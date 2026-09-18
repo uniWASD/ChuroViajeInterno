@@ -1,6 +1,6 @@
 # Contexto del Proyecto — ChuroViaje
 
-Este documento sirve como base de conocimiento sobre la metodología, estructura, identificadores y flujo de trabajo del proyecto ChuroViaje. Es fundamental para que tanto los agentes de inteligencia artificial como los nuevos integrantes del equipo entiendan el estado y las reglas del proyecto.
+Este documento sirve como base de conocimiento sobre la metodología, estructura, identificadores y flujo de trabajo del proyecto ChuroViaje.
 
 ## 1. Metodología
 

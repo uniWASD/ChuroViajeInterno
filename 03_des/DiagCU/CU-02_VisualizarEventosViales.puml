@@ -1,0 +1,53 @@
+@startuml CU-02_VisualizarEventosViales
+' CU-02: Visualizar Eventos Viales
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-02: Visualizar Eventos Viales
+
+actor "Conductor" as Conductor
+actor "Backend Java" as Backend <<sistema>>
+
+rectangle "Aplicación Móvil ChuroViaje" {
+  usecase "CU-02\nVisualizar Eventos Viales" as CU02
+}
+
+Conductor --> CU02
+CU02 --> Backend
+
+legend bottom
+  Muestra los eventos vigentes reportados en CU-01,
+  categorizados por color y actualizados cada 10-15 s.
+endlegend
+
+@enduml

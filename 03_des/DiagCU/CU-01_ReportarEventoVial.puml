@@ -1,0 +1,57 @@
+@startuml CU-01_ReportarEventoVial
+' CU-01: Reportar Evento Vial
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-01: Reportar Evento Vial
+
+actor "Conductor" as Conductor
+actor "Backend Java" as Backend <<sistema>>
+actor "Módulo de distribución\nen tiempo real" as Distrib <<sistema>>
+
+rectangle "Aplicación Móvil ChuroViaje" {
+  usecase "CU-01\nReportar Evento Vial" as CU01
+  usecase "CU-08\nIniciar Sesión" as CU08
+}
+
+Conductor --> CU01
+CU01 --> Backend
+CU01 --> Distrib
+CU01 ..> CU08 : <<include>>
+note on link
+  Precondición de CU-01: token de sesión válido.
+  Si el token expiró (extensión 4a) el conductor
+  se reautentica con CU-08 y se reintenta el envío.
+end note
+
+@enduml

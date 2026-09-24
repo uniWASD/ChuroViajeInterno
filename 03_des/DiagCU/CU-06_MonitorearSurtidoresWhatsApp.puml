@@ -1,0 +1,53 @@
+@startuml CU-06_MonitorearSurtidoresWhatsApp
+' CU-06: Monitorear Estado de Surtidores vía WhatsApp
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-06: Monitorear Estado de Surtidores vía WhatsApp
+
+actor "Proceso de monitoreo\n(automático)" as Monitor <<proceso>>
+actor "Grupos de WhatsApp\nmonitoreados" as WA <<sistema externo>>
+
+rectangle "Backend de ChuroViaje (módulo de combustible)" {
+  usecase "CU-06\nMonitorear Estado de\nSurtidores vía WhatsApp" as CU06
+}
+
+Monitor --> CU06
+CU06 --> WA
+
+legend bottom
+  Disparador: llega un mensaje nuevo a un grupo monitoreado.
+  El estado interpretado queda disponible para CU-05.
+endlegend
+
+@enduml

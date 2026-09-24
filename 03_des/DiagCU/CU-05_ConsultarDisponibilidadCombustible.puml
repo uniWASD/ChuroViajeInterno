@@ -1,0 +1,56 @@
+@startuml CU-05_ConsultarDisponibilidadCombustible
+' CU-05: Consultar Disponibilidad de Combustible
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-05: Consultar Disponibilidad de Combustible
+
+actor "Conductor" as Conductor
+actor "API externa\nde surtidores" as API <<sistema externo>>
+actor "Backend Java" as Backend <<sistema>>
+
+rectangle "Aplicación Móvil ChuroViaje (módulo de combustible)" {
+  usecase "CU-05\nConsultar Disponibilidad\nde Combustible" as CU05
+}
+
+Conductor --> CU05
+CU05 --> API
+CU05 --> Backend
+
+legend bottom
+  Si la API oficial no responde, se usa el estado
+  obtenido del monitoreo de WhatsApp (CU-06),
+  indicando el origen del dato.
+endlegend
+
+@enduml

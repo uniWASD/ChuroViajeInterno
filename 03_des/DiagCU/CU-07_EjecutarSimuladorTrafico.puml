@@ -1,0 +1,53 @@
+@startuml CU-07_EjecutarSimuladorTrafico
+' CU-07: Ejecutar Simulador de Tráfico
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-07: Ejecutar Simulador de Tráfico
+
+actor "Desarrollador /\nAdministrador" as Dev
+actor "Script de simulación\n(Python)" as Script <<sistema>>
+
+rectangle "Backend e infraestructura de ChuroViaje" {
+  usecase "CU-07\nEjecutar Simulador\nde Tráfico" as CU07
+}
+
+Dev --> CU07
+CU07 --> Script
+
+legend bottom
+  El script genera "usuarios fantasma" que envían
+  eventos y telemetría al backend (prueba de carga).
+endlegend
+
+@enduml

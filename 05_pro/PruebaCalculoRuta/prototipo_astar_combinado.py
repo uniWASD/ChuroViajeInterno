@@ -1,25 +1,4 @@
-"""
-Prototipo combinado (versión 2) — junta lo mejor de las dos exploraciones:
 
-De nuestro prototipo (Python / A*):
-  - A* real, con heurística admisible (en vez de Dijkstra puro).
-  - Los eventos EXPIRAN solos después de un tiempo (como ya define CU-01).
-  - El caso extremo (choque) nunca bloquea del todo la ruta.
-
-De la exploración de [tu compañero] (Java):
-  - TrafficLevel como categoría con multiplicador, en vez de números sueltos
-    por tipo de evento — más prolijo y más fácil de justificar en la defensa.
-  - Fórmula de Haversine para trabajar con coordenadas GPS reales.
-  - Casos de prueba narrados con el razonamiento impreso en pantalla
-    (mucho más claro para mostrar en una review o en la defensa que un
-    print seco de la ruta).
-
-Coordenadas de esta versión: aproximadas al centro de Tarija (no Camiri).
-Son ilustrativas, no direcciones exactas — sirven para probar la lógica,
-no para navegación real todavía.
-
-Requisito: pip install networkx
-"""
 
 import math
 from enum import Enum

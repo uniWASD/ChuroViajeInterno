@@ -33,3 +33,7 @@ git push interno feature/HUXX-CUXX-nombre-corto
 ```bash
 
 ```
+
+### Sincronizar issues
+gh issue list --state all --limit 500 --json number,title,body,state,labels,milestone,closedAt > issues.json
+gh pr list --state all --limit 500 --json number,title,headRefName,state,body > prs.json

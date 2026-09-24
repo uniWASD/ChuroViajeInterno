@@ -1,0 +1,61 @@
+@startuml CU-04_RecalcularRuta
+' CU-04: Recalcular Ruta
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-04: Recalcular Ruta
+
+actor "Conductor\n(pasivo)" as Conductor
+actor "Motor core (C++)" as Motor <<sistema>>
+actor "Backend Java" as Backend <<sistema>>
+
+rectangle "Aplicación Móvil ChuroViaje (motor de ruteo)" {
+  usecase "CU-04\nRecalcular Ruta" as CU04
+  usecase CU03 as "CU-03
+Calcular Ruta Óptima
+--
+<i>puntos de extensión</i>
+Navegación activa"
+}
+
+Conductor --> CU04
+CU04 --> Motor
+CU04 --> Backend
+CU04 .> CU03 : <<extend>>
+note on link
+  Condición: {se detecta congestión sobre el
+  trayecto de la ruta activa (reporte CU-01
+  o telemetría de velocidad/posición)}
+end note
+
+@enduml

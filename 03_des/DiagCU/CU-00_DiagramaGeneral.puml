@@ -1,0 +1,98 @@
+@startuml CU-00_DiagramaGeneral
+' Diagrama de Casos de Uso - Sistema ChuroViaje (CU-01 a CU-08)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title Diagrama de Casos de Uso - Sistema ChuroViaje (CU-01 a CU-08)
+
+' Actores principales (izquierda)
+actor "Conductor" as Conductor
+actor "Desarrollador /\nAdministrador" as Dev
+actor "Proceso de monitoreo\n(automático)" as Monitor <<proceso>>
+
+' Actores secundarios externos (derecha)
+actor "Google Sign-In" as Google <<sistema externo>>
+actor "Mapbox" as Mapbox <<sistema externo>>
+actor "API externa\nde surtidores" as API <<sistema externo>>
+actor "Grupos de WhatsApp\nmonitoreados" as WA <<sistema externo>>
+actor "Script de simulación\n(Python)" as Script <<sistema>>
+
+rectangle "Sistema ChuroViaje" {
+  usecase "CU-08\nIniciar Sesión" as CU08
+  usecase "CU-01\nReportar Evento Vial" as CU01
+  usecase "CU-02\nVisualizar Eventos Viales" as CU02
+  usecase CU03 as "CU-03
+Calcular Ruta Óptima
+--
+<i>puntos de extensión</i>
+Navegación activa"
+  usecase "CU-04\nRecalcular Ruta" as CU04
+  usecase "CU-05\nConsultar Disponibilidad\nde Combustible" as CU05
+  usecase "CU-06\nMonitorear Estado de\nSurtidores vía WhatsApp" as CU06
+  usecase "CU-07\nEjecutar Simulador\nde Tráfico" as CU07
+}
+
+' Asociaciones actor principal -> caso de uso
+Conductor --> CU01
+Conductor --> CU08
+Conductor --> CU02
+Conductor --> CU03
+Conductor --> CU04
+Conductor --> CU05
+Monitor --> CU06
+Dev --> CU07
+
+' Relaciones entre casos de uso
+CU01 ..> CU08 : <<include>>
+CU04 .> CU03 : <<extend>>
+note on link
+  Condición: {congestión detectada
+  sobre la ruta activa}
+end note
+
+' Asociaciones con actores secundarios externos
+CU08 --> Google
+CU03 --> Mapbox
+CU05 --> API
+CU06 --> WA
+CU07 --> Script
+
+
+legend bottom left
+  El límite "Sistema ChuroViaje" agrupa la App móvil (Flutter), el Backend (Java)
+  y el Motor core (C++); por eso esos componentes no aparecen como actores aquí.
+  En los diagramas por CU se muestran como actores secundarios, igual que en la
+  especificación, porque el alcance (SUD) de esos casos es la app móvil.
+endlegend
+
+@enduml

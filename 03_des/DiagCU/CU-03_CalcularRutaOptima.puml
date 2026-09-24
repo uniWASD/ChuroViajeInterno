@@ -1,0 +1,60 @@
+@startuml CU-03_CalcularRutaOptima
+' CU-03: Calcular Ruta Óptima
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-03: Calcular Ruta Óptima
+
+actor "Conductor" as Conductor
+actor "Motor core (C++)" as Motor <<sistema>>
+actor "Mapbox" as Mapbox <<sistema externo>>
+
+rectangle "Aplicación Móvil ChuroViaje (motor de ruteo)" {
+  usecase CU03 as "CU-03
+Calcular Ruta Óptima
+--
+<i>puntos de extensión</i>
+Navegación activa"
+  usecase "CU-04\nRecalcular Ruta" as CU04
+}
+
+Conductor --> CU03
+CU03 --> Motor
+CU03 --> Mapbox
+CU04 .> CU03 : <<extend>>
+note on link
+  Condición: {se detecta congestión
+  sobre el trayecto de la ruta activa}
+end note
+
+@enduml

@@ -1,0 +1,53 @@
+@startuml CU-08_IniciarSesion
+' CU-08: Iniciar Sesión
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Issue: T-029 (#8)
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-08: Iniciar Sesión
+
+actor "Conductor" as Conductor
+actor "Google Sign-In" as Google <<sistema externo>>
+actor "Backend Java" as Backend <<sistema>>
+
+rectangle "Aplicación Móvil ChuroViaje" {
+  usecase "CU-08\nIniciar Sesión" as CU08
+  usecase "CU-01\nReportar Evento Vial" as CU01
+}
+
+Conductor --> CU08
+Conductor -[hidden]-> CU01
+CU01 ..> CU08 : <<include>>
+CU08 --> Google
+CU08 --> Backend
+
+@enduml

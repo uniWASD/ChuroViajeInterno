@@ -1,4 +1,0 @@
-- Fluido (x1.0): Ruta Normal, El costo equivale a la distancia real (100% del peso). No hay penalización
-- Moderado (x1.5): Leve retraso, Atravesar la calle cuesta un 50% más que recorrer la misma distancia en una calle normal
-- Congestionado (x2.5): Tráfico pesado, El costo es más del doble (250%). Fomenta que el algoritmo busque alternativas
-- Muy congestionado (x4.0): Bloqueo parcial severo, El costo es 4 veces mayor al de una ruta normal. Casi siempre obligará al algoritmo a tomar un desvío largo

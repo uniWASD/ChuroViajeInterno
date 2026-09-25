@@ -1,7 +1,7 @@
 @startuml CU-06_MonitorearSurtidoresWhatsApp
 ' CU-06: Monitorear Estado de Surtidores vía WhatsApp
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
-' Issue: T-029 (#8)
+' Issue: T-029 (#8); actualizado en T-045 (extracción con Baileys y análisis por lotes con LLM)
 
 left to right direction
 skinparam shadowing false
@@ -37,17 +37,31 @@ title CU-06: Monitorear Estado de Surtidores vía WhatsApp
 
 actor "Proceso de monitoreo\n(automático)" as Monitor <<proceso>>
 actor "Grupos de WhatsApp\nmonitoreados" as WA <<sistema externo>>
+actor "Proveedor del LLM" as LLM <<sistema externo>>
 
-rectangle "Backend de ChuroViaje (módulo de combustible)" {
+rectangle "Backend de ChuroViaje (módulo de combustible\ny servicio de extracción de WhatsApp)" {
   usecase "CU-06\nMonitorear Estado de\nSurtidores vía WhatsApp" as CU06
 }
 
 Monitor --> CU06
 CU06 --> WA
+note on link
+  El servicio de extracción (Node.js + Baileys)
+  lee los grupos con un número dedicado,
+  en modo solo lectura.
+end note
+CU06 --> LLM
+note on link
+  Recibe los mensajes pendientes por lotes
+  cada 5 minutos (solo si hay mensajes)
+  e identifica surtidor, combustible y estado.
+end note
 
 legend bottom
-  Disparador: llega un mensaje nuevo a un grupo monitoreado.
-  El estado interpretado queda disponible para CU-05.
+  Disparador: llega un mensaje nuevo a un grupo monitoreado;
+  se analiza en el siguiente ciclo de 5 minutos.
+  El estado validado contra el catálogo de surtidores queda disponible para CU-05.
+  Decisión de arquitectura: decision_conexion_whatsapp.md
 endlegend
 
 @enduml

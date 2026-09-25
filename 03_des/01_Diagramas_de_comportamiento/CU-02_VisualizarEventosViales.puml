@@ -1,0 +1,83 @@
+@startuml CU-02_VisualizarEventosViales
+' CU-02: Visualizar Eventos Viales - Diagrama de comportamiento (actividad)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Issue: T-045
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 200
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-02: Visualizar Eventos Viales\nDiagrama de actividad
+
+|Conductor|
+start
+:Abre la app;
+|Sistema ChuroViaje|
+:Solicita los
+permisos
+necesarios y carga
+el mapa base;
+repeat
+  :Solicita al
+backend los
+eventos activos;
+  |Backend Java|
+  if (¿Responde a\ntiempo?) then (sí)
+    :Responde con los
+eventos vigentes;
+    |Sistema ChuroViaje|
+    :Dibuja los eventos
+con el color de su
+tipo;
+    if (¿Algún evento\nexpiró?) then (sí [3a])
+      #FFF8E1:[3a] Lo remueve
+del mapa;
+    else (no)
+    endif
+  else (no [2a])
+    |Sistema ChuroViaje|
+    #FFF8E1:[2a] Muestra el
+mapa sin eventos
+actualizados;
+    #FFF8E1:[2a] Notifica "No
+se pudo actualizar
+eventos";
+  endif
+  |Conductor|
+  :Se desplaza o hace
+zoom en el mapa;
+  |Sistema ChuroViaje|
+  :Espera el
+intervalo de
+actualización;
+repeat while (¿El mapa sigue\nabierto?) is (sí)
+->no;
+stop
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo y flechas de retorno etiquetadas: extensiones y flujos alternativos
+  (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

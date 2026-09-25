@@ -1,0 +1,76 @@
+@startuml CU-05_ConsultarDisponibilidadCombustible
+' CU-05: Consultar Disponibilidad de Combustible - Diagrama de comportamiento (actividad)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Issue: T-045
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 200
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-05: Consultar Disponibilidad de Combustible\nDiagrama de actividad
+
+|Conductor|
+start
+:Abre el módulo de
+combustible;
+|Sistema ChuroViaje|
+:Obtiene la
+ubicación actual;
+:Consulta al
+backend los
+surtidores
+cercanos;
+|Backend Java|
+if (¿La API oficial\nestá disponible?) then (sí)
+  :Usa el dato de la
+API oficial;
+else (no [2a])
+  #FFF8E1:[2a] Usa la
+información de los
+grupos de WhatsApp
+monitoreados
+(CU-06);
+endif
+|Sistema ChuroViaje|
+if (¿Hay algún dato\npara el\nsurtidor?) then (sí)
+  :Muestra el estado
+del surtidor y el
+origen del dato;
+else (no [3a])
+  #FFF8E1:[3a] Lo muestra
+como "sin
+información
+reciente";
+endif
+|Conductor|
+:Revisa el listado
+o el mapa;
+stop
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo y flechas de retorno etiquetadas: extensiones y flujos alternativos
+  (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

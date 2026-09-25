@@ -1,0 +1,84 @@
+@startuml CU-07_EjecutarSimuladorTrafico
+' CU-07: Ejecutar Simulador de Tráfico - Diagrama de comportamiento (actividad)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Issue: T-045
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 200
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-07: Ejecutar Simulador de Tráfico\nDiagrama de actividad
+
+|Desarrollador|
+start
+:Configura los
+parámetros de
+carga (usuarios
+fantasma, rutas,
+eventos);
+|Script de simulación|
+:Valida los
+parámetros;
+if (¿Parámetros\nválidos y dentro\nde los límites?) then (sí)
+  |Desarrollador|
+  :Ejecuta el script
+de simulación;
+  |Script de simulación|
+  :Genera los
+usuarios fantasma;
+  :Envía eventos y
+telemetría;
+  |Backend Java|
+  if (¿Soporta la\ncarga simulada?) then (sí)
+    :Procesa los
+eventos como si
+provinieran de
+usuarios reales;
+  else (no [3a])
+    #FFF8E1:[3a] Degrada su
+desempeño (no se
+considera fallo
+del caso de uso);
+  endif
+  :Registra logs de
+la prueba de carga;
+  |Desarrollador|
+  :Observa las
+métricas de
+rendimiento;
+  stop
+else (no [1a])
+  #FFF8E1:[1a] Rechaza la
+ejecución e indica
+los límites
+permitidos;
+  stop
+endif
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo y flechas de retorno etiquetadas: extensiones y flujos alternativos
+  (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

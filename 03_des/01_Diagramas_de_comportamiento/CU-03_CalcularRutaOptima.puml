@@ -1,0 +1,97 @@
+@startuml CU-03_CalcularRutaOptima
+' CU-03: Calcular Ruta Óptima - Diagrama de comportamiento (actividad)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Issue: T-045
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 200
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-03: Calcular Ruta Óptima\nDiagrama de actividad
+
+|Conductor|
+start
+repeat
+  |Conductor|
+  :Ingresa origen,
+destino y paradas
+opcionales;
+  |Sistema ChuroViaje|
+  :Valida los puntos
+ingresados;
+backward:[1a] Muestra un
+mensaje de error y
+solicita un nuevo
+destino;
+repeat while (¿Destino\ninválido o fuera\nde cobertura?) is (sí [1a])
+->no;
+|Conductor|
+:Solicita "Calcular
+ruta";
+|Sistema ChuroViaje|
+:Envía la solicitud
+al motor core;
+|Motor core (C++)|
+if (¿Mapbox\ndisponible?) then (sí)
+  :Obtiene los datos
+viales de Mapbox;
+  :Ejecuta el
+algoritmo
+(Dijkstra/A*);
+  if (¿Existe una ruta\nvehicular?) then (sí)
+    |Sistema ChuroViaje|
+    :Dibuja la ruta con
+tiempo y distancia
+estimados;
+    |Conductor|
+    :Confirma el inicio
+de la navegación;
+    |Sistema ChuroViaje|
+    :Comienza el
+seguimiento de la
+ruta;
+    stop
+  else (no [3b])
+    |Sistema ChuroViaje|
+    #FFF8E1:[3b] Notifica que
+no se encontró una
+ruta válida;
+    stop
+  endif
+else (no [3a])
+  |Sistema ChuroViaje|
+  #FFF8E1:[3a] Informa un
+error de servicio
+externo y sugiere
+reintentar más
+tarde;
+  stop
+endif
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo y flechas de retorno etiquetadas: extensiones y flujos alternativos
+  (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

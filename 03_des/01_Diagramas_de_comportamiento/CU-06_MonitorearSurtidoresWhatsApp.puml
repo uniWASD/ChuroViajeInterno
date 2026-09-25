@@ -1,0 +1,130 @@
+@startuml CU-06_MonitorearSurtidoresWhatsApp
+' CU-06: Monitorear Estado de Surtidores vía WhatsApp - Diagrama de comportamiento (actividad)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Issue: T-045
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 200
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-06: Monitorear Estado de Surtidores vía WhatsApp\nDiagrama de actividad
+
+|Grupos de WhatsApp|
+|Servicio de extracción\n(Node.js + Baileys)|
+start
+repeat
+  :Monitorea los
+grupos de WhatsApp
+designados;
+  if (¿Hay conexión\ncon el servicio\nde mensajería?) then (sí)
+    break
+  else (no [1a])
+    #FFF8E1:[1a] Reintenta la
+conexión
+periódicamente;
+    #FFF8E1:[1a] Los
+surtidores
+conservan su
+último estado y
+fecha de
+actualización;
+  endif
+repeat while
+|Grupos de WhatsApp|
+:Llega un mensaje
+de texto nuevo;
+|Servicio de extracción\n(Node.js + Baileys)|
+:Guarda el mensaje
+como pendiente,
+sin número ni
+nombre del
+remitente;
+|Backend Java\n(proceso de análisis)|
+:Se cumple el ciclo
+de 5 minutos;
+if (¿Hay mensajes\npendientes?) then (sí)
+  :Envía el lote de
+mensajes al LLM;
+  |Proveedor del LLM|
+  if (¿El LLM responde\ncorrectamente?) then (sí)
+    :Identifica en cada
+mensaje el
+surtidor, el tipo
+de combustible y
+el estado;
+    #FFF8E1:[3a] Descarta
+preguntas,
+mensajes ambiguos
+o sin surtidor
+identificable;
+    |Backend Java\n(proceso de análisis)|
+    :Valida cada
+resultado contra
+el catálogo de
+surtidores;
+    if (¿Surtidor en el\ncatálogo y\nformato válido?) then (sí)
+      :Actualiza el
+estado del
+surtidor;
+    else (no [4a])
+      #FFF8E1:[4a] Descarta ese
+resultado sin
+actualizar ningún
+estado;
+    endif
+    :Elimina el texto
+de los mensajes y
+los marca como
+procesados;
+    :El estado queda
+disponible para
+las consultas
+(CU-05);
+    stop
+  else (no [3c])
+    |Backend Java\n(proceso de análisis)|
+    #FFF8E1:[3c] Los mensajes
+siguen pendientes
+para el siguiente
+ciclo;
+    #FFF8E1:[3c] Descarta los
+que superan el
+tiempo máximo de
+vigencia;
+    stop
+  endif
+else (no [3b])
+  #FFF8E1:[3b] No realiza el
+análisis ni llama
+al LLM y espera al
+siguiente ciclo;
+  stop
+endif
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo y flechas de retorno etiquetadas: extensiones y flujos alternativos
+  (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

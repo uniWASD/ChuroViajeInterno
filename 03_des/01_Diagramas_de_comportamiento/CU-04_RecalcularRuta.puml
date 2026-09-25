@@ -1,0 +1,86 @@
+@startuml CU-04_RecalcularRuta
+' CU-04: Recalcular Ruta - Diagrama de comportamiento (actividad)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Issue: T-045
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 200
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-04: Recalcular Ruta\nDiagrama de actividad
+
+|Sistema ChuroViaje|
+start
+:Detecta una zona
+de congestión en
+la ruta activa
+(evento reportado
+o telemetría
+anómala);
+:Evalúa su impacto;
+:Solicita una ruta
+alternativa al
+motor core;
+|Motor core (C++)|
+:Recalcula evitando
+la zona
+congestionada;
+if (¿Existe una ruta\nalternativa\nviable?) then (sí)
+  |Sistema ChuroViaje|
+  :Muestra la nueva
+ruta de forma no
+intrusiva;
+  |Conductor|
+  if (¿Acepta el\ncambio de ruta?) then (sí)
+    :Continúa la
+navegación;
+    |Sistema ChuroViaje|
+    :Actualiza las
+indicaciones según
+la nueva ruta;
+    stop
+  else (no [3a])
+    |Sistema ChuroViaje|
+    #FFF8E1:[3a] Mantiene la
+ruta original
+marcada como
+congestionada;
+    stop
+  endif
+else (no [2a])
+  |Sistema ChuroViaje|
+  #FFF8E1:[2a] Mantiene la
+ruta original;
+  #FFF8E1:[2a] Notifica la
+congestión
+detectada;
+  stop
+endif
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo y flechas de retorno etiquetadas: extensiones y flujos alternativos
+  (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

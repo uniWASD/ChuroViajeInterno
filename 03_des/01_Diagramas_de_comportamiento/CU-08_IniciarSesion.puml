@@ -1,0 +1,96 @@
+@startuml CU-08_IniciarSesion
+' CU-08: Iniciar Sesión - Diagrama de comportamiento (actividad)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Issue: T-045
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 200
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-08: Iniciar Sesión\nDiagrama de actividad
+
+|Conductor|
+start
+:Presiona "Iniciar
+sesión con Google";
+|Sistema ChuroViaje|
+:Despliega el
+selector de
+cuentas de Google;
+|Conductor|
+if (¿Selecciona una\ncuenta y\nautoriza el\nacceso?) then (sí)
+  |Google|
+  :Emite el token de
+identidad;
+  |Sistema ChuroViaje|
+  if (¿Se mantiene la\nconexión?) then (sí)
+    :Envía el token al
+backend;
+    |Backend Java|
+    if (¿El token de\nGoogle es\nválido?) then (sí)
+      :Verifica o crea la
+cuenta del
+conductor;
+      :Genera un token
+JWT propio con
+expiración;
+      |Sistema ChuroViaje|
+      :Almacena el token
+de forma segura;
+      :Redirige al mapa
+principal;
+      stop
+    else (no [3a])
+      |Backend Java|
+      #FFF8E1:[3a] Rechaza la
+solicitud;
+      |Sistema ChuroViaje|
+      #FFF8E1:[3a] Muestra un
+mensaje de error y
+permite reintentar;
+      stop
+    endif
+  else (no [4a])
+    |Sistema ChuroViaje|
+    #FFF8E1:[4a] Notifica el
+error de red y
+permite reintentar;
+    stop
+  endif
+else (no [2a])
+  |Sistema ChuroViaje|
+  #FFF8E1:[2a] Cancela el
+inicio de sesión y
+regresa a la
+pantalla de inicio
+sin autenticar;
+  stop
+endif
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo y flechas de retorno etiquetadas: extensiones y flujos alternativos
+  (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

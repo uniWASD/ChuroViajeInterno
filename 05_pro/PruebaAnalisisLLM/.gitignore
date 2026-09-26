@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.env
+Chats/*.txt
+salida_cu06*.json
+*.checkpoint.jsonl
+*.partial.json
+*_BACKUP.py
+*_ANTES_*.py
+!03_des/HU08_CU06_benchmark.json
+!03_des/HU08_CU06_test_set.json

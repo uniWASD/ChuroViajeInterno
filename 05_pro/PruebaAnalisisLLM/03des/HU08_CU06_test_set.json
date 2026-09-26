@@ -1,0 +1,287 @@
+{
+  "caso": "HU-08/CU-06",
+  "descripcion": "Set controlado T-037 para español informal de Tarija",
+  "total": 40,
+  "casos": [
+    {
+      "id": "T001",
+      "texto": "Don Daniel tiene clarita sin fila",
+      "label": "HAY",
+      "surtidor": "Don Daniel",
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T002",
+      "texto": "en tacurandi ay diessel ⛽",
+      "label": "HAY",
+      "surtidor": "Tacuarandi",
+      "combustible": "Diesel"
+    },
+    {
+      "id": "T003",
+      "texto": "la mas vegas ya tiene la plus, poquita fila",
+      "label": "HAY",
+      "surtidor": "Las Vegas",
+      "combustible": "Gasolina Plus"
+    },
+    {
+      "id": "T004",
+      "texto": "morros blancos están dando blanquita",
+      "label": "HAY",
+      "surtidor": "YPFB Morros Blancos",
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T005",
+      "texto": "acabo de cargar etanol en el portillo",
+      "label": "HAY",
+      "surtidor": "El Portillo",
+      "combustible": "Etanol"
+    },
+    {
+      "id": "T006",
+      "texto": "en sointar llegó gasolina especial",
+      "label": "HAY",
+      "surtidor": "Sointa",
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T007",
+      "texto": "san gorje tiene amarilla",
+      "label": "HAY",
+      "surtidor": "San Jorge",
+      "combustible": "Gasolina Plus"
+    },
+    {
+      "id": "T008",
+      "texto": "moto mendez venta normal de diesel",
+      "label": "HAY",
+      "surtidor": "Moto Mendez",
+      "combustible": "Diesel"
+    },
+    {
+      "id": "T009",
+      "texto": "en don daniel se acabó la clarita",
+      "label": "NO_HAY",
+      "surtidor": "Don Daniel",
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T010",
+      "texto": "tacuarandi ya no hay diessel",
+      "label": "NO_HAY",
+      "surtidor": "Tacuarandi",
+      "combustible": "Diesel"
+    },
+    {
+      "id": "T011",
+      "texto": "portillo sin gasolina",
+      "label": "NO_HAY",
+      "surtidor": "El Portillo",
+      "combustible": "NO_ESPECIFICADO"
+    },
+    {
+      "id": "T012",
+      "texto": "en agrupa no están vendiendo plus",
+      "label": "NO_HAY",
+      "surtidor": "Agrupa",
+      "combustible": "Gasolina Plus"
+    },
+    {
+      "id": "T013",
+      "texto": "morros blancos se terminó la especial",
+      "label": "NO_HAY",
+      "surtidor": "YPFB Morros Blancos",
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T014",
+      "texto": "san martin se fue la cisterna, no hay diesel",
+      "label": "NO_HAY",
+      "surtidor": "San Martin",
+      "combustible": "Diesel"
+    },
+    {
+      "id": "T015",
+      "texto": "ex terminal no llegó etanol",
+      "label": "NO_HAY",
+      "surtidor": "Ex Terminal",
+      "combustible": "Etanol"
+    },
+    {
+      "id": "T016",
+      "texto": "dnd hay clarita?",
+      "label": "PREGUNTA",
+      "surtidor": null,
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T017",
+      "texto": "alguien sabe si don daniel tiene plus?",
+      "label": "PREGUNTA",
+      "surtidor": "Don Daniel",
+      "combustible": "Gasolina Plus"
+    },
+    {
+      "id": "T018",
+      "texto": "avisen donde están cargando diesel",
+      "label": "PREGUNTA",
+      "surtidor": null,
+      "combustible": "Diesel"
+    },
+    {
+      "id": "T019",
+      "texto": "en el portillo hay especial?",
+      "label": "PREGUNTA",
+      "surtidor": "El Portillo",
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T020",
+      "texto": "q surtidor tiene etanol ahorita?",
+      "label": "PREGUNTA",
+      "surtidor": null,
+      "combustible": "Etanol"
+    },
+    {
+      "id": "T021",
+      "texto": "saben dónde venden la amarilla sin fila?",
+      "label": "PREGUNTA",
+      "surtidor": null,
+      "combustible": "Gasolina Plus"
+    },
+    {
+      "id": "T022",
+      "texto": "alguien cargó en la terminal?",
+      "label": "PREGUNTA",
+      "surtidor": "Ex Terminal",
+      "combustible": null
+    },
+    {
+      "id": "T023",
+      "texto": "porfa reporten gasolina",
+      "label": "PREGUNTA",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T024",
+      "texto": "dicen q hay en el de siempre",
+      "label": "AMBIGUO",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T025",
+      "texto": "ahi sigue?",
+      "label": "AMBIGUO",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T026",
+      "texto": "llegó hace rato pero no sé si queda",
+      "label": "AMBIGUO",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T027",
+      "texto": "en daniel está normal",
+      "label": "AMBIGUO",
+      "surtidor": "Don Daniel",
+      "combustible": null
+    },
+    {
+      "id": "T028",
+      "texto": "la blanquita por ahí nomas",
+      "label": "AMBIGUO",
+      "surtidor": null,
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T029",
+      "texto": "creo que sí hay, no estoy seguro",
+      "label": "AMBIGUO",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T030",
+      "texto": "en moto mendez hay especial pero también dicen que ya se acabó",
+      "label": "CONTRADICTORIO",
+      "surtidor": "Moto Mendez",
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T031",
+      "texto": "don daniel tiene plus, aunque otro dice que no hay",
+      "label": "CONTRADICTORIO",
+      "surtidor": "Don Daniel",
+      "combustible": "Gasolina Plus"
+    },
+    {
+      "id": "T032",
+      "texto": "tacurandi ya llegó diesel pero se acabó al toque",
+      "label": "NO_HAY",
+      "surtidor": "Tacuarandi",
+      "combustible": "Diesel"
+    },
+    {
+      "id": "T033",
+      "texto": "en portillo hay y no hay, cada uno dice algo",
+      "label": "CONTRADICTORIO",
+      "surtidor": "El Portillo",
+      "combustible": null
+    },
+    {
+      "id": "T034",
+      "texto": "morros blancos está vendiendo especial, mentira ya no hay",
+      "label": "NO_HAY",
+      "surtidor": "YPFB Morros Blancos",
+      "combustible": "Gasolina Especial"
+    },
+    {
+      "id": "T035",
+      "texto": "buen día a todos",
+      "label": "NO_RELEVANTE",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T036",
+      "texto": "vendo llantas aro 16 baratas",
+      "label": "NO_RELEVANTE",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T037",
+      "texto": "jajaja xd",
+      "label": "NO_RELEVANTE",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T038",
+      "texto": "<Multimedia omitido>",
+      "label": "NO_RELEVANTE",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T039",
+      "texto": "alguien conoce mecánico bueno?",
+      "label": "NO_RELEVANTE",
+      "surtidor": null,
+      "combustible": null
+    },
+    {
+      "id": "T040",
+      "texto": "partido esta noche a las 8",
+      "label": "NO_RELEVANTE",
+      "surtidor": null,
+      "combustible": null
+    }
+  ]
+}

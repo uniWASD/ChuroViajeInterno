@@ -1,0 +1,56 @@
+{
+  "caso": "HU-08/CU-06",
+  "fecha_validacion": "2026-09-25",
+  "modelo_seleccionado": "gemini-3.1-flash-lite",
+  "benchmark_controlado": {
+    "total_casos": 40,
+    "cobertura_local": 0.725,
+    "precision_local_sobre_resueltos": 1.0,
+    "casos_llm": 11,
+    "disponibilidad_llm": 1.0,
+    "precision_semantica_llm": 1.0,
+    "precision_final": 1.0,
+    "alucinaciones_entidad": 0,
+    "api_calls_exitosas": 11,
+    "api_attempts": 17,
+    "reintentos": 6,
+    "costo_usd_estimado": 0.005316,
+    "latencia_p95_ms": 48549.75,
+    "nota": "Resultados empíricos obtenidos durante la validación FIX5 antes de optimizar el batching final."
+  },
+  "prueba_real_100_mensajes_fix8": {
+    "mensajes": 100,
+    "limite_por_chat": 50,
+    "eventos": 21,
+    "mensajes_unicos_con_evento": 12,
+    "descartados_unicos": 88,
+    "solapados": 0,
+    "api_calls": 24,
+    "api_attempts": 27,
+    "reintentos": 3,
+    "errores_api": 0,
+    "duracion_segundos": 258,
+    "costo_usd_estimado": 0.01540575
+  },
+  "prueba_real_50_mensajes_fix9": {
+    "mensajes": 50,
+    "limite_por_chat": 25,
+    "eventos": 6,
+    "descartados": 44,
+    "api_calls_exitosas": 7,
+    "api_attempts": 28,
+    "reintentos": 17,
+    "errores_api": 4,
+    "costo_usd_estimado": 0.0040435,
+    "causa_errores": "HTTP 429 RESOURCE_EXHAUSTED del Free Tier; el proyecto reportó límite 500 solicitudes para gemini-3.1-flash-lite."
+  },
+  "arquitectura_final_v1_0": {
+    "mensajes_maximos_por_ejecucion": 50,
+    "ultimos_por_chat": 25,
+    "intervalo_logico_minutos": 5,
+    "llamadas_llm_logicas_maximas_por_ejecucion": 1,
+    "llamadas_llm_logicas_maximas_por_dia_si_se_ejecuta_cada_5_min": 288,
+    "estrategia": "preclasificación local + una solicitud LLM agregada con ventana lógica por caso",
+    "validacion_automatizada_nueva_arquitectura": "7/7 pruebas específicas PASS; no se repitió benchmark live completo por agotamiento de cuota Free Tier."
+  }
+}

@@ -31,7 +31,7 @@ REINTENTOS_API = 5
 MAX_REINTENTOS_429 = 1
 RETRY_BASE_SECONDS = 1.5
 RETRY_MAX_DELAY_SECONDS = 70.0
-CHECKPOINT_VERSION = 3
+CHECKPOINT_VERSION = 4
 DEFAULT_PARTIAL_EVERY = 10
 DEFAULT_ULTIMOS_POR_CHAT = 25
 PSEUDONYM_SALT = os.getenv('HU08_PSEUDONYM_SALT', 'hu08-cu06-v1')
@@ -41,12 +41,17 @@ COMBUSTIBLES: Dict[str, List[str]] = {'Gasolina Especial': ['\\bespecial\\b', '\
 CANON_SURTIDORES = list(SURTIDORES.keys())
 CANON_COMBUSTIBLES = list(COMBUSTIBLES.keys())
 PATRONES_PREGUNTA = re.compile('(?:\\?|alguien\\s+sabe|donde\\s+hay|dnd\\s+hay|d[oó]nde\\s+hay|saben\\s+d[oó]nde|no\\s+saben|avisen|reporten|alguien\\s+que\\s+(?:sepa|pase)|alguien\\s+sabe\\s+si|donde\\s+puedo|en\\s+qu[eé]\\s+surtidor|donde\\s+est[aá]n\\s+(?:vendiendo|cargando|repartiendo)|donde\\s*(?:ay|venden)|no\\s+saben\\s+donde|alguien\\s+carg[oó]|q\\s+surtidor|que\\s+surtidor)', re.IGNORECASE)
-PATRONES_HAY = re.compile('(?:ya\\s*lleg[oó]\\s*gasolina|lleg[oó]\\s*gasolina|ya\\s*lleg[oó]|acabo\\s*de\\s*cargar|cargu[eé]|cargue|(?<!\\bno\\s)\\bhay\\s*(?:gasolina|etanol|especial|plus|la\\s*plus|diesel|di[eé]sel|la\\s*especial|la\\s*clarita|blanquita)|(?<!\\bno\\s)est[aá]n?\\s*(?:vendiendo|cargando|dando|descargando|repartiendo)|sin\\s*fila|no\\s*hay\\s*fila|venta\\s*normal|reci[eé]n\\s*(?:cargue|cargu[eé])|(?<!\\bno\\s)est[aá]\\s*(?:clarita|clara|blanquita|blanca|amarilla)|(?<!\\bno\\s)tiene[n]?\\s*(?:gasolina|(?:la\\s*)?especial|(?:la\\s*)?plus|etanol|(?:la\\s*)?clarita|di[eé]sel|amarilla|blanquita)|ya\\s*tiene|descarg(?:ando|aron)|\\bay\\s*(?:clarita|blanquita|diessel|etanol|gasolina)|\\bventa\\s+normal\\b)', re.IGNORECASE)
-PATRONES_NO_HAY = re.compile('(?:se\\s*acab[oó]|se\\s*termin[oó]|ya\\s*no\\s*hay|\\bno\\s*hay\\b(?!\\s+(?:fila|cola|mucha\\s+fila|mucha\\s+cola))|\\bno\\s*tiene[n]?\\s*(?:gasolina|etanol|especial|plus|diesel|di[eé]sel|clarita|blanquita|amarilla)|\\bno\\s*est[aá]n\\s*(?:vendiendo|cargando|dando|descargando|repartiendo)|se\\s*fue\\s*la\\s*cisterna|\\bno\\s*lleg[oó]|\\bsin\\s*combustible|\\bsin\\s*gasolina)', re.IGNORECASE)
+PATRONES_EVIDENCIA_HAY = re.compile('(?:ya\\s*lleg[oó]\\s*gasolina|lleg[oó]\\s*gasolina|ya\\s*lleg[oó]|acabo\\s*de\\s*cargar|cargu[eé]|cargue|(?<!\\bno\\s)\\bhay\\s*(?:gasolina|etanol|especial|plus|la\\s*plus|diesel|di[eé]sel|la\\s*especial|la\\s*clarita|blanquita)|(?<!\\bno\\s)est[aá]n?\\s*(?:vendiendo|cargando|dando|descargando|repartiendo)|sin\\s*fila|no\\s*hay\\s*fila|venta\\s*normal|reci[eé]n\\s*(?:cargue|cargu[eé])|(?<!\\bno\\s)est[aá]\\s*(?:clarita|clara|blanquita|blanca|amarilla)|(?<!\\bno\\s)tiene[n]?\\s*(?:gasolina|(?:la\\s*)?especial|(?:la\\s*)?plus|etanol|(?:la\\s*)?clarita|di[eé]sel|amarilla|blanquita)|ya\\s*tiene|descarg(?:ando|aron)|\\bay\\s*(?:clarita|blanquita|diessel|etanol|gasolina)|\\bventa\\s+normal\\b)', re.IGNORECASE)
+PATRONES_EVIDENCIA_NO_HAY = re.compile('(?:se\\s*acab[oó]|se\\s*termin[oó]|ya\\s*no\\s*hay|\\bno\\s*hay\\b(?!\\s+(?:fila|cola|mucha\\s+fila|mucha\\s+cola))|\\bno\\s*tiene[n]?\\s*(?:gasolina|etanol|especial|plus|diesel|di[eé]sel|clarita|blanquita|amarilla)|\\bno\\s*est[aá]n\\s*(?:vendiendo|cargando|dando|descargando|repartiendo)|se\\s*fue\\s*la\\s*cisterna|\\bno\\s*lleg[oó]|\\bsin\\s*combustible|\\bsin\\s*gasolina)', re.IGNORECASE)
 PATRON_RUIDO = re.compile('<multimedia omitido>|multimedia omitido|mensaje eliminado|se elimin[oó] este mensaje|imagen omitida|video omitido|audio omitido|sticker omitido|documento omitido|archivo adjunto|los mensajes y las llamadas est[aá]n cifrados|BEGIN:VCARD|END:VCARD|mensaje de voz omitido|\\.vcf\\b', re.IGNORECASE)
 PATRON_SALUDO = re.compile('^(?:buen(?:os)?\\s+d[ií]as?|buenas\\s+(?:tardes|noches)|hola|holas|j+a+j+a+|xd+|gracias|ok|dale)[!. ]*$', re.IGNORECASE)
 PATRONES_FILA = [('SIN_FILA', re.compile('\\bsin\\s+fila\\b|\\bno\\s+hay\\s+fila\\b|\\bvac[ií]o\\b|\\bvac[ií]a\\b', re.I)), ('CORTA', re.compile('\\bfila\\s+corta\\b|\\bpoca\\s+fila\\b|\\bpoquita\\s+fila\\b', re.I)), ('MEDIA', re.compile('\\bfila\\s+(?:media|mediana)\\b', re.I)), ('LARGA', re.compile('\\bfila\\s+larga\\b|\\bmucha\\s+fila\\b|\\bfil[oó]n\\b|\\bcola\\s+larga\\b', re.I))]
-PATRON_CONTEXTO = re.compile('(?:\\bah[ií]\\b|\\ball[ií]\\b|\\bsigue\\b|\\bqueda\\b|\\bqued[aó]\\b|\\bnormal\\b|\\breci[eé]n\\b|\\bdicen\\b|\\bcreo\\b)', re.IGNORECASE)
+PATRON_CONTEXTO = re.compile('(?:\\bah[ií]\\b|\\ball[ií]\\b|\\bsigue\\b|\\bqueda\\b|\\bqued[aó]\\b|\\bnormal\\b|\\breci[eé]n\\b|\\btambi[eé]n\\b|\\bigual\\b)', re.IGNORECASE)
+PATRON_INCERTIDUMBRE = re.compile(r'(?:\bcreo\b|\bdicen\b|\bdice[n]?\s+que\b|\bno\s+s[eé]\b|\bno\s+estoy\s+segur[oa]\b|\bsupuestamente\b|\btal\s+vez\b|\bquiz[aá]s?\b|\bparece\b|\bdebe\s+haber\b|\bimagino\b)', re.IGNORECASE)
+PATRON_AFIRMACION_CONTEXTO = re.compile(r'^\s*(?:s[ií]+|yes|positivo|confirmado|correcto|as[ií]\s+es)(?:\b|[.! ,;:])', re.IGNORECASE)
+PATRON_NEGACION_CONTEXTO = re.compile(r'^\s*(?:no+|nop+|negativo)(?:\b|[.! ,;:])', re.IGNORECASE)
+PATRON_CONTRADICCION_NO_RESUELTA = re.compile(r'(?:aunque\s+otro|otro\s+dice|cada\s+uno\s+dice|hay\s+y\s+no\s+hay|pero\s+(?:tambi[eé]n\s+)?dicen)', re.IGNORECASE)
+PATRON_PASADO_VAGO = re.compile(r'^\s*hab[ií]a(?:n)?(?:\s|[.!?,;:]|$)', re.IGNORECASE)
 PATRON_FORMATO1 = re.compile('^\\[(?P<fecha>\\d{1,2}/\\d{1,2}/\\d{2,4}),\\s+(?P<hora>\\d{1,2}:\\d{2}:\\d{2})\\s+(?P<ampm>AM|PM|am|pm)\\]\\s+(?:(?P<autor>[^:]+):\\s*(?P<mensaje>.*)|(?P<sistema>.*))$')
 PATRON_FORMATO2 = re.compile('^(?P<fecha>\\d{1,2}/\\d{1,2}/\\d{2,4}),\\s+(?P<hora>\\d{1,2}:\\d{2})\\s*[-\\u2013\\u2014]\\s+(?:(?P<autor>[^:]+):\\s*(?P<mensaje>.*)|(?P<sistema>.*))$')
 PATRON_FORMATO_ORIG = re.compile('^\\[?(?P<fecha>\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4}),?\\s+(?P<hora>\\d{1,2}:\\d{2}(?::\\d{2})?)(?:\\s*(?P<ampm>[apAP]\\.\\s*m\\.|[apAP]m|AM|PM|am|pm))?\\]?\\s*[-\\u2013\\u2014]\\s+(?:(?P<autor>[^:]+):\\s*(?P<mensaje>.*)|(?P<sistema>.*))$')
@@ -207,39 +212,14 @@ def es_ruido(texto: str) -> bool:
     t = normalizar_linea(texto)
     return bool(PATRON_RUIDO.search(t) or PATRON_SALUDO.match(t))
 
-def _event_from_local(msg: Dict[str, Any], surtidor: str, combustible: str, estado: str) -> Dict[str, Any]:
-    return {'mensaje_id': msg['id'], 'surtidor': surtidor, 'combustible': combustible, 'estado': estado, 'fila': detectar_fila(msg['mensaje']), 'fecha': msg.get('fecha', ''), 'confianza': 96, 'evidencia': sanitizar_texto(msg['mensaje'])[:160], 'origen': 'preclasificador'}
-
 def _discard_local(msg: Dict[str, Any], motivo: str, detalle: str) -> Dict[str, Any]:
     return {'mensaje_id': msg['id'], 'motivo': motivo, 'fecha': msg.get('fecha', ''), 'detalle': detalle[:160], 'origen': 'preclasificador'}
 
 def preclasificar(msg: Dict[str, Any]) -> Dict[str, Any]:
     texto = normalizar_linea(str(msg.get('mensaje', '')))
-    if len(texto) < 4 or es_ruido(texto):
+    if not texto or es_ruido(texto) or not re.search(r'\w', texto, re.UNICODE):
         return {'decision': 'descartar', 'payload': _discard_local(msg, 'NO_RELEVANTE', 'Ruido/saludo/multimedia')}
-    surtidores = detectar_surtidores(texto)
-    combustibles = detectar_combustibles(texto)
-    relevancia_combustible = bool(re.search('\\b(?:gasolina|combustible|di[eé]s?el|diessel|etanol|plus|especial|clarita|blanquita|amarilla)\\b', texto, re.I))
-    if PATRONES_PREGUNTA.search(texto):
-        if surtidores or combustibles or relevancia_combustible:
-            return {'decision': 'descartar', 'payload': _discard_local(msg, 'PREGUNTA', 'Solicitud/pregunta; no confirma estado')}
-        if PATRON_CONTEXTO.search(texto):
-            return {'decision': 'llm', 'razon': 'Pregunta elíptica: requiere contexto inmediato'}
-        return {'decision': 'descartar', 'payload': _discard_local(msg, 'NO_RELEVANTE', 'Pregunta sin relación identificable con combustible/surtidores')}
-    hay = bool(PATRONES_HAY.search(texto))
-    texto_sin_no_hay = re.sub('\\bno\\s+hay\\b', ' ', texto, flags=re.I)
-    if surtidores and re.search('\\bhay\\b', texto_sin_no_hay, re.I):
-        hay = True
-    no_hay = bool(PATRONES_NO_HAY.search(texto))
-    if hay and no_hay:
-        return {'decision': 'llm', 'razon': 'Evidencia contradictoria en el mismo mensaje'}
-    if hay ^ no_hay and len(surtidores) == 1 and (len(combustibles) <= 1):
-        estado = 'HAY' if hay else 'NO_HAY'
-        combustible = combustibles[0] if combustibles else 'NO_ESPECIFICADO'
-        return {'decision': 'resolver', 'payload': _event_from_local(msg, surtidores[0], combustible, estado)}
-    if hay or no_hay or surtidores or combustibles or PATRON_CONTEXTO.search(texto):
-        return {'decision': 'llm', 'razon': 'Requiere contexto o desambiguación semántica'}
-    return {'decision': 'descartar', 'payload': _discard_local(msg, 'NO_RELEVANTE', 'Sin relación identificable con combustible/surtidores')}
+    return {'decision': 'llm', 'razon': 'Mensaje textual pendiente de clasificación semántica'}
 OUTPUT_SCHEMA: Dict[str, Any] = {'type': 'object', 'properties': {'eventos': {'type': 'array', 'items': {'type': 'object', 'properties': {'mensaje_id': {'type': 'string'}, 'surtidor': {'type': 'string', 'enum': CANON_SURTIDORES + ['NO_IDENTIFICADO']}, 'combustible': {'type': 'string', 'enum': CANON_COMBUSTIBLES + ['NO_ESPECIFICADO']}, 'estado': {'type': 'string', 'enum': ['HAY', 'NO_HAY', 'CONTRADICTORIO', 'DESCONOCIDO']}, 'fila': {'type': 'string', 'enum': ['SIN_FILA', 'CORTA', 'MEDIA', 'LARGA', 'DESCONOCIDA']}, 'fecha': {'type': 'string'}, 'confianza': {'type': 'integer', 'minimum': 0, 'maximum': 100}, 'evidencia': {'type': 'string'}}, 'required': ['mensaje_id', 'surtidor', 'combustible', 'estado', 'fila', 'fecha', 'confianza', 'evidencia'], 'additionalProperties': False}}, 'mensajes_descartados': {'type': 'array', 'items': {'type': 'object', 'properties': {'mensaje_id': {'type': 'string'}, 'motivo': {'type': 'string', 'enum': ['PREGUNTA', 'AMBIGUO', 'NO_RELEVANTE']}, 'fecha': {'type': 'string'}, 'detalle': {'type': 'string'}}, 'required': ['mensaje_id', 'motivo', 'fecha', 'detalle'], 'additionalProperties': False}}}, 'required': ['eventos', 'mensajes_descartados'], 'additionalProperties': False}
 
 def _catalogo_para_prompt() -> str:
@@ -439,7 +419,7 @@ def call_gemini(mensajes: List[Dict[str, Any]], model: Optional[str]=None) -> LL
         raise LLMError('Falta GEMINI_API_KEY o GOOGLE_API_KEY')
     model = model or PROVIDERS['gemini']['model']
     user_text = 'Analiza este lote:\n' + json.dumps(mensajes, ensure_ascii=False, separators=(',', ':'))
-    payload = {'systemInstruction': {'parts': [{'text': SYSTEM_PROMPT}]}, 'contents': [{'role': 'user', 'parts': [{'text': user_text}]}], 'generationConfig': {'thinkingConfig': {'thinkingLevel': 'MINIMAL'}, 'responseFormat': {'text': {'mimeType': 'APPLICATION_JSON', 'schema': OUTPUT_SCHEMA}}}}
+    payload = {'systemInstruction': {'parts': [{'text': SYSTEM_PROMPT}]}, 'contents': [{'role': 'user', 'parts': [{'text': user_text}]}], 'generationConfig': {'temperature': 0, 'thinkingConfig': {'thinkingLevel': 'MINIMAL'}, 'responseFormat': {'text': {'mimeType': 'APPLICATION_JSON', 'schema': OUTPUT_SCHEMA}}}}
     url = f'https://generativelanguage.googleapis.com/v1beta/models/{parse.quote(model)}:generateContent'
     t0 = time.perf_counter()
     resp = _post_json(url, {'Content-Type': 'application/json', 'x-goog-api-key': key}, payload)
@@ -494,7 +474,130 @@ def call_llm(provider: str, mensajes: List[Dict[str, Any]], model: Optional[str]
         return call_anthropic(mensajes, model)
     raise LLMError(f'Proveedor no soportado: {provider}')
 
-def validar_salida_llm(data: Dict[str, Any], objetivos: set[str], fechas_esperadas: Optional[Dict[str, str]]=None) -> Dict[str, List[Dict[str, Any]]]:
+def _texto_entrada(item: Dict[str, Any]) -> str:
+    return normalizar_linea(str(item.get('mensaje', item.get('texto', '')) or ''))
+
+def _id_entrada(item: Dict[str, Any]) -> str:
+    return str(item.get('id', item.get('mensaje_id', '')) or '')
+
+def _es_pregunta_semantica(texto: str) -> bool:
+    t = normalizar_linea(texto)
+    return bool('?' in t or PATRONES_PREGUNTA.search(t))
+
+def _ultimo_anterior_util(anteriores: Sequence[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+    for item in reversed(anteriores):
+        t = _texto_entrada(item)
+        if t and not es_ruido(t):
+            return item
+    return None
+
+def _candidatos_contexto(items: Sequence[Dict[str, Any]], detector) -> List[str]:
+    encontrados: List[str] = []
+    for item in items:
+        for valor in detector(_texto_entrada(item)):
+            if valor not in encontrados:
+                encontrados.append(valor)
+    return encontrados
+
+def _separar_contexto_autorizado(mensaje_id: str, contextos_autorizados: Dict[str, Sequence[Dict[str, Any]]]) -> Tuple[Optional[Dict[str, Any]], List[Dict[str, Any]]]:
+    contexto = list(contextos_autorizados.get(mensaje_id, []) or [])
+    for i, item in enumerate(contexto):
+        if _id_entrada(item) == mensaje_id:
+            return item, contexto[:i]
+    return None, []
+
+def _permite_contexto(texto_objetivo: str, anteriores: Sequence[Dict[str, Any]]) -> bool:
+    previo = _ultimo_anterior_util(anteriores)
+    if previo is None:
+        return False
+    if _es_pregunta_semantica(_texto_entrada(previo)):
+        return True
+    return bool(PATRON_CONTEXTO.search(texto_objetivo) or PATRON_AFIRMACION_CONTEXTO.search(texto_objetivo) or PATRON_NEGACION_CONTEXTO.search(texto_objetivo))
+
+def _campo_grounded(valor: str, valor_vacio: str, directos: Sequence[str], anteriores: Sequence[Dict[str, Any]], detector, permite_contexto: bool) -> Tuple[bool, bool]:
+    if valor == valor_vacio:
+        return True, False
+    if valor in directos:
+        return True, False
+    if not permite_contexto:
+        return False, False
+    candidatos = _candidatos_contexto(anteriores, detector)
+    if len(candidatos) == 1 and candidatos[0] == valor:
+        return True, True
+    return False, False
+
+def _estado_grounded(estado: str, texto_objetivo: str, anteriores: Sequence[Dict[str, Any]], surtidor: str, combustible: str, surtidores_directos: Sequence[str], combustibles_directos: Sequence[str], permite_contexto: bool) -> Tuple[bool, bool]:
+    t = normalizar_linea(texto_objetivo)
+    if not t or _es_pregunta_semantica(t):
+        return False, False
+    positivo = bool(PATRONES_EVIDENCIA_HAY.search(t))
+    negativo = bool(PATRONES_EVIDENCIA_NO_HAY.search(t))
+    contradiccion = bool(PATRON_CONTRADICCION_NO_RESUELTA.search(t) or re.search(r'\bhay\s+y\s+no\s+hay\b', t, re.I))
+    incertidumbre = bool(PATRON_INCERTIDUMBRE.search(t))
+    previo = _ultimo_anterior_util(anteriores)
+    previo_texto = _texto_entrada(previo) if previo is not None else ''
+    previo_pregunta = bool(previo_texto and _es_pregunta_semantica(previo_texto))
+    directo_surtidor = surtidor != 'NO_IDENTIFICADO' and surtidor in surtidores_directos
+    directo_combustible = combustible != 'NO_ESPECIFICADO' and combustible in combustibles_directos
+    if estado == 'HAY':
+        if negativo:
+            return False, False
+        if positivo and not incertidumbre:
+            return True, False
+        if PATRON_PASADO_VAGO.search(t):
+            return False, False
+        if directo_surtidor and directo_combustible and not incertidumbre:
+            return True, False
+        if permite_contexto and not incertidumbre and previo_pregunta and (PATRON_AFIRMACION_CONTEXTO.search(t) or directo_surtidor or directo_combustible):
+            return True, True
+        if permite_contexto and not incertidumbre and PATRON_CONTEXTO.search(t) and previo_texto and PATRONES_EVIDENCIA_HAY.search(previo_texto) and not _es_pregunta_semantica(previo_texto):
+            return True, True
+        return False, False
+    if estado == 'NO_HAY':
+        if negativo:
+            if incertidumbre and not contradiccion:
+                return False, False
+            if positivo and contradiccion:
+                return False, False
+            return True, False
+        if permite_contexto and previo_pregunta and PATRON_NEGACION_CONTEXTO.search(t):
+            return True, True
+        return False, False
+    if estado == 'CONTRADICTORIO':
+        if re.search(r'\bhay\s+y\s+no\s+hay\b', t, re.I):
+            return True, False
+        return bool(positivo and negativo and contradiccion), False
+    return False, False
+
+def _validar_evento_grounding(e: Dict[str, Any], contextos_autorizados: Dict[str, Sequence[Dict[str, Any]]]) -> Tuple[bool, str, bool, str]:
+    mid = str(e.get('mensaje_id', ''))
+    objetivo, anteriores = _separar_contexto_autorizado(mid, contextos_autorizados)
+    if objetivo is None:
+        return False, 'Sin mensaje objetivo dentro del contexto autorizado', False, ''
+    texto = _texto_entrada(objetivo)
+    surtidores_directos = detectar_surtidores(texto)
+    combustibles_directos = detectar_combustibles(texto)
+    permite = _permite_contexto(texto, anteriores)
+    ok_surtidor, surtidor_contextual = _campo_grounded(str(e.get('surtidor', '')), 'NO_IDENTIFICADO', surtidores_directos, anteriores, detectar_surtidores, permite)
+    if not ok_surtidor:
+        return False, 'Surtidor sin respaldo en el mensaje o contexto autorizado', False, texto
+    ok_combustible, combustible_contextual = _campo_grounded(str(e.get('combustible', '')), 'NO_ESPECIFICADO', combustibles_directos, anteriores, detectar_combustibles, permite)
+    if not ok_combustible:
+        return False, 'Combustible sin respaldo en el mensaje o contexto autorizado', False, texto
+    ok_estado, estado_contextual = _estado_grounded(str(e.get('estado', '')), texto, anteriores, str(e.get('surtidor', '')), str(e.get('combustible', '')), surtidores_directos, combustibles_directos, permite)
+    if not ok_estado:
+        return False, 'Estado sin evidencia suficiente en el mensaje o contexto autorizado', False, texto
+    return True, '', bool(surtidor_contextual or combustible_contextual or estado_contextual), texto
+
+def _contextos_individuales_desde_payload(payload: Sequence[Dict[str, Any]]) -> Dict[str, List[Dict[str, Any]]]:
+    salida: Dict[str, List[Dict[str, Any]]] = {}
+    for item in payload:
+        mid = _id_entrada(item)
+        if mid:
+            salida[mid] = [item]
+    return salida
+
+def validar_salida_llm(data: Dict[str, Any], objetivos: set[str], fechas_esperadas: Dict[str, str], contextos_autorizados: Dict[str, Sequence[Dict[str, Any]]]) -> Dict[str, List[Dict[str, Any]]]:
     if not isinstance(data, dict):
         raise LLMError('Salida LLM no es objeto JSON')
     eventos = data.get('eventos', [])
@@ -503,49 +606,79 @@ def validar_salida_llm(data: Dict[str, Any], objetivos: set[str], fechas_esperad
         raise LLMError('Salida LLM no cumple arrays esperados')
     clean_events: List[Dict[str, Any]] = []
     clean_discards: List[Dict[str, Any]] = []
-    ids_cubiertos = set()
-    for e in eventos:
-        if not isinstance(e, dict) or e.get('mensaje_id') not in objetivos:
+    valid_event_ids: set[str] = set()
+    invalid_event_reasons: Dict[str, List[str]] = defaultdict(list)
+    firmas = set()
+    for raw in eventos:
+        if not isinstance(raw, dict):
+            continue
+        e = dict(raw)
+        mid = str(e.get('mensaje_id', ''))
+        if mid not in objetivos:
             continue
         if e.get('surtidor') not in CANON_SURTIDORES + ['NO_IDENTIFICADO']:
+            invalid_event_reasons[mid].append('Surtidor fuera del catálogo canónico')
             continue
         if e.get('combustible') not in CANON_COMBUSTIBLES + ['NO_ESPECIFICADO']:
+            invalid_event_reasons[mid].append('Combustible fuera del catálogo canónico')
             continue
         if e.get('estado') not in ('HAY', 'NO_HAY', 'CONTRADICTORIO', 'DESCONOCIDO'):
+            invalid_event_reasons[mid].append('Estado fuera del contrato permitido')
             continue
         if e.get('estado') == 'DESCONOCIDO':
-            mid = e['mensaje_id']
-            clean_discards.append({'mensaje_id': mid, 'motivo': 'AMBIGUO', 'fecha': (fechas_esperadas or {}).get(mid, str(e.get('fecha', ''))), 'detalle': str(e.get('evidencia', ''))[:160] or 'Estado de disponibilidad no determinado', 'origen': 'validador'})
-            ids_cubiertos.add(mid)
+            invalid_event_reasons[mid].append('Estado de disponibilidad no determinado')
             continue
-        if e.get('fila') not in ('SIN_FILA', 'CORTA', 'MEDIA', 'LARGA', 'DESCONOCIDA'):
-            e['fila'] = 'DESCONOCIDA'
-        e['confianza'] = max(0, min(100, int(e.get('confianza', 0) or 0)))
+        grounded, reason, contextual, texto_objetivo = _validar_evento_grounding(e, contextos_autorizados)
+        if not grounded:
+            invalid_event_reasons[mid].append(reason)
+            continue
+        fila = str(e.get('fila', 'DESCONOCIDA'))
+        if fila not in ('SIN_FILA', 'CORTA', 'MEDIA', 'LARGA', 'DESCONOCIDA'):
+            fila = 'DESCONOCIDA'
+        fila_directa = detectar_fila(texto_objetivo)
+        if fila != 'DESCONOCIDA' and fila != fila_directa:
+            fila = 'DESCONOCIDA'
+        e['fila'] = fila
+        try:
+            confianza = int(e.get('confianza', 0) or 0)
+        except (TypeError, ValueError):
+            confianza = 0
+        confianza = max(0, min(100, confianza))
+        if contextual:
+            confianza = min(confianza, 85)
+        e['confianza'] = confianza
         e['evidencia'] = str(e.get('evidencia', ''))[:160]
-        if fechas_esperadas and e['mensaje_id'] in fechas_esperadas:
-            e['fecha'] = fechas_esperadas[e['mensaje_id']]
+        e['fecha'] = fechas_esperadas.get(mid, '')
         e['origen'] = 'llm'
-        firma = (e.get('mensaje_id'), e.get('surtidor'), e.get('combustible'), e.get('estado'), e.get('fila'))
-        if not any(((x.get('mensaje_id'), x.get('surtidor'), x.get('combustible'), x.get('estado'), x.get('fila')) == firma for x in clean_events)):
+        firma = (mid, e.get('surtidor'), e.get('combustible'), e.get('estado'), e.get('fila'))
+        if firma not in firmas:
+            firmas.add(firma)
             clean_events.append(e)
-        ids_cubiertos.add(e['mensaje_id'])
-    for d in descartados:
-        if not isinstance(d, dict) or d.get('mensaje_id') not in objetivos:
+        valid_event_ids.add(mid)
+    ids_cubiertos = set(valid_event_ids)
+    for mid in sorted(invalid_event_reasons):
+        if mid in valid_event_ids:
             continue
-        if d.get('mensaje_id') in ids_cubiertos:
+        detalle = '; '.join(dict.fromkeys(invalid_event_reasons[mid]))[:160]
+        clean_discards.append({'mensaje_id': mid, 'motivo': 'AMBIGUO', 'fecha': fechas_esperadas.get(mid, ''), 'detalle': detalle or 'Evento rechazado por validación determinista', 'origen': 'validador'})
+        ids_cubiertos.add(mid)
+    for raw in descartados:
+        if not isinstance(raw, dict):
+            continue
+        d = dict(raw)
+        mid = str(d.get('mensaje_id', ''))
+        if mid not in objetivos or mid in ids_cubiertos:
             continue
         if d.get('motivo') not in ('PREGUNTA', 'AMBIGUO', 'NO_RELEVANTE'):
             continue
         d['detalle'] = str(d.get('detalle', ''))[:160]
-        if fechas_esperadas and d['mensaje_id'] in fechas_esperadas:
-            d['fecha'] = fechas_esperadas[d['mensaje_id']]
+        d['fecha'] = fechas_esperadas.get(mid, '')
         d['origen'] = 'llm'
         clean_discards.append(d)
-        ids_cubiertos.add(d['mensaje_id'])
+        ids_cubiertos.add(mid)
     for mid in sorted(objetivos - ids_cubiertos):
-        clean_discards.append({'mensaje_id': mid, 'motivo': 'AMBIGUO', 'fecha': (fechas_esperadas or {}).get(mid, ''), 'detalle': 'LLM no devolvió clasificación válida para este ID', 'origen': 'validador'})
+        clean_discards.append({'mensaje_id': mid, 'motivo': 'AMBIGUO', 'fecha': fechas_esperadas.get(mid, ''), 'detalle': 'LLM no devolvió clasificación válida para este ID', 'origen': 'validador'})
     return {'eventos': clean_events, 'mensajes_descartados': clean_discards}
-
 def _floor_window(dt: datetime, minutes: int=INTERVALO_MINUTOS) -> datetime:
     minute = dt.minute // minutes * minutes
     return dt.replace(minute=minute, second=0, microsecond=0)
@@ -738,11 +871,7 @@ def analizar_chats(paths: Sequence[Path], provider: str, model: Optional[str], o
         local_discards = 0
         for msg in batch:
             pre = preclasificar(msg)
-            if pre['decision'] == 'resolver':
-                rec_eventos.append(pre['payload'])
-                local_events += 1
-                local_total += 1
-            elif pre['decision'] == 'descartar':
+            if pre['decision'] == 'descartar':
                 rec_descartados.append(pre['payload'])
                 local_discards += 1
                 local_total += 1
@@ -796,11 +925,12 @@ def analizar_chats(paths: Sequence[Path], provider: str, model: Optional[str], o
             for plan in pending_llm:
                 by_id = {m['id']: m for m in plan['batch']}
                 for mid in sorted(plan['objetivos']):
-                    plan['descartados'].append(_discard_local(by_id[mid], 'AMBIGUO', 'Caso derivado a LLM; provider=rules no ejecuta API'))
+                    plan['descartados'].append({'mensaje_id': mid, 'motivo': 'AMBIGUO', 'fecha': by_id[mid].get('fecha', ''), 'detalle': 'Caso derivado a LLM; provider=rules no ejecuta API', 'origen': 'sin_llm'})
                 persist_plan(plan, True, {})
         else:
             all_obj: set[str] = set()
             expected_dates: Dict[str, str] = {}
+            contextos_autorizados: Dict[str, List[Dict[str, Any]]] = {}
             combined_payload: List[Dict[str, Any]] = []
             id_to_plan: Dict[str, Dict[str, Any]] = {}
             for plan in pending_llm:
@@ -815,12 +945,13 @@ def analizar_chats(paths: Sequence[Path], provider: str, model: Optional[str], o
                     if m['id'] in objetivos:
                         all_obj.add(m['id'])
                         expected_dates[m['id']] = m.get('fecha', '')
+                        contextos_autorizados[m['id']] = contexto_para_objetivos(plan['batch'], {m['id']}, vecinos=1)
                         id_to_plan[m['id']] = plan
             if show_progress:
                 print(f'[API] lote único | objetivos={len(all_obj)} | ventanas={len(pending_llm)} | provider={provider} ...', flush=True)
             try:
                 result = call_llm(provider, combined_payload, model=model)
-                valid = validar_salida_llm(result.data, all_obj, expected_dates)
+                valid = validar_salida_llm(result.data, all_obj, expected_dates, contextos_autorizados)
                 for e in valid['eventos']:
                     plan = id_to_plan.get(e.get('mensaje_id'))
                     if plan is not None:
@@ -861,7 +992,7 @@ TEST_SET: List[Dict[str, Any]] = [{'id': 'T001', 'texto': 'Don Daniel tiene clar
 
 def _test_messages(casos: Sequence[Dict[str, Any]]) -> List[Dict[str, Any]]:
     base = datetime(2026, 9, 25, 8, 0)
-    return [{'id': c['id'], 'fecha': (base + timedelta(seconds=i)).isoformat(), 'usuario': f'u_test_{i % 4}', 'analizar': True, 'texto': c['texto']} for i, c in enumerate(casos)]
+    return [{'id': c['id'], 'fecha': (base + timedelta(seconds=i)).isoformat(), 'usuario': f'u_test_{i % 4}', 'analizar': True, 'ventana': f'test:{c["id"]}', 'texto': c['texto']} for i, c in enumerate(casos)]
 
 def _label_from_output(data: Dict[str, Any], test_id: str) -> Tuple[str, Optional[Dict[str, Any]]]:
     for e in data.get('eventos', []) or []:
@@ -892,8 +1023,6 @@ def _test_case_message(c: Dict[str, Any], index: int=0) -> Dict[str, Any]:
 
 def _prediction_from_preclassifier(c: Dict[str, Any], index: int) -> Tuple[str, Optional[Dict[str, Any]], str]:
     pre = preclasificar(_test_case_message(c, index))
-    if pre['decision'] == 'resolver':
-        return (str(pre['payload'].get('estado', 'DESCONOCIDO')), pre['payload'], 'local')
     if pre['decision'] == 'descartar':
         return (str(pre['payload'].get('motivo', 'AMBIGUO')), pre['payload'], 'local')
     return ('DERIVAR_LLM', None, 'llm')
@@ -937,7 +1066,7 @@ def benchmark_provider_direct(provider: str, batch_size: int=10, model: Optional
             traces.extend(result.request_trace or [])
             objetivos = {c['id'] for c in chunk_cases}
             fechas_esperadas = {m['id']: m.get('fecha', '') for m in payload}
-            valid = validar_salida_llm(result.data, objetivos, fechas_esperadas)
+            valid = validar_salida_llm(result.data, objetivos, fechas_esperadas, _contextos_individuales_desde_payload(payload))
             calls += 1
             input_tokens += result.input_tokens
             output_tokens += result.output_tokens
@@ -999,7 +1128,7 @@ def benchmark_provider_hybrid(provider: str, model: Optional[str]=None) -> Dict[
             attempt_latencies.extend((float(t.get('latency_ms', 0) or 0) for t in case_trace))
             objetivos = {c['id']}
             fechas_esperadas = {m['id']: m.get('fecha', '') for m in payload}
-            valid = validar_salida_llm(result.data, objetivos, fechas_esperadas)
+            valid = validar_salida_llm(result.data, objetivos, fechas_esperadas, _contextos_individuales_desde_payload(payload))
             label, obj = _label_from_output(valid, c['id'])
             predicted[c['id']] = {'label': label, 'obj': obj, 'origen': 'llm'}
             calls += 1
@@ -1172,7 +1301,7 @@ def ejecutar_smoke_gemini(model: Optional[str]=None) -> Dict[str, Any]:
     result = call_gemini(payload, model=model)
     objetivos = {c['id'] for c in cases}
     fechas = {x['id']: x['fecha'] for x in payload}
-    valid = validar_salida_llm(result.data, objetivos, fechas)
+    valid = validar_salida_llm(result.data, objetivos, fechas, _contextos_individuales_desde_payload(payload))
     detalle = []
     aciertos = 0
     for c in cases:
@@ -1193,6 +1322,62 @@ def cmd_smoke_gemini(args: argparse.Namespace) -> int:
         return 1
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report['status'] == 'OK' else 1
+
+def ejecutar_selftest_validador() -> Dict[str, Any]:
+    pruebas: List[Dict[str, Any]] = []
+
+    def registrar(nombre: str, ok: bool, detalle: str='') -> None:
+        pruebas.append({'prueba': nombre, 'ok': bool(ok), 'detalle': detalle})
+
+    base_msg = {'id': 'V001', 'archivo': 'test', 'fecha': '2026-09-25T08:00:00-04:00', 'datetime': datetime(2026, 9, 25, 8, 0), 'autor': 'test', 'mensaje': 'Don Daniel tiene clarita sin fila'}
+    registrar('preclasificador_no_decide_disponibilidad', preclasificar(base_msg).get('decision') == 'llm')
+
+    fechas = {'V001': base_msg['fecha']}
+    ctx = {'V001': [base_msg]}
+    wrong_station = {'eventos': [{'mensaje_id': 'V001', 'surtidor': 'Las Vegas', 'combustible': 'Gasolina Especial', 'estado': 'HAY', 'fila': 'SIN_FILA', 'fecha': '2099-01-01', 'confianza': 100, 'evidencia': 'x'}], 'mensajes_descartados': []}
+    r = validar_salida_llm(wrong_station, {'V001'}, fechas, ctx)
+    registrar('rechaza_surtidor_canonico_no_respaldado', len(r['eventos']) == 0 and any(d.get('origen') == 'validador' for d in r['mensajes_descartados']))
+
+    wrong_fuel = {'eventos': [{'mensaje_id': 'V001', 'surtidor': 'Don Daniel', 'combustible': 'Gasolina Plus', 'estado': 'HAY', 'fila': 'SIN_FILA', 'fecha': '2099-01-01', 'confianza': 100, 'evidencia': 'x'}], 'mensajes_descartados': []}
+    r = validar_salida_llm(wrong_fuel, {'V001'}, fechas, ctx)
+    registrar('rechaza_combustible_canonico_no_respaldado', len(r['eventos']) == 0 and any(d.get('origen') == 'validador' for d in r['mensajes_descartados']))
+
+    cross_mid = 'V002'
+    cross_msg = {'id': cross_mid, 'mensaje': 'Si es la especial', 'fecha': '2026-09-19T17:24:00-04:00'}
+    cross_ctx = {cross_mid: [cross_msg, {'id': 'V003', 'mensaje': 'Muchas gracias', 'fecha': '2026-09-19T17:24:10-04:00'}]}
+    cross_data = {'eventos': [{'mensaje_id': cross_mid, 'surtidor': 'Tacuarandi', 'combustible': 'Gasolina Especial', 'estado': 'HAY', 'fila': 'DESCONOCIDA', 'fecha': '2099-01-01', 'confianza': 95, 'evidencia': 'x'}], 'mensajes_descartados': []}
+    r = validar_salida_llm(cross_data, {cross_mid}, {cross_mid: cross_msg['fecha']}, cross_ctx)
+    registrar('rechaza_contexto_fuera_de_ventana', len(r['eventos']) == 0 and any('Surtidor sin respaldo' in d.get('detalle', '') for d in r['mensajes_descartados']))
+
+    past_mid = 'V004'
+    past_q = {'id': 'V003A', 'mensaje': 'Siguen teniendo gasolina Agrupa o Don Daniel?', 'fecha': '2026-09-19T15:57:00-04:00'}
+    past_msg = {'id': past_mid, 'mensaje': 'Había.....', 'fecha': '2026-09-19T15:57:10-04:00'}
+    past_data = {'eventos': [{'mensaje_id': past_mid, 'surtidor': 'NO_IDENTIFICADO', 'combustible': 'NO_ESPECIFICADO', 'estado': 'NO_HAY', 'fila': 'DESCONOCIDA', 'fecha': '2099-01-01', 'confianza': 85, 'evidencia': 'x'}], 'mensajes_descartados': []}
+    r = validar_salida_llm(past_data, {past_mid}, {past_mid: past_msg['fecha']}, {past_mid: [past_q, past_msg]})
+    registrar('rechaza_estado_no_hay_sin_evidencia', len(r['eventos']) == 0 and any('Estado sin evidencia suficiente' in d.get('detalle', '') for d in r['mensajes_descartados']))
+
+    ok_mid = 'V005'
+    ok_q = {'id': 'V004A', 'mensaje': 'Hay gasolina especial en Tacuarandi?', 'fecha': '2026-09-25T08:01:00-04:00'}
+    ok_msg = {'id': ok_mid, 'mensaje': 'Sí', 'fecha': '2026-09-25T08:01:10-04:00'}
+    ok_data = {'eventos': [{'mensaje_id': ok_mid, 'surtidor': 'Tacuarandi', 'combustible': 'Gasolina Especial', 'estado': 'HAY', 'fila': 'DESCONOCIDA', 'fecha': '2099-01-01', 'confianza': 99, 'evidencia': 'x'}], 'mensajes_descartados': []}
+    r = validar_salida_llm(ok_data, {ok_mid}, {ok_mid: ok_msg['fecha']}, {ok_mid: [ok_q, ok_msg]})
+    ok_event = r['eventos'][0] if r['eventos'] else {}
+    registrar('acepta_contexto_valido_misma_ventana', len(r['eventos']) == 1 and ok_event.get('confianza') == 85)
+
+    date_data = {'eventos': [{'mensaje_id': 'V001', 'surtidor': 'Don Daniel', 'combustible': 'Gasolina Especial', 'estado': 'HAY', 'fila': 'LARGA', 'fecha': '2099-01-01T00:00:00Z', 'confianza': 100, 'evidencia': 'x'}], 'mensajes_descartados': []}
+    r = validar_salida_llm(date_data, {'V001'}, fechas, ctx)
+    date_event = r['eventos'][0] if r['eventos'] else {}
+    registrar('restaura_fecha_original', date_event.get('fecha') == base_msg['fecha'])
+    registrar('rechaza_fila_no_respaldada', date_event.get('fila') == 'DESCONOCIDA')
+
+    total = len(pruebas)
+    pass_count = sum(1 for x in pruebas if x['ok'])
+    return {'status': 'PASS' if pass_count == total else 'FAIL', 'pruebas': total, 'pass': pass_count, 'fail': total - pass_count, 'detalle': pruebas}
+
+def cmd_selftest_validator(args: argparse.Namespace) -> int:
+    result = ejecutar_selftest_validador()
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0 if result['status'] == 'PASS' else 1
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description='HU-08/CU-06 - analizador híbrido de chats exportados de WhatsApp')
@@ -1226,6 +1411,8 @@ def build_parser() -> argparse.ArgumentParser:
     g = sub.add_parser('smoke-gemini', help='Prueba LIVE de Gemini con 5 mensajes sintéticos; no envía chats reales')
     g.add_argument('--model', default=None, help='Sobrescribe el modelo Gemini')
     g.set_defaults(func=cmd_smoke_gemini)
+    v = sub.add_parser('selftest-validator', help='Ejecuta pruebas deterministas del filtro y validador sin usar API')
+    v.set_defaults(func=cmd_selftest_validator)
     return p
 
 def main() -> int:
@@ -1234,3 +1421,4 @@ def main() -> int:
     return int(args.func(args))
 if __name__ == '__main__':
     raise SystemExit(main())
+

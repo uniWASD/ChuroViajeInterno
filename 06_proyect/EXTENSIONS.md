@@ -17,13 +17,10 @@ esc	Toggle sidebar TOC
 
 PlantUML (jebbs)
 
-
 Instalacion
 1. Instalar la extension: Ctrl+Shift+X, buscar "PlantUML" (autor: jebbs) e instalar.
 2. Instalar Java JDK 11 o superior (ej. https://adoptium.net).
    Verificar en PowerShell: java -version
-3. (Solo si sale error de "dot" o Graphviz) winget install Graphviz.Graphviz
-
 
 Shortcuts	Functionality
 alt-d	                        Preview del diagrama (con el .puml abierto)

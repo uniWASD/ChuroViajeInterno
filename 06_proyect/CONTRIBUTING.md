@@ -26,11 +26,11 @@ Cada quien coloca sus artefactos en la carpeta que corresponda a su naturaleza, 
 
 Todo en el proyecto se puede rastrear con esta cadena:
 
-**Documento de Visión (RQ-XX) → Caso de Uso (CU-XX) → Historia de Usuario (HU-XX) → Tarea (T-XX) → Caso de Prueba (CP-XX)**
+**Requisito (RF-XX / RNF-XX) → Caso de Uso (CU-XX) → Historia de Usuario (HU-XX) → Tarea (T-XX) → Caso de Prueba (CP-XX)**
 
 | Artefacto | Prefijo | Ejemplo | Dónde vive |
 |---|---|---|---|
-| Requisito de Visión | RQ-XX | RQ-05 | Documento de Visión |
+| Requisito | RF-XX / RNF-XX | RF-05 | Matriz de requisitos (`02_req/pdf/matriz_de_requisitos_churoviaje.md`) |
 | Caso de uso | CU-XX | CU-04 | Documento de Casos de Uso (CU-01 a CU-08) |
 | Historia de usuario | HU-XX | HU-12 | Issue de GitHub |
 | Tarea de desarrollo | T-XX | T-034 | Checklist dentro del Issue de la HU |
@@ -108,7 +108,7 @@ Y esta plantilla en el cuerpo:
 - [ ] T-XXX ...
 - [ ] T-XXX ...
 
-**Relacionado:** Vision RQ-XX · CU-XX
+**Relacionado:** RF-XX · CU-XX
 ```
 
 Etiqueta el Issue con `caso-uso:CU-XX` y `tipo:historia-usuario`, y asígnalo al Milestone del sprint actual.
@@ -158,9 +158,9 @@ Closes #48
 
 Archivo: `06_proyect/TRAZABILIDAD.md`. Se actualiza cada vez que se cierra una historia de usuario, agregando o completando su fila:
 
-| RQ (Visión) | CU | HU | Issue | Rama | Casos de prueba | Estado |
+| RF / RNF | CU | HU | Issue | Rama | Casos de prueba | Estado |
 |---|---|---|---|---|---|---|
-| RQ-05 | CU-04 | HU-12 | #48 | feature/HU12-CU04-recalculo-congestion | CP-09, CP-10 | En progreso |
+| RF-06 | CU-04 | HU-12 | #48 | feature/HU12-CU04-recalculo-congestion | CP-09, CP-10 | En progreso |
 
 ---
 

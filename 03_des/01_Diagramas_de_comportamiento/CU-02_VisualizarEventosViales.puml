@@ -2,6 +2,7 @@
 ' CU-02: Visualizar Eventos Viales - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
 ' Issue: T-045
+' Revisión de coherencia (06/10/2026): consulta cada 5 s, detalle del evento al tocarlo y voto real/falso (5a).
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -66,10 +67,34 @@ eventos";
   |Conductor|
   :Se desplaza o hace
 zoom en el mapa;
+  :Toca un evento
+del mapa;
+  |Sistema ChuroViaje|
+  :Muestra su tipo y
+hace cuánto
+ocurrió;
+  |Conductor|
+  if (¿Vota en la lista\nde eventos?) then (sí [5a])
+    |Backend Java|
+    #FFF8E1:[5a] Registra el
+voto "real" o
+"falso" (uno por
+conductor y
+evento);
+    #FFF8E1:[5a] Retira el
+evento si acumula
+los votos "falso"
+definidos, o lo
+marca como
+confirmado si
+recibe votos
+"real";
+  else (no)
+  endif
   |Sistema ChuroViaje|
   :Espera el
-intervalo de
-actualización;
+intervalo de 5
+segundos;
 repeat while (¿El mapa sigue\nabierto?) is (sí)
 ->no;
 stop

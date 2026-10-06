@@ -2,6 +2,7 @@
 ' CU-08: Iniciar Sesión
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
 ' Issue: T-029 (#8)
+' Revisión de coherencia (06/10/2026): la sesión es obligatoria para toda la app.
 
 left to right direction
 skinparam shadowing false
@@ -49,5 +50,10 @@ Conductor -[hidden]-> CU01
 CU01 ..> CU08 : <<include>>
 CU08 --> Google
 CU08 --> Backend
+
+legend bottom
+  La sesión es obligatoria para usar la app: es precondición de CU-01 a CU-05.
+  CU-01 incluye CU-08 cuando el token expira al enviar un reporte.
+endlegend
 
 @enduml

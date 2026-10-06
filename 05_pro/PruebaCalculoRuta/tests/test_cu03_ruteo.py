@@ -23,8 +23,8 @@ from redes_de_prueba import (construir_red_grande, construir_red_irregular,
 # CU-03, requisitos especiales: el cálculo debe completarse en menos de 3 s.
 TIEMPO_MAXIMO_SEGUNDOS = 3.0
 
-# Tamaño de la red para CP-13. PROVISIONAL: el equipo debe fijar el tamaño
-# definitivo (por ejemplo, el número de intersecciones de la mancha urbana).
+# Tamaño de la red para CP-13: 100 × 100 = 10 000 intersecciones, el tamaño
+# fijado en la issue #29.
 FILAS_RED_GRANDE = 100
 COLUMNAS_RED_GRANDE = 100
 CONSULTAS_RENDIMIENTO = 20

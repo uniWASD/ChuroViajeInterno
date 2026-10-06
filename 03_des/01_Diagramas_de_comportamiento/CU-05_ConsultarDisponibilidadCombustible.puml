@@ -2,6 +2,7 @@
 ' CU-05: Consultar Disponibilidad de Combustible - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
 ' Issue: T-045
+' Revisión de coherencia (06/10/2026): sin API oficial; dato más reciente por tipo de combustible y confirmación de recarga con tipo (4a).
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -41,21 +42,20 @@ backend los
 surtidores
 cercanos;
 |Backend Java|
-if (¿La API oficial\nestá disponible?) then (sí)
-  :Usa el dato de la
-API oficial;
-else (no [2a])
-  #FFF8E1:[2a] Usa la
-información de los
-grupos de WhatsApp
-monitoreados
-(CU-06);
-endif
+:Responde con el
+dato más reciente
+de cada surtidor y
+tipo de combustible
+(WhatsApp o
+Conductores);
 |Sistema ChuroViaje|
-if (¿Hay algún dato\npara el\nsurtidor?) then (sí)
+if (¿Hay un dato\nvigente para el\nsurtidor?) then (sí)
   :Muestra el estado
-del surtidor y el
-origen del dato;
+por tipo de
+combustible, la
+fila si se conoce,
+el origen y la
+fecha del dato;
 else (no [3a])
   #FFF8E1:[3a] Lo muestra
 como "sin
@@ -65,6 +65,26 @@ endif
 |Conductor|
 :Revisa el listado
 o el mapa;
+if (¿Responde "Sí" a\n"¿Acabas de recargar\ncombustible?"?) then (sí [4a])
+  |Sistema ChuroViaje|
+  #FFF8E1:[4a] Pregunta el
+tipo de combustible
+(Gasolina, Diesel,
+Gasolina Premium o
+Diesel ULS);
+  |Conductor|
+  #FFF8E1:[4a] Elige el tipo
+de combustible;
+  |Backend Java|
+  #FFF8E1:[4a] Marca ese
+combustible como
+disponible en el
+surtidor, con
+origen
+"Conductores";
+else (no)
+endif
+|Conductor|
 stop
 
 legend bottom

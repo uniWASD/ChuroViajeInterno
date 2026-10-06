@@ -2,6 +2,7 @@
 ' CU-01: Reportar Evento Vial - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
 ' Issue: T-045
+' Revisión de coherencia (06/10/2026): modal con tipo y tiempo, descarte del reporte vencido y propagación por consulta periódica.
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -35,11 +36,15 @@ start
 presiona "Reportar
 evento";
 |Sistema ChuroViaje|
-:Muestra la lista
-de tipos de evento;
+:Muestra el modal con
+los tipos de evento y
+el tiempo ("Hace 5
+minutos" por defecto);
 |Conductor|
 :Selecciona el tipo
-de evento;
+de evento y, si hace
+falta, cambia el
+tiempo;
 |Sistema ChuroViaje|
 :Captura la
 ubicación GPS
@@ -57,14 +62,23 @@ envío
 automáticamente al
 recuperar la
 conexión;
-  #FFF8E1:[3a] Notifica al
+  if (¿El reporte\nsigue vigente?) then (sí)
+    #FFF8E1:[3a] Notifica al
 conductor el
 estado del envío;
+  else (no)
+    #FFF8E1:[3a] Descarta el
+reporte y avisa al
+conductor;
+    stop
+  endif
 endif
 repeat
   |Sistema ChuroViaje|
   :Envía el reporte
-al backend;
+al backend (tipo,
+momento y
+ubicación);
   |Backend Java|
   :Verifica el token
 de sesión;
@@ -81,10 +95,11 @@ el evento;
 :Confirma el
 registro al
 conductor;
-|Módulo de distribución|
-:Propaga el evento
-a los demás
-usuarios;
+|Demás conductores|
+:Reciben el evento
+en su siguiente
+consulta periódica
+(CU-02);
 :El evento aparece
 en su mapa en 5-10
 s;

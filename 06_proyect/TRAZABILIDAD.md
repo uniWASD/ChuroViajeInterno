@@ -16,3 +16,6 @@
 | RF-08 · RF-09 · RNF-04 · RNF-11 | CU-06 | HU-08 | #10 | feature/HU08-CU06-AnalisisLLM | — | En progreso |
 | RF-10 · RNF-12 | CU-07 | HU-09 | — | — | — | Pendiente |
 | RF-11 · RNF-05 · RNF-08 | CU-08 | HU-10 | — | — | — | Pendiente |
+| RF-12 · RNF-09 | CU-02 | HU-11 | — | — | — | Pendiente |
+| RF-13 · RNF-07 · RNF-09 | CU-05 | HU-12 | — | — | — | Pendiente |
+| RF-14 · RNF-13 | CU-04 | HU-13 | — | — | — | Pendiente |

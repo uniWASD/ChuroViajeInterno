@@ -2,6 +2,7 @@
 ' CU-06: Monitorear Estado de Surtidores vía WhatsApp - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
 ' Issue: T-045
+' Revisión de coherencia (06/10/2026): el análisis corre en el servicio de WhatsApp/LLM; tipo de combustible obligatorio y fila opcional.
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -30,7 +31,7 @@ skinparam legend {
 title CU-06: Monitorear Estado de Surtidores vía WhatsApp\nDiagrama de actividad
 
 |Grupos de WhatsApp|
-|Servicio de extracción\n(Node.js + Baileys)|
+|Servicio de WhatsApp/LLM\n(Node.js + Baileys)|
 start
 repeat
   :Monitorea los
@@ -53,13 +54,12 @@ repeat while
 |Grupos de WhatsApp|
 :Llega un mensaje
 de texto nuevo;
-|Servicio de extracción\n(Node.js + Baileys)|
+|Servicio de WhatsApp/LLM\n(Node.js + Baileys)|
 :Guarda el mensaje
 como pendiente,
 sin número ni
 nombre del
 remitente;
-|Backend Java\n(proceso de análisis)|
 :Se cumple el ciclo
 de 5 minutos;
 if (¿Hay mensajes\npendientes?) then (sí)
@@ -70,14 +70,20 @@ mensajes al LLM;
     :Identifica en cada
 mensaje el
 surtidor, el tipo
-de combustible y
-el estado;
+de combustible
+("Desconocido" si
+no se indica), el
+estado y, si se
+menciona, la fila;
     #FFF8E1:[3a] Descarta
 preguntas,
 mensajes ambiguos
 o sin surtidor
 identificable;
-    |Backend Java\n(proceso de análisis)|
+    |Servicio de WhatsApp/LLM\n(Node.js + Baileys)|
+    :Envía el resultado
+al backend Java;
+    |Backend Java|
     :Valida cada
 resultado contra
 el catálogo de
@@ -92,17 +98,19 @@ resultado sin
 actualizar ningún
 estado;
     endif
+    |Servicio de WhatsApp/LLM\n(Node.js + Baileys)|
     :Elimina el texto
 de los mensajes y
 los marca como
 procesados;
+    |Backend Java|
     :El estado queda
 disponible para
 las consultas
 (CU-05);
     stop
   else (no [3c])
-    |Backend Java\n(proceso de análisis)|
+    |Servicio de WhatsApp/LLM\n(Node.js + Baileys)|
     #FFF8E1:[3c] Los mensajes
 siguen pendientes
 para el siguiente
@@ -110,7 +118,7 @@ ciclo;
     #FFF8E1:[3c] Descarta los
 que superan el
 tiempo máximo de
-vigencia;
+vigencia (30 minutos);
     stop
   endif
 else (no [3b])

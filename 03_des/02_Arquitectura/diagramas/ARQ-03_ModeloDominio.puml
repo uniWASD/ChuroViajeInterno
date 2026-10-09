@@ -1,0 +1,82 @@
+@startuml ARQ-03_ModeloDominio
+' ARQ-03: Modelo de dominio de ChuroViaje (19 objetos en 6 áreas)
+' Fuente: Documento de Arquitectura de Software, sección 5 (06/10/2026)
+' Además de los vínculos del dibujo del documento, incluye los que describen
+' las tablas de la sección 5 (tipo y ubicación del evento, surtidor y tipo del estado, conductor de la sesión).
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam backgroundColor transparent
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor white
+skinparam classBackgroundColor white
+hide empty members
+hide circle
+
+title EventoVial y EstadoCombustible concentran las reglas
+caption La flecha va del objeto que actúa al que recibe el efecto.
+
+package "Acceso" {
+  class "Sesión" as Sesion
+  class Conductor
+}
+
+package "Pruebas de carga" {
+  class UsuarioFantasma
+  class "Simulación" as Simulacion
+}
+
+package "Eventos viales" {
+  class TipoEvento
+  class "Ubicación" as Ubicacion
+  class Voto
+  class EventoVial <<concentra reglas>>
+}
+
+package "Rutas y tráfico" {
+  class "LecturaTelemetría" as LecturaTelemetria
+  class RedVial
+  class Tramo
+  class Ruta
+  class Parada
+}
+
+package "Combustible" {
+  class TipoCombustible
+  class Surtidor
+  class "ConfirmaciónRecarga" as ConfirmacionRecarga
+  class EstadoCombustible <<concentra reglas>>
+}
+
+package "WhatsApp" {
+  class "ResultadoAnálisis" as ResultadoAnalisis
+  class MensajePendiente
+}
+
+' Vínculos que muestra el dibujo del documento
+Conductor --> Voto : vota
+Conductor --> EventoVial : reporta
+UsuarioFantasma --|> Conductor : es un
+Simulacion --> UsuarioFantasma : crea
+Voto --> EventoVial : sobre
+LecturaTelemetria --> EventoVial : genera
+EventoVial --> Tramo : encarece
+RedVial *-- Tramo : contiene
+Ruta --> Tramo : recorre
+Ruta *-- Parada : tiene
+ConfirmacionRecarga --> EstadoCombustible : actualiza
+ResultadoAnalisis --> EstadoCombustible : actualiza
+MensajePendiente --> ResultadoAnalisis : se analiza en
+
+' Vínculos que describen las tablas de la sección 5
+Sesion --> Conductor : pertenece a
+EventoVial --> TipoEvento : es de un
+EventoVial --> Ubicacion : ocurre en
+EstadoCombustible --> Surtidor : de un
+EstadoCombustible --> TipoCombustible : de un
+
+@enduml

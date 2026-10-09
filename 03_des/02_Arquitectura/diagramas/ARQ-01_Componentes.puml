@@ -1,0 +1,48 @@
+@startuml ARQ-01_Componentes
+' ARQ-01: Componentes, despliegue y comunicación de ChuroViaje
+' Fuente: Documento de Arquitectura de Software, sección 3 (06/10/2026)
+' Decisiones: D-03 (el backend es la única puerta de entrada), D-08 (Mapbox solo da el mapa base de la app)
+
+left to right direction
+skinparam monochrome true
+skinparam shadowing false
+skinparam backgroundColor transparent
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam componentStyle rectangle
+skinparam componentBackgroundColor white
+skinparam nodeBackgroundColor white
+skinparam databaseBackgroundColor white
+skinparam cloudBackgroundColor white
+
+title Todo entra por el backend; solo él llega al motor core y a los datos
+
+component "Simulador\n(Python)\nusuarios fantasma, misma API" as sim
+component "App móvil\n(Flutter)\nlas vistas y la sesión con Google" as app
+
+node "Un solo VPS" {
+  component "Backend de gestión\n(Java, Spring Boot)\ncontroladores REST,\nobjetos de dominio y sus reglas" as backend <<puerta de entrada>>
+  component "Motor core\n(C++)\nred vial, rutas y tráfico" as motor
+  database "Base de datos\n(PostgreSQL con PostGIS)" as bd
+  component "Servicio de WhatsApp/LLM\n(Node.js, Baileys)\nlee los grupos y analiza\npor lotes cada 5 minutos" as wa
+}
+
+cloud "Google Sign-In\nverifica la identidad" as google
+cloud "Mapbox\nmapa base de la app" as mapbox
+cloud "Proveedor del LLM\ninterpreta los mensajes" as llm
+cloud "Grupos de WhatsApp\nmonitoreados" as grupos
+
+sim --> backend : HTTPS y JWT
+app --> backend : HTTPS y JWT
+app --> google : token de identidad
+app --> mapbox : mapa base
+backend --> google : valida el token
+backend --> motor : HTTP local (JSON)
+backend --> bd
+wa --> backend : resultado del análisis\n(HTTP local)
+wa --> llm : texto y fecha (HTTPS)
+wa --> grupos : solo lectura
+
+@enduml

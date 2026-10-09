@@ -1,0 +1,44 @@
+@startuml ARQ-02_CapasMVC
+' ARQ-02: Aplicación de MVC en ChuroViaje
+' Fuente: Documento de Arquitectura de Software, sección 4 (06/10/2026)
+' Decisión: D-01 (un solo MVC para todo el sistema; las reglas viven solo en el modelo)
+
+skinparam monochrome true
+skinparam shadowing false
+skinparam backgroundColor transparent
+skinparam defaultFontName Arial
+skinparam defaultFontSize 13
+skinparam defaultFontColor black
+skinparam ArrowColor black
+skinparam packageStyle rectangle
+skinparam packageBackgroundColor white
+skinparam componentStyle rectangle
+skinparam componentBackgroundColor white
+
+title Las reglas de negocio viven solo en el modelo
+caption La petición baja de la vista al modelo y la respuesta vuelve por el mismo camino.
+
+package "Vista" {
+  component "Pantallas\n(App Flutter)\nmuestran y reciben toques" as pantallas
+}
+
+package "Controlador" {
+  component "Controlador de pantalla\n(App Flutter)\ntraduce toques a peticiones" as cpantalla
+  component "Controlador REST\n(Backend Java)\ncomprueba JWT y formato" as crest
+}
+
+package "Modelo" {
+  component "Servicios del modelo\n(Backend Java)\nuno por proceso, coordinan" as servicios
+  component "Objetos de dominio\n(Backend Java)\naquí viven las reglas" as objetos <<reglas>>
+  component "Repositorios\n(Backend Java)\nguardan en PostgreSQL" as repositorios
+  component "Motor core\n(C++)\nred vial y rutas" as motor <<reglas>>
+}
+
+pantallas --> cpantalla
+cpantalla -right-> crest : HTTPS
+crest --> servicios
+servicios --> objetos
+servicios --> repositorios
+servicios -right-> motor : MotorDeRutas
+
+@enduml

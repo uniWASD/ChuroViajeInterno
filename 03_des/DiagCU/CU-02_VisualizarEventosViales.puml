@@ -2,6 +2,7 @@
 ' CU-02: Visualizar Eventos Viales
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
 ' Issue: T-029 (#8)
+' Revisión de coherencia (06/10/2026): actualización cada 5 s y voto real/falso (HU-11).
 
 left to right direction
 skinparam shadowing false
@@ -47,7 +48,8 @@ CU02 --> Backend
 
 legend bottom
   Muestra los eventos vigentes reportados en CU-01,
-  categorizados por color y actualizados cada 10-15 s.
+  categorizados por color y actualizados cada 5 s.
+  El conductor puede votar si un evento es real o falso (HU-11).
 endlegend
 
 @enduml

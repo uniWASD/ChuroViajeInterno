@@ -2,6 +2,7 @@
 ' Diagrama de Casos de Uso - Sistema ChuroViaje (CU-01 a CU-08)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
 ' Issue: T-029 (#8)
+' Revisión de coherencia (06/10/2026): sin API externa de surtidores, con proveedor del LLM y sesión obligatoria.
 
 left to right direction
 skinparam shadowing false
@@ -43,8 +44,8 @@ actor "Proceso de monitoreo\n(automático)" as Monitor <<proceso>>
 ' Actores secundarios externos (derecha)
 actor "Google Sign-In" as Google <<sistema externo>>
 actor "Mapbox" as Mapbox <<sistema externo>>
-actor "API externa\nde surtidores" as API <<sistema externo>>
 actor "Grupos de WhatsApp\nmonitoreados" as WA <<sistema externo>>
+actor "Proveedor del LLM" as LLM <<sistema externo>>
 actor "Script de simulación\n(Python)" as Script <<sistema>>
 
 rectangle "Sistema ChuroViaje" {
@@ -83,8 +84,8 @@ end note
 ' Asociaciones con actores secundarios externos
 CU08 --> Google
 CU03 --> Mapbox
-CU05 --> API
 CU06 --> WA
+CU06 --> LLM
 CU07 --> Script
 
 
@@ -93,6 +94,8 @@ legend bottom left
   y el Motor core (C++); por eso esos componentes no aparecen como actores aquí.
   En los diagramas por CU se muestran como actores secundarios, igual que en la
   especificación, porque el alcance (SUD) de esos casos es la app móvil.
+  La sesión iniciada (CU-08) es precondición de CU-01 a CU-05; CU-01 además la
+  incluye para reautenticar al conductor cuando el token expira.
 endlegend
 
 @enduml

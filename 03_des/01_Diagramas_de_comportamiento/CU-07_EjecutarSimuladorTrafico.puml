@@ -2,6 +2,7 @@
 ' CU-07: Ejecutar Simulador de Tráfico - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
 ' Issue: T-045
+' Revisión de coherencia (06/10/2026): el script envía los datos al backend por su API.
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -47,7 +48,8 @@ de simulación;
   :Genera los
 usuarios fantasma;
   :Envía eventos y
-telemetría;
+telemetría al
+backend por su API;
   |Backend Java|
   if (¿Soporta la\ncarga simulada?) then (sí)
     :Procesa los

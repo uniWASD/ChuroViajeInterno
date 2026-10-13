@@ -2,9 +2,9 @@
 
 [Índice del backlog](README.md)
 
-Este archivo dice en qué orden se crean los 53 issues del backlog en GitHub y con qué Milestone y etiquetas. El texto de cada issue sigue en su archivo por tecnología; aquí solo está el orden, para que cada issue se cree después de los issues de los que depende y se pueda enlazar con su número.
+Este archivo dice en qué orden se crean los 55 issues del backlog en GitHub y con qué Milestone y etiquetas. El texto de cada issue sigue en su archivo por tecnología; aquí solo está el orden, para que cada issue se cree después de los issues de los que depende y se pueda enlazar con su número.
 
-Los issues todavía llevan `T-XXX` y `CP-XX`. Los números se asignan al subirlos: son 24 tareas técnicas y 135 casos de prueba, a partir del primer número libre en ese momento.
+Los 53 primeros se crearon el 13/10/2026 con [subir_issues.py](subir_issues.py), que les asignó T-087 a T-110 y CP-20 a CP-154. Las filas 54 y 55 salieron después, al dividir #50 y #70 según la [estimación](07_Estimacion.md), y se crean con [sincronizar_issues.py](sincronizar_issues.py). Por eso dos filas anteriores, la 12 y la 45, dependen de ellas.
 
 ## Pasos para subir
 
@@ -25,11 +25,11 @@ El script [subir_issues.py](subir_issues.py) hace los pasos 2 a 5 con GitHub CLI
 | Milestone | Fechas | Fecha de cierre | Issues |
 | --- | --- | --- | --- |
 | Sprint 1 | 15/10 – 21/10 | 2026-10-21 | 6 |
-| Sprint 2 | 22/10 – 28/10 | 2026-10-28 | 8 |
+| Sprint 2 | 22/10 – 28/10 | 2026-10-28 | 9 |
 | Sprint 3 | 29/10 – 04/11 | 2026-11-04 | 8 |
 | Sprint 4 | 05/11 – 11/11 | 2026-11-11 | 8 |
 | Sprint 5 | 12/11 – 18/11 | 2026-11-18 | 11 |
-| Sprint 6 | 19/11 – 25/11 | 2026-11-25 | 8 |
+| Sprint 6 | 19/11 – 25/11 | 2026-11-25 | 9 |
 | Sprint 7 | 26/11 – 30/11 | 2026-11-30 | 4 |
 
 ## Orden de creación
@@ -49,7 +49,7 @@ La columna «Depende de» usa el número de orden de esta tabla.
 | 9 | [T-094][Java] Catálogos para la app | [02_Java.md](02_Java.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:java | 3, 8 | 1 | #47 |
 | 10 | [HU-10][CU-08][Flutter] Iniciar sesión con Google | [01_Flutter.md](01_Flutter.md) | Sprint 2 | caso-uso:CU-08, tipo:historia-usuario, fase:construccion, tec:flutter | 1, 8, 9 | 4 | #48 |
 | 11 | [T-095][Java] Wrapper MotorDeRutas | [02_Java.md](02_Java.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:java, tec:cpp | 2, 4 | 4 | #49 |
-| 12 | [T-096][C++] Red vial desde OpenStreetMap | [03_Cpp.md](03_Cpp.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:cpp | 4, 3 | 3 | #50 |
+| 12 | [T-096][C++] Cargar la red vial en el núcleo | [03_Cpp.md](03_Cpp.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:cpp | 4, 54 | 1 | #50 |
 | 13 | [HU-08][CU-06][WhatsApp/LLM] Leer los grupos autorizados | [04_WhatsApp_LLM.md](04_WhatsApp_LLM.md) | Sprint 2 | caso-uso:CU-06, tipo:historia-usuario, fase:construccion, tec:whatsapp-llm | 5 | 3 | #51 |
 | 14 | [T-097][Servidor] Dominio, Nginx y HTTPS | [06_Servidor.md](06_Servidor.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:servidor | 6 | 1 | #52 |
 | 15 | [HU-01][CU-01][Java] Registrar reportes de eventos viales | [02_Java.md](02_Java.md) | Sprint 3 | caso-uso:CU-01, tipo:historia-usuario, fase:construccion, tec:java | 8, 9 | 5 | #53 |
@@ -59,7 +59,7 @@ La columna «Depende de» usa el número de orden de esta tabla.
 | 19 | [HU-08][CU-06][Java] Recibir el análisis de WhatsApp | [02_Java.md](02_Java.md) | Sprint 3 | caso-uso:CU-06, tipo:historia-usuario, fase:construccion, tec:java | 3, 8 | 3 | #57 |
 | 20 | [HU-05][CU-03][C++] Calcular la ruta óptima con A* | [03_Cpp.md](03_Cpp.md) | Sprint 3 | caso-uso:CU-03, tipo:historia-usuario, fase:construccion, tec:cpp | 12 | 3 | #58 |
 | 21 | [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado | [04_WhatsApp_LLM.md](04_WhatsApp_LLM.md) | Sprint 3 | caso-uso:CU-06, tipo:historia-usuario, fase:construccion, tec:whatsapp-llm | 13, 19 | 5 | #59 |
-| 22 | [T-098][Servidor] Desplegar el backend con el núcleo C++ | [06_Servidor.md](06_Servidor.md) | Sprint 3 | tipo:tarea, fase:construccion, tec:servidor | 14, 8, 11, 12 | 2 | #60 |
+| 22 | [T-098][Servidor] Desplegar el backend con el núcleo C++ | [06_Servidor.md](06_Servidor.md) | Sprint 3 | tipo:tarea, fase:construccion, tec:servidor | 14, 8, 11, 12, 54 | 2 | #60 |
 | 23 | [HU-02][CU-01][Flutter] Guardar y reintentar reportes sin conexión | [01_Flutter.md](01_Flutter.md) | Sprint 4 | caso-uso:CU-01, tipo:historia-usuario, fase:construccion, tec:flutter | 16 | 3 | #61 |
 | 24 | [HU-04][CU-02][Flutter] Ver eventos guardados sin conexión | [01_Flutter.md](01_Flutter.md) | Sprint 4 | caso-uso:CU-02, tipo:historia-usuario, fase:construccion, tec:flutter | 18 | 2 | #62 |
 | 25 | [HU-11][CU-02][Java] Votar eventos | [02_Java.md](02_Java.md) | Sprint 4 | caso-uso:CU-02, tipo:historia-usuario, fase:construccion, tec:java | 17 | 4 | #63 |
@@ -69,7 +69,7 @@ La columna «Depende de» usa el número de orden de esta tabla.
 | 29 | [T-099][Java] Mantener al día el tráfico del motor | [02_Java.md](02_Java.md) | Sprint 4 | tipo:tarea, fase:construccion, tec:java | 11, 25, 28 | 2 | #67 |
 | 30 | [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM | [06_Servidor.md](06_Servidor.md) | Sprint 4 | tipo:tarea, fase:construccion, tec:servidor | 22, 21 | 1 | #68 |
 | 31 | [HU-07][CU-05][Java] Consultar surtidores cercanos | [02_Java.md](02_Java.md) | Sprint 5 | caso-uso:CU-05, tipo:historia-usuario, fase:construccion, tec:java | 19 | 3 | #69 |
-| 32 | [HU-05][CU-03][Flutter] Cómo llegar y navegación activa | [01_Flutter.md](01_Flutter.md) | Sprint 5 | caso-uso:CU-03, tipo:historia-usuario, fase:construccion, tec:flutter | 7, 27, 31 | 3 | #70 |
+| 32 | [HU-05][CU-03][Flutter] Cómo llegar | [01_Flutter.md](01_Flutter.md) | Sprint 5 | caso-uso:CU-03, tipo:historia-usuario, fase:construccion, tec:flutter | 7, 27, 31 | 2 | #70 |
 | 33 | [HU-07][CU-05][Flutter] Consultar surtidores cercanos | [01_Flutter.md](01_Flutter.md) | Sprint 5 | caso-uso:CU-05, tipo:historia-usuario, fase:construccion, tec:flutter | 7, 31 | 3 | #71 |
 | 34 | [HU-12][CU-05][Java] Registrar confirmaciones de recarga | [02_Java.md](02_Java.md) | Sprint 5 | caso-uso:CU-05, tipo:historia-usuario, fase:construccion, tec:java | 31 | 3 | #72 |
 | 35 | [HU-13][CU-04][C++] Detectar congestión con la telemetría | [03_Cpp.md](03_Cpp.md) | Sprint 5 | caso-uso:CU-04, tipo:historia-usuario, fase:construccion, tec:cpp | 28 | 5 | #73 |
@@ -78,11 +78,11 @@ La columna «Depende de» usa el número de orden de esta tabla.
 | 38 | [HU-06][CU-04][C++] Revisar la ruta activa | [03_Cpp.md](03_Cpp.md) | Sprint 5 | caso-uso:CU-04, tipo:historia-usuario, fase:construccion, tec:cpp | 28 | 3 | #76 |
 | 39 | [T-101][WhatsApp/LLM] Prueba con mensajes reales | [04_WhatsApp_LLM.md](04_WhatsApp_LLM.md) | Sprint 5 | tipo:prueba, fase:construccion, tec:whatsapp-llm | 21, 30, 31, 33 | 1 | #77 |
 | 40 | [T-102][Simulador] Estructura y parámetros del simulador | [05_Simulador.md](05_Simulador.md) | Sprint 5 | tipo:tarea, fase:construccion, tec:simulador | — | 1 | #78 |
-| 41 | [T-103][Servidor] Respaldos de la base de datos y registros | [06_Servidor.md](06_Servidor.md) | Sprint 5 | tipo:tarea, fase:construccion, tec:servidor | 22 | 1 | #79 |
+| 41 | [T-103][Servidor] Respaldos de la base de datos y registros | [06_Servidor.md](06_Servidor.md) | Sprint 6 | tipo:tarea, fase:construccion, tec:servidor | 22 | 1 | #79 |
 | 42 | [HU-12][CU-05][Flutter] Preguntar por la recarga | [01_Flutter.md](01_Flutter.md) | Sprint 6 | caso-uso:CU-05, tipo:historia-usuario, fase:construccion, tec:flutter | 33, 34 | 3 | #80 |
 | 43 | [T-104][Flutter] Política de privacidad | [01_Flutter.md](01_Flutter.md) | Sprint 6 | tipo:tarea, fase:construccion, tec:flutter | 14, 21, 37 | 1 | #81 |
 | 44 | [HU-06][CU-04][Java] Revisar la ruta activa | [02_Java.md](02_Java.md) | Sprint 6 | caso-uso:CU-04, tipo:historia-usuario, fase:construccion, tec:java | 27, 38 | 4 | #82 |
-| 45 | [HU-06][CU-04][Flutter] Aviso de ruta alternativa | [01_Flutter.md](01_Flutter.md) | Sprint 6 | caso-uso:CU-04, tipo:historia-usuario, fase:construccion, tec:flutter | 32, 44 | 3 | #83 |
+| 45 | [HU-06][CU-04][Flutter] Aviso de ruta alternativa | [01_Flutter.md](01_Flutter.md) | Sprint 6 | caso-uso:CU-04, tipo:historia-usuario, fase:construccion, tec:flutter | 55, 44 | 3 | #83 |
 | 46 | [HU-09][CU-07][Java] Soporte para el simulador | [02_Java.md](02_Java.md) | Sprint 6 | caso-uso:CU-07, tipo:historia-usuario, fase:construccion, tec:java | 36 | 3 | #84 |
 | 47 | [T-105][Java] Limpieza de datos vencidos | [02_Java.md](02_Java.md) | Sprint 6 | tipo:tarea, fase:construccion, tec:java | 34 | 1 | #85 |
 | 48 | [T-106][Servidor] Ambiente de pruebas para el simulador | [06_Servidor.md](06_Servidor.md) | Sprint 6 | tipo:tarea, fase:construccion, tec:servidor | 22 | 1 | #86 |
@@ -91,3 +91,5 @@ La columna «Depende de» usa el número de orden de esta tabla.
 | 51 | [T-108][Simulador] Pruebas de carga y reporte | [05_Simulador.md](05_Simulador.md) | Sprint 7 | tipo:prueba, fase:construccion, tec:simulador | 49 | 2 | #89 |
 | 52 | [T-109][C++] Rendimiento con la red real de Tarija | [03_Cpp.md](03_Cpp.md) | Sprint 7 | tipo:prueba, fase:construccion, tec:cpp | 38, 51 | 1 | #90 |
 | 53 | [T-110][Servidor] Despliegue final y revisión de seguridad | [06_Servidor.md](06_Servidor.md) | Sprint 7 | tipo:tarea, fase:construccion, tec:servidor | Todos los de sprints anteriores | 1 | #91 |
+| 54 | [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap | [03_Cpp.md](03_Cpp.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:cpp | 3 | 2 | #93 |
+| 55 | [HU-05][CU-03][Flutter] Navegación activa | [01_Flutter.md](01_Flutter.md) | Sprint 5 | caso-uso:CU-03, tipo:historia-usuario, fase:construccion, tec:flutter | 32 | 2 | #94 |

@@ -8,15 +8,15 @@ Reemplaza al backlog de la fase de Elaboración, que queda guardado en [Backlog_
 
 | Archivo | Tecnología | Responsables | Issues |
 | --- | --- | --- | --- |
-| [01_Flutter.md](01_Flutter.md) | App Flutter | Alex; Franz en los modos sin conexión y la política de privacidad | 14 |
+| [01_Flutter.md](01_Flutter.md) | App Flutter | Alex; Franz en los modos sin conexión, los surtidores, la telemetría y la política de privacidad | 15 |
 | [02_Java.md](02_Java.md) | Backend Java | Jorge y Antonio | 18 |
-| [03_Cpp.md](03_Cpp.md) | Núcleo C++ del motor core | Marcelo | 7 |
+| [03_Cpp.md](03_Cpp.md) | Núcleo C++ del motor core | Marcelo; Franz prepara la red vial | 8 |
 | [04_WhatsApp_LLM.md](04_WhatsApp_LLM.md) | Servicio de WhatsApp/LLM (Node.js) | Franz | 4 |
 | [05_Simulador.md](05_Simulador.md) | Simulador (Python) | Antonio | 3 |
 | [06_Servidor.md](06_Servidor.md) | Servidor y despliegue (Oracle Cloud) | Marcelo | 7 |
-| | | **Total** | **53** |
+| | | **Total** | **55** |
 
-Son 29 issues de historia de usuario y 24 tareas técnicas. El orden en que se crean en GitHub, con su Milestone y sus etiquetas, está en [00_Indice_de_subida.md](00_Indice_de_subida.md).
+Son 30 issues de historia de usuario y 25 tareas técnicas. El orden en que se crean en GitHub, con su Milestone y sus etiquetas, está en [00_Indice_de_subida.md](00_Indice_de_subida.md). La estimación de tamaño y la carga de cada persona están en [07_Estimacion.md](07_Estimacion.md).
 
 ## Sprints
 
@@ -41,11 +41,11 @@ En esta tabla los títulos van abreviados; el título completo es el encabezado 
 | Sprint | Flutter | Java | C++ | WhatsApp/LLM | Simulador | Servidor |
 | --- | --- | --- | --- | --- | --- | --- |
 | S1 | Estructura base de la app | Estructura base del backend · Base de datos, catálogos y zona de cobertura | Estructura del núcleo y protocolo por pipe | Estructura del servicio | — | Preparar la instancia de Oracle Cloud |
-| S2 | HU-10 Iniciar sesión · Mapa base con Mapbox | HU-10 Iniciar sesión y JWT · Catálogos para la app · Wrapper `MotorDeRutas` | Red vial desde OpenStreetMap | HU-08 Leer los grupos autorizados | — | Dominio, Nginx y HTTPS |
+| S2 | HU-10 Iniciar sesión · Mapa base con Mapbox | HU-10 Iniciar sesión y JWT · Catálogos para la app · Wrapper `MotorDeRutas` | Preparar y cargar la red vial | HU-08 Leer los grupos autorizados | — | Dominio, Nginx y HTTPS |
 | S3 | HU-03 Ver los eventos en el mapa · HU-01 Reportar un evento vial | HU-01 Registrar reportes · HU-03 Consultar y vencer eventos · HU-08 Recibir el análisis de WhatsApp | HU-05 Calcular la ruta óptima con A* | HU-08 Analizar los mensajes por lotes | — | Desplegar el backend con el núcleo C++ |
 | S4 | HU-11 Lista de eventos y votos · HU-02 Reportes sin conexión · HU-04 Eventos sin conexión | HU-11 Votar eventos · HU-05 Calcular la ruta · Mantener al día el tráfico del motor | HU-05 Tráfico de los eventos en los tramos | — | — | Desplegar el servicio de WhatsApp/LLM |
-| S5 | HU-05 Cómo llegar y navegación activa · HU-13 Enviar telemetría · HU-07 Consultar surtidores | HU-07 Consultar surtidores · HU-12 Confirmaciones de recarga · HU-13 Telemetría y congestión | HU-13 Detectar congestión · HU-06 Revisar la ruta activa | Prueba con mensajes reales | Estructura y parámetros | Respaldos y registros |
-| S6 | HU-12 Preguntar por la recarga · HU-06 Aviso de ruta alternativa · Política de privacidad | HU-06 Revisar la ruta activa · HU-09 Soporte para el simulador · Limpieza de datos vencidos | — | — | HU-09 Usuarios fantasma | Ambiente de pruebas |
+| S5 | HU-05 Cómo llegar · HU-05 Navegación activa · HU-13 Enviar telemetría · HU-07 Consultar surtidores | HU-07 Consultar surtidores · HU-12 Confirmaciones de recarga · HU-13 Telemetría y congestión | HU-13 Detectar congestión · HU-06 Revisar la ruta activa | Prueba con mensajes reales | Estructura y parámetros | — |
+| S6 | HU-12 Preguntar por la recarga · HU-06 Aviso de ruta alternativa · Política de privacidad | HU-06 Revisar la ruta activa · HU-09 Soporte para el simulador · Limpieza de datos vencidos | — | — | HU-09 Usuarios fantasma | Ambiente de pruebas · Respaldos y registros |
 | S7 | — | Pruebas de punta a punta | Rendimiento con la red real | — | Pruebas de carga y reporte | Despliegue final y revisión de seguridad |
 
 ## De historia de usuario a issues
@@ -58,7 +58,7 @@ Cada historia de usuario se reparte en issues por tecnología, y algunas de sus 
 | HU-02 | CU-01 | Flutter S4 | — | RN-01.13 a RN-01.15 |
 | HU-03 | CU-02 | Java S3 · Flutter S3 | — | RN-02.1 a RN-02.8 |
 | HU-04 | CU-02 | Flutter S4 | — | RN-02.9 |
-| HU-05 | CU-03 | C++ S3 y S4 · Java S4 · Flutter S5 | Red vial C++ S2 (RN-03.4 a RN-03.7) · Wrapper Java S2 (RN-03.15) | RN-03.1 a RN-03.18 |
+| HU-05 | CU-03 | C++ S3 y S4 · Java S4 · Flutter S5 (Cómo llegar y Navegación activa) | Red vial C++ S2, preparación y carga (RN-03.4 a RN-03.7) · Wrapper Java S2 (RN-03.15) | RN-03.1 a RN-03.18 |
 | HU-06 | CU-04 | C++ S5 · Java S6 · Flutter S6 | — | RN-04.13 a RN-04.19, RN-04.21 |
 | HU-07 | CU-05 | Java S5 · Flutter S5 | — | RN-05.1 a RN-05.7, RN-05.17 |
 | HU-08 | CU-06 | WhatsApp/LLM S2 y S3 · Java S3 | — | RN-06.1 a RN-06.19 |
@@ -75,6 +75,8 @@ Las 135 reglas de `04_reglas` están citadas en al menos un issue.
 Los issues se crean en el orden de [00_Indice_de_subida.md](00_Indice_de_subida.md), para que cada uno se cree después de aquellos de los que depende.
 
 El script [subir_issues.py](subir_issues.py) hace todo esto solo, con GitHub CLI (`gh`) y la cuenta de quien lo ejecuta, que queda como autor de los issues. Primero se ejecuta sin `--crear`, para revisar los issues ya numerados en la carpeta `_simulacion/`, y después con `--crear`. Las instrucciones están al principio del script. Los pasos de abajo describen lo que hace, por si hay que subir algún issue a mano.
+
+Después de la primera subida, cualquier cambio en estos archivos (un issue nuevo, un título, un sprint) se lleva a GitHub con [sincronizar_issues.py](sincronizar_issues.py): compara cada issue con el que está en GitHub, crea los que faltan y actualiza solo los que cambiaron. El responsable y la talla de cada issue se cambian en [07_Estimacion.md](07_Estimacion.md): el mismo script asigna el issue a su responsable y, con `--proyecto 1`, carga los campos «Talla» y «Puntos» del tablero.
 
 1. **Numerar.** Los issues van con `T-XXX` y `CP-XX` a propósito. Al crearlos en GitHub, en el orden de los sprints, se reemplaza cada `T-XXX` por el siguiente número libre y cada `CP-XX` por el siguiente caso de prueba. Al 13/10/2026 la última tarea es T-086 y el último caso de prueba es CP-19; confírmalo en [TRAZABILIDAD.md](../TRAZABILIDAD.md) y en GitHub antes de empezar. En la rama, `TXX` toma el mismo número (T-087 → `feature/T87-...`).
 2. **Título y cuerpo.** El título es el encabezado del issue, sin el `###`. El cuerpo es todo lo que sigue hasta la línea horizontal.
@@ -146,7 +148,7 @@ Estos detalles no cambian la arquitectura y quedaron dentro de los issues. Si el
 | La red vial de OpenStreetMap tiene errores (calles mal marcadas de un sentido) | Revisar en el sprint 2 las calles del centro con alguien que maneje en Tarija |
 | La instancia de Oracle Cloud se termina o cambia de IP | IP reservada desde el sprint 1 y no terminar la instancia hasta el 30/11 |
 | Marcelo lleva el camino crítico del motor, el servidor y las revisiones de todos los Pull Requests | En los sprints 4 y 5, otro integrante revisa los Pull Requests que no son de C++ ni del servidor |
-| Antonio reparte su tiempo entre Java y el simulador en los sprints 5 y 6 | Jorge toma «Limpieza de datos vencidos» si el simulador se atrasa |
-| Alex tiene tres issues en el sprint 5 | Franz puede tomar «Consultar surtidores cercanos» si termina antes la prueba del LLM |
+| Antonio reparte su tiempo entre Java y el simulador en los sprints 5 y 6 | Jorge ya toma «Soporte para el simulador»; si el simulador se atrasa, toma también «Limpieza de datos vencidos» |
+| La red vial la hacen dos personas en el mismo sprint | Franz y Marcelo acuerdan el formato del archivo el primer día del sprint 2, y Marcelo avanza con un archivo de prueba |
 | Probar la app en iOS requiere una Mac | Si el equipo no tiene una, las pruebas se hacen en Android y se anota |
 | Con la capa gratuita de Gemini, Google puede leer y usar los mensajes enviados (D-17) | Solo viajan texto y fecha, con los números enmascarados, y la política de privacidad lo dice |

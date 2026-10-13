@@ -2,7 +2,7 @@
 
 [Índice del backlog](README.md)
 
-Responsable: Marcelo. Código en `04_imp/motor_cpp`.
+Responsable: Marcelo, con Franz en la preparación de la red vial. Código en `04_imp/motor_cpp`.
 
 El núcleo guarda la red vial de Tarija en memoria, calcula rutas con A*, aplica el tráfico de los eventos y analiza la telemetría. No abre puertos ni llama a nadie: lo arranca el backend como proceso hijo y solo responde los mensajes que el wrapper `MotorDeRutas` le escribe por su entrada estándar, una línea de JSON por mensaje ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). El prototipo de `05_pro/PruebaCalculoRuta` ya validó el algoritmo; aquí se lleva a C++ con datos reales. Antes de tomar un issue, lee la sección «Backend con el motor core» de [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md).
 
@@ -11,7 +11,7 @@ El servidor es ARM (Oracle Cloud, [D-16](../../03_des/02_Arquitectura/08_decisio
 | Sprint | Issues |
 | --- | --- |
 | S1 (15/10–21/10) | Estructura del núcleo y protocolo por pipe |
-| S2 (22/10–28/10) | Red vial desde OpenStreetMap |
+| S2 (22/10–28/10) | Preparar la red vial desde OpenStreetMap · Cargar la red vial en el núcleo |
 | S3 (29/10–04/11) | HU-05 Calcular la ruta óptima con A* |
 | S4 (05/11–11/11) | HU-05 Tráfico de los eventos en los tramos |
 | S5 (12/11–18/11) | HU-13 Detectar congestión con la telemetría · HU-06 Revisar la ruta activa |
@@ -24,7 +24,7 @@ El servidor es ARM (Oracle Cloud, [D-16](../../03_des/02_Arquitectura/08_decisio
 ### [T-090][C++] Estructura del núcleo y protocolo por pipe
 
 **Tipo:** Tarea de infraestructura (base del motor core; cubre CU-03 y CU-04)
-**Tecnología:** C++ · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Marcelo
+**Tecnología:** C++ · **Sprint:** Sprint 1 (15/10–21/10)
 **Depende de:** nada
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:cpp`
 
@@ -58,40 +58,65 @@ Lo subes en una nueva rama llamada "feature/T90-cpp-estructura-nucleo" (No olvid
 
 ## Sprint 2
 
-### [T-096][C++] Red vial desde OpenStreetMap
+### [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap
 
 **Tipo:** Tarea de desarrollo (cubre CU-03 y CU-04)
-**Tecnología:** C++ · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Marcelo
-**Depende de:** [T-090][C++] Estructura del núcleo y protocolo por pipe #42 · [T-089][Java] Base de datos, catálogos y zona de cobertura #41 (por el polígono de la mancha urbana)
+**Tecnología:** Python, para el núcleo C++ · **Sprint:** Sprint 2 (22/10–28/10)
+**Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 (por el polígono de la mancha urbana)
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:cpp`
 
-**Descripción:** Preparar la red de calles de Tarija a partir de un extracto de OpenStreetMap y cargarla en memoria al arrancar ([D-08](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Es la base de `RedVial` y `Tramo`.
+**Descripción:** Preparar, a partir de un extracto de OpenStreetMap, el archivo con la red de calles de Tarija que el núcleo carga al arrancar ([D-08](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Este issue cubre la preparación, con un script en Python; la carga en C++ va en «[T-096][C++] Cargar la red vial en el núcleo».
 
 **Criterios de aceptación**
 - [ ] Un script de preparación recorta el extracto de OpenStreetMap con el polígono de `04_imp/datos/mancha_urbana_tarija.geojson` y deja solo las vías vehiculares (RN-03.5).
 - [ ] Cada calle de doble sentido queda como dos tramos y cada calle de un sentido como uno (RN-03.6).
 - [ ] La longitud de cada tramo es la de su recorrido real, sumando sus segmentos, nunca menor que la línea recta entre sus extremos (RN-03.7).
-- [ ] Cada tramo guarda el nombre de su calle y su tipo de vía: vía rápida, avenida principal o zona residencial, según una tabla de correspondencia con las etiquetas `highway` de OpenStreetMap que queda escrita en el README.
+- [ ] Cada tramo guarda un identificador, el nombre de su calle y su tipo de vía: vía rápida, avenida principal o zona residencial, según una tabla de correspondencia con las etiquetas `highway` de OpenStreetMap que queda escrita en el README.
+- [ ] El formato del archivo (nodos y tramos) queda documentado y acordado con Marcelo en los primeros días del sprint, para que la carga en C++ avance en paralelo.
+- [ ] El script se puede volver a correr con un extracto nuevo y deja en el archivo la fecha del extracto.
+
+**Tareas**
+- [ ] Descargar el extracto de Bolivia y recortar Tarija (osmium o un script en Python con pyosmium).
+- [ ] Definir la tabla de etiquetas `highway` que cuentan como vehiculares y su tipo de vía, partiendo de las velocidades de `05_pro/CalculoVelocidad`.
+- [ ] Definir con Marcelo el formato del archivo y documentarlo.
+- [ ] Revisar con alguien que maneje en Tarija las calles de un solo sentido del centro.
+- [ ] Guardar el script en `04_imp/motor_cpp/preparacion` y el archivo resultante fuera del repositorio, si pesa mucho.
+
+**Casos de prueba**
+- [ ] CP-45 Caso de prueba: en la red preparada, una calle peatonal conocida del centro no tiene ningún tramo.
+- [ ] CP-46 Caso de prueba: una calle de un solo sentido conocida tiene un tramo y no el contrario.
+
+**Relacionado:** RF-05 · CU-03 · RN-03.5 a RN-03.7 · D-08 · [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md)
+
+Lo subes en una nueva rama llamada "feature/T111-red-vial-preparacion" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [T-096][C++] Cargar la red vial en el núcleo
+
+**Tipo:** Tarea de desarrollo (cubre CU-03 y CU-04)
+**Tecnología:** C++ · **Sprint:** Sprint 2 (22/10–28/10)
+**Depende de:** [T-090][C++] Estructura del núcleo y protocolo por pipe #42 · [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap #93
+**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:cpp`
+
+**Descripción:** Cargar en memoria, al arrancar, la red de calles que prepara «[T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap» ([D-08](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Es la base de `RedVial` y `Tramo`. Mientras el archivo real no esté listo, se avanza con uno pequeño hecho a mano en el formato acordado.
+
+**Criterios de aceptación**
 - [ ] El núcleo carga el archivo preparado al arrancar y `consultar_estado` informa cuántas intersecciones y tramos tiene y la fecha del extracto.
 - [ ] Un punto se ajusta a la intersección vehicular más cercana; si no hay ninguna a menos de 100 m, el punto es inválido (RN-03.4, P-23).
 - [ ] La carga tarda menos de 10 segundos en el servidor.
 
 **Tareas**
-- [ ] Descargar el extracto de Bolivia y recortar Tarija (osmium o un script en Python con pyosmium).
-- [ ] Definir la tabla de etiquetas `highway` que cuentan como vehiculares y su tipo de vía, partiendo de las velocidades de `05_pro/CalculoVelocidad`.
-- [ ] Definir el formato del archivo preparado (nodos y tramos) y documentarlo.
 - [ ] Implementar `RedVial` y `Tramo` en C++ y la carga del archivo.
 - [ ] Implementar la búsqueda de la intersección más cercana con un índice espacial (por ejemplo, una grilla).
-- [ ] Guardar el script de preparación en `04_imp/motor_cpp/preparacion` y el archivo resultante fuera del repositorio, si pesa mucho.
+- [ ] Escribir un archivo pequeño de prueba en el formato acordado.
 
 **Casos de prueba**
-- [ ] CP-45 Caso de prueba: en la red cargada, una calle peatonal conocida del centro no tiene ningún tramo.
-- [ ] CP-46 Caso de prueba: una calle de un solo sentido conocida tiene un tramo y no el contrario.
 - [ ] CP-47 Caso de prueba: un punto en medio de la Plaza Luis de Fuentes se ajusta a una esquina vecina; un punto fuera del polígono es inválido.
 
-**Relacionado:** RF-05 · CU-03 · RN-03.4 a RN-03.7 · D-08 · P-23 · [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md)
+**Relacionado:** RF-05 · CU-03 · RN-03.4 · D-08 · P-23 · [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md)
 
-Lo subes en una nueva rama llamada "feature/T96-cpp-red-vial-osm" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T96-cpp-cargar-red-vial" (No olvides que el source de la rama es la de develop)
 
 ---
 
@@ -100,8 +125,8 @@ Lo subes en una nueva rama llamada "feature/T96-cpp-red-vial-osm" (No olvides qu
 ### [HU-05][CU-03][C++] Calcular la ruta óptima con A*
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** C++ · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Marcelo
-**Depende de:** [T-096][C++] Red vial desde OpenStreetMap #50
+**Tecnología:** C++ · **Sprint:** Sprint 3 (29/10–04/11)
+**Depende de:** [T-096][C++] Cargar la red vial en el núcleo #50
 **Issue anterior:** #29 (prototipo en Python con manejo de errores)
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
@@ -140,7 +165,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-calcular-ruta" (No olv
 ### [HU-05][CU-03][C++] Tráfico de los eventos en los tramos
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** C++ · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Marcelo
+**Tecnología:** C++ · **Sprint:** Sprint 4 (05/11–11/11)
 **Depende de:** [HU-05][CU-03][C++] Calcular la ruta óptima con A* #58
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
@@ -180,7 +205,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-trafico-tramos" (No ol
 ### [HU-13][CU-04][C++] Detectar congestión con la telemetría
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** C++ · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Marcelo
+**Tecnología:** C++ · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Issue anterior:** #3 (prototipo de cálculo de velocidad)
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
@@ -222,7 +247,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (
 ### [HU-06][CU-04][C++] Revisar la ruta activa
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** C++ · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Marcelo
+**Tecnología:** C++ · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
@@ -257,7 +282,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-cpp-revisar-ruta" (No olvi
 ### [T-109][C++] Rendimiento con la red real de Tarija
 
 **Tipo:** Tarea de pruebas (cubre CU-03 y CU-04)
-**Tecnología:** C++ · **Sprint:** Sprint 7 (26/11–30/11) · **Responsable sugerido:** Marcelo
+**Tecnología:** C++ · **Sprint:** Sprint 7 (26/11–30/11)
 **Depende de:** [HU-06][CU-04][C++] Revisar la ruta activa #76 · [T-108][Simulador] Pruebas de carga y reporte #89
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:cpp`
 

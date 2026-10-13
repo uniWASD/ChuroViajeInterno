@@ -2,7 +2,7 @@
 
 [Índice del backlog](README.md)
 
-Responsables: Jorge, con el apoyo de Antonio (sobre todo en la base de datos). Código en `04_imp/backend_java`.
+Responsables: Jorge y Antonio. Código en `04_imp/backend_java`.
 
 El backend es la única puerta de entrada del sistema y el lugar donde viven los objetos de dominio y sus reglas. También contiene el wrapper `MotorDeRutas`, la cara en Java del motor core ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Antes de tomar un issue, lee [02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md), [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md) y el archivo de reglas del caso de uso.
 
@@ -23,7 +23,7 @@ El backend es la única puerta de entrada del sistema y el lugar donde viven los
 ### [T-088][Java] Estructura base del backend
 
 **Tipo:** Tarea de infraestructura (base para todos los issues de Java)
-**Tecnología:** Java · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 1 (15/10–21/10)
 **Depende de:** nada
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -102,7 +102,7 @@ Lo subes en una nueva rama llamada "feature/T89-java-base-de-datos" (No olvides 
 ### [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT
 
 **Caso de uso:** CU-08 — Iniciar Sesión
-**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Antonio
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41
 **Etiquetas:** `caso-uso:CU-08` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -173,7 +173,7 @@ Lo subes en una nueva rama llamada "feature/T94-java-catalogos" (No olvides que 
 ### [T-095][Java] Wrapper MotorDeRutas
 
 **Tipo:** Tarea de desarrollo (cubre CU-03 y CU-04; no es una HU específica)
-**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Jorge, con Marcelo
+**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Apoyo:** Marcelo
 **Depende de:** [T-088][Java] Estructura base del backend #40 · [T-090][C++] Estructura del núcleo y protocolo por pipe #42
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java` · `tec:cpp`
 
@@ -214,7 +214,7 @@ Lo subes en una nueva rama llamada "feature/T95-java-wrapper-motor" (No olvides 
 ### [HU-01][CU-01][Java] Registrar reportes de eventos viales
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
 **Depende de:** [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-094][Java] Catálogos para la app #47
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -368,7 +368,7 @@ Lo subes en una nueva rama llamada "feature/HU11-CU02-java-votos" (No olvides qu
 ### [HU-05][CU-03][Java] Calcular la ruta
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
 **Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-05][CU-03][C++] Calcular la ruta óptima con A* #58
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -403,7 +403,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-java-calcular-ruta" (No ol
 ### [T-099][Java] Mantener al día el tráfico del motor
 
 **Tipo:** Tarea de desarrollo (cubre CU-02, CU-03 y CU-04; no es una HU específica)
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
 **Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-11][CU-02][Java] Votar eventos #63 · [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -506,7 +506,7 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-java-confirmar-recarga" (N
 ### [HU-13][CU-04][Java] Recibir telemetría y registrar congestión
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** [T-099][Java] Mantener al día el tráfico del motor #67 · [HU-13][CU-04][C++] Detectar congestión con la telemetría #73
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -546,7 +546,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvid
 ### [HU-06][CU-04][Java] Revisar la ruta activa
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11)
 **Depende de:** [HU-05][CU-03][Java] Calcular la ruta #65 · [HU-06][CU-04][C++] Revisar la ruta activa #76
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -582,7 +582,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-java-revisar-ruta" (No olv
 ### [HU-09][CU-07][Java] Soporte para el simulador
 
 **Caso de uso:** CU-07 — Ejecutar Simulador de Tráfico
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11), al inicio, porque el simulador lo usa en el mismo sprint · **Responsable sugerido:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11), al inicio, porque el simulador lo usa en el mismo sprint
 **Depende de:** [HU-13][CU-04][Java] Recibir telemetría y registrar congestión #74
 **Etiquetas:** `caso-uso:CU-07` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 

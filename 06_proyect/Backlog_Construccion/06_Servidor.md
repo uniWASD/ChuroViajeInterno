@@ -16,8 +16,7 @@ Dos cosas que hay que tener presentes durante toda la Construcción:
 | S2 (22/10–28/10) | Dominio, Nginx y HTTPS |
 | S3 (29/10–04/11) | Desplegar el backend con el núcleo C++ |
 | S4 (05/11–11/11) | Desplegar el servicio de WhatsApp/LLM |
-| S5 (12/11–18/11) | Respaldos de la base de datos y registros |
-| S6 (19/11–25/11) | Ambiente de pruebas para el simulador |
+| S6 (19/11–25/11) | Ambiente de pruebas para el simulador · Respaldos de la base de datos y registros |
 | S7 (26/11–30/11) | Despliegue final y revisión de seguridad |
 
 ---
@@ -27,7 +26,7 @@ Dos cosas que hay que tener presentes durante toda la Construcción:
 ### [T-092][Servidor] Preparar la instancia de Oracle Cloud
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Marcelo, con el dueño de la cuenta de Oracle Cloud
+**Tecnología:** Servidor · **Sprint:** Sprint 1 (15/10–21/10) · **Apoyo:** el dueño de la cuenta de Oracle Cloud
 **Depende de:** nada
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -66,7 +65,7 @@ Lo subes en una nueva rama llamada "feature/T92-servidor-preparar-instancia" (No
 ### [T-097][Servidor] Dominio, Nginx y HTTPS
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Marcelo
+**Tecnología:** Servidor · **Sprint:** Sprint 2 (22/10–28/10)
 **Depende de:** [T-092][Servidor] Preparar la instancia de Oracle Cloud #44
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -100,8 +99,8 @@ Lo subes en una nueva rama llamada "feature/T97-servidor-dominio-https" (No olvi
 ### [T-098][Servidor] Desplegar el backend con el núcleo C++
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Marcelo, con Jorge
-**Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-095][Java] Wrapper MotorDeRutas #49 · [T-096][C++] Red vial desde OpenStreetMap #50
+**Tecnología:** Servidor · **Sprint:** Sprint 3 (29/10–04/11) · **Apoyo:** Jorge
+**Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-095][Java] Wrapper MotorDeRutas #49 · [T-096][C++] Cargar la red vial en el núcleo #50 · [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap #93
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
 **Descripción:** Poner el backend en el servidor, con el núcleo C++ compilado para ARM y la red vial de Tarija, para que la app pruebe contra el sistema real desde el sprint 3. Desde aquí, cada sprint termina con lo fusionado en `develop` desplegado.
@@ -137,7 +136,7 @@ Lo subes en una nueva rama llamada "feature/T98-servidor-desplegar-backend" (No 
 ### [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM
 
 **Tipo:** Tarea de infraestructura (cubre CU-06)
-**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Marcelo, con Franz
+**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–11/11) · **Apoyo:** Franz
 **Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60 · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -165,12 +164,42 @@ Lo subes en una nueva rama llamada "feature/T100-servidor-desplegar-whatsapp" (N
 
 ---
 
-## Sprint 5
+## Sprint 6
+
+### [T-106][Servidor] Ambiente de pruebas para el simulador
+
+**Tipo:** Tarea de infraestructura (cubre CU-07)
+**Tecnología:** Servidor · **Sprint:** Sprint 6 (19/11–25/11), al inicio · **Apoyo:** Antonio
+**Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60
+**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
+
+**Descripción:** Tener un segundo backend con su propia base de datos para correr el simulador sin tocar producción (RN-07.12). Con 12 GB de memoria, la instancia aguanta los dos.
+
+**Criterios de aceptación**
+- [ ] Hay una base `churoviaje_pruebas` separada y un segundo backend con el perfil `pruebas`, con su propio núcleo.
+- [ ] Ese backend tiene habilitadas las credenciales de prueba y el modo demostración; el de producción no (P-20).
+- [ ] Se llega a él por HTTPS en un subdominio propio (por ejemplo, `pruebas.dominio`).
+- [ ] Se puede encender y apagar sin afectar a producción, y tiene la CPU limitada (por ejemplo, con `CPUQuota` de systemd) para que una prueba de carga no deje sin recursos al backend de producción.
+
+**Tareas**
+- [ ] Crear la base y el usuario de pruebas.
+- [ ] Crear el servicio del backend de pruebas y su archivo de entorno.
+- [ ] Agregar el subdominio en Nginx con su certificado.
+- [ ] Actualizar la guía.
+
+**Casos de prueba**
+- [ ] CP-145 Caso de prueba: `POST /sesion/prueba` funciona en `pruebas.dominio` y responde 403 en el dominio de producción.
+
+**Relacionado:** RNF-12 · CU-07 · RN-07.5, RN-07.12, RN-07.13 · P-20 · D-16
+
+Lo subes en una nueva rama llamada "feature/T106-servidor-ambiente-pruebas" (No olvides que el source de la rama es la de develop)
+
+---
 
 ### [T-103][Servidor] Respaldos de la base de datos y registros
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Marcelo, con Antonio
+**Tecnología:** Servidor · **Sprint:** Sprint 6 (19/11–25/11) · **Apoyo:** Antonio
 **Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -198,44 +227,12 @@ Lo subes en una nueva rama llamada "feature/T103-servidor-respaldos" (No olvides
 
 ---
 
-## Sprint 6
-
-### [T-106][Servidor] Ambiente de pruebas para el simulador
-
-**Tipo:** Tarea de infraestructura (cubre CU-07)
-**Tecnología:** Servidor · **Sprint:** Sprint 6 (19/11–25/11), al inicio · **Responsable sugerido:** Marcelo, con Antonio
-**Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60
-**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
-
-**Descripción:** Tener un segundo backend con su propia base de datos para correr el simulador sin tocar producción (RN-07.12). Con 12 GB de memoria, la instancia aguanta los dos.
-
-**Criterios de aceptación**
-- [ ] Hay una base `churoviaje_pruebas` separada y un segundo backend con el perfil `pruebas`, con su propio núcleo.
-- [ ] Ese backend tiene habilitadas las credenciales de prueba y el modo demostración; el de producción no (P-20).
-- [ ] Se llega a él por HTTPS en un subdominio propio (por ejemplo, `pruebas.dominio`).
-- [ ] Se puede encender y apagar sin afectar a producción, y tiene la CPU limitada (por ejemplo, con `CPUQuota` de systemd) para que una prueba de carga no deje sin recursos al backend de producción.
-
-**Tareas**
-- [ ] Crear la base y el usuario de pruebas.
-- [ ] Crear el servicio del backend de pruebas y su archivo de entorno.
-- [ ] Agregar el subdominio en Nginx con su certificado.
-- [ ] Actualizar la guía.
-
-**Casos de prueba**
-- [ ] CP-145 Caso de prueba: `POST /sesion/prueba` funciona en `pruebas.dominio` y responde 403 en el dominio de producción.
-
-**Relacionado:** RNF-12 · CU-07 · RN-07.5, RN-07.12, RN-07.13 · P-20 · D-16
-
-Lo subes en una nueva rama llamada "feature/T106-servidor-ambiente-pruebas" (No olvides que el source de la rama es la de develop)
-
----
-
 ## Sprint 7
 
 ### [T-110][Servidor] Despliegue final y revisión de seguridad
 
 **Tipo:** Tarea de infraestructura (cierre de la Construcción)
-**Tecnología:** Servidor · **Sprint:** Sprint 7 (26/11–30/11) · **Responsable sugerido:** Marcelo
+**Tecnología:** Servidor · **Sprint:** Sprint 7 (26/11–30/11)
 **Depende de:** todos los issues de los sprints anteriores
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 

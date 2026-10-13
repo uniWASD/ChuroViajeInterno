@@ -2,7 +2,7 @@
 
 [Índice del backlog](README.md)
 
-Responsables: Alex, con Franz en los modos sin conexión (HU-02 y HU-04). Código en `04_imp/app_flutter`.
+Responsables: Alex, con Franz en los modos sin conexión (HU-02 y HU-04), la consulta de surtidores (HU-07), la telemetría (HU-13) y la política de privacidad. Código en `04_imp/app_flutter`.
 
 La app es la vista y el controlador de pantalla del MVC: muestra, captura toques y GPS, y habla con el backend. No decide reglas de negocio; la única que repite es la vigencia de un reporte que espera en la cola sin conexión, y lo hace con los tiempos que le da el backend ([02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md), reglas de reparto). Antes de tomar un issue, lee la sección «App y simulador con el backend» de [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md) y las vistas de `02_mvc.md`.
 
@@ -14,7 +14,7 @@ Cuando el endpoint del backend todavía no está listo, la app avanza con respue
 | S2 (22/10–28/10) | HU-10 Iniciar sesión con Google · Mapa base con Mapbox y ubicación |
 | S3 (29/10–04/11) | HU-03 Ver los eventos en el mapa · HU-01 Reportar un evento vial |
 | S4 (05/11–11/11) | HU-11 Lista de eventos y votos · HU-02 Guardar y reintentar reportes sin conexión · HU-04 Ver eventos guardados sin conexión |
-| S5 (12/11–18/11) | HU-05 Cómo llegar y navegación activa · HU-13 Enviar telemetría con la app abierta · HU-07 Consultar surtidores cercanos |
+| S5 (12/11–18/11) | HU-05 Cómo llegar · HU-05 Navegación activa · HU-13 Enviar telemetría con la app abierta · HU-07 Consultar surtidores cercanos |
 | S6 (19/11–25/11) | HU-12 Preguntar por la recarga · HU-06 Aviso de ruta alternativa · Política de privacidad |
 
 ---
@@ -24,7 +24,7 @@ Cuando el endpoint del backend todavía no está listo, la app avanza con respue
 ### [T-087][Flutter] Estructura base de la app
 
 **Tipo:** Tarea de infraestructura (base para todos los issues de Flutter)
-**Tecnología:** Flutter · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 1 (15/10–21/10)
 **Depende de:** nada
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
 
@@ -62,7 +62,7 @@ Lo subes en una nueva rama llamada "feature/T87-flutter-estructura-base" (No olv
 ### [HU-10][CU-08][Flutter] Iniciar sesión con Google
 
 **Caso de uso:** CU-08 — Iniciar Sesión
-**Tecnología:** Flutter · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 2 (22/10–28/10)
 **Depende de:** [T-087][Flutter] Estructura base de la app #39 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-094][Java] Catálogos para la app #47
 **Etiquetas:** `caso-uso:CU-08` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -105,7 +105,7 @@ Lo subes en una nueva rama llamada "feature/HU10-CU08-flutter-inicio-sesion" (No
 ### [T-093][Flutter] Mapa base con Mapbox y ubicación
 
 **Tipo:** Tarea de desarrollo (base de CU-01 a CU-05)
-**Tecnología:** Flutter · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 2 (22/10–28/10)
 **Depende de:** [T-087][Flutter] Estructura base de la app #39
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
 
@@ -141,7 +141,7 @@ Lo subes en una nueva rama llamada "feature/T93-flutter-mapa-base" (No olvides q
 ### [HU-03][CU-02][Flutter] Ver los eventos en el mapa
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 3 (29/10–04/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-10][CU-08][Flutter] Iniciar sesión con Google #48 · [T-094][Java] Catálogos para la app #47 · [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos #55
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -175,7 +175,7 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-flutter-ver-eventos" (No o
 ### [HU-01][CU-01][Flutter] Reportar un evento vial
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Flutter · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 3 (29/10–04/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-10][CU-08][Flutter] Iniciar sesión con Google #48 · [HU-01][CU-01][Java] Registrar reportes de eventos viales #53
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -215,7 +215,7 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-flutter-reportar-evento" (
 ### [HU-11][CU-02][Flutter] Lista de eventos y votos
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
 **Depende de:** [HU-03][CU-02][Flutter] Ver los eventos en el mapa #56 · [HU-11][CU-02][Java] Votar eventos #63
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -246,7 +246,7 @@ Lo subes en una nueva rama llamada "feature/HU11-CU02-flutter-votos" (No olvides
 ### [HU-02][CU-01][Flutter] Guardar y reintentar reportes sin conexión
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Franz
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
 **Depende de:** [HU-01][CU-01][Flutter] Reportar un evento vial #54
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -280,7 +280,7 @@ Lo subes en una nueva rama llamada "feature/HU02-CU01-flutter-cola-sin-conexion"
 ### [HU-04][CU-02][Flutter] Ver eventos guardados sin conexión
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Franz
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
 **Depende de:** [HU-03][CU-02][Flutter] Ver los eventos en el mapa #56
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -309,14 +309,16 @@ Lo subes en una nueva rama llamada "feature/HU04-CU02-flutter-eventos-sin-conexi
 
 ## Sprint 5
 
-### [HU-05][CU-03][Flutter] Cómo llegar y navegación activa
+### [HU-05][CU-03][Flutter] Cómo llegar
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-05][CU-03][Java] Calcular la ruta #65 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69 (para elegir un surtidor como destino)
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
 **Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
+
+Este issue cubre la vista Cómo llegar; la vista Navegación activa va en «[HU-05][CU-03][Flutter] Navegación activa».
 
 **Criterios de aceptación**
 - [ ] La vista Cómo llegar toma la posición actual como origen, o un punto que el conductor marca, y deja elegir el destino tocando el mapa o eligiendo un surtidor del catálogo; no hay buscador de lugares (P-19, D-24).
@@ -324,31 +326,60 @@ Lo subes en una nueva rama llamada "feature/HU04-CU02-flutter-eventos-sin-conexi
 - [ ] La ruta se dibuja con su tiempo y su distancia, visibles antes de confirmar (RN-03.13).
 - [ ] Un punto inválido muestra «Origen o destino inválido» y pide otro; «No se encontró una ruta válida» se muestra como respuesta, no como error (RN-03.3, RN-03.12).
 - [ ] Si el backend responde 503, la app informa el fallo y deja reintentar sin quedar a medias (RN-03.15).
-- [ ] Al tocar «Iniciar», la ruta pasa a Activa y se abre la vista Navegación activa, con la posición del conductor, la calle que sigue con el sentido del giro (izquierda o derecha), que la app calcula con el trazado y los nombres de calle de la ruta, y la distancia y el tiempo que faltan (RN-03.17, D-22).
-- [ ] Al llegar al destino, a menos de 30 m, o al tocar «Cancelar», la ruta pasa a Terminada y se borra del teléfono; nunca se guarda en el servidor (D-05).
+- [ ] Al tocar «Iniciar», la ruta pasa a Activa y se abre la vista Navegación activa (RN-03.17).
 
 **Tareas**
 - [ ] Implementar la vista Cómo llegar y su controlador de ruta.
 - [ ] Implementar la elección de destino por mapa y por surtidor.
 - [ ] Dibujar la ruta con Mapbox.
-- [ ] Implementar la vista Navegación activa y su controlador, que guarda los tramos de la ruta para revisarla después (D-12).
-- [ ] Escribir pruebas de los controladores con respuestas falsas.
+- [ ] Escribir pruebas del controlador con respuestas falsas.
 
 **Casos de prueba**
 - [ ] CP-105 Caso de prueba: de la posición actual a un punto del mapa, la ruta aparece con tiempo y distancia en menos de 3 segundos.
 - [ ] CP-106 Caso de prueba: un destino fuera de Tarija muestra «Origen o destino inválido».
-- [ ] CP-107 Caso de prueba: al tocar «Iniciar», la vista Navegación activa sigue la posición del conductor.
 
-**Relacionado:** RF-05 · RNF-02 · CU-03 · RN-03.2, RN-03.3, RN-03.12, RN-03.13, RN-03.15, RN-03.17, RN-03.18 · D-05, D-12, D-22, D-24 · P-19
+**Relacionado:** RF-05 · RNF-02 · CU-03 · RN-03.2, RN-03.3, RN-03.12, RN-03.13, RN-03.15, RN-03.17, RN-03.18 · D-24 · P-19
 
 Lo subes en una nueva rama llamada "feature/HU05-CU03-flutter-como-llegar" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [HU-05][CU-03][Flutter] Navegación activa
+
+**Caso de uso:** CU-03 — Calcular Ruta Óptima
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
+**Depende de:** [HU-05][CU-03][Flutter] Cómo llegar #70
+**Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
+
+**Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
+
+Este issue cubre la vista Navegación activa, que se abre al tocar «Iniciar» en Cómo llegar.
+
+**Criterios de aceptación**
+- [ ] La vista Navegación activa muestra la posición del conductor, la calle que sigue con el sentido del giro (izquierda o derecha), que la app calcula con el trazado y los nombres de calle de la ruta, y la distancia y el tiempo que faltan (RN-03.17, D-22).
+- [ ] El controlador de navegación guarda los tramos de la ruta, para revisarla después (D-12).
+- [ ] Al llegar al destino, a menos de 30 m, o al tocar «Cancelar», la ruta pasa a Terminada y se borra del teléfono; nunca se guarda en el servidor (D-05).
+
+**Tareas**
+- [ ] Implementar la vista Navegación activa y su controlador.
+- [ ] Implementar el cálculo de la calle que sigue y del sentido del giro con el trazado de la ruta.
+- [ ] Implementar la llegada y la cancelación.
+- [ ] Escribir pruebas del controlador con una ruta y posiciones simuladas.
+
+**Casos de prueba**
+- [ ] CP-107 Caso de prueba: al tocar «Iniciar», la vista Navegación activa sigue la posición del conductor.
+- [ ] CP-155 Caso de prueba: al acercarse a una esquina de la ruta, la vista muestra la calle que sigue y el sentido del giro; a menos de 30 m del destino, la navegación termina.
+
+**Relacionado:** RF-05 · CU-03 · RN-03.17 · D-05, D-12, D-22
+
+Lo subes en una nueva rama llamada "feature/HU05-CU03-flutter-navegacion-activa" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ### [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-13][CU-04][Java] Recibir telemetría y registrar congestión #74
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -380,7 +411,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-flutter-telemetria" (No ol
 ### [HU-07][CU-05][Flutter] Consultar surtidores cercanos
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Alex, con Franz si hace falta
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -417,7 +448,7 @@ Lo subes en una nueva rama llamada "feature/HU07-CU05-flutter-surtidores" (No ol
 ### [HU-12][CU-05][Flutter] Preguntar por la recarga
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Alex
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
 **Depende de:** [HU-07][CU-05][Flutter] Consultar surtidores cercanos #71 · [HU-12][CU-05][Java] Registrar confirmaciones de recarga #72
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -451,8 +482,8 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-flutter-pregunta-recarga" 
 ### [HU-06][CU-04][Flutter] Aviso de ruta alternativa
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Alex
-**Depende de:** [HU-05][CU-03][Flutter] Cómo llegar y navegación activa #70 · [HU-06][CU-04][Java] Revisar la ruta activa #82
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
+**Depende de:** [HU-05][CU-03][Flutter] Navegación activa #94 · [HU-06][CU-04][Java] Revisar la ruta activa #82
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
 **Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema me proponga una ruta alternativa cuando un evento vial afecte mi camino, para evitar demoras sin tener que buscarla yo.
@@ -488,7 +519,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 ### [T-104][Flutter] Política de privacidad
 
 **Tipo:** Tarea de documentación (cubre CU-04, CU-06 y CU-08)
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Franz
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
 **Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59 · [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta #75
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
 

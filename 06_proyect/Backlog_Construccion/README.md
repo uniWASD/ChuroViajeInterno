@@ -74,6 +74,8 @@ Las 135 reglas de `04_reglas` están citadas en al menos un issue.
 
 Los issues se crean en el orden de [00_Indice_de_subida.md](00_Indice_de_subida.md), para que cada uno se cree después de aquellos de los que depende.
 
+El script [subir_issues.py](subir_issues.py) hace todo esto solo, con GitHub CLI (`gh`) y la cuenta de quien lo ejecuta, que queda como autor de los issues. Primero se ejecuta sin `--crear`, para revisar los issues ya numerados en la carpeta `_simulacion/`, y después con `--crear`. Las instrucciones están al principio del script. Los pasos de abajo describen lo que hace, por si hay que subir algún issue a mano.
+
 1. **Numerar.** Los issues van con `T-XXX` y `CP-XX` a propósito. Al crearlos en GitHub, en el orden de los sprints, se reemplaza cada `T-XXX` por el siguiente número libre y cada `CP-XX` por el siguiente caso de prueba. Al 13/10/2026 la última tarea es T-086 y el último caso de prueba es CP-19; confírmalo en [TRAZABILIDAD.md](../TRAZABILIDAD.md) y en GitHub antes de empezar. En la rama, `TXX` toma el mismo número (T-087 → `feature/T87-...`).
 2. **Título y cuerpo.** El título es el encabezado del issue, sin el `###`. El cuerpo es todo lo que sigue hasta la línea horizontal.
 3. **Dependencias.** Cuando el issue del que depende ya existe en GitHub, se agrega su número junto al título (por ejemplo, «[HU-10][CU-08][Java] … #41»).

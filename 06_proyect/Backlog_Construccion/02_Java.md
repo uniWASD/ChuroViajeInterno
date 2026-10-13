@@ -20,7 +20,7 @@ El backend es la única puerta de entrada del sistema y el lugar donde viven los
 
 ## Sprint 1
 
-### [T-XXX][Java] Estructura base del backend
+### [T-088][Java] Estructura base del backend
 
 **Tipo:** Tarea de infraestructura (base para todos los issues de Java)
 **Tecnología:** Java · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Jorge
@@ -52,19 +52,19 @@ El backend es la única puerta de entrada del sistema y el lugar donde viven los
 - [ ] Escribir el README.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: una petición con un cuerpo mal formado responde 400 con `{codigo, mensaje}` en español.
+- [ ] CP-21 Caso de prueba: una petición con un cuerpo mal formado responde 400 con `{codigo, mensaje}` en español.
 
 **Relacionado:** RNF-08 · [02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md) · [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md) · D-01, D-02
 
-Lo subes en una nueva rama llamada "feature/TXX-java-estructura-base" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T88-java-estructura-base" (No olvides que el source de la rama es la de develop)
 
 ---
 
-### [T-XXX][Java] Base de datos, catálogos y zona de cobertura
+### [T-089][Java] Base de datos, catálogos y zona de cobertura
 
 **Tipo:** Tarea de infraestructura (datos que usan CU-01, CU-02, CU-03, CU-05 y CU-06)
 **Tecnología:** Java · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Antonio
-**Depende de:** [T-XXX][Java] Estructura base del backend
+**Depende de:** [T-088][Java] Estructura base del backend #40
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
 **Descripción:** Dejar lista la base de datos PostgreSQL con PostGIS, versionada con migraciones, con los catálogos cargados. También dibujar el polígono de la mancha urbana de Tarija, que usan el backend para validar ubicaciones y el motor para recortar la red vial. Cada historia agrega después sus propias tablas en su propia migración.
@@ -88,12 +88,12 @@ Lo subes en una nueva rama llamada "feature/TXX-java-estructura-base" (No olvide
 - [ ] Probar las migraciones sobre una base limpia.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un punto en la Plaza Luis de Fuentes está dentro de la mancha urbana; uno en San Lorenzo está fuera.
-- [ ] CP-XX Caso de prueba: correr las migraciones sobre una base vacía crea las tablas y los catálogos completos.
+- [ ] CP-22 Caso de prueba: un punto en la Plaza Luis de Fuentes está dentro de la mancha urbana; uno en San Lorenzo está fuera.
+- [ ] CP-23 Caso de prueba: correr las migraciones sobre una base vacía crea las tablas y los catálogos completos.
 
 **Relacionado:** RF-01 · RF-07 · CU-01 · CU-05 · CU-06 · [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md) · [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md) · D-02, D-04, D-10
 
-Lo subes en una nueva rama llamada "feature/TXX-java-base-de-datos" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T89-java-base-de-datos" (No olvides que el source de la rama es la de develop)
 
 ---
 
@@ -103,7 +103,7 @@ Lo subes en una nueva rama llamada "feature/TXX-java-base-de-datos" (No olvides 
 
 **Caso de uso:** CU-08 — Iniciar Sesión
 **Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Jorge
-**Depende de:** [T-XXX][Java] Base de datos, catálogos y zona de cobertura
+**Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41
 **Etiquetas:** `caso-uso:CU-08` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como conductor de la app, quiero iniciar sesión con mi cuenta de Google, para acceder de forma rápida y segura sin gestionar una contraseña adicional.
@@ -128,11 +128,11 @@ Lo subes en una nueva rama llamada "feature/TXX-java-base-de-datos" (No olvides 
 - [ ] Escribir pruebas unitarias del dominio y pruebas de integración de los dos endpoints.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: primer ingreso con una cuenta válida crea el conductor y devuelve el JWT; el segundo ingreso no crea otro.
-- [ ] CP-XX Caso de prueba: un token de Google vencido o falso responde 401 y no emite JWT.
-- [ ] CP-XX Caso de prueba: una petición a `GET /eventos` sin JWT, o con uno vencido, responde 401.
-- [ ] CP-XX Caso de prueba: con un token de renovación vigente se obtiene un JWT nuevo; con uno de más de 30 días, 401.
-- [ ] CP-XX Caso de prueba: después de cerrar sesión, el token de renovación ya no sirve.
+- [ ] CP-31 Caso de prueba: primer ingreso con una cuenta válida crea el conductor y devuelve el JWT; el segundo ingreso no crea otro.
+- [ ] CP-32 Caso de prueba: un token de Google vencido o falso responde 401 y no emite JWT.
+- [ ] CP-33 Caso de prueba: una petición a `GET /eventos` sin JWT, o con uno vencido, responde 401.
+- [ ] CP-34 Caso de prueba: con un token de renovación vigente se obtiene un JWT nuevo; con uno de más de 30 días, 401.
+- [ ] CP-35 Caso de prueba: después de cerrar sesión, el token de renovación ya no sirve.
 
 **Relacionado:** RF-11 · RNF-05 · RNF-08 · CU-08 · RN-08.1 a RN-08.12, RN-08.14 · P-05
 
@@ -140,11 +140,11 @@ Lo subes en una nueva rama llamada "feature/HU10-CU08-java-inicio-sesion" (No ol
 
 ---
 
-### [T-XXX][Java] Catálogos para la app
+### [T-094][Java] Catálogos para la app
 
 **Tipo:** Tarea de desarrollo (cubre CU-01, CU-02 y CU-05; no es una HU específica)
 **Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Antonio
-**Depende de:** [T-XXX][Java] Base de datos, catálogos y zona de cobertura · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT
+**Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
 **Descripción:** Entregar a la app los catálogos que necesita para no tener valores propios: tipos de evento con su color, su vigencia y si son reportables; tipos de combustible; valores de la fila; y los tiempos que ofrece el reporte. Así la app y el backend nunca usan valores distintos ([D-06](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
@@ -162,19 +162,19 @@ Lo subes en una nueva rama llamada "feature/HU10-CU08-java-inicio-sesion" (No ol
 - [ ] Escribir la prueba de integración del endpoint.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: `GET /catalogos` devuelve 5 tipos de evento (4 reportables), 5 tipos de combustible, 4 valores de fila y 4 tiempos de reporte.
+- [ ] CP-36 Caso de prueba: `GET /catalogos` devuelve 5 tipos de evento (4 reportables), 5 tipos de combustible, 4 valores de fila y 4 tiempos de reporte.
 
 **Relacionado:** RF-01 · RF-03 · CU-01 · CU-02 · CU-05 · D-06, D-09 · P-06, P-15
 
-Lo subes en una nueva rama llamada "feature/TXX-java-catalogos" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T94-java-catalogos" (No olvides que el source de la rama es la de develop)
 
 ---
 
-### [T-XXX][Java] Wrapper MotorDeRutas
+### [T-095][Java] Wrapper MotorDeRutas
 
 **Tipo:** Tarea de desarrollo (cubre CU-03 y CU-04; no es una HU específica)
 **Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Jorge, con Marcelo
-**Depende de:** [T-XXX][Java] Estructura base del backend · [T-XXX][C++] Estructura del núcleo y protocolo por pipe
+**Depende de:** [T-088][Java] Estructura base del backend #40 · [T-090][C++] Estructura del núcleo y protocolo por pipe #42
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java` · `tec:cpp`
 
 **Descripción:** Construir el wrapper `MotorDeRutas`, la única forma que tiene el backend de llegar al núcleo C++. El wrapper arranca el núcleo como proceso hijo, le escribe una línea de JSON por petición en su entrada estándar y lee la respuesta de su salida estándar, como define [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md). El resto del backend solo ve métodos Java.
@@ -198,14 +198,14 @@ Lo subes en una nueva rama llamada "feature/TXX-java-catalogos" (No olvides que 
 - [ ] Escribir pruebas de integración: respuesta normal, demora, caída y reinicio.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: con el núcleo falso, `consultarEstado` devuelve que la red está cargada.
-- [ ] CP-XX Caso de prueba: si el núcleo no responde, el wrapper corta antes de los 3 segundos, lo reinicia y la siguiente petición funciona.
-- [ ] CP-XX Caso de prueba: con 50 peticiones juntas y un núcleo falso lento, las que vencen en la fila responden «motor no disponible» y el núcleo no se reinicia.
-- [ ] CP-XX Caso de prueba: si el proceso del núcleo muere, el wrapper lo vuelve a arrancar solo.
+- [ ] CP-41 Caso de prueba: con el núcleo falso, `consultarEstado` devuelve que la red está cargada.
+- [ ] CP-42 Caso de prueba: si el núcleo no responde, el wrapper corta antes de los 3 segundos, lo reinicia y la siguiente petición funciona.
+- [ ] CP-43 Caso de prueba: con 50 peticiones juntas y un núcleo falso lento, las que vencen en la fila responden «motor no disponible» y el núcleo no se reinicia.
+- [ ] CP-44 Caso de prueba: si el proceso del núcleo muere, el wrapper lo vuelve a arrancar solo.
 
 **Relacionado:** RNF-02 · CU-03 · CU-04 · RN-03.15 · D-14, D-15 · [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md)
 
-Lo subes en una nueva rama llamada "feature/TXX-java-wrapper-motor" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T95-java-wrapper-motor" (No olvides que el source de la rama es la de develop)
 
 ---
 
@@ -215,7 +215,7 @@ Lo subes en una nueva rama llamada "feature/TXX-java-wrapper-motor" (No olvides 
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
 **Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Jorge
-**Depende de:** [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT · [T-XXX][Java] Catálogos para la app
+**Depende de:** [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-094][Java] Catálogos para la app #47
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como conductor de la app, quiero reportar un evento vial (accidente, control policial, bloqueo u otro) desde el mapa, para que otros conductores lo vean y puedan evitarlo.
@@ -240,11 +240,11 @@ Lo subes en una nueva rama llamada "feature/TXX-java-wrapper-motor" (No olvides 
 - [ ] Escribir pruebas unitarias de cada regla y pruebas de integración del endpoint.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un accidente «hace 5 minutos» dentro de Tarija se registra Activo y el momento en que ocurrió es 5 minutos antes de la confirmación.
-- [ ] CP-XX Caso de prueba: un reporte sin ubicación responde 400 y no se guarda nada.
-- [ ] CP-XX Caso de prueba: el mismo conductor reporta dos controles policiales a 50 m en 3 minutos; el segundo responde 409.
-- [ ] CP-XX Caso de prueba: el sexto reporte en 10 minutos responde 429.
-- [ ] CP-XX Caso de prueba: un reporte de «congestión» responde 422.
+- [ ] CP-52 Caso de prueba: un accidente «hace 5 minutos» dentro de Tarija se registra Activo y el momento en que ocurrió es 5 minutos antes de la confirmación.
+- [ ] CP-53 Caso de prueba: un reporte sin ubicación responde 400 y no se guarda nada.
+- [ ] CP-54 Caso de prueba: el mismo conductor reporta dos controles policiales a 50 m en 3 minutos; el segundo responde 409.
+- [ ] CP-55 Caso de prueba: el sexto reporte en 10 minutos responde 429.
+- [ ] CP-56 Caso de prueba: un reporte de «congestión» responde 422.
 
 **Relacionado:** RF-01 · RNF-01 · RNF-06 · RNF-08 · RNF-09 · RNF-10 · CU-01 · RN-01.1 a RN-01.12 · P-03, P-04 · D-09, D-10
 
@@ -256,7 +256,7 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-java-registrar-reporte" (N
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
 **Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Antonio, con Jorge
-**Depende de:** [HU-01][CU-01][Java] Registrar reportes de eventos viales
+**Depende de:** [HU-01][CU-01][Java] Registrar reportes de eventos viales #53
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como conductor de la app, quiero ver en el mapa los eventos viales activos reportados por otros conductores, para anticiparme a accidentes, controles, bloqueos o congestiones en mi ruta.
@@ -278,10 +278,10 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-java-registrar-reporte" (N
 - [ ] Escribir pruebas unitarias, de integración y una prueba de tiempo con 500 eventos.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un control policial de hace 61 minutos ya no sale en `GET /eventos` y queda Vencido.
-- [ ] CP-XX Caso de prueba: con la marca de una consulta anterior solo llegan los eventos nuevos, los que se confirmaron y los que dejaron de estar vigentes.
-- [ ] CP-XX Caso de prueba: un evento que vence entre dos consultas llega como vencido en la segunda, aunque la tarea periódica no haya corrido todavía.
-- [ ] CP-XX Caso de prueba: la respuesta no contiene ningún identificador de conductor.
+- [ ] CP-61 Caso de prueba: un control policial de hace 61 minutos ya no sale en `GET /eventos` y queda Vencido.
+- [ ] CP-62 Caso de prueba: con la marca de una consulta anterior solo llegan los eventos nuevos, los que se confirmaron y los que dejaron de estar vigentes.
+- [ ] CP-63 Caso de prueba: un evento que vence entre dos consultas llega como vencido en la segunda, aunque la tarea periódica no haya corrido todavía.
+- [ ] CP-64 Caso de prueba: la respuesta no contiene ningún identificador de conductor.
 
 **Relacionado:** RF-03 · RNF-01 · RNF-10 · CU-02 · RN-02.1 a RN-02.6, RN-02.14, RN-04.11
 
@@ -293,7 +293,7 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-java-consultar-eventos" (N
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
 **Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Antonio
-**Depende de:** [T-XXX][Java] Base de datos, catálogos y zona de cobertura · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT
+**Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como sistema, quiero extraer los mensajes de los grupos de WhatsApp monitoreados e interpretarlos por lotes, para mantener actualizado el estado de los surtidores sin depender de reportes manuales.
@@ -317,9 +317,9 @@ Este issue cubre la parte del backend: recibir, validar y guardar el resultado d
 - [ ] Escribir pruebas con lotes válidos, mezclados y repetidos.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un lote con un aviso de «Las Vegas» válido y otro de un surtidor que no existe actualiza solo el primero y reporta el segundo como descartado.
-- [ ] CP-XX Caso de prueba: un aviso de las 15:00 no reemplaza un dato del mismo surtidor y tipo de las 15:10.
-- [ ] CP-XX Caso de prueba: una petición con el JWT de un conductor responde 403.
+- [ ] CP-68 Caso de prueba: un lote con un aviso de «Las Vegas» válido y otro de un surtidor que no existe actualiza solo el primero y reporta el segundo como descartado.
+- [ ] CP-69 Caso de prueba: un aviso de las 15:00 no reemplaza un dato del mismo surtidor y tipo de las 15:10.
+- [ ] CP-70 Caso de prueba: una petición con el JWT de un conductor responde 403.
 
 **Relacionado:** RF-08 · RF-09 · RNF-04 · CU-06 · RN-06.14 a RN-06.17 · D-13 · P-15 · [decision_conexion_whatsapp.md](../../05_pro/ComWhatsapp/decision_conexion_whatsapp.md)
 
@@ -333,7 +333,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
 **Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Antonio
-**Depende de:** [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos
+**Depende de:** [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos #55
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como conductor de la app, quiero ver la lista de eventos activos y votar si cada uno es real o falso, para que el mapa muestre solo eventos confiables.
@@ -354,10 +354,10 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 - [ ] Escribir pruebas de cada regla, incluida la de dos votos que llegan al mismo tiempo.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: tres conductores votan «falso» un accidente; queda Retirado y no sale en la siguiente `GET /eventos`.
-- [ ] CP-XX Caso de prueba: un evento con 3 votos «real» recibe después 3 «falso» y sigue Confirmado.
-- [ ] CP-XX Caso de prueba: el mismo conductor vota dos veces; el segundo voto responde 409.
-- [ ] CP-XX Caso de prueba: el reportante intenta votar su evento y recibe 422.
+- [ ] CP-86 Caso de prueba: tres conductores votan «falso» un accidente; queda Retirado y no sale en la siguiente `GET /eventos`.
+- [ ] CP-87 Caso de prueba: un evento con 3 votos «real» recibe después 3 «falso» y sigue Confirmado.
+- [ ] CP-88 Caso de prueba: el mismo conductor vota dos veces; el segundo voto responde 409.
+- [ ] CP-89 Caso de prueba: el reportante intenta votar su evento y recibe 422.
 
 **Relacionado:** RF-12 · RNF-09 · CU-02 · RN-02.10 a RN-02.14 · D-20 · P-01, P-11, P-17
 
@@ -369,7 +369,7 @@ Lo subes en una nueva rama llamada "feature/HU11-CU02-java-votos" (No olvides qu
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
 **Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Jorge
-**Depende de:** [T-XXX][Java] Wrapper MotorDeRutas · [HU-05][CU-03][C++] Calcular la ruta óptima con A*
+**Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-05][CU-03][C++] Calcular la ruta óptima con A* #58
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
@@ -390,9 +390,9 @@ Lo subes en una nueva rama llamada "feature/HU11-CU02-java-votos" (No olvides qu
 - [ ] Escribir pruebas con el núcleo falso y una prueba de integración con el núcleo real.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: de la Plaza Luis de Fuentes a la terminal se obtiene una ruta con distancia y tiempo en menos de 3 segundos.
-- [ ] CP-XX Caso de prueba: un destino en San Lorenzo responde «Origen o destino inválido».
-- [ ] CP-XX Caso de prueba: con el núcleo detenido, la respuesta es 503 y el siguiente intento, con el núcleo reiniciado, funciona.
+- [ ] CP-92 Caso de prueba: de la Plaza Luis de Fuentes a la terminal se obtiene una ruta con distancia y tiempo en menos de 3 segundos.
+- [ ] CP-93 Caso de prueba: un destino en San Lorenzo responde «Origen o destino inválido».
+- [ ] CP-94 Caso de prueba: con el núcleo detenido, la respuesta es 503 y el siguiente intento, con el núcleo reiniciado, funciona.
 
 **Relacionado:** RF-05 · RNF-02 · RNF-10 · CU-03 · RN-03.1 a RN-03.4, RN-03.12, RN-03.13, RN-03.15 a RN-03.17 · D-05, D-12, D-15
 
@@ -400,11 +400,11 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-java-calcular-ruta" (No ol
 
 ---
 
-### [T-XXX][Java] Mantener al día el tráfico del motor
+### [T-099][Java] Mantener al día el tráfico del motor
 
 **Tipo:** Tarea de desarrollo (cubre CU-02, CU-03 y CU-04; no es una HU específica)
 **Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Jorge
-**Depende de:** [T-XXX][Java] Wrapper MotorDeRutas · [HU-11][CU-02][Java] Votar eventos · [HU-05][CU-03][C++] Tráfico de los eventos en los tramos
+**Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-11][CU-02][Java] Votar eventos #63 · [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
 **Descripción:** Que el motor calcule siempre con el tráfico al día. El backend le avisa cada vez que un evento nace, cambia su vencimiento, se retira o vence ([D-14](../../03_des/02_Arquitectura/08_decisiones_parametros.md)) y, cada vez que el wrapper arranca el núcleo, le envía todos los eventos vigentes ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
@@ -423,12 +423,12 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-java-calcular-ruta" (No ol
 - [ ] Escribir pruebas con el núcleo falso que registren qué mensajes recibió.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un bloqueo reportado sobre la única calle entre dos puntos hace que la ruta entre ellos responda «sin ruta»; al retirarlo por votos, la ruta vuelve a existir.
-- [ ] CP-XX Caso de prueba: se reinicia el núcleo con 3 eventos vigentes y, antes de la primera ruta, el núcleo ya recibió los 3.
+- [ ] CP-99 Caso de prueba: un bloqueo reportado sobre la única calle entre dos puntos hace que la ruta entre ellos responda «sin ruta»; al retirarlo por votos, la ruta vuelve a existir.
+- [ ] CP-100 Caso de prueba: se reinicia el núcleo con 3 eventos vigentes y, antes de la primera ruta, el núcleo ya recibió los 3.
 
 **Relacionado:** RF-05 · RF-06 · CU-02 · CU-03 · CU-04 · RN-02.15, RN-03.9 · D-14, D-15, D-18
 
-Lo subes en una nueva rama llamada "feature/TXX-java-trafico-motor" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T99-java-trafico-motor" (No olvides que el source de la rama es la de develop)
 
 ---
 
@@ -438,7 +438,7 @@ Lo subes en una nueva rama llamada "feature/TXX-java-trafico-motor" (No olvides 
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
 **Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Antonio
-**Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp
+**Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como conductor de la app, quiero consultar el estado de disponibilidad de combustible en surtidores cercanos, para evitar dirigirme a uno que esté agotado.
@@ -459,9 +459,9 @@ Lo subes en una nueva rama llamada "feature/TXX-java-trafico-motor" (No olvides 
 - [ ] Escribir pruebas con datos de ambos orígenes y datos vencidos.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un surtidor con Gasolina «agotado» por WhatsApp a las 10:00 y «disponible» por Conductores a las 10:30 muestra disponible, origen Conductores, 10:30.
-- [ ] CP-XX Caso de prueba: un surtidor cuyo último dato es de hace 7 horas sale como «sin información reciente».
-- [ ] CP-XX Caso de prueba: desde la Plaza, el primer surtidor de la lista es el más cercano.
+- [ ] CP-102 Caso de prueba: un surtidor con Gasolina «agotado» por WhatsApp a las 10:00 y «disponible» por Conductores a las 10:30 muestra disponible, origen Conductores, 10:30.
+- [ ] CP-103 Caso de prueba: un surtidor cuyo último dato es de hace 7 horas sale como «sin información reciente».
+- [ ] CP-104 Caso de prueba: desde la Plaza, el primer surtidor de la lista es el más cercano.
 
 **Relacionado:** RF-07 · RNF-03 · RNF-07 · CU-05 · RN-05.1 a RN-05.7
 
@@ -473,7 +473,7 @@ Lo subes en una nueva rama llamada "feature/HU07-CU05-java-consultar-surtidores"
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
 **Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Antonio, con Jorge
-**Depende de:** [HU-07][CU-05][Java] Consultar surtidores cercanos
+**Depende de:** [HU-07][CU-05][Java] Consultar surtidores cercanos #69
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como conductor de la app, quiero indicar que acabo de recargar combustible y de qué tipo, para que los demás conductores sepan que ese surtidor tiene ese combustible.
@@ -493,9 +493,9 @@ Lo subes en una nueva rama llamada "feature/HU07-CU05-java-consultar-surtidores"
 - [ ] Escribir pruebas de cada regla.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un conductor a 20 m del surtidor confirma Diesel y el surtidor queda con Diesel disponible, origen Conductores.
-- [ ] CP-XX Caso de prueba: la misma confirmación 10 minutos después responde 409.
-- [ ] CP-XX Caso de prueba: una confirmación desde 500 m responde 422.
+- [ ] CP-111 Caso de prueba: un conductor a 20 m del surtidor confirma Diesel y el surtidor queda con Diesel disponible, origen Conductores.
+- [ ] CP-112 Caso de prueba: la misma confirmación 10 minutos después responde 409.
+- [ ] CP-113 Caso de prueba: una confirmación desde 500 m responde 422.
 
 **Relacionado:** RF-13 · RNF-07 · RNF-09 · CU-05 · RN-05.9, RN-05.11 a RN-05.15 · P-09, P-14
 
@@ -507,7 +507,7 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-java-confirmar-recarga" (N
 
 **Caso de uso:** CU-04 — Recalcular Ruta
 **Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Jorge
-**Depende de:** [T-XXX][Java] Mantener al día el tráfico del motor · [HU-13][CU-04][C++] Detectar congestión con la telemetría
+**Depende de:** [T-099][Java] Mantener al día el tráfico del motor #67 · [HU-13][CU-04][C++] Detectar congestión con la telemetría #73
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como sistema, quiero recibir la posición de los conductores mientras tienen la app abierta, para calcular su velocidad y detectar congestión sin depender solo de los reportes manuales.
@@ -531,9 +531,9 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-java-confirmar-recarga" (N
 - [ ] Escribir pruebas con el núcleo falso que devuelve una congestión.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: cuando el motor informa congestión en un tramo, aparece un evento Congestión con origen Telemetría en `GET /eventos`.
-- [ ] CP-XX Caso de prueba: una segunda congestión en el mismo tramo no crea otro evento; mueve el momento del existente.
-- [ ] CP-XX Caso de prueba: después de procesar las lecturas, la base no tiene ninguna fila de telemetría.
+- [ ] CP-119 Caso de prueba: cuando el motor informa congestión en un tramo, aparece un evento Congestión con origen Telemetría en `GET /eventos`.
+- [ ] CP-120 Caso de prueba: una segunda congestión en el mismo tramo no crea otro evento; mueve el momento del existente.
+- [ ] CP-121 Caso de prueba: después de procesar las lecturas, la base no tiene ninguna fila de telemetría.
 
 **Relacionado:** RF-14 · RNF-08 · RNF-10 · RNF-13 · CU-04 · RN-04.4, RN-04.10 a RN-04.12 · D-04, D-07, D-14 · P-12
 
@@ -547,7 +547,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvid
 
 **Caso de uso:** CU-04 — Recalcular Ruta
 **Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Jorge
-**Depende de:** [HU-05][CU-03][Java] Calcular la ruta · [HU-06][CU-04][C++] Revisar la ruta activa
+**Depende de:** [HU-05][CU-03][Java] Calcular la ruta #65 · [HU-06][CU-04][C++] Revisar la ruta activa #76
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema me proponga una ruta alternativa cuando un evento vial afecte mi camino, para evitar demoras sin tener que buscarla yo.
@@ -568,10 +568,10 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvid
 - [ ] Escribir pruebas de los tres resultados posibles.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: con un accidente nuevo sobre un tramo que falta, la respuesta trae una alternativa más barata.
-- [ ] CP-XX Caso de prueba: si no hay camino mejor, la respuesta es «sin alternativa», con el evento que la provocó.
-- [ ] CP-XX Caso de prueba: el mismo evento, enviado como ya avisado, devuelve «sin cambios».
-- [ ] CP-XX Caso de prueba: con tramos que no existen, la respuesta es «ruta desactualizada».
+- [ ] CP-134 Caso de prueba: con un accidente nuevo sobre un tramo que falta, la respuesta trae una alternativa más barata.
+- [ ] CP-135 Caso de prueba: si no hay camino mejor, la respuesta es «sin alternativa», con el evento que la provocó.
+- [ ] CP-136 Caso de prueba: el mismo evento, enviado como ya avisado, devuelve «sin cambios».
+- [ ] CP-137 Caso de prueba: con tramos que no existen, la respuesta es «ruta desactualizada».
 
 **Relacionado:** RF-06 · CU-04 · RN-04.13 a RN-04.16, RN-04.19 · D-05, D-12
 
@@ -583,7 +583,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-java-revisar-ruta" (No olv
 
 **Caso de uso:** CU-07 — Ejecutar Simulador de Tráfico
 **Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11), al inicio, porque el simulador lo usa en el mismo sprint · **Responsable sugerido:** Antonio
-**Depende de:** [HU-13][CU-04][Java] Recibir telemetría y registrar congestión
+**Depende de:** [HU-13][CU-04][Java] Recibir telemetría y registrar congestión #74
 **Etiquetas:** `caso-uso:CU-07` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como desarrollador del equipo, quiero ejecutar un simulador que genere «usuarios fantasma» con eventos y telemetría, para validar el rendimiento y la estabilidad del sistema bajo carga antes de un despliegue.
@@ -609,9 +609,9 @@ Este issue cubre la parte del backend: recibir a los usuarios fantasma como cond
 - [ ] Agregar el registro de cada prueba de carga por su identificador.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: en el perfil `prod`, `POST /sesion/prueba` responde 403.
-- [ ] CP-XX Caso de prueba: un evento simulado no aparece a un conductor real fuera del modo demostración.
-- [ ] CP-XX Caso de prueba: después del borrado no queda ninguna fila simulada y las reales siguen intactas.
+- [ ] CP-141 Caso de prueba: en el perfil `prod`, `POST /sesion/prueba` responde 403.
+- [ ] CP-142 Caso de prueba: un evento simulado no aparece a un conductor real fuera del modo demostración.
+- [ ] CP-143 Caso de prueba: después del borrado no queda ninguna fila simulada y las reales siguen intactas.
 
 **Relacionado:** RF-10 · RNF-12 · CU-07 · RN-01.17, RN-02.16, RN-04.20, RN-07.4 a RN-07.11, RN-07.13, RN-08.13 · P-20
 
@@ -619,11 +619,11 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-java-soporte-simulador" (N
 
 ---
 
-### [T-XXX][Java] Limpieza de datos vencidos
+### [T-105][Java] Limpieza de datos vencidos
 
 **Tipo:** Tarea de desarrollo (privacidad y mantenimiento; cubre CU-02 y CU-05)
 **Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Antonio
-**Depende de:** [HU-12][CU-05][Java] Registrar confirmaciones de recarga
+**Depende de:** [HU-12][CU-05][Java] Registrar confirmaciones de recarga #72
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
 **Descripción:** Borrar lo que el sistema ya no necesita, como define [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md): eventos vencidos o retirados, sus votos y las confirmaciones de recarga con más de 30 días, y los tokens de renovación vencidos o invalidados al cerrar sesión.
@@ -638,17 +638,17 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-java-soporte-simulador" (N
 - [ ] Escribir una prueba con datos de distintas fechas.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un evento vencido hace 31 días y sus votos se borran; uno vencido hace 29 días se conserva.
+- [ ] CP-144 Caso de prueba: un evento vencido hace 31 días y sus votos se borran; uno vencido hace 29 días se conserva.
 
 **Relacionado:** RNF-10 · RNF-17 · CU-02 · CU-05 · P-21 · [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md)
 
-Lo subes en una nueva rama llamada "feature/TXX-java-limpieza-datos" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T105-java-limpieza-datos" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ## Sprint 7
 
-### [T-XXX][Java] Pruebas de punta a punta
+### [T-107][Java] Pruebas de punta a punta
 
 **Tipo:** Tarea de pruebas (cubre los ocho casos de uso)
 **Tecnología:** Java · **Sprint:** Sprint 7 (26/11–30/11) · **Responsable sugerido:** Jorge y Antonio
@@ -668,9 +668,9 @@ Lo subes en una nueva rama llamada "feature/TXX-java-limpieza-datos" (No olvides
 - [ ] Abrir los issues de los fallos y corregir los que sean del backend.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un evento reportado por un conductor llega a otro en su siguiente consulta, en menos de 10 segundos (RNF-01).
-- [ ] CP-XX Caso de prueba: un bloqueo reportado cambia la ruta calculada después entre los mismos puntos.
+- [ ] CP-149 Caso de prueba: un evento reportado por un conductor llega a otro en su siguiente consulta, en menos de 10 segundos (RNF-01).
+- [ ] CP-150 Caso de prueba: un bloqueo reportado cambia la ruta calculada después entre los mismos puntos.
 
 **Relacionado:** RNF-01 · RNF-02 · RNF-03 · CU-01 a CU-08
 
-Lo subes en una nueva rama llamada "feature/TXX-java-pruebas-punta-a-punta" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T107-java-pruebas-punta-a-punta" (No olvides que el source de la rama es la de develop)

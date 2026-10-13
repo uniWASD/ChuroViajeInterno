@@ -19,7 +19,7 @@ En el sprint 4 Franz trabaja en los modos sin conexión de la app (HU-02 y HU-04
 
 ## Sprint 1
 
-### [T-XXX][WhatsApp/LLM] Estructura del servicio
+### [T-091][WhatsApp/LLM] Estructura del servicio
 
 **Tipo:** Tarea de infraestructura (base del servicio de CU-06)
 **Tecnología:** Node.js · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Franz
@@ -45,11 +45,11 @@ En el sprint 4 Franz trabaja en los modos sin conexión de la app (HU-02 y HU-04
 - [ ] Escribir el README.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un mensaje guardado y leído de nuevo conserva grupo, fecha y texto, y la tabla no tiene datos del remitente.
+- [ ] CP-26 Caso de prueba: un mensaje guardado y leído de nuevo conserva grupo, fecha y texto, y la tabla no tiene datos del remitente.
 
 **Relacionado:** RNF-11 · CU-06 · RN-06.4 · P-22 · D-13
 
-Lo subes en una nueva rama llamada "feature/TXX-whatsapp-estructura-servicio" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T91-whatsapp-estructura-servicio" (No olvides que el source de la rama es la de develop)
 
 ---
 
@@ -59,7 +59,7 @@ Lo subes en una nueva rama llamada "feature/TXX-whatsapp-estructura-servicio" (N
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
 **Tecnología:** Node.js · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Franz
-**Depende de:** [T-XXX][WhatsApp/LLM] Estructura del servicio
+**Depende de:** [T-091][WhatsApp/LLM] Estructura del servicio #43
 **Issue anterior:** #6 (investigación de la conexión a WhatsApp)
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:whatsapp-llm`
 
@@ -84,9 +84,9 @@ Este issue cubre la extracción; el análisis va en su propio issue.
 - [ ] Probar en un grupo de prueba controlado por el equipo antes de entrar a los grupos reales.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: en el grupo de prueba se envían un texto, una imagen y un audio; solo el texto queda pendiente, sin datos del remitente.
-- [ ] CP-XX Caso de prueba: un mensaje en un grupo que no está en la lista no se guarda.
-- [ ] CP-XX Caso de prueba: al cortar la red del servicio 2 minutos, se reconecta solo al volver.
+- [ ] CP-48 Caso de prueba: en el grupo de prueba se envían un texto, una imagen y un audio; solo el texto queda pendiente, sin datos del remitente.
+- [ ] CP-49 Caso de prueba: un mensaje en un grupo que no está en la lista no se guarda.
+- [ ] CP-50 Caso de prueba: al cortar la red del servicio 2 minutos, se reconecta solo al volver.
 
 **Relacionado:** RF-08 · RNF-11 · CU-06 · RN-06.1 a RN-06.4, RN-06.13 · [decision_conexion_whatsapp.md](../../05_pro/ComWhatsapp/decision_conexion_whatsapp.md)
 
@@ -100,7 +100,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-whatsapp-leer-grupos" (No 
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
 **Tecnología:** Node.js · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Franz
-**Depende de:** [HU-08][CU-06][WhatsApp/LLM] Leer los grupos autorizados · [HU-08][CU-06][Java] Recibir el análisis de WhatsApp
+**Depende de:** [HU-08][CU-06][WhatsApp/LLM] Leer los grupos autorizados #51 · [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Issue anterior:** #10 (investigación del LLM)
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:whatsapp-llm`
 
@@ -129,11 +129,11 @@ Este issue cubre el análisis por lotes y la entrega al backend.
 - [ ] Escribir pruebas con el LLM simulado: lote normal, LLM caído, backend caído.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: «ya hay gasolina en Las Vegas, fila corta» produce un aviso de Las Vegas, Gasolina, disponible, fila corta.
-- [ ] CP-XX Caso de prueba: «¿alguien sabe si hay diésel en El Portillo?» se descarta.
-- [ ] CP-XX Caso de prueba: con el LLM caído, los mensajes siguen pendientes y se analizan en el ciclo siguiente.
-- [ ] CP-XX Caso de prueba: un mensaje válido en el grupo de prueba queda en la tabla `estado_combustible` del backend en menos de 6 minutos (RNF-04).
-- [ ] CP-XX Caso de prueba: un mensaje con «llamen al 71234567» llega al LLM con el número enmascarado.
+- [ ] CP-74 Caso de prueba: «ya hay gasolina en Las Vegas, fila corta» produce un aviso de Las Vegas, Gasolina, disponible, fila corta.
+- [ ] CP-75 Caso de prueba: «¿alguien sabe si hay diésel en El Portillo?» se descarta.
+- [ ] CP-76 Caso de prueba: con el LLM caído, los mensajes siguen pendientes y se analizan en el ciclo siguiente.
+- [ ] CP-77 Caso de prueba: un mensaje válido en el grupo de prueba queda en la tabla `estado_combustible` del backend en menos de 6 minutos (RNF-04).
+- [ ] CP-78 Caso de prueba: un mensaje con «llamen al 71234567» llega al LLM con el número enmascarado.
 
 **Relacionado:** RF-08 · RF-09 · RNF-04 · RNF-11 · CU-06 · RN-06.5 a RN-06.12, RN-06.18, RN-06.19 · D-17 · P-15 · [decision_conexion_whatsapp.md](../../05_pro/ComWhatsapp/decision_conexion_whatsapp.md)
 
@@ -143,11 +143,11 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-llm-analisis-lotes" (No ol
 
 ## Sprint 5
 
-### [T-XXX][WhatsApp/LLM] Prueba con mensajes reales
+### [T-101][WhatsApp/LLM] Prueba con mensajes reales
 
 **Tipo:** Tarea de pruebas (cubre CU-06)
 **Tecnología:** Node.js · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Franz
-**Depende de:** [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado · [T-XXX][Servidor] Desplegar el servicio de WhatsApp/LLM · [HU-07][CU-05][Java] Consultar surtidores cercanos · [HU-07][CU-05][Flutter] Consultar surtidores cercanos
+**Depende de:** [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59 · [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM #68 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69 · [HU-07][CU-05][Flutter] Consultar surtidores cercanos #71
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:whatsapp-llm`
 
 **Descripción:** Medir qué tan bien interpreta el LLM los mensajes reales de los grupos de Tarija y ajustar el prompt antes del cierre, como pide la sección «Revisión futura» de la decisión de WhatsApp.
@@ -166,8 +166,8 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-llm-analisis-lotes" (No ol
 - [ ] Medir el tiempo de punta a punta en el servidor.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: la precisión sobre la muestra anotada alcanza el mínimo que fijó el equipo.
+- [ ] CP-127 Caso de prueba: la precisión sobre la muestra anotada alcanza el mínimo que fijó el equipo.
 
 **Relacionado:** RF-08 · RF-09 · RNF-04 · RNF-11 · CU-06 · RN-06.7 a RN-06.9, RN-06.12
 
-Lo subes en una nueva rama llamada "feature/TXX-llm-prueba-mensajes-reales" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T101-llm-prueba-mensajes-reales" (No olvides que el source de la rama es la de develop)

@@ -1,7 +1,8 @@
 @startuml ARQ-02_CapasMVC
 ' ARQ-02: Aplicación de MVC en ChuroViaje
 ' Fuente: Documento de Arquitectura de Software, sección 4 (06/10/2026)
-' Decisión: D-01 (un solo MVC para todo el sistema; las reglas viven solo en el modelo)
+' Decisiones: D-01 (un solo MVC para todo el sistema; las reglas viven solo en el modelo),
+' D-15 (el wrapper Java MotorDeRutas habla con el núcleo C++ por pipe)
 
 skinparam monochrome true
 skinparam shadowing false
@@ -31,7 +32,8 @@ package "Modelo" {
   component "Servicios del modelo\n(Backend Java)\nuno por proceso, coordinan" as servicios
   component "Objetos de dominio\n(Backend Java)\naquí viven las reglas" as objetos <<reglas>>
   component "Repositorios\n(Backend Java)\nguardan en PostgreSQL" as repositorios
-  component "Motor core\n(C++)\nred vial y rutas" as motor <<reglas>>
+  component "MotorDeRutas\n(wrapper Java)\ntraduce llamadas a mensajes" as wrapper
+  component "Núcleo del motor core\n(C++)\nred vial y rutas" as motor <<reglas>>
 }
 
 pantallas --> cpantalla
@@ -39,6 +41,7 @@ cpantalla -right-> crest : HTTPS
 crest --> servicios
 servicios --> objetos
 servicios --> repositorios
-servicios -right-> motor : MotorDeRutas
+servicios -right-> wrapper : llamada Java
+wrapper --> motor : pipe (JSON por línea)
 
 @enduml

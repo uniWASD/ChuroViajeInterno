@@ -2,7 +2,7 @@
 
 Este documento define cómo se construye ChuroViaje: qué componentes tiene, cómo se organiza con el patrón Modelo-Vista-Controlador (MVC) y qué reglas de negocio gobiernan cada proceso. Es el paso previo al backlog de Construcción: los issues de cada tecnología se derivan de lo que aquí queda escrito.
 
-Esta carpeta es la versión oficial del documento de arquitectura (revisión del 06/10/2026). Cada tema vive en su propio archivo para encontrarlo rápido; el documento completo en Word se arma uniendo estos archivos.
+Esta carpeta es la versión oficial del documento de arquitectura (revisión del 12/10/2026). Cada tema vive en su propio archivo para encontrarlo rápido; el documento completo en Word se arma uniendo estos archivos.
 
 ## Contenido
 
@@ -12,10 +12,10 @@ Esta carpeta es la versión oficial del documento de arquitectura (revisión del
 | [02_mvc.md](02_mvc.md) | Qué es vista, controlador y modelo, reglas de reparto y vistas de la app | Todo el equipo, Flutter |
 | [03_modelo_dominio.md](03_modelo_dominio.md) | Los 19 objetos de dominio, sus estados, catálogos y valores | Java, C++ |
 | [04_reglas/](04_reglas/README.md) | Las 131 reglas de negocio y el recorrido de cada caso de uso, un archivo por CU | Cada uno, según su CU |
-| [05_contratos.md](05_contratos.md) | API de la app, llamadas al motor core, servicio de WhatsApp/LLM y códigos de rechazo | Flutter, Java, C++, LLM |
+| [05_contratos.md](05_contratos.md) | API de la app, wrapper del motor core y sus mensajes por pipe, servicio de WhatsApp/LLM y códigos de rechazo | Flutter, Java, C++, LLM |
 | [06_base_de_datos.md](06_base_de_datos.md) | Qué se guarda y cuánto tiempo, tablas e integridad | Java, simulador |
 | [07_seguridad_privacidad.md](07_seguridad_privacidad.md) | Accesos, defensa contra el abuso, privacidad y servidor | Java, LLM |
-| [08_decisiones_parametros.md](08_decisiones_parametros.md) | Decisiones D-01 a D-14 y parámetros P-01 a P-22 | Todo el equipo |
+| [08_decisiones_parametros.md](08_decisiones_parametros.md) | Decisiones D-01 a D-18 y parámetros P-01 a P-25 | Todo el equipo |
 | [diagramas/](diagramas/) | Fuentes PlantUML (.puml) de los tres diagramas y su imagen | Todo el equipo |
 
 La relación entre requisitos, casos de uso, historias de usuario y reglas está en la matriz [TRAZABILIDAD.md](../../06_proyect/TRAZABILIDAD.md), columna Reglas.

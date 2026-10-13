@@ -21,6 +21,8 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | Sesión del número de WhatsApp | Archivo del servicio de WhatsApp/LLM, con acceso restringido | Mientras el número siga vinculado | CU-06 sección 7 |
 | JWT, cola de reportes, últimos eventos y catálogos | El teléfono del conductor | Hasta cerrar sesión o hasta que se reemplazan | HU-02, HU-04, [RN-08.7](04_reglas/CU-08_IniciarSesion.md) |
 | Registros de las pruebas de carga | Archivos de registro del backend | Hasta revisarlos | [RN-07.11](04_reglas/CU-07_EjecutarSimuladorTrafico.md) |
+| Registros del servidor (Nginx, backend, núcleo y servicio de WhatsApp/LLM) | Archivos del servidor, sin ubicaciones, sin la consulta de las URL y sin textos de mensajes | 14 días, salvo los de pruebas de carga | [D-16](08_decisiones_parametros.md) |
+| Respaldos de la base de datos | Almacenamiento de objetos de Oracle Cloud, fuera de la instancia | 7 días. Lo que borra [P-21](08_decisiones_parametros.md) desaparece de los respaldos 7 días después | [D-16](08_decisiones_parametros.md) |
 
 ## Tablas principales
 
@@ -29,7 +31,7 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | `conductor` | Identificador, identificador de Google, fecha de alta, simulado | Conductor |
 | `sesion` | Conductor, token de renovación, emisión, expiración | Sesión |
 | `tipo_evento` | Código, nombre, color, vigencia en minutos, reportable | TipoEvento |
-| `evento_vial` | Identificador, tipo, ubicación, momento en que ocurrió, momento de registro, reportante, origen, estado, votos «real», votos «falso», simulado | EventoVial, Ubicación |
+| `evento_vial` | Identificador, tipo, ubicación, momento en que ocurrió, momento de registro, reportante, origen, nivel (solo congestión), estado, votos «real», votos «falso», simulado | EventoVial, Ubicación |
 | `voto` | Evento, conductor, valor, fecha, simulado | Voto |
 | `surtidor` | Identificador, nombre, ubicación | Surtidor |
 | `surtidor_alias` | Surtidor, alias | Surtidor |

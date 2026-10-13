@@ -8,7 +8,7 @@ ChuroViaje usa un solo MVC que atraviesa los componentes: la vista está en la a
 
 *Figura: Capas MVC de ChuroViaje · una vista, dos controladores y el modelo en el servidor. Fuente editable: [ARQ-02_CapasMVC.puml](diagramas/ARQ-02_CapasMVC.puml).*
 
-Los dos recuadros resaltados son los únicos lugares donde hay reglas de negocio: los objetos de dominio del backend y el motor core.
+Los dos recuadros resaltados son los únicos lugares donde hay reglas de negocio: los objetos de dominio del backend y el núcleo C++ del motor core.
 
 ## Qué es cada capa
 
@@ -24,7 +24,11 @@ Los dos recuadros resaltados son los únicos lugares donde hay reglas de negocio
 - **Objetos de dominio.** Cada uno guarda sus datos y hace cumplir sus propias reglas. Un `EventoVial` sabe si sigue vigente y si un conductor ya lo votó; nadie más lo calcula por él.
 - **Servicios del modelo.** Hay uno por proceso. Coordinan a los objetos de dominio y a los repositorios para completar un caso de uso, pero no deciden reglas.
 - **Repositorios.** Guardan y recuperan objetos de dominio en PostgreSQL. No contienen reglas.
-- **Motor core.** Es la parte del modelo que conoce la red vial. El backend lo usa a través de un único objeto, `MotorDeRutas`, de modo que el resto del modelo no sabe que detrás hay una llamada HTTP.
+- **Motor core.** Es la parte del modelo que conoce la red vial. Tiene dos partes ([D-15](08_decisiones_parametros.md)):
+  - **Wrapper `MotorDeRutas`, en Java.** Es lo único que el resto del modelo ve: un objeto Java más dentro del backend. Traduce cada llamada a un mensaje para el núcleo, pone en fila las peticiones y vuelve a arrancar el núcleo si deja de responder. No decide reglas.
+  - **Núcleo, en C++.** Mantiene la red vial en memoria y hace cumplir las reglas de los objetos de dominio que viven en el motor core, como `RedVial` y `Tramo`. Corre como un proceso aparte y solo habla con el wrapper, por pipe.
+
+  El resto del modelo no sabe que detrás hay otro programa ni cómo se le habla.
 
 ## Reglas de reparto
 

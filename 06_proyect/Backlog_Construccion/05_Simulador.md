@@ -16,7 +16,7 @@ El simulador crea usuarios fantasma que envían eventos y telemetría por la mis
 
 ## Sprint 5
 
-### [T-XXX][Simulador] Estructura y parámetros del simulador
+### [T-102][Simulador] Estructura y parámetros del simulador
 
 **Tipo:** Tarea de infraestructura (base de CU-07)
 **Tecnología:** Python · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Antonio
@@ -41,11 +41,11 @@ El simulador crea usuarios fantasma que envían eventos y telemetría por la mis
 - [ ] Escribir el README.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: con −5 usuarios fantasma, el simulador no arranca y muestra los límites permitidos.
+- [ ] CP-128 Caso de prueba: con −5 usuarios fantasma, el simulador no arranca y muestra los límites permitidos.
 
 **Relacionado:** RF-10 · RNF-12 · CU-07 · RN-07.1, RN-07.2, RN-07.12 · P-18
 
-Lo subes en una nueva rama llamada "feature/TXX-simulador-estructura" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T102-simulador-estructura" (No olvides que el source de la rama es la de develop)
 
 ---
 
@@ -55,7 +55,7 @@ Lo subes en una nueva rama llamada "feature/TXX-simulador-estructura" (No olvide
 
 **Caso de uso:** CU-07 — Ejecutar Simulador de Tráfico
 **Tecnología:** Python · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Antonio
-**Depende de:** [T-XXX][Simulador] Estructura y parámetros del simulador · [HU-09][CU-07][Java] Soporte para el simulador · [T-XXX][Servidor] Ambiente de pruebas para el simulador
+**Depende de:** [T-102][Simulador] Estructura y parámetros del simulador #78 · [HU-09][CU-07][Java] Soporte para el simulador #84 · [T-106][Servidor] Ambiente de pruebas para el simulador #86
 **Etiquetas:** `caso-uso:CU-07` · `tipo:historia-usuario` · `fase:construccion` · `tec:simulador`
 
 **Historia de usuario:** Como desarrollador del equipo, quiero ejecutar un simulador que genere «usuarios fantasma» con eventos y telemetría, para validar el rendimiento y la estabilidad del sistema bajo carga antes de un despliegue.
@@ -75,9 +75,9 @@ Lo subes en una nueva rama llamada "feature/TXX-simulador-estructura" (No olvide
 - [ ] Probar contra el ambiente de pruebas con pocos usuarios.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: 10 usuarios fantasma durante 5 minutos generan eventos y congestiones simuladas visibles en modo demostración.
-- [ ] CP-XX Caso de prueba: se interrumpe la simulación a la mitad y los datos reales siguen iguales.
-- [ ] CP-XX Caso de prueba: después del borrado no queda ningún dato simulado.
+- [ ] CP-146 Caso de prueba: 10 usuarios fantasma durante 5 minutos generan eventos y congestiones simuladas visibles en modo demostración.
+- [ ] CP-147 Caso de prueba: se interrumpe la simulación a la mitad y los datos reales siguen iguales.
+- [ ] CP-148 Caso de prueba: después del borrado no queda ningún dato simulado.
 
 **Relacionado:** RF-10 · RNF-12 · CU-07 · RN-07.3, RN-07.4, RN-07.6 a RN-07.9
 
@@ -87,11 +87,11 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-simulador-usuarios-fantasm
 
 ## Sprint 7
 
-### [T-XXX][Simulador] Pruebas de carga y reporte
+### [T-108][Simulador] Pruebas de carga y reporte
 
 **Tipo:** Tarea de pruebas (cubre CU-07 y los requisitos de rendimiento)
 **Tecnología:** Python · **Sprint:** Sprint 7 (26/11–30/11) · **Responsable sugerido:** Antonio, con Marcelo
-**Depende de:** [HU-09][CU-07][Simulador] Usuarios fantasma que envían eventos y telemetría
+**Depende de:** [HU-09][CU-07][Simulador] Usuarios fantasma que envían eventos y telemetría #87
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:simulador`
 
 **Descripción:** Ejecutar las pruebas de carga en el ambiente de pruebas, comprobar los requisitos de rendimiento y fijar los límites del simulador.
@@ -110,9 +110,9 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-simulador-usuarios-fantasm
 - [ ] Escribir el reporte y actualizar P-18.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: con la carga normal, el 95 % de las rutas responde en menos de 3 segundos.
-- [ ] CP-XX Caso de prueba: con la carga creciente, el backend no se cae y la saturación queda registrada.
+- [ ] CP-151 Caso de prueba: con la carga normal, el 95 % de las rutas responde en menos de 3 segundos.
+- [ ] CP-152 Caso de prueba: con la carga creciente, el backend no se cae y la saturación queda registrada.
 
 **Relacionado:** RNF-01 · RNF-02 · RNF-03 · RNF-12 · CU-07 · RN-07.10, RN-07.11 · P-18
 
-Lo subes en una nueva rama llamada "feature/TXX-simulador-pruebas-carga" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T108-simulador-pruebas-carga" (No olvides que el source de la rama es la de develop)

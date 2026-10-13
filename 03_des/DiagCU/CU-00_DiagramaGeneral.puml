@@ -77,8 +77,8 @@ Dev --> CU07
 CU01 ..> CU08 : <<include>>
 CU04 .> CU03 : <<extend>>
 note on link
-  Condición: {congestión detectada
-  sobre la ruta activa}
+  Condición: {evento vial vigente sobre
+  el tramo que falta de la ruta activa}
 end note
 
 ' Asociaciones con actores secundarios externos
@@ -91,7 +91,7 @@ CU07 --> Script
 
 legend bottom left
   El límite "Sistema ChuroViaje" agrupa la App móvil (Flutter), el Backend (Java)
-  y el Motor core (C++); por eso esos componentes no aparecen como actores aquí.
+  y el Motor core (núcleo C++ con cara Java); por eso esos componentes no aparecen como actores aquí.
   En los diagramas por CU se muestran como actores secundarios, igual que en la
   especificación, porque el alcance (SUD) de esos casos es la app móvil.
   La sesión iniciada (CU-08) es precondición de CU-01 a CU-05; CU-01 además la

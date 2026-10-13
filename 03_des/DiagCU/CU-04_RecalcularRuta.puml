@@ -36,7 +36,7 @@ skinparam legend {
 title CU-04: Recalcular Ruta
 
 actor "Conductor\n(pasivo)" as Conductor
-actor "Motor core (C++)" as Motor <<sistema>>
+actor "Motor core" as Motor <<sistema>>
 actor "Backend Java" as Backend <<sistema>>
 
 rectangle "Aplicación Móvil ChuroViaje (motor de ruteo)" {
@@ -53,9 +53,9 @@ CU04 --> Motor
 CU04 --> Backend
 CU04 .> CU03 : <<extend>>
 note on link
-  Condición: {se detecta congestión sobre el
-  trayecto de la ruta activa (reporte CU-01
-  o telemetría de velocidad/posición)}
+  Condición: {un evento vial vigente afecta el
+  tramo que falta de la ruta activa (reporte
+  CU-01 o congestión por telemetría)}
 end note
 
 @enduml

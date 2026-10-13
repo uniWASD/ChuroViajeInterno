@@ -1,7 +1,7 @@
 @startuml CU-02_VisualizarEventosViales
 ' CU-02: Visualizar Eventos Viales - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
-' Issue: T-045
+' Issue: T-045 (actualizado en T-086)
 ' Revisión de coherencia (06/10/2026): consulta cada 5 s, detalle del evento al tocarlo y voto real/falso (5a).
 
 skinparam shadowing false
@@ -80,15 +80,18 @@ ocurrió;
 voto "real" o
 "falso" (uno por
 conductor y
-evento);
+evento; no se vota
+el evento propio ni
+la congestión del
+sistema);
     #FFF8E1:[5a] Retira el
 evento si acumula
 los votos "falso"
 definidos, o lo
 marca como
 confirmado si
-recibe votos
-"real";
+acumula los votos
+"real" definidos;
   else (no)
   endif
   |Sistema ChuroViaje|

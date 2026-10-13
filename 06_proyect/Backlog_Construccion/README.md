@@ -16,7 +16,7 @@ Reemplaza al backlog de la fase de Elaboración, que queda guardado en [Backlog_
 | [06_Servidor.md](06_Servidor.md) | Servidor y despliegue (Oracle Cloud) | Marcelo | 7 |
 | | | **Total** | **53** |
 
-Son 29 issues de historia de usuario y 24 tareas técnicas.
+Son 29 issues de historia de usuario y 24 tareas técnicas. El orden en que se crean en GitHub, con su Milestone y sus etiquetas, está en [00_Indice_de_subida.md](00_Indice_de_subida.md).
 
 ## Sprints
 
@@ -59,20 +59,24 @@ Cada historia de usuario se reparte en issues por tecnología, y algunas de sus 
 | HU-03 | CU-02 | Java S3 · Flutter S3 | — | RN-02.1 a RN-02.8 |
 | HU-04 | CU-02 | Flutter S4 | — | RN-02.9 |
 | HU-05 | CU-03 | C++ S3 y S4 · Java S4 · Flutter S5 | Red vial C++ S2 (RN-03.4 a RN-03.7) · Wrapper Java S2 (RN-03.15) | RN-03.1 a RN-03.18 |
-| HU-06 | CU-04 | C++ S5 · Java S6 · Flutter S6 | — | RN-04.13 a RN-04.19 |
-| HU-07 | CU-05 | Java S5 · Flutter S5 | — | RN-05.1 a RN-05.7 |
-| HU-08 | CU-06 | WhatsApp/LLM S2 y S3 · Java S3 | — | RN-06.1 a RN-06.18 |
+| HU-06 | CU-04 | C++ S5 · Java S6 · Flutter S6 | — | RN-04.13 a RN-04.19, RN-04.21 |
+| HU-07 | CU-05 | Java S5 · Flutter S5 | — | RN-05.1 a RN-05.7, RN-05.17 |
+| HU-08 | CU-06 | WhatsApp/LLM S2 y S3 · Java S3 | — | RN-06.1 a RN-06.19 |
 | HU-09 | CU-07 | Java S6 · Simulador S6 | Ambiente de pruebas S6 (RN-07.12) | RN-07.1 a RN-07.13 |
-| HU-10 | CU-08 | Java S2 · Flutter S2 | HU-09 Java S6 (RN-08.13) | RN-08.1 a RN-08.13 |
+| HU-10 | CU-08 | Java S2 · Flutter S2 | HU-09 Java S6 (RN-08.13) | RN-08.1 a RN-08.14 |
 | HU-11 | CU-02 | Java S4 · Flutter S4 | Mantener al día el tráfico del motor S4 (RN-02.15) · HU-09 Java S6 (RN-02.16) | RN-02.10 a RN-02.16 |
 | HU-12 | CU-05 | Java S5 · Flutter S6 | — | RN-05.8 a RN-05.16 |
 | HU-13 | CU-04 | C++ S5 · Java S5 · Flutter S5 | HU-09 Java S6 (RN-04.20, junto con C++ S5) | RN-04.1 a RN-04.12, RN-04.20 |
 
-Las 131 reglas de `04_reglas` están citadas en al menos un issue.
+Las 135 reglas de `04_reglas` están citadas en al menos un issue.
 
 ## Cómo pasar un issue a GitHub
 
-1. **Numerar.** Los issues van con `T-XXX` y `CP-XX` a propósito. Al crearlos en GitHub, en el orden de los sprints, se reemplaza cada `T-XXX` por el siguiente número libre y cada `CP-XX` por el siguiente caso de prueba. Al 12/10/2026 la última tarea es T-084 y el último caso de prueba es CP-19; confírmalo en [TRAZABILIDAD.md](../TRAZABILIDAD.md) antes de empezar. En la rama, `TXX` toma el mismo número (T-085 → `feature/T85-...`).
+Los issues se crean en el orden de [00_Indice_de_subida.md](00_Indice_de_subida.md), para que cada uno se cree después de aquellos de los que depende.
+
+El script [subir_issues.py](subir_issues.py) hace todo esto solo, con GitHub CLI (`gh`) y la cuenta de quien lo ejecuta, que queda como autor de los issues. Primero se ejecuta sin `--crear`, para revisar los issues ya numerados en la carpeta `_simulacion/`, y después con `--crear`. Las instrucciones están al principio del script. Los pasos de abajo describen lo que hace, por si hay que subir algún issue a mano.
+
+1. **Numerar.** Los issues van con `T-XXX` y `CP-XX` a propósito. Al crearlos en GitHub, en el orden de los sprints, se reemplaza cada `T-XXX` por el siguiente número libre y cada `CP-XX` por el siguiente caso de prueba. Al 13/10/2026 la última tarea es T-086 y el último caso de prueba es CP-19; confírmalo en [TRAZABILIDAD.md](../TRAZABILIDAD.md) y en GitHub antes de empezar. En la rama, `TXX` toma el mismo número (T-087 → `feature/T87-...`).
 2. **Título y cuerpo.** El título es el encabezado del issue, sin el `###`. El cuerpo es todo lo que sigue hasta la línea horizontal.
 3. **Dependencias.** Cuando el issue del que depende ya existe en GitHub, se agrega su número junto al título (por ejemplo, «[HU-10][CU-08][Java] … #41»).
 4. **Milestone y etiquetas.** El Milestone es «Sprint N» y las etiquetas son las de la línea «Etiquetas».
@@ -112,6 +116,8 @@ Al escribir el backlog aparecieron huecos en la arquitectura. Se cerraron el 12/
 | El puerto 80 se abre solo para redirigir a HTTPS y validar el certificado | 07 |
 | Registros del servidor por 14 días, sin ubicaciones; respaldos de 7 días fuera de la instancia | 06 |
 | Distancias y tiempos que faltaban: ajuste a la red (100 m), lectura a tramo (30 m), memoria de un recorrido (5 min) | P-23, P-24, P-25 |
+| Revisión del 13/10/2026 contra los requisitos: el aviso de ruta alternativa se cierra solo a los 15 s, la congestión por telemetría no se vota, se entra sin conexión con el token de renovación, indicación de giro calculada en la app, lista de surtidores cada 60 s, sin buscador, surtidores en el mapa y dominio propio | D-19 a D-26, P-26, P-27, RN-04.21, RN-05.17, RN-06.19, RN-08.14 |
+| Revisión de los issues del 13/10/2026: la revisión de ruta responde «sin alternativa» (ya no solo la congestión la provoca), un evento a más de 100 m de una calle no afecta las rutas, la lectura de telemetría va al tramo del sentido en que avanza el vehículo, la app guarda también el token de renovación y los marcadores de surtidores del mapa se actualizan cada 60 s | RN-03.9, RN-04.8, RN-05.17, RN-08.7, RN-08.11, D-23, P-23, P-27 · 02_mvc, 05_contratos, 06, 07 |
 
 ## Decisiones de detalle que tomó este backlog
 
@@ -123,13 +129,14 @@ Estos detalles no cambian la arquitectura y quedaron dentro de los issues. Si el
 | Lista de surtidores y alias | Sale del diccionario de `05_pro/PruebaClasificacion` y la revisa Franz | Java S1 |
 | Identificador de recorrido de la telemetría | HMAC del conductor con una clave en memoria que cambia cada día | Java S5 |
 | Códigos de respuesta | Las reglas que rompe un voto o una confirmación responden 422; «sin ruta» y «punto inválido» responden 200 con su estado | Java S4 y S5 |
-| Destino de la ruta (P-19) | Mientras no haya buscador, se toca el mapa o se elige un surtidor | Flutter S5 |
 | Fin de la ruta | Termina a menos de 30 m del destino o con «Cancelar» | Flutter S5 |
 | Colores de bloqueo, otro y congestión (P-06) | Valores provisionales hasta que el diseño los fije | Java S2 |
 | Frecuencia de la telemetría (P-13) | Lectura cada 3 segundos, envío cada 15 | Flutter S5 |
 | Datos simulados | Un comando del backend los borra, solo donde están habilitadas las credenciales de prueba | Java S6 |
 | Carga normal del simulador | Propuesta: 50 usuarios fantasma, 10 de ellos navegando | Simulador S5 |
 | Precisión del LLM | El equipo fija el mínimo aceptable antes de medirla | WhatsApp/LLM S5 |
+| Respuesta «No» a la pregunta de recarga | No se vuelve a preguntar mientras el conductor siga detenido junto a ese surtidor | Flutter S6 |
+| Fallo de la revisión de ruta | Sin red o con 503, la app sigue con la ruta actual sin mostrar un error y reintenta en el siguiente ciclo | Flutter S6 |
 
 ## Riesgos
 

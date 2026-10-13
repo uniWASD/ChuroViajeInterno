@@ -13,7 +13,7 @@ La arquitectura responde a los requisitos no funcionales de la matriz y respeta 
 | Un evento reportado llega a los demás conductores en 5 a 10 segundos | RNF-01 | La app consulta los eventos cada 5 segundos. No se usan WebSocket ni notificaciones push |
 | La ruta se calcula en menos de 3 segundos | RNF-02 | El cálculo corre en el motor C++, que mantiene la red vial cargada en memoria |
 | Los surtidores cercanos se listan en menos de 3 segundos | RNF-03 | El estado de cada surtidor ya está guardado cuando el conductor pregunta; la búsqueda por cercanía la resuelve PostGIS |
-| El estado de un surtidor se actualiza en menos de 6 minutos | RNF-04 | El servicio de WhatsApp/LLM analiza cada 5 minutos y envía el resultado directo al backend |
+| El estado de un surtidor se actualiza en menos de 6 minutos | RNF-04 | El servicio de WhatsApp/LLM analiza cada 5 minutos y envía el resultado directo al backend; la app refresca la lista de surtidores cada 60 segundos mientras está abierta |
 | El inicio de sesión tarda menos de 3 segundos | RNF-05 | Tras elegir la cuenta de Google, la app hace una sola llamada al backend |
 | Reportar un evento toma 3 toques como máximo | RNF-06 | La vista de reporte trae el tiempo preseleccionado |
 | El origen del dato de cada surtidor es visible | RNF-07 | El origen (WhatsApp o Conductores) es un atributo obligatorio del estado de combustible |
@@ -23,6 +23,12 @@ La arquitectura responde a los requisitos no funcionales de la matriz y respeta 
 | Los mensajes de WhatsApp no guardan remitente y se borran | RNF-11 | El servicio de WhatsApp/LLM descarta número y nombre al recibir el mensaje y elimina el texto tras analizarlo |
 | El simulador no daña los datos reales | RNF-12 | Todo dato simulado queda marcado y puede eliminarse por separado |
 | La ubicación se obtiene solo con la app abierta | RNF-13 | La telemetría la envía la app únicamente mientras está en pantalla |
+| Todo viaja cifrado entre la app y el servidor | RNF-14 | Solo el backend queda expuesto, por HTTPS con un certificado de Let's Encrypt para el dominio del proyecto ([D-26](08_decisiones_parametros.md)) |
+| Toda la app está en español | RNF-15 | Los mensajes de rechazo del backend ya vienen en español, listos para mostrar ([05_contratos.md](05_contratos.md)) |
+| Hay una política de privacidad | RNF-16 | Se publica en el dominio y se abre desde la vista Inicio de sesión ([07_seguridad_privacidad.md](07_seguridad_privacidad.md), [D-17](08_decisiones_parametros.md)) |
+| Los datos se guardan solo el tiempo necesario | RNF-17 | Cada dato tiene su plazo en [06_base_de_datos.md](06_base_de_datos.md); las rutas no se guardan ([D-05](08_decisiones_parametros.md)) |
+| La app no gasta más batería que una de navegación | RNF-18 | Lectura del GPS cada 3 segundos y envío cada 15, solo con la app abierta ([P-13](08_decisiones_parametros.md)) |
+| El mapa muestra la atribución de Mapbox y OpenStreetMap | RNF-19 | La muestra la vista Mapa principal |
 
 ### Restricciones
 

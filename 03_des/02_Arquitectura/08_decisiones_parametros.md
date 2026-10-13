@@ -26,6 +26,14 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | D-16 | Todo el sistema corre en la instancia `churoviaje-server` de Oracle Cloud: Ubuntu sobre procesador ARM (Ampere A1), 2 OCPU y 12 GB de memoria, dentro del nivel Always Free, con IP pública reservada | Ya existe, tiene más memoria que un VPS básico y no tiene costo mensual | Confirmada el 12/10/2026 |
 | D-17 | El análisis de mensajes usa la capa gratuita de la API de Gemini. Sus términos permiten a Google usar lo enviado para mejorar sus productos y que lo lean revisores humanos; por eso solo viajan el texto y la fecha, con los números de teléfono enmascarados, y la política de privacidad lo informa | Sin costo para un proyecto académico. Reemplaza el criterio anterior de elegir un proveedor que no entrene con los datos enviados por API | Confirmada el 12/10/2026 |
 | D-18 | Un evento que reporta un conductor afecta a los dos sentidos de la calle donde cae; la congestión por telemetría, solo al sentido donde se midió | Un accidente o un bloqueo frena o cierra la calle entera, no un solo sentido | Confirmada el 12/10/2026 |
+| D-19 | Si el conductor no responde al aviso de ruta alternativa, el aviso se cierra solo y sigue la ruta original | No distraer al conductor mientras maneja (CU-04 sección 7) | Confirmada el 13/10/2026 |
+| D-20 | La congestión registrada por telemetría no se vota; solo se votan los eventos que reportan los conductores | Si 3 votos «falso» la retiraran, la siguiente lectura lenta la volvería a crear y aparecería y desaparecería del mapa | Confirmada el 13/10/2026 |
+| D-21 | Sin conexión, la app entra al mapa mientras el token de renovación siga vigente (30 días), aunque el JWT haya vencido; al volver la red, renueva el JWT | El JWT dura 1 hora y sin red no se puede renovar | Confirmada el 13/10/2026 |
+| D-22 | La vista Navegación activa muestra la calle que sigue y el sentido del giro (izquierda o derecha); la app lo calcula con el trazado y los nombres de calle que trae la ruta | El contrato de la ruta no trae instrucciones de giro y no hace falta agregarlas al motor | Confirmada el 13/10/2026 |
+| D-23 | Con la vista Surtidores o el Mapa principal abiertos, la app vuelve a consultar los surtidores cada cierto tiempo, para la lista y para los marcadores | Para que un dato nuevo de WhatsApp se vea en la pantalla en menos de 6 minutos (RNF-04) | Confirmada el 13/10/2026 |
+| D-24 | El buscador de lugares queda fuera de la app hasta que se decida P-19; el destino se marca en el mapa o se elige un surtidor | No hay servicio de búsqueda elegido | Confirmada el 13/10/2026 |
+| D-25 | Los surtidores también se muestran como marcadores en el mapa, además de la lista | CU-05 paso 4 habla de «listado/mapa» | Confirmada el 13/10/2026 |
+| D-26 | El proyecto tiene un dominio propio (unos 15 dólares al año) que apunta a la IP reservada del servidor, con certificado de Let's Encrypt | HTTPS necesita un dominio (Visión 4.4 y 6.3) | Confirmada el 13/10/2026 |
 
 ## Parámetros
 
@@ -49,8 +57,10 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | P-20 | Credenciales de prueba y modo demostración | [RN-07.5](04_reglas/CU-07_EjecutarSimuladorTrafico.md), [RN-07.13](04_reglas/CU-07_EjecutarSimuladorTrafico.md) | Se habilitan por configuración del ambiente | Propuesta |
 | P-21 | Cuánto se conservan los eventos vencidos o retirados, sus votos y las confirmaciones de recarga | [06_base_de_datos.md](06_base_de_datos.md) | 30 días, y después se borran | Propuesta |
 | P-22 | Dónde guarda el servicio de WhatsApp/LLM los mensajes pendientes | [06_base_de_datos.md](06_base_de_datos.md) | Un archivo SQLite propio del servicio | Propuesta |
-| P-23 | Distancia máxima para ajustar un punto a la red vial | [RN-03.4](04_reglas/CU-03_CalcularRutaOptima.md) | 100 metros | Propuesta |
+| P-23 | Distancia máxima para ajustar un punto o un evento a la red vial | [RN-03.4](04_reglas/CU-03_CalcularRutaOptima.md), [RN-03.9](04_reglas/CU-03_CalcularRutaOptima.md) | 100 metros | Propuesta |
 | P-24 | Distancia máxima entre una lectura de telemetría y su tramo | [RN-04.8](04_reglas/CU-04_RecalcularRuta.md) | 30 metros | Propuesta |
 | P-25 | Tiempo que el motor recuerda un recorrido sin lecturas nuevas | [RN-04.12](04_reglas/CU-04_RecalcularRuta.md) | 5 minutos | Propuesta |
+| P-26 | Tiempo que el aviso de ruta alternativa espera una respuesta | [RN-04.21](04_reglas/CU-04_RecalcularRuta.md) | 15 segundos | Confirmado |
+| P-27 | Cada cuánto se actualizan la lista y los marcadores de surtidores con su vista abierta | [RN-05.17](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md) | 60 segundos | Confirmado |
 
-P-07, P-08 y P-10 se cerraron con las decisiones D-09, D-08 y D-12.
+P-07, P-08 y P-10 se cerraron con las decisiones D-09, D-08 y D-12. P-16 quedó sin uso.

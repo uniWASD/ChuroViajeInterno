@@ -43,13 +43,13 @@ Los dos recuadros resaltados son los únicos lugares donde hay reglas de negocio
 
 | Vista | Proceso | Qué muestra y qué permite |
 | --- | --- | --- |
-| Inicio de sesión | CU-08 | El botón «Iniciar sesión con Google». Es la única vista disponible sin sesión |
-| Mapa principal | CU-02 | El mapa con los eventos vigentes por color, el buscador y la barra inferior (Mapa, Eventos, Surtidores) |
+| Inicio de sesión | CU-08 | El botón «Iniciar sesión con Google» y el enlace a la política de privacidad. Es la única vista disponible sin sesión |
+| Mapa principal | CU-02, CU-05, CU-08 | El mapa con los eventos vigentes por color y los surtidores como marcadores, que se actualizan cada 60 segundos ([D-25](08_decisiones_parametros.md)), el menú de la cuenta con «Cerrar sesión» y la barra inferior (Mapa, Eventos, Surtidores). No hay buscador de lugares mientras no se decida P-19 ([D-24](08_decisiones_parametros.md)) |
 | Reportar evento | CU-01 | Tipo de evento y hace cuánto ocurrió, con «Hace 5 minutos» marcado; ajuste manual del punto si falla el GPS |
 | Lista y detalle de eventos | CU-02 | Tipo y antigüedad de cada evento, los botones para votar real o falso y la marca de confirmado |
 | Cómo llegar | CU-03 | Origen, destino y paradas; la ruta con su tiempo y su distancia; el botón para iniciar |
-| Navegación activa | CU-03, CU-04 | La indicación de giro y, si hay congestión, el aviso de ruta alternativa para aceptar o rechazar |
-| Surtidores | CU-05 | Cada surtidor con su estado por tipo de combustible, la fila, el origen del dato y su fecha |
+| Navegación activa | CU-03, CU-04 | La calle que sigue y el sentido del giro, que la app calcula con el trazado ([D-22](08_decisiones_parametros.md)); si un evento afecta lo que falta de la ruta, el aviso de ruta alternativa para aceptar o rechazar, que se cierra solo a los 15 segundos ([D-19](08_decisiones_parametros.md)) |
+| Surtidores | CU-05 | Cada surtidor con su estado por tipo de combustible, la fila, el origen del dato y su fecha. Mientras está abierta, se actualiza cada 60 segundos |
 | Pregunta de recarga | CU-05 | «¿Acabas de recargar combustible?» y, si la respuesta es sí, los tipos de combustible |
 
 CU-06 no tiene vista: es un proceso automático. CU-07 se opera por línea de comandos o con un archivo de configuración.

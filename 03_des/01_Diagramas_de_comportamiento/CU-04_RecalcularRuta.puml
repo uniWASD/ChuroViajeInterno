@@ -1,7 +1,7 @@
 @startuml CU-04_RecalcularRuta
 ' CU-04: Recalcular Ruta - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
-' Issue: T-045
+' Issue: T-045 (actualizado en T-086)
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -29,51 +29,66 @@ skinparam legend {
 
 title CU-04: Recalcular Ruta\nDiagrama de actividad
 
+|Conductor|
 |Sistema ChuroViaje|
 start
-:Detecta una zona
-de congestión en
-la ruta activa
-(evento reportado
-o telemetría
-anómala);
-:Evalúa su impacto;
+:Detecta un evento
+vial vigente sobre
+el tramo que falta
+de la ruta activa
+(reportado por un
+conductor o
+congestión por
+telemetría);
 :Solicita una ruta
 alternativa al
 motor core;
-|Motor core (C++)|
-:Recalcula evitando
-la zona
-congestionada;
-if (¿Existe una ruta\nalternativa\nviable?) then (sí)
+|Motor core|
+:Calcula la
+alternativa y la
+compara con la
+ruta actual;
+if (¿Existe una ruta\nalternativa\nmejor?) then (sí)
   |Sistema ChuroViaje|
-  :Muestra la nueva
+  :Propone la nueva
 ruta de forma no
-intrusiva;
-  |Conductor|
-  if (¿Acepta el\ncambio de ruta?) then (sí)
-    :Continúa la
-navegación;
-    |Sistema ChuroViaje|
-    :Actualiza las
+intrusiva, para
+aceptarla o
+rechazarla;
+  if (¿El conductor\nresponde en\n15 segundos?) then (sí)
+    |Conductor|
+    if (¿Acepta el\ncambio de ruta?) then (sí)
+      |Sistema ChuroViaje|
+      :Actualiza las
 indicaciones según
 la nueva ruta;
-    stop
-  else (no [3a])
+      stop
+    else (no [3a])
+      |Sistema ChuroViaje|
+      #FFF8E1:[3a] Mantiene la
+ruta original y
+muestra el evento
+sobre ella;
+      stop
+    endif
+  else (no [4a])
     |Sistema ChuroViaje|
-    #FFF8E1:[3a] Mantiene la
-ruta original
-marcada como
-congestionada;
+    #FFF8E1:[4a] Cierra el
+aviso y sigue la
+ruta original;
+    #FFF8E1:[4a] Ese evento no
+vuelve a generar
+una propuesta en
+esta ruta;
     stop
   endif
 else (no [2a])
   |Sistema ChuroViaje|
   #FFF8E1:[2a] Mantiene la
 ruta original;
-  #FFF8E1:[2a] Notifica la
-congestión
-detectada;
+  #FFF8E1:[2a] Notifica el
+evento que afecta
+la ruta;
   stop
 endif
 

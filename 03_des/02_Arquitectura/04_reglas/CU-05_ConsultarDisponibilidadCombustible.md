@@ -16,14 +16,15 @@ Cubre HU-07 y HU-12, y los requisitos RF-07, RF-13, RNF-03, RNF-07 y RNF-09.
 | RN-05.6 | Todo dato lleva un tipo del catálogo. Cuando un mensaje de WhatsApp no lo indica, el dato se guarda y se muestra con el tipo Desconocido. | TipoCombustible | CU-05 sección 8, HU-07 c.5 |
 | RN-05.7 | Nunca se muestra quién aportó un dato. | EstadoCombustible | CU-05 sección 7, HU-07 seguridad |
 | RN-05.8 | La app pregunta «¿Acabas de recargar combustible?» cuando, estando abierta, detecta que el conductor estuvo detenido unos minutos junto a un surtidor del catálogo. | Controlador de combustible de la app | Decisión [D-11](../08_decisiones_parametros.md), propuesta [P-09](../08_decisiones_parametros.md) |
-| RN-05.9 | Si el conductor responde que sí, debe elegir uno de los cuatro tipos: Gasolina, Diesel, Gasolina Premium o Diesel ULS. Desconocido no es una opción. | ConfirmaciónRecarga | CU-05 ext. 4a, HU-12 c.1 |
-| RN-05.10 | Si responde que no, o cierra cualquiera de las dos preguntas, no se registra nada. | ConfirmaciónRecarga | CU-05 ext. 4a, HU-12 c.3 |
-| RN-05.11 | Una confirmación aceptada marca ese combustible como disponible en ese surtidor, con origen Conductores y con la fecha de la confirmación. | ConfirmaciónRecarga, EstadoCombustible | CU-05 ext. 4a, HU-12 c.2 |
+| RN-05.9 | Si el conductor responde que sí, debe elegir uno de los cuatro tipos: Gasolina, Diesel, Gasolina Premium o Diesel ULS. Desconocido no es una opción. | ConfirmaciónRecarga | CU-05 ext. \*a, HU-12 c.1 |
+| RN-05.10 | Si responde que no, o cierra cualquiera de las dos preguntas, no se registra nada. | ConfirmaciónRecarga | CU-05 ext. \*a, HU-12 c.3 |
+| RN-05.11 | Una confirmación aceptada marca ese combustible como disponible en ese surtidor, con origen Conductores y con la fecha de la confirmación. | ConfirmaciónRecarga, EstadoCombustible | CU-05 ext. \*a, HU-12 c.2 |
 | RN-05.12 | Una confirmación solo puede decir que hay combustible. Nunca marca un surtidor como agotado. | ConfirmaciónRecarga | HU-12 |
-| RN-05.13 | El backend acepta la confirmación solo si la ubicación que envía la app está junto a ese surtidor. | ConfirmaciónRecarga, Surtidor | RNF-09, propuesta |
+| RN-05.13 | El backend acepta la confirmación solo si la ubicación que envía la app está junto a ese surtidor. | ConfirmaciónRecarga, Surtidor | CU-05 ext. \*a, RNF-09 |
 | RN-05.14 | Un conductor no puede repetir la confirmación del mismo surtidor y tipo en poco tiempo. La repetida no se registra, y la app no vuelve a preguntar por ese surtidor en ese lapso. | ConfirmaciónRecarga | CU-05 sección 7, HU-12 c.5, [P-14](../08_decisiones_parametros.md) |
 | RN-05.15 | La confirmación se ve en los demás conductores solo si es más reciente que el último dato de WhatsApp para ese surtidor y tipo. | EstadoCombustible | HU-12 c.4 |
 | RN-05.16 | La pregunta no interrumpe la consulta de surtidores ni la navegación, y se responde en dos toques como máximo. | Controlador de combustible de la app | HU-12 usabilidad |
+| RN-05.17 | Con la vista Surtidores o el Mapa principal abiertos, la app vuelve a consultar los surtidores cada 60 segundos, para que un dato nuevo se vea en menos de 6 minutos en la lista y en los marcadores del mapa. | Controlador de combustible de la app | RNF-04, [D-23](../08_decisiones_parametros.md), [D-25](../08_decisiones_parametros.md), [P-27](../08_decisiones_parametros.md) |
 
 ## Recorrido por Vista, Controlador y Modelo
 
@@ -34,7 +35,7 @@ La consulta:
 3. **Controlador REST de surtidores (backend).** Comprueba el JWT (RN-05.1) y el formato. Llama al servicio del modelo que consulta surtidores.
 4. **Modelo (backend).** Ordena los `Surtidor` por cercanía (RN-05.2). Para cada uno, el `EstadoCombustible` elige el dato más reciente por tipo y descarta lo vencido (RN-05.3, RN-05.5, RN-05.6).
 5. **Controlador REST de surtidores (backend).** Devuelve la lista sin datos de quien aportó (RN-05.7).
-6. **Vista Surtidores.** Muestra cada surtidor con su estado por tipo, la fila si se conoce, el origen y la fecha (RN-05.4).
+6. **Vista Surtidores.** Muestra cada surtidor con su estado por tipo, la fila si se conoce, el origen y la fecha (RN-05.4). Mientras sigue abierta, la consulta se repite cada 60 segundos (RN-05.17).
 
 La confirmación de recarga:
 

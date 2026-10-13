@@ -24,7 +24,7 @@ Dos cosas que hay que tener presentes durante toda la Construcción:
 
 ## Sprint 1
 
-### [T-XXX][Servidor] Preparar la instancia de Oracle Cloud
+### [T-092][Servidor] Preparar la instancia de Oracle Cloud
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
 **Tecnología:** Servidor · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Marcelo, con el dueño de la cuenta de Oracle Cloud
@@ -52,28 +52,28 @@ Dos cosas que hay que tener presentes durante toda la Construcción:
 - [ ] Escribir la guía.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: desde fuera, solo el puerto SSH responde; un intento de SSH con contraseña se rechaza.
-- [ ] CP-XX Caso de prueba: desde fuera, el puerto de PostgreSQL no responde.
+- [ ] CP-27 Caso de prueba: desde fuera, solo el puerto SSH responde; un intento de SSH con contraseña se rechaza.
+- [ ] CP-28 Caso de prueba: desde fuera, el puerto de PostgreSQL no responde.
 
 **Relacionado:** RNF-08 · Visión 6.3 · D-03, D-16 · [07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md)
 
-Lo subes en una nueva rama llamada "feature/TXX-servidor-preparar-instancia" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T92-servidor-preparar-instancia" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ## Sprint 2
 
-### [T-XXX][Servidor] Dominio, Nginx y HTTPS
+### [T-097][Servidor] Dominio, Nginx y HTTPS
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
 **Tecnología:** Servidor · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Marcelo
-**Depende de:** [T-XXX][Servidor] Preparar la instancia de Oracle Cloud
+**Depende de:** [T-092][Servidor] Preparar la instancia de Oracle Cloud #44
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
 **Descripción:** Darle al backend una dirección propia con HTTPS. Nginx recibe las peticiones de internet y las pasa al backend, que solo escucha dentro de la máquina.
 
 **Criterios de aceptación**
-- [ ] Hay un dominio propio que apunta a la IP reservada.
+- [ ] Hay un dominio propio que apunta a la IP reservada (D-26).
 - [ ] Nginx atiende HTTPS con un certificado de Let's Encrypt que se renueva solo, y redirige HTTP a HTTPS.
 - [ ] Los puertos 80 y 443 están abiertos en las reglas de la VCN y en el firewall de Ubuntu; el 80 solo redirige a HTTPS y atiende la validación de Let's Encrypt. Ningún otro puerto nuevo ([07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md), Servidor).
 - [ ] Nginx pasa las peticiones al puerto local del backend, que no es accesible desde fuera.
@@ -87,21 +87,21 @@ Lo subes en una nueva rama llamada "feature/TXX-servidor-preparar-instancia" (No
 - [ ] Actualizar la guía.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: `http://dominio` redirige a `https://dominio`, y el certificado es válido en un teléfono.
+- [ ] CP-51 Caso de prueba: `http://dominio` redirige a `https://dominio`, y el certificado es válido en un teléfono.
 
-**Relacionado:** RNF-08 · Visión 4.4 y 6.3 · D-03, D-16
+**Relacionado:** RNF-08 · RNF-14 · Visión 4.4 y 6.3 · D-03, D-16, D-26
 
-Lo subes en una nueva rama llamada "feature/TXX-servidor-dominio-https" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T97-servidor-dominio-https" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ## Sprint 3
 
-### [T-XXX][Servidor] Desplegar el backend con el núcleo C++
+### [T-098][Servidor] Desplegar el backend con el núcleo C++
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
 **Tecnología:** Servidor · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Marcelo, con Jorge
-**Depende de:** [T-XXX][Servidor] Dominio, Nginx y HTTPS · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT · [T-XXX][Java] Wrapper MotorDeRutas · [T-XXX][C++] Red vial desde OpenStreetMap
+**Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-095][Java] Wrapper MotorDeRutas #49 · [T-096][C++] Red vial desde OpenStreetMap #50
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
 **Descripción:** Poner el backend en el servidor, con el núcleo C++ compilado para ARM y la red vial de Tarija, para que la app pruebe contra el sistema real desde el sprint 3. Desde aquí, cada sprint termina con lo fusionado en `develop` desplegado.
@@ -123,22 +123,22 @@ Lo subes en una nueva rama llamada "feature/TXX-servidor-dominio-https" (No olvi
 - [ ] Desplegar y comprobar el inicio de sesión desde la app.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: tras reiniciar la instancia, el backend y el núcleo vuelven solos y el inicio de sesión funciona desde la app.
-- [ ] CP-XX Caso de prueba: al matar el proceso del núcleo, el backend lo vuelve a arrancar.
+- [ ] CP-79 Caso de prueba: tras reiniciar la instancia, el backend y el núcleo vuelven solos y el inicio de sesión funciona desde la app.
+- [ ] CP-80 Caso de prueba: al matar el proceso del núcleo, el backend lo vuelve a arrancar.
 
 **Relacionado:** RNF-02 · RNF-08 · D-03, D-08, D-15, D-16
 
-Lo subes en una nueva rama llamada "feature/TXX-servidor-desplegar-backend" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T98-servidor-desplegar-backend" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ## Sprint 4
 
-### [T-XXX][Servidor] Desplegar el servicio de WhatsApp/LLM
+### [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM
 
 **Tipo:** Tarea de infraestructura (cubre CU-06)
 **Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Marcelo, con Franz
-**Depende de:** [T-XXX][Servidor] Desplegar el backend con el núcleo C++ · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado
+**Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60 · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
 **Descripción:** Poner el servicio de WhatsApp/LLM en el servidor para que empiece a llenar el estado de los surtidores con datos reales.
@@ -157,21 +157,21 @@ Lo subes en una nueva rama llamada "feature/TXX-servidor-desplegar-backend" (No 
 - [ ] Actualizar la guía.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un mensaje en el grupo de prueba queda en la tabla `estado_combustible` en menos de 6 minutos (RNF-04). La comprobación en la app se hace en el sprint 5.
+- [ ] CP-101 Caso de prueba: un mensaje en el grupo de prueba queda en la tabla `estado_combustible` en menos de 6 minutos (RNF-04). La comprobación en la app se hace en el sprint 5.
 
 **Relacionado:** RNF-04 · RNF-11 · CU-06 · D-13, D-16
 
-Lo subes en una nueva rama llamada "feature/TXX-servidor-desplegar-whatsapp" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T100-servidor-desplegar-whatsapp" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ## Sprint 5
 
-### [T-XXX][Servidor] Respaldos de la base de datos y registros
+### [T-103][Servidor] Respaldos de la base de datos y registros
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
 **Tecnología:** Servidor · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Marcelo, con Antonio
-**Depende de:** [T-XXX][Servidor] Desplegar el backend con el núcleo C++
+**Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
 **Descripción:** Evitar perder los datos por un error y que los registros llenen el disco.
@@ -190,21 +190,21 @@ Lo subes en una nueva rama llamada "feature/TXX-servidor-desplegar-whatsapp" (No
 - [ ] Actualizar la guía.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: el respaldo de ayer se restaura en una base aparte y tiene los mismos eventos y surtidores.
+- [ ] CP-129 Caso de prueba: el respaldo de ayer se restaura en una base aparte y tiene los mismos eventos y surtidores.
 
 **Relacionado:** RNF-10 · RNF-11 · D-16 · [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md)
 
-Lo subes en una nueva rama llamada "feature/TXX-servidor-respaldos" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T103-servidor-respaldos" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ## Sprint 6
 
-### [T-XXX][Servidor] Ambiente de pruebas para el simulador
+### [T-106][Servidor] Ambiente de pruebas para el simulador
 
 **Tipo:** Tarea de infraestructura (cubre CU-07)
 **Tecnología:** Servidor · **Sprint:** Sprint 6 (19/11–25/11), al inicio · **Responsable sugerido:** Marcelo, con Antonio
-**Depende de:** [T-XXX][Servidor] Desplegar el backend con el núcleo C++
+**Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
 **Descripción:** Tener un segundo backend con su propia base de datos para correr el simulador sin tocar producción (RN-07.12). Con 12 GB de memoria, la instancia aguanta los dos.
@@ -222,17 +222,17 @@ Lo subes en una nueva rama llamada "feature/TXX-servidor-respaldos" (No olvides 
 - [ ] Actualizar la guía.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: `POST /sesion/prueba` funciona en `pruebas.dominio` y responde 403 en el dominio de producción.
+- [ ] CP-145 Caso de prueba: `POST /sesion/prueba` funciona en `pruebas.dominio` y responde 403 en el dominio de producción.
 
 **Relacionado:** RNF-12 · CU-07 · RN-07.5, RN-07.12, RN-07.13 · P-20 · D-16
 
-Lo subes en una nueva rama llamada "feature/TXX-servidor-ambiente-pruebas" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T106-servidor-ambiente-pruebas" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ## Sprint 7
 
-### [T-XXX][Servidor] Despliegue final y revisión de seguridad
+### [T-110][Servidor] Despliegue final y revisión de seguridad
 
 **Tipo:** Tarea de infraestructura (cierre de la Construcción)
 **Tecnología:** Servidor · **Sprint:** Sprint 7 (26/11–30/11) · **Responsable sugerido:** Marcelo
@@ -258,8 +258,8 @@ Lo subes en una nueva rama llamada "feature/TXX-servidor-ambiente-pruebas" (No o
 - [ ] Escribir la lista de comprobación.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un escaneo de puertos desde fuera solo encuentra el 22 y el 443 (y el 80, que redirige).
+- [ ] CP-154 Caso de prueba: un escaneo de puertos desde fuera solo encuentra el 22 y el 443 (y el 80, que redirige).
 
 **Relacionado:** RNF-08 · RNF-10 · RNF-11 · RNF-12 · D-03, D-16 · [07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md)
 
-Lo subes en una nueva rama llamada "feature/TXX-servidor-despliegue-final" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T110-servidor-despliegue-final" (No olvides que el source de la rama es la de develop)

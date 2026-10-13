@@ -1,7 +1,7 @@
 @startuml CU-06_MonitorearSurtidoresWhatsApp
 ' CU-06: Monitorear Estado de Surtidores vía WhatsApp - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
-' Issue: T-045
+' Issue: T-045 (actualizado en T-086)
 ' Revisión de coherencia (06/10/2026): el análisis corre en el servicio de WhatsApp/LLM; tipo de combustible obligatorio y fila opcional.
 
 skinparam shadowing false
@@ -84,30 +84,39 @@ identificable;
     :Envía el resultado
 al backend Java;
     |Backend Java|
-    :Valida cada
+    if (¿Recibe el\nresultado?) then (sí)
+      :Valida cada
 resultado contra
 el catálogo de
 surtidores;
-    if (¿Surtidor en el\ncatálogo y\nformato válido?) then (sí)
-      :Actualiza el
+      if (¿Surtidor en el\ncatálogo y\nformato válido?) then (sí)
+        :Actualiza el
 estado del
 surtidor;
-    else (no [4a])
-      #FFF8E1:[4a] Descarta ese
+        :El estado queda
+disponible para
+las consultas
+(CU-05);
+      else (no [4a])
+        #FFF8E1:[4a] Descarta ese
 resultado sin
 actualizar ningún
 estado;
+      endif
+    else (no [4b])
+      |Servicio de WhatsApp/LLM\n(Node.js + Baileys)|
+      #FFF8E1:[4b] Guarda el
+resultado, ya sin el
+texto de los
+mensajes, y lo
+reenvía en el
+siguiente ciclo;
     endif
     |Servicio de WhatsApp/LLM\n(Node.js + Baileys)|
     :Elimina el texto
 de los mensajes y
 los marca como
 procesados;
-    |Backend Java|
-    :El estado queda
-disponible para
-las consultas
-(CU-05);
     stop
   else (no [3c])
     |Servicio de WhatsApp/LLM\n(Node.js + Baileys)|

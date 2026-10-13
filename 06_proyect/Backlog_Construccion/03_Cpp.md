@@ -21,7 +21,7 @@ El servidor es ARM (Oracle Cloud, [D-16](../../03_des/02_Arquitectura/08_decisio
 
 ## Sprint 1
 
-### [T-XXX][C++] Estructura del núcleo y protocolo por pipe
+### [T-090][C++] Estructura del núcleo y protocolo por pipe
 
 **Tipo:** Tarea de infraestructura (base del motor core; cubre CU-03 y CU-04)
 **Tecnología:** C++ · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Marcelo
@@ -47,22 +47,22 @@ El servidor es ARM (Oracle Cloud, [D-16](../../03_des/02_Arquitectura/08_decisio
 - [ ] Escribir el README de `04_imp/motor_cpp`: cómo compilar, probar y mandar un mensaje a mano.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: `{"id":1,"operacion":"consultar_estado"}` responde `{"id":1,"ok":true,...}` en una sola línea.
-- [ ] CP-XX Caso de prueba: una línea que no es JSON responde `"ok":false` y la siguiente petición válida se atiende normal.
+- [ ] CP-24 Caso de prueba: `{"id":1,"operacion":"consultar_estado"}` responde `{"id":1,"ok":true,...}` en una sola línea.
+- [ ] CP-25 Caso de prueba: una línea que no es JSON responde `"ok":false` y la siguiente petición válida se atiende normal.
 
 **Relacionado:** RNF-02 · CU-03 · CU-04 · D-15 · [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md)
 
-Lo subes en una nueva rama llamada "feature/TXX-cpp-estructura-nucleo" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T90-cpp-estructura-nucleo" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ## Sprint 2
 
-### [T-XXX][C++] Red vial desde OpenStreetMap
+### [T-096][C++] Red vial desde OpenStreetMap
 
 **Tipo:** Tarea de desarrollo (cubre CU-03 y CU-04)
 **Tecnología:** C++ · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Marcelo
-**Depende de:** [T-XXX][C++] Estructura del núcleo y protocolo por pipe · [T-XXX][Java] Base de datos, catálogos y zona de cobertura (por el polígono de la mancha urbana)
+**Depende de:** [T-090][C++] Estructura del núcleo y protocolo por pipe #42 · [T-089][Java] Base de datos, catálogos y zona de cobertura #41 (por el polígono de la mancha urbana)
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:cpp`
 
 **Descripción:** Preparar la red de calles de Tarija a partir de un extracto de OpenStreetMap y cargarla en memoria al arrancar ([D-08](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Es la base de `RedVial` y `Tramo`.
@@ -85,13 +85,13 @@ Lo subes en una nueva rama llamada "feature/TXX-cpp-estructura-nucleo" (No olvid
 - [ ] Guardar el script de preparación en `04_imp/motor_cpp/preparacion` y el archivo resultante fuera del repositorio, si pesa mucho.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: en la red cargada, una calle peatonal conocida del centro no tiene ningún tramo.
-- [ ] CP-XX Caso de prueba: una calle de un solo sentido conocida tiene un tramo y no el contrario.
-- [ ] CP-XX Caso de prueba: un punto en medio de la Plaza Luis de Fuentes se ajusta a una esquina vecina; un punto fuera del polígono es inválido.
+- [ ] CP-45 Caso de prueba: en la red cargada, una calle peatonal conocida del centro no tiene ningún tramo.
+- [ ] CP-46 Caso de prueba: una calle de un solo sentido conocida tiene un tramo y no el contrario.
+- [ ] CP-47 Caso de prueba: un punto en medio de la Plaza Luis de Fuentes se ajusta a una esquina vecina; un punto fuera del polígono es inválido.
 
 **Relacionado:** RF-05 · CU-03 · RN-03.4 a RN-03.7 · D-08 · P-23 · [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md)
 
-Lo subes en una nueva rama llamada "feature/TXX-cpp-red-vial-osm" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T96-cpp-red-vial-osm" (No olvides que el source de la rama es la de develop)
 
 ---
 
@@ -101,7 +101,7 @@ Lo subes en una nueva rama llamada "feature/TXX-cpp-red-vial-osm" (No olvides qu
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
 **Tecnología:** C++ · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Marcelo
-**Depende de:** [T-XXX][C++] Red vial desde OpenStreetMap
+**Depende de:** [T-096][C++] Red vial desde OpenStreetMap #50
 **Issue anterior:** #29 (prototipo en Python con manejo de errores)
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
@@ -125,9 +125,9 @@ Lo subes en una nueva rama llamada "feature/TXX-cpp-red-vial-osm" (No olvides qu
 - [ ] Medir el tiempo con consultas al azar sobre la red real.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: la red irregular del prototipo da en C++ las mismas rutas que daba en Python en CP-14 a CP-17.
-- [ ] CP-XX Caso de prueba: con una parada intermedia, la ruta pasa por ella y la distancia es la suma de los dos tramos.
-- [ ] CP-XX Caso de prueba: 100 consultas al azar en la red real tardan menos de 1 segundo cada una.
+- [ ] CP-71 Caso de prueba: la red irregular del prototipo da en C++ las mismas rutas que daba en Python en CP-14 a CP-17.
+- [ ] CP-72 Caso de prueba: con una parada intermedia, la ruta pasa por ella y la distancia es la suma de los dos tramos.
+- [ ] CP-73 Caso de prueba: 100 consultas al azar en la red real tardan menos de 1 segundo cada una.
 
 **Relacionado:** RF-05 · RNF-02 · CU-03 · RN-03.4, RN-03.6, RN-03.8, RN-03.10 a RN-03.14 · [05_pro/PruebaCalculoRuta](../../05_pro/PruebaCalculoRuta/README.md)
 
@@ -141,7 +141,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-calcular-ruta" (No olv
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
 **Tecnología:** C++ · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Marcelo
-**Depende de:** [HU-05][CU-03][C++] Calcular la ruta óptima con A*
+**Depende de:** [HU-05][CU-03][C++] Calcular la ruta óptima con A* #58
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
 **Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
@@ -150,7 +150,7 @@ Este issue cubre la parte de «datos viales vigentes»: cómo los eventos cambia
 
 **Criterios de aceptación**
 - [ ] `actualizar_trafico` recibe un evento que nace, cambia su vencimiento, se retira o vence (identificador, tipo, nivel si es congestión, ubicación y vencimiento) y responde los tramos afectados.
-- [ ] Un evento reportado por un conductor se asigna a la calle vehicular más cercana y afecta a sus dos sentidos; una congestión, solo al tramo y sentido donde se midió (D-18).
+- [ ] Un evento reportado por un conductor se asigna a la calle vehicular más cercana, si está a menos de 100 m (P-23), y afecta a sus dos sentidos; más lejos, se muestra en el mapa pero no afecta ninguna ruta. Una congestión afecta solo al tramo y sentido donde se midió (RN-03.9, D-18).
 - [ ] El nivel del tramo sale de los eventos vigentes sobre él y, si hay varios, vale el más grave (RN-03.9).
 - [ ] Los factores son los de P-12: accidente ×4,0; control policial y otro ×1,5; congestión ×2,5 o ×4,0 según el nivel que trae el mensaje.
 - [ ] Un bloqueo vigente cierra el tramo: ninguna ruta pasa por él (RN-03.9).
@@ -164,12 +164,12 @@ Este issue cubre la parte de «datos viales vigentes»: cómo los eventos cambia
 - [ ] Escribir pruebas de nacer, retirar y vencer.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un accidente sobre la calle directa entre dos puntos hace que la ruta tome el rodeo cuando el rodeo cuesta menos que la calle por 4,0.
-- [ ] CP-XX Caso de prueba: un bloqueo sobre la única calle de acceso a un punto hace que la ruta a ese punto responda `SIN_RUTA`.
-- [ ] CP-XX Caso de prueba: al retirarse el bloqueo, la misma ruta vuelve a encontrarse.
-- [ ] CP-XX Caso de prueba: un bloqueo en una calle de doble sentido impide pasar por ella en los dos sentidos; una congestión en esa calle solo encarece el sentido donde se midió.
+- [ ] CP-95 Caso de prueba: un accidente sobre la calle directa entre dos puntos hace que la ruta tome el rodeo cuando el rodeo cuesta menos que la calle por 4,0.
+- [ ] CP-96 Caso de prueba: un bloqueo sobre la única calle de acceso a un punto hace que la ruta a ese punto responda `SIN_RUTA`.
+- [ ] CP-97 Caso de prueba: al retirarse el bloqueo, la misma ruta vuelve a encontrarse.
+- [ ] CP-98 Caso de prueba: un bloqueo en una calle de doble sentido impide pasar por ella en los dos sentidos; una congestión en esa calle solo encarece el sentido donde se midió.
 
-**Relacionado:** RF-05 · RF-06 · CU-03 · CU-04 · RN-02.15, RN-03.9 · P-12 · D-14, D-18
+**Relacionado:** RF-05 · RF-06 · CU-03 · CU-04 · RN-02.15, RN-03.9 · P-12, P-23 · D-14, D-18
 
 Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-trafico-tramos" (No olvides que el source de la rama es la de develop)
 
@@ -181,11 +181,11 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-trafico-tramos" (No ol
 
 **Caso de uso:** CU-04 — Recalcular Ruta
 **Tecnología:** C++ · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Marcelo
-**Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos
+**Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Issue anterior:** #3 (prototipo de cálculo de velocidad)
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
-**Historia de usuario:** Como sistema, quiero recibir la velocidad y la posición de los conductores mientras tienen la app abierta, para detectar congestión sin depender solo de los reportes manuales.
+**Historia de usuario:** Como sistema, quiero recibir la posición de los conductores mientras tienen la app abierta, para calcular su velocidad y detectar congestión sin depender solo de los reportes manuales.
 
 Este issue cubre la parte del núcleo: analizar las lecturas y decidir si hay congestión.
 
@@ -194,7 +194,7 @@ Este issue cubre la parte del núcleo: analizar las lecturas y decidir si hay co
 - [ ] La velocidad sale de la distancia y el tiempo entre dos lecturas seguidas del mismo recorrido (RN-04.5).
 - [ ] Se descarta la lectura con precisión peor que 50 m o que implica más de 150 km/h (RN-04.6).
 - [ ] Una lectura de 25 km/h o menos con un giro mayor a 40 grados se toma como giro y no como congestión (RN-04.7).
-- [ ] Cada lectura válida se asigna al tramo vehicular donde está; si el tramo más cercano está a más de 30 m, la lectura se ignora (RN-04.8, P-24).
+- [ ] Cada lectura válida se asigna al tramo vehicular donde está; si el tramo más cercano está a más de 30 m, la lectura se ignora (RN-04.8, P-24). En una calle de doble sentido, va al tramo cuyo sentido coincide con el rumbo del vehículo entre sus dos últimas lecturas (D-18).
 - [ ] Un tramo está congestionado por debajo de la mitad de la velocidad esperada de su tipo de vía y muy congestionado por debajo de la cuarta parte (RN-04.9, P-02).
 - [ ] Hay congestión cuando un recorrido sigue lento en un tramo durante 2 minutos seguidos; entonces la respuesta informa el tramo, un punto y el nivel (RN-04.10).
 - [ ] Los recorridos simulados y los reales se analizan por separado: una congestión que sale de recorridos simulados se informa como simulada (RN-04.20, RN-07.6).
@@ -207,12 +207,13 @@ Este issue cubre la parte del núcleo: analizar las lecturas y decidir si hay co
 - [ ] Escribir pruebas con recorridos fabricados: fluido, lento, detenido en un giro.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un recorrido a 8 km/h durante 2 minutos en una avenida principal produce congestión; durante 1 minuto, no.
-- [ ] CP-XX Caso de prueba: un vehículo que frena para doblar una esquina no produce congestión.
-- [ ] CP-XX Caso de prueba: una lectura con precisión de 80 m se descarta.
-- [ ] CP-XX Caso de prueba: un recorrido simulado lento produce una congestión informada como simulada.
+- [ ] CP-114 Caso de prueba: un recorrido a 8 km/h durante 2 minutos en una avenida principal produce congestión; durante 1 minuto, no.
+- [ ] CP-115 Caso de prueba: un vehículo que frena para doblar una esquina no produce congestión.
+- [ ] CP-116 Caso de prueba: una lectura con precisión de 80 m se descarta.
+- [ ] CP-117 Caso de prueba: un recorrido lento en un sentido de una calle de doble sentido congestiona ese tramo y no el del sentido contrario.
+- [ ] CP-118 Caso de prueba: un recorrido simulado lento produce una congestión informada como simulada.
 
-**Relacionado:** RF-14 · RNF-13 · CU-04 · RN-04.5 a RN-04.10, RN-04.12, RN-04.20 · P-02, P-24, P-25 · D-07 · [05_pro/CalculoVelocidad](../../05_pro/CalculoVelocidad/CU-04_CalculoVelocidad.md)
+**Relacionado:** RF-14 · RNF-13 · CU-04 · RN-04.5 a RN-04.10, RN-04.12, RN-04.20 · P-02, P-24, P-25 · D-07, D-18 · [05_pro/CalculoVelocidad](../../05_pro/CalculoVelocidad/CU-04_CalculoVelocidad.md)
 
 Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (No olvides que el source de la rama es la de develop)
 
@@ -222,17 +223,17 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (
 
 **Caso de uso:** CU-04 — Recalcular Ruta
 **Tecnología:** C++ · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Marcelo
-**Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos
+**Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
-**Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema recalcule automáticamente mi ruta si detecta congestión, para evitar demoras sin tener que intervenir manualmente.
+**Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema me proponga una ruta alternativa cuando un evento vial afecte mi camino, para evitar demoras sin tener que buscarla yo.
 
 **Criterios de aceptación**
 - [ ] `revisar_ruta` recibe la posición actual, los identificadores de los tramos que faltan, el destino, las paradas que faltan y los eventos ya avisados.
 - [ ] Busca algún evento vigente, de cualquier tipo y origen, sobre los tramos que faltan, sin contar los ya avisados (RN-04.14).
 - [ ] Si lo hay, calcula la alternativa desde la posición actual, con el destino y las paradas que faltan (RN-04.15).
-- [ ] Propone la alternativa solo si cuesta menos que seguir por la ruta actual con el tráfico al día; si no, responde «congestión sin alternativa» (RN-04.16).
-- [ ] Cuando la respuesta es una alternativa o «congestión sin alternativa», dice qué evento la provocó, para que la app no lo vuelva a avisar (RN-04.19).
+- [ ] Propone la alternativa solo si cuesta menos que seguir por la ruta actual con el tráfico al día; si no, responde «sin alternativa» (RN-04.16).
+- [ ] Cuando la respuesta es una alternativa o «sin alternativa», dice qué evento la provocó, para que la app no lo vuelva a avisar (RN-04.19).
 - [ ] Si los identificadores de tramo ya no existen porque se recargó la red, responde «ruta desactualizada» y la app pide la ruta de nuevo.
 
 **Tareas**
@@ -241,9 +242,9 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (
 - [ ] Escribir pruebas de los tres resultados.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: un accidente sobre un tramo que falta produce una alternativa más barata.
-- [ ] CP-XX Caso de prueba: un control policial (×1,5) sobre un tramo cuya alternativa cuesta más produce «congestión sin alternativa».
-- [ ] CP-XX Caso de prueba: el mismo evento, enviado como ya avisado, produce «sin cambios».
+- [ ] CP-124 Caso de prueba: un accidente sobre un tramo que falta produce una alternativa más barata.
+- [ ] CP-125 Caso de prueba: un control policial (×1,5) sobre un tramo cuya alternativa cuesta más produce «sin alternativa».
+- [ ] CP-126 Caso de prueba: el mismo evento, enviado como ya avisado, produce «sin cambios».
 
 **Relacionado:** RF-06 · CU-04 · RN-04.13 a RN-04.16, RN-04.19 · D-12
 
@@ -253,11 +254,11 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-cpp-revisar-ruta" (No olvi
 
 ## Sprint 7
 
-### [T-XXX][C++] Rendimiento con la red real de Tarija
+### [T-109][C++] Rendimiento con la red real de Tarija
 
 **Tipo:** Tarea de pruebas (cubre CU-03 y CU-04)
 **Tecnología:** C++ · **Sprint:** Sprint 7 (26/11–30/11) · **Responsable sugerido:** Marcelo
-**Depende de:** [HU-06][CU-04][C++] Revisar la ruta activa · [T-XXX][Simulador] Pruebas de carga y reporte
+**Depende de:** [HU-06][CU-04][C++] Revisar la ruta activa #76 · [T-108][Simulador] Pruebas de carga y reporte #89
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:cpp`
 
 **Descripción:** Medir el núcleo en el servidor real, con la red de Tarija y la carga del simulador, y ajustar los parámetros que los documentos dejan «a ajustar con pruebas» (niveles de tráfico, P-02, P-23, P-24 y P-25).
@@ -273,8 +274,8 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-cpp-revisar-ruta" (No olvi
 - [ ] Anotar los resultados en `05_pro`.
 
 **Casos de prueba**
-- [ ] CP-XX Caso de prueba: 1000 rutas al azar en la red real, en el servidor, cada una en menos de 1 segundo.
+- [ ] CP-153 Caso de prueba: 1000 rutas al azar en la red real, en el servidor, cada una en menos de 1 segundo.
 
 **Relacionado:** RNF-02 · CU-03 · CU-04 · P-02, P-12, P-23, P-24, P-25
 
-Lo subes en una nueva rama llamada "feature/TXX-cpp-rendimiento" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/T109-cpp-rendimiento" (No olvides que el source de la rama es la de develop)

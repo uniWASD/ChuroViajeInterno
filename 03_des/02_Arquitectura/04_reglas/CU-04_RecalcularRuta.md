@@ -15,7 +15,7 @@ Cubre HU-06 y HU-13, y los requisitos RF-06, RF-14 y RNF-13. Las reglas RN-04.1 
 | RN-04.5 | La velocidad se calcula con la distancia entre dos lecturas seguidas y el tiempo que pasó entre ellas. | LecturaTelemetría | `05_pro/CalculoVelocidad`, issue #3 |
 | RN-04.6 | Una lectura se descarta si su precisión es peor que 50 metros o si implica una velocidad mayor a 150 km/h. | LecturaTelemetría | `05_pro/CalculoVelocidad` |
 | RN-04.7 | Una lectura lenta, de 25 km/h o menos, con un cambio de dirección mayor a 40 grados se toma como un giro y no cuenta como congestión. | LecturaTelemetría | `05_pro/CalculoVelocidad`, issue #3 |
-| RN-04.8 | Cada lectura válida se asigna al tramo vehicular donde está el vehículo. Fuera de una vía vehicular, la lectura se ignora. | RedVial, Tramo | Visión 1.2.2 |
+| RN-04.8 | Cada lectura válida se asigna al tramo vehicular donde está el vehículo; en una calle de doble sentido, al del sentido en que avanza. Fuera de una vía vehicular, la lectura se ignora. | RedVial, Tramo | Visión 1.2.2, [D-18](../08_decisiones_parametros.md) |
 | RN-04.9 | Un tramo se clasifica como congestionado cuando se circula por debajo de la mitad de la velocidad esperada de su tipo de vía, y como muy congestionado por debajo de la cuarta parte. | Tramo | Prototipo `Analisis_Trafico.java`, [P-02](../08_decisiones_parametros.md) |
 | RN-04.10 | Hay congestión cuando un vehículo sigue detenido o lento en un tramo durante 2 minutos seguidos. Entonces el backend registra un `EventoVial` de tipo Congestión, con origen Telemetría, ubicado en ese tramo. | EventoVial, Tramo | HU-13 c.3, Visión 1.2.2, [D-04](../08_decisiones_parametros.md), [P-02](../08_decisiones_parametros.md) |
 | RN-04.11 | Si ese tramo ya tiene una congestión vigente, no se crea otra: se actualiza el momento de la existente, que así dura mientras siga la lentitud. | EventoVial | Propuesta |
@@ -47,6 +47,6 @@ El recálculo:
 1. **Controlador de navegación (app).** Mientras la ruta está Activa, envía al backend su posición y lo que le falta recorrer, junto con su consulta periódica.
 2. **Controlador REST de rutas (backend).** Comprueba el JWT y llama al servicio del modelo que revisa rutas.
 3. **Modelo (backend y motor core).** Comprueba si algún evento vigente toca lo que falta de la ruta (RN-04.13, RN-04.14). Si lo hay, calcula la alternativa y la compara con la ruta actual (RN-04.15, RN-04.16, RN-04.19).
-4. **Controlador REST de rutas (backend).** Devuelve «sin cambios», «hay congestión y no hay alternativa» o la ruta alternativa.
+4. **Controlador REST de rutas (backend).** Devuelve «sin cambios», «sin alternativa» o la ruta alternativa, con el evento que la provocó.
 5. **Controlador de navegación (app) y vista Navegación activa.** Muestran el aviso sin tapar la navegación (RN-04.17).
 6. **Vista Navegación activa.** Si el conductor acepta, la alternativa pasa a ser la ruta Activa. Si la rechaza, sigue la original con el evento a la vista (RN-04.18). Si no responde en 15 segundos, el aviso se cierra y sigue la original (RN-04.21).

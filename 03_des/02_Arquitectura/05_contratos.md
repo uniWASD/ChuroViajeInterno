@@ -26,7 +26,7 @@ Hay tres contratos: el de la app con el backend, el del backend con el motor cor
 | Consultar eventos | `GET /eventos` | Marca de la última consulta, opcional | Eventos vigentes o solo los cambios, y la marca nueva | CU-02 |
 | Votar un evento | `POST /eventos/{id}/votos` | Real o falso | Estado del evento tras el voto | CU-02 |
 | Calcular ruta | `POST /rutas` | Origen, destino y paradas | Trazado, distancia y tiempo, con el identificador y el nombre de la calle de cada tramo; o «sin ruta» o «punto inválido» | CU-03 |
-| Revisar ruta activa | `POST /rutas/revision` | Posición actual, tramos que faltan, destino, paradas que faltan y eventos ya avisados | Sin cambios; congestión sin alternativa; o ruta alternativa. Las dos últimas traen el evento que las provocó. Si la red vial cambió, «ruta desactualizada» | CU-04 |
+| Revisar ruta activa | `POST /rutas/revision` | Posición actual, tramos que faltan, destino, paradas que faltan y eventos ya avisados | Sin cambios; sin alternativa; o ruta alternativa. Las dos últimas traen el evento que las provocó. Si la red vial cambió, «ruta desactualizada» | CU-04 |
 | Enviar telemetría | `POST /telemetria` | Grupo de lecturas: posición, precisión y momento | Recibido | CU-04 |
 | Consultar surtidores | `GET /surtidores` | Ubicación actual | Surtidores por cercanía, con estado por tipo, fila, origen y fecha | CU-05 |
 | Confirmar recarga | `POST /surtidores/{id}/confirmaciones` | Tipo de combustible y ubicación actual | Confirmación aceptada, o motivo del rechazo | CU-05 |

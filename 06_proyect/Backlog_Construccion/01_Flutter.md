@@ -179,7 +179,7 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-flutter-ver-eventos" (No o
 **Depende de:** [T-XXX][Flutter] Mapa base con Mapbox y ubicación · [HU-10][CU-08][Flutter] Iniciar sesión con Google · [HU-01][CU-01][Java] Registrar reportes de eventos viales
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
-**Historia de usuario:** Como conductor de la app, quiero reportar un evento vial desde el mapa, para que otros conductores lo vean y puedan evitarlo.
+**Historia de usuario:** Como conductor de la app, quiero reportar un evento vial (accidente, control policial, bloqueo u otro) desde el mapa, para que otros conductores lo vean y puedan evitarlo.
 
 **Criterios de aceptación**
 - [ ] Desde el mapa, el reporte se completa en 3 toques: «Reportar evento», el tipo y confirmar (RNF-06).
@@ -188,20 +188,21 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-flutter-ver-eventos" (No o
 - [ ] Al confirmar, la app toma la ubicación del GPS; si el GPS no responde, deja ajustar el punto en el mapa antes de enviar (RN-01.5).
 - [ ] La app envía tipo, ubicación, hora de confirmación y minutos elegidos; nunca calcula el momento del evento por su cuenta (05_contratos).
 - [ ] Muestra la confirmación, o el mensaje del backend cuando el reporte es duplicado, supera el límite, está fuera de Tarija o ya venció.
-- [ ] Si la sesión expiró, conserva el reporte, pide iniciar sesión y después lo reintenta (RN-01.16).
+- [ ] Si el JWT venció, conserva el reporte y renueva la sesión sin que el conductor intervenga; solo si no puede renovarla, pide iniciar sesión. Después reintenta el envío (RN-01.16).
 - [ ] Sin conexión, la app avisa que no hay red y conserva lo que el conductor eligió en la pantalla. Guardarlo en la cola es parte de HU-02.
 
 **Tareas**
 - [ ] Implementar la vista Reportar evento y su controlador.
 - [ ] Implementar la captura de la ubicación con el ajuste manual de respaldo.
 - [ ] Mostrar los rechazos del backend con su mensaje.
-- [ ] Implementar el reintento después de iniciar sesión otra vez.
+- [ ] Implementar la renovación de la sesión y el reintento del envío.
 - [ ] Escribir pruebas del controlador.
 
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: reportar un control policial con «Hace 5 minutos» toma 3 toques y aparece en el mapa de otro teléfono.
 - [ ] CP-XX Caso de prueba: con el GPS apagado, el conductor ajusta el punto en el mapa y el reporte se envía con ese punto.
-- [ ] CP-XX Caso de prueba: con el JWT vencido, la app pide iniciar sesión y el reporte se envía después sin volver a llenarlo.
+- [ ] CP-XX Caso de prueba: con el JWT vencido y el token de renovación vigente, el reporte se envía sin pedir iniciar sesión.
+- [ ] CP-XX Caso de prueba: con el token de renovación también vencido, la app pide iniciar sesión y el reporte se envía después sin volver a llenarlo.
 
 **Relacionado:** RF-01 · RNF-06 · RNF-08 · CU-01 · RN-01.3 a RN-01.5, RN-01.16 · D-09, D-10
 
@@ -388,7 +389,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-flutter-telemetria" (No ol
 **Criterios de aceptación**
 - [ ] La pestaña Surtidores pide `GET /surtidores` con la ubicación actual y muestra la lista del más cercano al más lejano (RN-05.2).
 - [ ] Mientras la pestaña sigue abierta, la lista se vuelve a pedir cada 60 segundos (RN-05.17, P-27).
-- [ ] Los surtidores también aparecen como marcadores en el Mapa principal, y al tocar uno se ve su estado (D-25).
+- [ ] Los surtidores también aparecen como marcadores en el Mapa principal, y al tocar uno se ve su estado. Con el mapa abierto, los marcadores se actualizan cada 60 segundos, igual que la lista (RN-05.17, D-25).
 - [ ] Cada surtidor muestra su estado por tipo de combustible, la fila si se conoce, el origen del dato y su fecha (RN-05.4).
 - [ ] El origen WhatsApp y el origen Conductores se distinguen a simple vista (RNF-07).
 - [ ] Un surtidor sin datos vigentes muestra «sin información reciente» y un dato sin tipo muestra «Desconocido» (RN-05.5, RN-05.6).
@@ -403,6 +404,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-flutter-telemetria" (No ol
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: un surtidor con un aviso de WhatsApp de hace 10 minutos muestra el estado, el origen WhatsApp y la hora.
 - [ ] CP-XX Caso de prueba: un surtidor sin datos muestra «sin información reciente».
+- [ ] CP-XX Caso de prueba: con el mapa abierto, un dato nuevo de un surtidor cambia su marcador en menos de 2 minutos, sin tocar la pantalla.
 
 **Relacionado:** RF-07 · RNF-03 · RNF-04 · RNF-07 · CU-05 · RN-05.2 a RN-05.6, RN-05.17 · D-23, D-25 · P-27
 
@@ -424,7 +426,7 @@ Lo subes en una nueva rama llamada "feature/HU07-CU05-flutter-surtidores" (No ol
 **Criterios de aceptación**
 - [ ] Con la app abierta, si el conductor está detenido 3 minutos a menos de 50 m de un surtidor del catálogo, aparece «¿Acabas de recargar combustible?» (RN-05.8, D-11, P-09).
 - [ ] Si responde «Sí», elige entre Gasolina, Diesel, Gasolina Premium y Diesel ULS; Desconocido no aparece (RN-05.9).
-- [ ] Si responde «No» o cierra cualquiera de las dos preguntas, no se envía nada (RN-05.10).
+- [ ] Si responde «No» o cierra cualquiera de las dos preguntas, no se envía nada (RN-05.10), y la pregunta no vuelve a aparecer mientras siga detenido junto a ese surtidor.
 - [ ] La respuesta toma dos toques como máximo y la pregunta no tapa la navegación ni la lista de surtidores (RN-05.16).
 - [ ] La app envía el surtidor, el tipo y la ubicación donde detectó la parada a `POST /surtidores/{id}/confirmaciones`, aunque el conductor ya haya arrancado, y muestra la confirmación o el rechazo.
 - [ ] Después de confirmar, o si el backend responde que es repetida, la app no vuelve a preguntar por ese surtidor durante 60 minutos (RN-05.14, P-14).
@@ -437,7 +439,7 @@ Lo subes en una nueva rama llamada "feature/HU07-CU05-flutter-surtidores" (No ol
 
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: con una ubicación simulada detenida 3 minutos junto a un surtidor, aparece la pregunta; al elegir Diesel, el surtidor muestra Diesel disponible con origen Conductores.
-- [ ] CP-XX Caso de prueba: al responder «No», no se envía nada al backend.
+- [ ] CP-XX Caso de prueba: al responder «No», no se envía nada al backend y la pregunta no reaparece mientras el conductor siga detenido allí.
 - [ ] CP-XX Caso de prueba: 10 minutos después, en el mismo surtidor, la pregunta no vuelve a aparecer.
 
 **Relacionado:** RF-13 · RNF-09 · CU-05 · RN-05.8 a RN-05.10, RN-05.14, RN-05.16 · D-11 · P-09, P-14
@@ -460,8 +462,9 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-flutter-pregunta-recarga" 
 - [ ] Si llega una alternativa, se muestra sin interrumpir la navegación, con «Aceptar» y «Rechazar» (RN-04.17).
 - [ ] Si el conductor no responde en 15 segundos, el aviso se cierra solo, sigue la ruta original y el evento queda como ya avisado (RN-04.21, P-26).
 - [ ] Al aceptar, la alternativa pasa a ser la ruta Activa; al rechazar, sigue la original con el evento a la vista (RN-04.18).
-- [ ] Si la respuesta es «hay congestión y no hay alternativa», la app avisa la congestión, mantiene la ruta y agrega el evento a los ya avisados (RN-04.16, RN-04.19).
+- [ ] Si la respuesta es «sin alternativa», la app avisa del evento que afecta la ruta, la mantiene y agrega el evento a los ya avisados (RN-04.16, RN-04.19).
 - [ ] Si la respuesta es «ruta desactualizada», la app pide la ruta de nuevo desde la posición actual, con el mismo destino y las paradas que faltan.
+- [ ] Si la revisión falla (sin red o con 503), la app sigue con la ruta actual sin mostrar un error y vuelve a intentar en el siguiente ciclo.
 - [ ] Un mismo evento produce un solo aviso en la ruta, se acepte o se rechace (RN-04.19).
 - [ ] La revisión corre fuera del hilo de la interfaz: con el perfilador de Flutter, el mapa no pierde cuadros mientras espera la respuesta (HU-06, rendimiento).
 
@@ -474,6 +477,7 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-flutter-pregunta-recarga" 
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: durante una navegación, se reporta un accidente desde otro teléfono sobre la ruta y aparece el aviso de alternativa.
 - [ ] CP-XX Caso de prueba: al rechazar la alternativa, la ruta sigue igual, con el evento a la vista, y el aviso no vuelve.
+- [ ] CP-XX Caso de prueba: si el conductor no toca el aviso, a los 15 segundos se cierra, la ruta sigue igual y el aviso no vuelve.
 
 **Relacionado:** RF-06 · CU-04 · RN-04.13, RN-04.16 a RN-04.19, RN-04.21 · D-12, D-19 · P-26
 
@@ -485,7 +489,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 
 **Tipo:** Tarea de documentación (cubre CU-04, CU-06 y CU-08)
 **Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Franz
-**Depende de:** [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado · [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta
+**Depende de:** [T-XXX][Servidor] Dominio, Nginx y HTTPS · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado · [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
 
 **Descripción:** Redactar la política de privacidad que pide [07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md) y enlazarla desde la app. Las tiendas de aplicaciones también la piden por el permiso de ubicación.
@@ -493,7 +497,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 **Criterios de aceptación**
 - [ ] La política dice qué datos se recogen y para qué: la cuenta de Google, la ubicación solo con la app abierta, la telemetría sin datos del conductor, y los reportes, votos y confirmaciones, que nunca se muestran con su autor (RNF-10, RNF-13).
 - [ ] Dice cuánto se guarda cada dato, según [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md).
-- [ ] Dice que el texto y la fecha de los mensajes de los grupos se envían al proveedor del LLM, y que en la capa gratuita de Gemini ese proveedor puede usarlos para mejorar sus productos (Visión 6.3, D-17).
+- [ ] Dice que el texto y la fecha de los mensajes de los grupos se envían al proveedor del LLM, y que en la capa gratuita de Gemini ese proveedor puede usarlos para mejorar sus productos y que pueden leerlos revisores humanos (Visión 6.3, D-17).
 - [ ] Está publicada en una página del dominio del proyecto y se puede abrir desde la vista Inicio de sesión, antes de entrar.
 - [ ] Está escrita en español claro, sin lenguaje legal innecesario.
 
@@ -505,6 +509,6 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: desde la vista Inicio de sesión, sin cuenta, se abre la política y menciona al proveedor del LLM.
 
-**Relacionado:** RNF-10 · RNF-11 · RNF-13 · RNF-16 · Visión 6.3 · D-17 · [07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md)
+**Relacionado:** RNF-10 · RNF-11 · RNF-13 · RNF-16 · RNF-17 · Visión 6.3 · D-17 · [07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md)
 
 Lo subes en una nueva rama llamada "feature/TXX-flutter-politica-privacidad" (No olvides que el source de la rama es la de develop)

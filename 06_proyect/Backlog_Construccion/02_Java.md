@@ -113,7 +113,7 @@ Lo subes en una nueva rama llamada "feature/TXX-java-base-de-datos" (No olvides 
 - [ ] En el primer ingreso se crea el `Conductor`; en los siguientes se reutiliza. La base no permite dos conductores con la misma cuenta de Google (RN-08.4).
 - [ ] La respuesta trae un JWT de 1 hora, su expiración y un token de renovación válido por 30 días (RN-08.5, RN-08.12).
 - [ ] `POST /sesion/renovar` entrega un JWT nuevo sin pasar por Google mientras el token de renovación siga vigente; vencido, responde 401 (RN-08.12).
-- [ ] Todas las rutas de la API exigen un JWT de conductor vigente, salvo las de `/sesion/*`, que no lo necesitan, y las de `/monitoreo/*`, que exigen la credencial de servicio. Sin la credencial correcta responden 401 (RN-08.11, RNF-08).
+- [ ] Todas las rutas de la API exigen un JWT de conductor vigente, salvo las de `/sesion/*`, que no lo necesitan, y las de `/monitoreo/*`, que exigen la credencial de servicio. Sin credencial, o con una vencida, responden 401; con una credencial de otro tipo, como un JWT de conductor en `/monitoreo/*`, responden 403 (RN-08.11, RNF-08).
 - [ ] `POST /sesion/cerrar` invalida el token de renovación; después, `POST /sesion/renovar` con ese token responde 401 (RN-08.14).
 - [ ] Nunca se guardan credenciales de Google; solo el identificador de la cuenta (RN-08.6).
 - [ ] La respuesta de inicio de sesión llega en menos de 3 segundos con red normal (RNF-05).
@@ -218,7 +218,7 @@ Lo subes en una nueva rama llamada "feature/TXX-java-wrapper-motor" (No olvides 
 **Depende de:** [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT · [T-XXX][Java] Catálogos para la app
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
-**Historia de usuario:** Como conductor de la app, quiero reportar un evento vial desde el mapa, para que otros conductores lo vean y puedan evitarlo.
+**Historia de usuario:** Como conductor de la app, quiero reportar un evento vial (accidente, control policial, bloqueo u otro) desde el mapa, para que otros conductores lo vean y puedan evitarlo.
 
 **Criterios de aceptación**
 - [ ] `POST /eventos` recibe tipo, ubicación, hora de confirmación y, si el conductor eligió, los minutos. Sin tipo, ubicación u hora de confirmación rechaza el reporte entero con 400 (RN-01.2).
@@ -264,7 +264,7 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-java-registrar-reporte" (N
 **Criterios de aceptación**
 - [ ] `GET /eventos` devuelve solo los eventos Activos y Confirmados; los Retirados y Vencidos no salen nunca (RN-02.2).
 - [ ] Un evento deja de salir en cuanto supera la vigencia de su tipo, contada desde que ocurrió: 30 minutos la congestión y 60 los demás (RN-02.3, RN-02.4).
-- [ ] Con una marca de la última consulta, la respuesta trae solo los cambios y una marca nueva: los eventos nuevos, los modificados (los que pasaron a Confirmado y las congestiones con su momento actualizado) y los identificadores de los que dejaron de estar vigentes (RN-02.6, RN-02.14, RN-04.11).
+- [ ] Con una marca de la última consulta, la respuesta trae solo los cambios y una marca nueva: los eventos nuevos, los modificados (los que pasaron a Confirmado y las congestiones con su momento actualizado) y los identificadores de los que dejaron de mostrarse, por vencidos o retirados (RN-02.6, RN-02.13, RN-02.14, RN-04.11).
 - [ ] La vigencia se calcula al momento de cada consulta, sin esperar a la tarea periódica: un evento que venció hace segundos ya sale entre los que dejaron de estar vigentes (RN-02.4).
 - [ ] De cada evento se entrega tipo, ubicación, cuándo ocurrió, si está confirmado y su origen; nunca quién lo reportó ni quién lo votó (RN-02.5, RNF-10).
 - [ ] Una tarea periódica marca como Vencido todo evento que superó su vigencia (RN-02.4).
@@ -343,6 +343,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 - [ ] Un segundo voto del mismo conductor sobre el mismo evento responde 409; la base tampoco lo permite (RN-02.11).
 - [ ] El reportante no puede votar su propio evento: responde 422 (RN-02.12, P-17).
 - [ ] Con 3 votos «falso», el evento pasa a Retirado (RN-02.13, P-01).
+- [ ] En la consulta por cambios de `GET /eventos`, un evento retirado llega entre los que dejaron de mostrarse y uno confirmado entre los modificados, para que la app lo quite o lo marque (RN-02.6, RN-02.13, RN-02.14).
 - [ ] Con 3 votos «real», pasa a Confirmado y ya no se retira por votos, solo vence (RN-02.14, P-11).
 - [ ] La respuesta trae el estado del evento después del voto, sin datos de quién votó.
 
@@ -553,7 +554,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvid
 
 **Criterios de aceptación**
 - [ ] `POST /rutas/revision` recibe la posición actual, los tramos que faltan, el destino, las paradas que faltan y los eventos ya avisados en esta ruta (D-12, 05_contratos).
-- [ ] Responde «sin cambios», «hay congestión y no hay alternativa» o una ruta alternativa con su costo. Las dos últimas traen el evento que las provocó, para que la app lo agregue a los ya avisados (RN-04.14, RN-04.16, RN-04.19).
+- [ ] Responde «sin cambios», «sin alternativa» o una ruta alternativa con su costo. Las dos últimas traen el evento que las provocó, para que la app lo agregue a los ya avisados (RN-04.14, RN-04.16, RN-04.19).
 - [ ] Si el motor responde que los tramos ya no existen porque se recargó la red vial, responde «ruta desactualizada» y la app pide la ruta de nuevo.
 - [ ] La alternativa parte de la posición actual y conserva el destino y las paradas que faltan (RN-04.15).
 - [ ] Solo se propone si cuesta menos que seguir por la ruta actual con el tráfico al día (RN-04.16).
@@ -568,7 +569,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvid
 
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: con un accidente nuevo sobre un tramo que falta, la respuesta trae una alternativa más barata.
-- [ ] CP-XX Caso de prueba: si no hay camino mejor, la respuesta es «hay congestión y no hay alternativa».
+- [ ] CP-XX Caso de prueba: si no hay camino mejor, la respuesta es «sin alternativa», con el evento que la provocó.
 - [ ] CP-XX Caso de prueba: el mismo evento, enviado como ya avisado, devuelve «sin cambios».
 - [ ] CP-XX Caso de prueba: con tramos que no existen, la respuesta es «ruta desactualizada».
 
@@ -625,11 +626,11 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-java-soporte-simulador" (N
 **Depende de:** [HU-12][CU-05][Java] Registrar confirmaciones de recarga
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
-**Descripción:** Borrar lo que el sistema ya no necesita, como define [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md): eventos vencidos o retirados, sus votos y las confirmaciones de recarga con más de 30 días, y los tokens de renovación vencidos.
+**Descripción:** Borrar lo que el sistema ya no necesita, como define [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md): eventos vencidos o retirados, sus votos y las confirmaciones de recarga con más de 30 días, y los tokens de renovación vencidos o invalidados al cerrar sesión.
 
 **Criterios de aceptación**
 - [ ] Una tarea diaria borra los eventos vencidos o retirados hace más de 30 días, junto con sus votos (P-21).
-- [ ] La misma tarea borra las confirmaciones de recarga de más de 30 días y los tokens de renovación vencidos.
+- [ ] La misma tarea borra las confirmaciones de recarga de más de 30 días y los tokens de renovación vencidos o invalidados al cerrar sesión (RN-08.14).
 - [ ] Nada vigente se borra.
 
 **Tareas**

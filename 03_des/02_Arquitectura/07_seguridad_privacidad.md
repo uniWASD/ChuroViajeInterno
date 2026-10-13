@@ -46,7 +46,7 @@ El sistema no guarda contraseñas ni credenciales de Google. El JWT dura 1 hora 
 | Texto de un mensaje de WhatsApp | Se borra al analizarse, o a los 30 minutos | [RN-06.11](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [RN-06.12](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
 | Lo que recibe el proveedor del LLM | Solo el texto y la fecha, con los números de teléfono enmascarados. Se usa la capa gratuita de la API de Gemini, cuyos términos permiten a Google usar lo enviado para mejorar sus productos y que lo lean revisores humanos | [RN-06.6](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [D-17](08_decisiones_parametros.md) |
 
-La política de privacidad de la app debe decir qué datos se recogen y que el texto y la fecha de los mensajes de los grupos se envían al proveedor del LLM, como pide la Visión 6.3. También debe decir que, en la capa gratuita, ese proveedor puede usarlos para mejorar sus productos ([D-17](08_decisiones_parametros.md)).
+La política de privacidad de la app debe decir qué datos se recogen y que el texto y la fecha de los mensajes de los grupos se envían al proveedor del LLM, como pide la Visión 6.3. También debe decir que, en la capa gratuita, ese proveedor puede usarlos para mejorar sus productos y que pueden leerlos revisores humanos ([D-17](08_decisiones_parametros.md)).
 
 ## Servidor
 

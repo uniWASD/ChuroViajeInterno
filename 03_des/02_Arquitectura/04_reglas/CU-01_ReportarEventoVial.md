@@ -37,7 +37,7 @@ Los valores de RN-01.8 y RN-01.9 son iniciales, se confirmaron el 06/10/2026 y s
 5. **Controlador REST de eventos (backend).** Comprueba el JWT (RN-01.1) y que la petición tenga el formato esperado. Llama al servicio del modelo que registra eventos.
 6. **Modelo (backend).** Construye la `Ubicación` (RN-01.5, RN-01.6), busca el `TipoEvento` (RN-01.3) y crea el `EventoVial` (RN-01.2, RN-01.4, RN-01.7). Comprueba duplicado y límite (RN-01.8, RN-01.9) y lo guarda como Activo (RN-01.10, RN-01.11).
 7. **Controlador REST de eventos (backend).** Devuelve que el evento fue aceptado, o el motivo del rechazo.
-8. **Controlador de reporte (app) y vista.** Muestran la confirmación o el mensaje de error. Si la sesión expiró, se pasa a CU-08 y después se reintenta (RN-01.16).
+8. **Controlador de reporte (app) y vista.** Muestran la confirmación o el mensaje de error. Si la sesión expiró, la app intenta renovarla y, si no puede, se pasa a CU-08. Después se reintenta (RN-01.16).
 9. **Los demás conductores.** Reciben el evento en su siguiente consulta periódica, que es parte de CU-02 (RN-01.12).
 
 Cuando vuelve la conexión, el controlador de reporte recorre la cola local: descarta lo vencido (RN-01.14) y reenvía el resto desde el paso 4 (RN-01.15).

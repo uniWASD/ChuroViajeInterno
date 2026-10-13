@@ -74,7 +74,7 @@ Las 135 reglas de `04_reglas` están citadas en al menos un issue.
 
 Los issues se crean en el orden de [00_Indice_de_subida.md](00_Indice_de_subida.md), para que cada uno se cree después de aquellos de los que depende.
 
-1. **Numerar.** Los issues van con `T-XXX` y `CP-XX` a propósito. Al crearlos en GitHub, en el orden de los sprints, se reemplaza cada `T-XXX` por el siguiente número libre y cada `CP-XX` por el siguiente caso de prueba. Al 12/10/2026 la última tarea es T-084 y el último caso de prueba es CP-19; confírmalo en [TRAZABILIDAD.md](../TRAZABILIDAD.md) antes de empezar. En la rama, `TXX` toma el mismo número (T-085 → `feature/T85-...`).
+1. **Numerar.** Los issues van con `T-XXX` y `CP-XX` a propósito. Al crearlos en GitHub, en el orden de los sprints, se reemplaza cada `T-XXX` por el siguiente número libre y cada `CP-XX` por el siguiente caso de prueba. Al 13/10/2026 la última tarea es T-086 y el último caso de prueba es CP-19; confírmalo en [TRAZABILIDAD.md](../TRAZABILIDAD.md) y en GitHub antes de empezar. En la rama, `TXX` toma el mismo número (T-087 → `feature/T87-...`).
 2. **Título y cuerpo.** El título es el encabezado del issue, sin el `###`. El cuerpo es todo lo que sigue hasta la línea horizontal.
 3. **Dependencias.** Cuando el issue del que depende ya existe en GitHub, se agrega su número junto al título (por ejemplo, «[HU-10][CU-08][Java] … #41»).
 4. **Milestone y etiquetas.** El Milestone es «Sprint N» y las etiquetas son las de la línea «Etiquetas».
@@ -115,6 +115,7 @@ Al escribir el backlog aparecieron huecos en la arquitectura. Se cerraron el 12/
 | Registros del servidor por 14 días, sin ubicaciones; respaldos de 7 días fuera de la instancia | 06 |
 | Distancias y tiempos que faltaban: ajuste a la red (100 m), lectura a tramo (30 m), memoria de un recorrido (5 min) | P-23, P-24, P-25 |
 | Revisión del 13/10/2026 contra los requisitos: el aviso de ruta alternativa se cierra solo a los 15 s, la congestión por telemetría no se vota, se entra sin conexión con el token de renovación, indicación de giro calculada en la app, lista de surtidores cada 60 s, sin buscador, surtidores en el mapa y dominio propio | D-19 a D-26, P-26, P-27, RN-04.21, RN-05.17, RN-06.19, RN-08.14 |
+| Revisión de los issues del 13/10/2026: la revisión de ruta responde «sin alternativa» (ya no solo la congestión la provoca), un evento a más de 100 m de una calle no afecta las rutas, la lectura de telemetría va al tramo del sentido en que avanza el vehículo, la app guarda también el token de renovación y los marcadores de surtidores del mapa se actualizan cada 60 s | RN-03.9, RN-04.8, RN-05.17, RN-08.7, RN-08.11, D-23, P-23, P-27 · 02_mvc, 05_contratos, 06, 07 |
 
 ## Decisiones de detalle que tomó este backlog
 
@@ -132,6 +133,8 @@ Estos detalles no cambian la arquitectura y quedaron dentro de los issues. Si el
 | Datos simulados | Un comando del backend los borra, solo donde están habilitadas las credenciales de prueba | Java S6 |
 | Carga normal del simulador | Propuesta: 50 usuarios fantasma, 10 de ellos navegando | Simulador S5 |
 | Precisión del LLM | El equipo fija el mínimo aceptable antes de medirla | WhatsApp/LLM S5 |
+| Respuesta «No» a la pregunta de recarga | No se vuelve a preguntar mientras el conductor siga detenido junto a ese surtidor | Flutter S6 |
+| Fallo de la revisión de ruta | Sin red o con 503, la app sigue con la ruta actual sin mostrar un error y reintenta en el siguiente ciclo | Flutter S6 |
 
 ## Riesgos
 

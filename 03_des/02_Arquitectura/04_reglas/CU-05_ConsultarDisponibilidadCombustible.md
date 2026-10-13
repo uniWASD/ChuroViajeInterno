@@ -24,7 +24,7 @@ Cubre HU-07 y HU-12, y los requisitos RF-07, RF-13, RNF-03, RNF-07 y RNF-09.
 | RN-05.14 | Un conductor no puede repetir la confirmación del mismo surtidor y tipo en poco tiempo. La repetida no se registra, y la app no vuelve a preguntar por ese surtidor en ese lapso. | ConfirmaciónRecarga | CU-05 sección 7, HU-12 c.5, [P-14](../08_decisiones_parametros.md) |
 | RN-05.15 | La confirmación se ve en los demás conductores solo si es más reciente que el último dato de WhatsApp para ese surtidor y tipo. | EstadoCombustible | HU-12 c.4 |
 | RN-05.16 | La pregunta no interrumpe la consulta de surtidores ni la navegación, y se responde en dos toques como máximo. | Controlador de combustible de la app | HU-12 usabilidad |
-| RN-05.17 | Con la vista Surtidores abierta, la app vuelve a consultar los surtidores cada 60 segundos, para que un dato nuevo se vea en menos de 6 minutos. | Controlador de combustible de la app | RNF-04, [D-23](../08_decisiones_parametros.md), [P-27](../08_decisiones_parametros.md) |
+| RN-05.17 | Con la vista Surtidores o el Mapa principal abiertos, la app vuelve a consultar los surtidores cada 60 segundos, para que un dato nuevo se vea en menos de 6 minutos en la lista y en los marcadores del mapa. | Controlador de combustible de la app | RNF-04, [D-23](../08_decisiones_parametros.md), [D-25](../08_decisiones_parametros.md), [P-27](../08_decisiones_parametros.md) |
 
 ## Recorrido por Vista, Controlador y Modelo
 

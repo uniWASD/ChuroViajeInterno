@@ -150,7 +150,7 @@ Este issue cubre la parte de «datos viales vigentes»: cómo los eventos cambia
 
 **Criterios de aceptación**
 - [ ] `actualizar_trafico` recibe un evento que nace, cambia su vencimiento, se retira o vence (identificador, tipo, nivel si es congestión, ubicación y vencimiento) y responde los tramos afectados.
-- [ ] Un evento reportado por un conductor se asigna a la calle vehicular más cercana y afecta a sus dos sentidos; una congestión, solo al tramo y sentido donde se midió (D-18).
+- [ ] Un evento reportado por un conductor se asigna a la calle vehicular más cercana, si está a menos de 100 m (P-23), y afecta a sus dos sentidos; más lejos, se muestra en el mapa pero no afecta ninguna ruta. Una congestión afecta solo al tramo y sentido donde se midió (RN-03.9, D-18).
 - [ ] El nivel del tramo sale de los eventos vigentes sobre él y, si hay varios, vale el más grave (RN-03.9).
 - [ ] Los factores son los de P-12: accidente ×4,0; control policial y otro ×1,5; congestión ×2,5 o ×4,0 según el nivel que trae el mensaje.
 - [ ] Un bloqueo vigente cierra el tramo: ninguna ruta pasa por él (RN-03.9).
@@ -169,7 +169,7 @@ Este issue cubre la parte de «datos viales vigentes»: cómo los eventos cambia
 - [ ] CP-XX Caso de prueba: al retirarse el bloqueo, la misma ruta vuelve a encontrarse.
 - [ ] CP-XX Caso de prueba: un bloqueo en una calle de doble sentido impide pasar por ella en los dos sentidos; una congestión en esa calle solo encarece el sentido donde se midió.
 
-**Relacionado:** RF-05 · RF-06 · CU-03 · CU-04 · RN-02.15, RN-03.9 · P-12 · D-14, D-18
+**Relacionado:** RF-05 · RF-06 · CU-03 · CU-04 · RN-02.15, RN-03.9 · P-12, P-23 · D-14, D-18
 
 Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-trafico-tramos" (No olvides que el source de la rama es la de develop)
 
@@ -194,7 +194,7 @@ Este issue cubre la parte del núcleo: analizar las lecturas y decidir si hay co
 - [ ] La velocidad sale de la distancia y el tiempo entre dos lecturas seguidas del mismo recorrido (RN-04.5).
 - [ ] Se descarta la lectura con precisión peor que 50 m o que implica más de 150 km/h (RN-04.6).
 - [ ] Una lectura de 25 km/h o menos con un giro mayor a 40 grados se toma como giro y no como congestión (RN-04.7).
-- [ ] Cada lectura válida se asigna al tramo vehicular donde está; si el tramo más cercano está a más de 30 m, la lectura se ignora (RN-04.8, P-24).
+- [ ] Cada lectura válida se asigna al tramo vehicular donde está; si el tramo más cercano está a más de 30 m, la lectura se ignora (RN-04.8, P-24). En una calle de doble sentido, va al tramo cuyo sentido coincide con el rumbo del vehículo entre sus dos últimas lecturas (D-18).
 - [ ] Un tramo está congestionado por debajo de la mitad de la velocidad esperada de su tipo de vía y muy congestionado por debajo de la cuarta parte (RN-04.9, P-02).
 - [ ] Hay congestión cuando un recorrido sigue lento en un tramo durante 2 minutos seguidos; entonces la respuesta informa el tramo, un punto y el nivel (RN-04.10).
 - [ ] Los recorridos simulados y los reales se analizan por separado: una congestión que sale de recorridos simulados se informa como simulada (RN-04.20, RN-07.6).
@@ -210,9 +210,10 @@ Este issue cubre la parte del núcleo: analizar las lecturas y decidir si hay co
 - [ ] CP-XX Caso de prueba: un recorrido a 8 km/h durante 2 minutos en una avenida principal produce congestión; durante 1 minuto, no.
 - [ ] CP-XX Caso de prueba: un vehículo que frena para doblar una esquina no produce congestión.
 - [ ] CP-XX Caso de prueba: una lectura con precisión de 80 m se descarta.
+- [ ] CP-XX Caso de prueba: un recorrido lento en un sentido de una calle de doble sentido congestiona ese tramo y no el del sentido contrario.
 - [ ] CP-XX Caso de prueba: un recorrido simulado lento produce una congestión informada como simulada.
 
-**Relacionado:** RF-14 · RNF-13 · CU-04 · RN-04.5 a RN-04.10, RN-04.12, RN-04.20 · P-02, P-24, P-25 · D-07 · [05_pro/CalculoVelocidad](../../05_pro/CalculoVelocidad/CU-04_CalculoVelocidad.md)
+**Relacionado:** RF-14 · RNF-13 · CU-04 · RN-04.5 a RN-04.10, RN-04.12, RN-04.20 · P-02, P-24, P-25 · D-07, D-18 · [05_pro/CalculoVelocidad](../../05_pro/CalculoVelocidad/CU-04_CalculoVelocidad.md)
 
 Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (No olvides que el source de la rama es la de develop)
 
@@ -231,8 +232,8 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (
 - [ ] `revisar_ruta` recibe la posición actual, los identificadores de los tramos que faltan, el destino, las paradas que faltan y los eventos ya avisados.
 - [ ] Busca algún evento vigente, de cualquier tipo y origen, sobre los tramos que faltan, sin contar los ya avisados (RN-04.14).
 - [ ] Si lo hay, calcula la alternativa desde la posición actual, con el destino y las paradas que faltan (RN-04.15).
-- [ ] Propone la alternativa solo si cuesta menos que seguir por la ruta actual con el tráfico al día; si no, responde «congestión sin alternativa» (RN-04.16).
-- [ ] Cuando la respuesta es una alternativa o «congestión sin alternativa», dice qué evento la provocó, para que la app no lo vuelva a avisar (RN-04.19).
+- [ ] Propone la alternativa solo si cuesta menos que seguir por la ruta actual con el tráfico al día; si no, responde «sin alternativa» (RN-04.16).
+- [ ] Cuando la respuesta es una alternativa o «sin alternativa», dice qué evento la provocó, para que la app no lo vuelva a avisar (RN-04.19).
 - [ ] Si los identificadores de tramo ya no existen porque se recargó la red, responde «ruta desactualizada» y la app pide la ruta de nuevo.
 
 **Tareas**
@@ -242,7 +243,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (
 
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: un accidente sobre un tramo que falta produce una alternativa más barata.
-- [ ] CP-XX Caso de prueba: un control policial (×1,5) sobre un tramo cuya alternativa cuesta más produce «congestión sin alternativa».
+- [ ] CP-XX Caso de prueba: un control policial (×1,5) sobre un tramo cuya alternativa cuesta más produce «sin alternativa».
 - [ ] CP-XX Caso de prueba: el mismo evento, enviado como ya avisado, produce «sin cambios».
 
 **Relacionado:** RF-06 · CU-04 · RN-04.13 a RN-04.16, RN-04.19 · D-12

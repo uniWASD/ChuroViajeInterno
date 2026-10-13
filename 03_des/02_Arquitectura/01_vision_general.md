@@ -26,9 +26,9 @@ La arquitectura responde a los requisitos no funcionales de la matriz y respeta 
 
 ### Restricciones
 
-- **Plataforma.** App en Flutter para Android e iOS, backend en Java con Spring Boot, motor core en C++, servicio de WhatsApp/LLM en Node.js por depender de Baileys, simulador en Python y mapas de Mapbox.
+- **Plataforma.** App en Flutter para Android e iOS, backend en Java con Spring Boot, motor core en C++ con un wrapper en Java, servicio de WhatsApp/LLM en Node.js por depender de Baileys, simulador en Python y mapas de Mapbox.
 - **Idioma.** Toda la interfaz está en español.
-- **Infraestructura.** Un solo VPS básico aloja el backend, el motor core, el servicio de WhatsApp/LLM y la base de datos, así que cada componente debe consumir poca memoria.
+- **Infraestructura.** Un solo servidor aloja el backend, el motor core, el servicio de WhatsApp/LLM y la base de datos: la instancia `churoviaje-server` de Oracle Cloud, con procesador ARM, 2 OCPU y 12 GB de memoria ([D-16](08_decisiones_parametros.md)). Cada componente debe consumir poca memoria y compilar para ARM.
 - **Cobertura.** El sistema opera solo en la mancha urbana de Tarija y solo sobre vías vehiculares.
 - **Privacidad.** La ubicación nunca se obtiene en segundo plano. Solo se monitorean grupos de WhatsApp autorizados por su administrador, y al proveedor del LLM se envían únicamente el texto y la fecha de cada mensaje.
 - **Acceso.** No existen contraseñas propias: la identidad la verifica Google.
@@ -50,7 +50,7 @@ Las flechas van de quien llama a quien responde.
 | --- | --- | --- | --- |
 | App móvil | Flutter, SDK de Mapbox | Muestra las pantallas, captura toques y GPS, guarda reportes sin conexión y los últimos eventos conocidos | Decidir reglas de negocio |
 | Backend de gestión | Java, Spring Boot | Recibe todas las peticiones, aplica las reglas en los objetos de dominio, guarda los datos y emite el JWT | Calcular rutas, leer WhatsApp |
-| Motor core | C++ | Mantiene la red vial, calcula y recalcula rutas, y analiza la telemetría para detectar congestión | Atender a la app directamente, guardar datos de usuarios |
+| Motor core | Núcleo en C++ y wrapper en Java (`MotorDeRutas`) | Mantiene la red vial, calcula y recalcula rutas, y analiza la telemetría para detectar congestión. El wrapper vive dentro del backend y es la única forma de llegar al núcleo | Atender a la app directamente, guardar datos de usuarios |
 | Servicio de WhatsApp/LLM | Node.js, Baileys | Lee los grupos, guarda los mensajes pendientes, los analiza por lotes cada 5 minutos y envía el resultado | Cambiar el estado de un surtidor por su cuenta: eso lo decide el backend |
 | Simulador | Python | Genera usuarios fantasma que envían eventos y telemetría por la misma API que la app | Escribir directo en la base de datos |
 | Base de datos | PostgreSQL, PostGIS | Guarda conductores, eventos, votos, surtidores y estados de combustible; resuelve búsquedas por cercanía | Contener reglas de negocio |
@@ -69,7 +69,8 @@ Las flechas van de quien llama a quien responde.
 | De | A | Medio | Qué viaja |
 | --- | --- | --- | --- |
 | App móvil | Backend | HTTPS, REST con JSON, JWT en cada petición | Reportes, votos, confirmaciones de recarga, telemetría y consultas de eventos, rutas y surtidores |
-| Backend | Motor core | HTTP local con JSON | Solicitudes de ruta y de recálculo, lecturas de telemetría, eventos y congestión vigentes |
+| Backend | Motor core, wrapper | Llamadas a métodos Java de `MotorDeRutas`, dentro del mismo proceso | Solicitudes de ruta y de recálculo, lecturas de telemetría, eventos y congestión vigentes |
+| Motor core, wrapper | Motor core, núcleo C++ | Pipe: entrada y salida estándar del núcleo, un mensaje JSON por línea | Los mismos datos, traducidos a mensajes ([D-15](08_decisiones_parametros.md)) |
 | Servicio de WhatsApp/LLM | Backend | HTTP local con JSON | Resultado estructurado del análisis de cada lote |
 | Simulador | Backend | La misma API REST que usa la app, con credenciales de prueba | Eventos y telemetría simulados |
 | Backend | Google | HTTPS | Validación del token de identidad |
@@ -79,4 +80,4 @@ La app nunca llama al motor core ni al servicio de WhatsApp/LLM. Los eventos nue
 
 ### Despliegue
 
-El backend, el motor core, el servicio de WhatsApp/LLM y la base de datos corren en el mismo VPS. Solo el backend queda expuesto a internet, por HTTPS; el motor core y la base de datos aceptan conexiones únicamente desde la propia máquina. El simulador se ejecuta desde la computadora de un desarrollador o desde un contenedor de pruebas.
+El backend, el motor core, el servicio de WhatsApp/LLM y la base de datos corren en el mismo servidor, la instancia de Oracle Cloud de [D-16](08_decisiones_parametros.md). Solo el backend queda expuesto a internet, por HTTPS. El núcleo C++ del motor core no abre ningún puerto: el backend lo arranca como proceso hijo y le habla por pipe. La base de datos acepta conexiones únicamente desde la propia máquina. El simulador se ejecuta desde la computadora de un desarrollador o desde un contenedor de pruebas.

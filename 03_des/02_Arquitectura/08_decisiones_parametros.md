@@ -21,7 +21,11 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | D-11 | La app pregunta por la recarga cuando el conductor se detiene junto a un surtidor con la app abierta | No le exige ningún paso extra al conductor | Confirmada el 06/10/2026 |
 | D-12 | Mientras navega, la app envía al backend lo que le falta de la ruta para que el modelo revise si hay congestión | Permite recalcular sin guardar rutas (D-05) | Propuesta |
 | D-13 | El servicio de WhatsApp/LLM se identifica ante el backend con una credencial de servicio propia | El backend solo atiende peticiones autenticadas (RNF-08) | Propuesta |
-| D-14 | El backend avisa al motor core cada vez que un evento nace, se retira o vence | El motor calcula siempre con el tráfico al día | Propuesta |
+| D-14 | El backend avisa al motor core cada vez que un evento nace, cambia su vencimiento, se retira o vence | El motor calcula siempre con el tráfico al día | Propuesta |
+| D-15 | El motor core tiene una cara en Java: el wrapper `MotorDeRutas`, dentro del backend. El wrapper arranca el núcleo C++ como proceso hijo, le habla por pipe con un mensaje JSON por línea y, cada vez que lo arranca, le envía los eventos vigentes | Recomendación del docente: el resto del backend solo ve Java, el núcleo no necesita servidor web ni abre puertos, y el backend controla su arranque y su reinicio. Se descartaron HTTP local, que suma un servidor web al C++, y JNI, porque un fallo del C++ tumbaría el backend | Confirmada el 12/10/2026 |
+| D-16 | Todo el sistema corre en la instancia `churoviaje-server` de Oracle Cloud: Ubuntu sobre procesador ARM (Ampere A1), 2 OCPU y 12 GB de memoria, dentro del nivel Always Free, con IP pública reservada | Ya existe, tiene más memoria que un VPS básico y no tiene costo mensual | Confirmada el 12/10/2026 |
+| D-17 | El análisis de mensajes usa la capa gratuita de la API de Gemini. Sus términos permiten a Google usar lo enviado para mejorar sus productos y que lo lean revisores humanos; por eso solo viajan el texto y la fecha, con los números de teléfono enmascarados, y la política de privacidad lo informa | Sin costo para un proyecto académico. Reemplaza el criterio anterior de elegir un proveedor que no entrene con los datos enviados por API | Confirmada el 12/10/2026 |
+| D-18 | Un evento que reporta un conductor afecta a los dos sentidos de la calle donde cae; la congestión por telemetría, solo al sentido donde se midió | Un accidente o un bloqueo frena o cierra la calle entera, no un solo sentido | Confirmada el 12/10/2026 |
 
 ## Parámetros
 
@@ -45,5 +49,8 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | P-20 | Credenciales de prueba y modo demostración | [RN-07.5](04_reglas/CU-07_EjecutarSimuladorTrafico.md), [RN-07.13](04_reglas/CU-07_EjecutarSimuladorTrafico.md) | Se habilitan por configuración del ambiente | Propuesta |
 | P-21 | Cuánto se conservan los eventos vencidos o retirados, sus votos y las confirmaciones de recarga | [06_base_de_datos.md](06_base_de_datos.md) | 30 días, y después se borran | Propuesta |
 | P-22 | Dónde guarda el servicio de WhatsApp/LLM los mensajes pendientes | [06_base_de_datos.md](06_base_de_datos.md) | Un archivo SQLite propio del servicio | Propuesta |
+| P-23 | Distancia máxima para ajustar un punto a la red vial | [RN-03.4](04_reglas/CU-03_CalcularRutaOptima.md) | 100 metros | Propuesta |
+| P-24 | Distancia máxima entre una lectura de telemetría y su tramo | [RN-04.8](04_reglas/CU-04_RecalcularRuta.md) | 30 metros | Propuesta |
+| P-25 | Tiempo que el motor recuerda un recorrido sin lecturas nuevas | [RN-04.12](04_reglas/CU-04_RecalcularRuta.md) | 5 minutos | Propuesta |
 
 P-07, P-08 y P-10 se cerraron con las decisiones D-09, D-08 y D-12.

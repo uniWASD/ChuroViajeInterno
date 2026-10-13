@@ -8,8 +8,8 @@
 | Tareas relacionadas | T-024, T-025, T-026, T-027 |
 | Documento base | `investigacion_whatsapp.md` (v1.1) |
 | Estado | Aceptada |
-| Versión | 1.3 |
-| Fecha | 06/10/2026 |
+| Versión | 1.4 |
+| Fecha | 12/10/2026 |
 
 | Versión | Fecha | Descripción |
 | ------- | ----- | ----------- |
@@ -17,6 +17,7 @@
 | 1.1 | 23/09/2026 | La interpretación pasa a un LLM que analiza los mensajes por lotes cada 5 minutos. La extracción y el análisis se separan en dos etapas; se actualizan riesgos, privacidad e implicaciones. |
 | 1.2 | 25/09/2026 | Se registra que CU-06, HU-08 y el Documento de Visión (v0.3) ya fueron actualizados según esta decisión; el requisito de tiempo pasa a menos de 6 minutos. |
 | 1.3 | 06/10/2026 | Se define que el proceso de análisis forma parte del servicio de WhatsApp/LLM y que el backend Java solo recibe, valida y guarda el resultado. El tipo de combustible es obligatorio en el resultado (uno de los tipos del catálogo, o "Desconocido" si el mensaje no lo indica) y la fila aproximada se extrae solo cuando el mensaje la menciona. Se alinea el contexto con el Documento de Visión v0.4 y se referencia la vigencia de los mensajes pendientes. |
+| 1.4 | 12/10/2026 | Se acepta la capa gratuita de la API de Gemini, aunque sus términos permiten a Google usar lo enviado para mejorar sus productos; se enmascaran los números de teléfono del texto y la política de privacidad lo informa (D-17 de la arquitectura). |
 
 ---
 
@@ -130,7 +131,7 @@ Backend Java (valida contra el catálogo) ──> Base de datos ──> App (CU-
 * Solo se monitorearán grupos cuyo **administrador haya autorizado** la presencia de la cuenta de ChuroViaje.
 * **No se almacenan** números de teléfono ni nombres de los remitentes en ningún momento.
 * El **texto de los mensajes** se guarda solo de forma temporal, hasta que el LLM lo procesa o hasta que supera el tiempo máximo de vigencia (CU-06, sección 8); después se elimina. De forma permanente solo se guarda el dato interpretado del surtidor.
-* Los mensajes se envían a un **servicio externo (el proveedor del LLM)**. Se envía únicamente el texto y la fecha, sin datos del remitente, y debe elegirse un proveedor que no use los datos enviados por API para entrenar sus modelos. Esto debe mencionarse en la política de privacidad del sistema.
+* Los mensajes se envían a un **servicio externo (el proveedor del LLM)**. Se envía únicamente el texto y la fecha, sin datos del remitente y con los números de teléfono que aparezcan en el texto enmascarados. Se usa la capa gratuita de la API de Gemini, cuyos términos permiten a Google usar lo enviado para mejorar sus productos y que lo lean revisores humanos (D-17 de la arquitectura). Ambas cosas deben mencionarse en la política de privacidad del sistema.
 * La sesión del número dedicado y la credencial del LLM solo son accesibles para los componentes autorizados.
 
 ---

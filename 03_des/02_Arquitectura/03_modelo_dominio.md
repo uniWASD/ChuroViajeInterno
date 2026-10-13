@@ -22,7 +22,7 @@ Casi todo termina en dos objetos: lo que reportan los conductores y la telemetr�
 | Objeto | Qué representa | Datos principales | Reglas que cuida | Vive en |
 | --- | --- | --- | --- | --- |
 | TipoEvento | El catálogo de lo que se puede reportar | Nombre, color en el mapa, vigencia en minutos, si es reportable | Define cuánto dura un evento de ese tipo y si un conductor puede reportarlo | Backend |
-| EventoVial | Un hecho en la vía que afecta a quien conduce | Tipo, ubicación, momento en que ocurrió, momento de registro, reportante, origen (Conductor o Telemetría), estado, votos «real» y «falso», marca de simulado | Sabe si sigue vigente, rechaza duplicados del mismo conductor y cambia de estado según los votos | Backend |
+| EventoVial | Un hecho en la vía que afecta a quien conduce | Tipo, ubicación, momento en que ocurrió, momento de registro, reportante, origen (Conductor o Telemetría), nivel si es congestión, estado, votos «real» y «falso», marca de simulado | Sabe si sigue vigente, rechaza duplicados del mismo conductor y cambia de estado según los votos | Backend |
 | Voto | La opinión de un conductor sobre un evento | Conductor, evento, valor (real o falso), fecha | Un solo voto por conductor y evento | Backend |
 | Ubicación | Un punto del mapa | Latitud, longitud, cómo se obtuvo (GPS o ajuste manual) | Debe caer dentro de la mancha urbana de Tarija | Backend y motor core |
 

@@ -11,14 +11,15 @@ La seguridad se apoya en tres ideas: nadie entra sin identificarse, el backend d
 | Conductor | Cuenta de Google, y después el JWT del sistema | Todas las operaciones de la app |
 | Usuario fantasma | Credenciales de prueba, solo en un ambiente que las habilite | Lo mismo que un conductor; todo lo suyo queda marcado como simulado |
 | Servicio de WhatsApp/LLM | Credencial de servicio propia | Leer el catálogo de surtidores y entregar resultados de análisis. Nada más |
-| Motor core | No recibe llamadas de fuera del VPS | Responder al backend |
+| Motor core | No abre puertos: el núcleo C++ solo lee la entrada estándar que le da el backend, que lo arranca como proceso hijo | Responder al wrapper `MotorDeRutas` |
 
 El sistema no guarda contraseñas ni credenciales de Google. El JWT dura 1 hora y la sesión se renueva hasta 30 días.
 
 ## Comunicación
 
 - Todo el tráfico entre la app y el backend viaja cifrado por HTTPS.
-- El backend habla con el motor core y con la base de datos dentro del VPS. Esos puertos no se abren a internet.
+- El backend habla con el núcleo C++ del motor core por pipe, sin red ([D-15](08_decisiones_parametros.md)).
+- La base de datos solo acepta conexiones desde el propio VPS; su puerto no se abre a internet.
 - Las llamadas a Google y al proveedor del LLM salen por HTTPS.
 
 ## Defensa contra el abuso
@@ -43,13 +44,13 @@ El sistema no guarda contraseñas ni credenciales de Google. El JWT dura 1 hora 
 | Quién reportó, votó o confirmó | Nunca sale en una respuesta | RNF-10, [RN-02.5](04_reglas/CU-02_VisualizarEventosViales.md), [RN-05.7](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md) |
 | Remitente de un mensaje de WhatsApp | Su número y su nombre no se guardan en ningún momento | RNF-11, [RN-06.4](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
 | Texto de un mensaje de WhatsApp | Se borra al analizarse, o a los 30 minutos | [RN-06.11](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [RN-06.12](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
-| Lo que recibe el proveedor del LLM | Solo el texto y la fecha. Se elige un proveedor que no entrene sus modelos con los datos enviados por API | [RN-06.6](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), CU-06 sección 7 |
+| Lo que recibe el proveedor del LLM | Solo el texto y la fecha, con los números de teléfono enmascarados. Se usa la capa gratuita de la API de Gemini, cuyos términos permiten a Google usar lo enviado para mejorar sus productos y que lo lean revisores humanos | [RN-06.6](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [D-17](08_decisiones_parametros.md) |
 
-La política de privacidad de la app debe decir qué datos se recogen y que el texto y la fecha de los mensajes de los grupos se envían al proveedor del LLM, como pide la Visión 6.3.
+La política de privacidad de la app debe decir qué datos se recogen y que el texto y la fecha de los mensajes de los grupos se envían al proveedor del LLM, como pide la Visión 6.3. También debe decir que, en la capa gratuita, ese proveedor puede usarlos para mejorar sus productos ([D-17](08_decisiones_parametros.md)).
 
 ## Servidor
 
 - Se entra al VPS por SSH solo con llave, sin contraseña.
-- El firewall deja abierto únicamente el puerto HTTPS del backend, además del SSH.
+- El firewall deja abiertos únicamente el puerto HTTPS del backend y el SSH, más el puerto 80, que solo redirige a HTTPS y atiende la validación del certificado de Let's Encrypt. En Oracle Cloud esto se configura en las reglas de red de la VCN y en el firewall de Ubuntu ([D-16](08_decisiones_parametros.md)).
 - El sistema operativo y las dependencias se mantienen actualizados.
 - Los secretos no van al repositorio: la clave que firma los JWT, la credencial del LLM, la credencial de servicio y la sesión del número de WhatsApp se guardan en el servidor con acceso restringido.

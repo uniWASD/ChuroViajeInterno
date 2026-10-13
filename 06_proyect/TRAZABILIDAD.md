@@ -14,7 +14,8 @@
 | RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #58 · C++ · Sprint 3 | feature/HU05-CU03-cpp-calcular-ruta | CP-71 a CP-73 | Pendiente |
 | RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #65 · Java · Sprint 4 | feature/HU05-CU03-java-calcular-ruta | CP-92 a CP-94 | Pendiente |
 | RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #66 · C++ · Sprint 4 | feature/HU05-CU03-cpp-trafico-tramos | CP-95 a CP-98 | Pendiente |
-| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #70 · Flutter · Sprint 5 | feature/HU05-CU03-flutter-como-llegar | CP-105 a CP-107 | Pendiente |
+| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #70 · Flutter · Sprint 5 | feature/HU05-CU03-flutter-como-llegar | CP-105, CP-106 | Pendiente |
+| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #94 · Flutter · Sprint 5 | feature/HU05-CU03-flutter-navegacion-activa | CP-107, CP-155 | Pendiente |
 | RF-06 | CU-04 | HU-06 | [RN-04.13 a RN-04.19, RN-04.21](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #76 · C++ · Sprint 5 | feature/HU06-CU04-cpp-revisar-ruta | CP-124 a CP-126 | Pendiente |
 | RF-06 | CU-04 | HU-06 | [RN-04.13 a RN-04.19, RN-04.21](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #82 · Java · Sprint 6 | feature/HU06-CU04-java-revisar-ruta | CP-134 a CP-137 | Pendiente |
 | RF-06 | CU-04 | HU-06 | [RN-04.13 a RN-04.19, RN-04.21](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #83 · Flutter · Sprint 6 | feature/HU06-CU04-flutter-ruta-alternativa | CP-138 a CP-140 | Pendiente |
@@ -60,14 +61,14 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-093 Mapa base con Mapbox y ubicación | CU-01 a CU-05 | #45 · Flutter · Sprint 2 | feature/T93-flutter-mapa-base | CP-29, CP-30 | Pendiente |
 | T-094 Catálogos para la app | CU-01, CU-02, CU-05 | #47 · Java · Sprint 2 | feature/T94-java-catalogos | CP-36 | Pendiente |
 | T-095 Wrapper MotorDeRutas | CU-03, CU-04 | #49 · Java · Sprint 2 | feature/T95-java-wrapper-motor | CP-41 a CP-44 | Pendiente |
-| T-096 Red vial desde OpenStreetMap | CU-03, CU-04 | #50 · C++ · Sprint 2 | feature/T96-cpp-red-vial-osm | CP-45 a CP-47 | Pendiente |
+| T-096 Cargar la red vial en el núcleo | CU-03, CU-04 | #50 · C++ · Sprint 2 | feature/T96-cpp-cargar-red-vial | CP-47 | Pendiente |
 | T-097 Dominio, Nginx y HTTPS | Todos | #52 · Servidor · Sprint 2 | feature/T97-servidor-dominio-https | CP-51 | Pendiente |
 | T-098 Desplegar el backend con el núcleo C++ | Todos | #60 · Servidor · Sprint 3 | feature/T98-servidor-desplegar-backend | CP-79, CP-80 | Pendiente |
 | T-099 Mantener al día el tráfico del motor | CU-02, CU-03, CU-04 | #67 · Java · Sprint 4 | feature/T99-java-trafico-motor | CP-99, CP-100 | Pendiente |
 | T-100 Desplegar el servicio de WhatsApp/LLM | CU-06 | #68 · Servidor · Sprint 4 | feature/T100-servidor-desplegar-whatsapp | CP-101 | Pendiente |
 | T-101 Prueba con mensajes reales | CU-06 | #77 · WhatsApp/LLM · Sprint 5 | feature/T101-llm-prueba-mensajes-reales | CP-127 | Pendiente |
 | T-102 Estructura y parámetros del simulador | CU-07 | #78 · Simulador · Sprint 5 | feature/T102-simulador-estructura | CP-128 | Pendiente |
-| T-103 Respaldos de la base de datos y registros | Todos | #79 · Servidor · Sprint 5 | feature/T103-servidor-respaldos | CP-129 | Pendiente |
+| T-103 Respaldos de la base de datos y registros | Todos | #79 · Servidor · Sprint 6 | feature/T103-servidor-respaldos | CP-129 | Pendiente |
 | T-104 Política de privacidad | CU-04, CU-06, CU-08 | #81 · Flutter · Sprint 6 | feature/T104-flutter-politica-privacidad | CP-133 | Pendiente |
 | T-105 Limpieza de datos vencidos | CU-02, CU-05 | #85 · Java · Sprint 6 | feature/T105-java-limpieza-datos | CP-144 | Pendiente |
 | T-106 Ambiente de pruebas para el simulador | CU-07 | #86 · Servidor · Sprint 6 | feature/T106-servidor-ambiente-pruebas | CP-145 | Pendiente |
@@ -75,3 +76,4 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-108 Pruebas de carga y reporte | CU-07 | #89 · Simulador · Sprint 7 | feature/T108-simulador-pruebas-carga | CP-151, CP-152 | Pendiente |
 | T-109 Rendimiento con la red real de Tarija | CU-03, CU-04 | #90 · C++ · Sprint 7 | feature/T109-cpp-rendimiento | CP-153 | Pendiente |
 | T-110 Despliegue final y revisión de seguridad | Todos | #91 · Servidor · Sprint 7 | feature/T110-servidor-despliegue-final | CP-154 | Pendiente |
+| T-111 Preparar la red vial de Tarija desde OpenStreetMap | CU-03, CU-04 | #93 · C++ · Sprint 2 | feature/T111-red-vial-preparacion | CP-45, CP-46 | Pendiente |

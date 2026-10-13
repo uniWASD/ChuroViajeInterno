@@ -13,7 +13,7 @@ El servicio lee los grupos de WhatsApp autorizados con Baileys, guarda los mensa
 | S3 (29/10–04/11) | HU-08 Analizar los mensajes por lotes y enviar el resultado |
 | S5 (12/11–18/11) | Prueba con mensajes reales |
 
-En el sprint 4 Franz trabaja en los modos sin conexión de la app (HU-02 y HU-04, en [01_Flutter.md](01_Flutter.md)).
+Franz también trabaja en otros archivos: en el sprint 2 prepara la red vial para el núcleo ([03_Cpp.md](03_Cpp.md)); en el sprint 4, los modos sin conexión de la app (HU-02 y HU-04), y en el sprint 5, la consulta de surtidores y la telemetría de la app ([01_Flutter.md](01_Flutter.md)).
 
 ---
 
@@ -22,7 +22,7 @@ En el sprint 4 Franz trabaja en los modos sin conexión de la app (HU-02 y HU-04
 ### [T-091][WhatsApp/LLM] Estructura del servicio
 
 **Tipo:** Tarea de infraestructura (base del servicio de CU-06)
-**Tecnología:** Node.js · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Franz
+**Tecnología:** Node.js · **Sprint:** Sprint 1 (15/10–21/10)
 **Depende de:** nada
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:whatsapp-llm`
 
@@ -58,7 +58,7 @@ Lo subes en una nueva rama llamada "feature/T91-whatsapp-estructura-servicio" (N
 ### [HU-08][CU-06][WhatsApp/LLM] Leer los grupos autorizados
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
-**Tecnología:** Node.js · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Franz
+**Tecnología:** Node.js · **Sprint:** Sprint 2 (22/10–28/10)
 **Depende de:** [T-091][WhatsApp/LLM] Estructura del servicio #43
 **Issue anterior:** #6 (investigación de la conexión a WhatsApp)
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:whatsapp-llm`
@@ -99,7 +99,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-whatsapp-leer-grupos" (No 
 ### [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
-**Tecnología:** Node.js · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Franz
+**Tecnología:** Node.js · **Sprint:** Sprint 3 (29/10–04/11)
 **Depende de:** [HU-08][CU-06][WhatsApp/LLM] Leer los grupos autorizados #51 · [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Issue anterior:** #10 (investigación del LLM)
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:whatsapp-llm`
@@ -146,7 +146,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-llm-analisis-lotes" (No ol
 ### [T-101][WhatsApp/LLM] Prueba con mensajes reales
 
 **Tipo:** Tarea de pruebas (cubre CU-06)
-**Tecnología:** Node.js · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Franz
+**Tecnología:** Node.js · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59 · [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM #68 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69 · [HU-07][CU-05][Flutter] Consultar surtidores cercanos #71
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:whatsapp-llm`
 

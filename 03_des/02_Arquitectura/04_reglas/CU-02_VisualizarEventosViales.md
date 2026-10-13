@@ -17,13 +17,13 @@ Cubre HU-03, HU-04 y HU-11, y los requisitos RF-03, RF-04, RF-12, RNF-01, RNF-09
 | RN-02.7 | Cada evento se dibuja con el color de su tipo. Al tocarlo se muestran su tipo y hace cuánto ocurrió. | TipoEvento | HU-03 c.1 y c.5 |
 | RN-02.8 | Si el backend no responde o tarda demasiado, el mapa conserva lo último que mostró, avisa «No se pudo actualizar eventos» y vuelve a intentar en el siguiente ciclo. | Controlador de mapa de la app | CU-02 ext. 2a, HU-03 c.3 |
 | RN-02.9 | Sin conexión, la app muestra los últimos eventos que guardó y avisa que pueden estar desactualizados. Al volver la red los reemplaza por los vigentes. | Caché local de la app | CU-02 garantía mínima, HU-04 |
-| RN-02.10 | Solo se puede votar un evento Activo o Confirmado, sea cual sea su origen. | EventoVial | HU-11 c.1 |
+| RN-02.10 | Solo se puede votar un evento Activo o Confirmado que haya reportado un conductor. La congestión registrada por telemetría no se vota. | EventoVial | CU-02 ext. 5a, HU-11 c.2, [D-20](../08_decisiones_parametros.md) |
 | RN-02.11 | Cada conductor vota una sola vez por evento, «real» o «falso». Un segundo voto se rechaza. | Voto | CU-02 ext. 5a, HU-11 c.2, RNF-09 |
-| RN-02.12 | El conductor que reportó un evento no puede votarlo. | Voto | Propuesta [P-17](../08_decisiones_parametros.md) |
+| RN-02.12 | El conductor que reportó un evento no puede votarlo. | Voto | CU-02 ext. 5a, HU-11 c.2, [P-17](../08_decisiones_parametros.md) |
 | RN-02.13 | Al llegar a 3 votos «falso», el evento pasa a Retirado y desaparece del mapa y de la lista de todos en la siguiente consulta. | EventoVial | CU-02 ext. 5a, HU-11 c.3, [P-01](../08_decisiones_parametros.md) |
-| RN-02.14 | Al llegar a 3 votos «real», el evento pasa a Confirmado y se muestra con su marca. Un evento confirmado ya no se retira por votos: solo vence. | EventoVial | HU-11 c.4, [P-11](../08_decisiones_parametros.md) |
-| RN-02.15 | Un evento retirado o vencido deja de pesar en el cálculo de rutas desde ese momento. | EventoVial, Tramo | CU-04 |
-| RN-02.16 | Un voto de un usuario fantasma queda marcado como simulado. | Voto | CU-07 sección 8, RNF-12 |
+| RN-02.14 | Al llegar a 3 votos «real», el evento pasa a Confirmado y se muestra con su marca. Un evento confirmado ya no se retira por votos: solo vence. | EventoVial | CU-02 ext. 5a, HU-11 c.4, [P-11](../08_decisiones_parametros.md) |
+| RN-02.15 | Un evento retirado o vencido deja de pesar en el cálculo de rutas desde ese momento. | EventoVial, Tramo | [D-14](../08_decisiones_parametros.md) |
+| RN-02.16 | Un voto de un usuario fantasma queda marcado como simulado. | Voto | Propuesta, por analogía con CU-07 sección 8; RNF-12 |
 
 ## Recorrido por Vista, Controlador y Modelo
 

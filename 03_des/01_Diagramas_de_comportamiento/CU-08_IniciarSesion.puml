@@ -1,7 +1,7 @@
 @startuml CU-08_IniciarSesion
 ' CU-08: Iniciar Sesión - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
-' Issue: T-045
+' Issue: T-045 (actualizado en T-086)
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -53,10 +53,13 @@ cuenta del
 conductor;
       :Genera un token
 JWT propio con
-expiración;
+expiración y un
+token de
+renovación;
       |Sistema ChuroViaje|
-      :Almacena el token
-de forma segura;
+      :Almacena los
+tokens de forma
+segura;
       :Redirige al mapa
 principal;
       stop
@@ -86,6 +89,28 @@ pantalla de inicio
 sin autenticar;
   stop
 endif
+
+|Conductor|
+start
+#FFF8E1:[*a] Con la sesión
+iniciada, toca
+"Cerrar sesión" en
+el menú de la
+cuenta;
+|Backend Java|
+#FFF8E1:[*a] Invalida el
+token de
+renovación;
+|Sistema ChuroViaje|
+#FFF8E1:[*a] Borra del
+teléfono los tokens,
+la cola de reportes
+y los datos
+guardados;
+#FFF8E1:[*a] Vuelve a la
+pantalla de inicio
+de sesión;
+stop
 
 legend bottom
   Azul: escenario principal de éxito (sección 4).

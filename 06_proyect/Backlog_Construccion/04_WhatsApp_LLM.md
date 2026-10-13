@@ -117,7 +117,7 @@ Este issue cubre el análisis por lotes y la entrega al backend.
 - [ ] Preguntas, mensajes ambiguos o contradictorios y mensajes sin un surtidor reconocible se descartan (RN-06.9).
 - [ ] Si el LLM falla, los mensajes siguen pendientes para el siguiente ciclo (RN-06.10).
 - [ ] El resultado se envía a `POST /monitoreo/resultados` apenas termina el análisis (RN-06.18).
-- [ ] Analizado el lote, el texto de sus mensajes se borra y quedan marcados como procesados (RN-06.12). Si el backend no responde, se guarda el resultado sin texto y se reenvía en el siguiente ciclo.
+- [ ] Analizado el lote, el texto de sus mensajes se borra y quedan marcados como procesados (RN-06.12). Si el backend no responde, se guarda el resultado sin texto y se reenvía en el siguiente ciclo (RN-06.19).
 - [ ] Se usa la capa gratuita de la API de Gemini. El README anota que sus términos permiten a Google usar lo enviado para mejorar sus productos, con el enlace a los términos y la fecha en que se revisaron (D-17).
 
 **Tareas**
@@ -135,7 +135,7 @@ Este issue cubre el análisis por lotes y la entrega al backend.
 - [ ] CP-XX Caso de prueba: un mensaje válido en el grupo de prueba queda en la tabla `estado_combustible` del backend en menos de 6 minutos (RNF-04).
 - [ ] CP-XX Caso de prueba: un mensaje con «llamen al 71234567» llega al LLM con el número enmascarado.
 
-**Relacionado:** RF-08 · RF-09 · RNF-04 · RNF-11 · CU-06 · RN-06.5 a RN-06.12, RN-06.18 · D-17 · P-15 · [decision_conexion_whatsapp.md](../../05_pro/ComWhatsapp/decision_conexion_whatsapp.md)
+**Relacionado:** RF-08 · RF-09 · RNF-04 · RNF-11 · CU-06 · RN-06.5 a RN-06.12, RN-06.18, RN-06.19 · D-17 · P-15 · [decision_conexion_whatsapp.md](../../05_pro/ComWhatsapp/decision_conexion_whatsapp.md)
 
 Lo subes en una nueva rama llamada "feature/HU08-CU06-llm-analisis-lotes" (No olvides que el source de la rama es la de develop)
 

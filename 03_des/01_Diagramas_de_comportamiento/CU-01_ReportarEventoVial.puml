@@ -1,7 +1,7 @@
 @startuml CU-01_ReportarEventoVial
 ' CU-01: Reportar Evento Vial - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
-' Issue: T-045
+' Issue: T-045 (actualizado en T-086)
 ' Revisión de coherencia (06/10/2026): modal con tipo y tiempo, descarte del reporte vencido y propagación por consulta periódica.
 
 skinparam shadowing false
@@ -45,14 +45,12 @@ minutos" por defecto);
 de evento y, si hace
 falta, cambia el
 tiempo;
+:Confirma el envío
+del reporte;
 |Sistema ChuroViaje|
 :Captura la
 ubicación GPS
 actual;
-|Conductor|
-:Confirma el envío
-del reporte;
-|Sistema ChuroViaje|
 if (¿Hay conexión a\ninternet?) then (sí)
 else (no [3a])
   #FFF8E1:[3a] Almacena el
@@ -82,19 +80,35 @@ ubicación);
   |Backend Java|
   :Verifica el token
 de sesión;
-backward:[4a] El conductor
-se reautentica
-(CU-08) y el
-sistema reintenta
-el envío;
+backward:[4a] El sistema
+renueva la sesión o,
+si no puede, el
+conductor se
+reautentica (CU-08),
+y luego reintenta el
+envío;
 repeat while (¿El token\nexpiró?) is (sí [4a])
 ->no;
 |Backend Java|
-:Valida y persiste
-el evento;
-:Confirma el
+:Valida el reporte;
+if (¿Lo acepta?) then (sí)
+  :Persiste el
+evento;
+  :Confirma el
 registro al
 conductor;
+else (no [4b])
+  |Sistema ChuroViaje|
+  #FFF8E1:[4b] Muestra el
+motivo del rechazo
+(fuera de Tarija,
+evento vencido,
+repetido o límite
+superado);
+  #FFF8E1:[4b] El reporte
+no se registra;
+  stop
+endif
 |Demás conductores|
 :Reciben el evento
 en su siguiente

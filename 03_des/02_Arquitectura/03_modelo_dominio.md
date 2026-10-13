@@ -41,7 +41,7 @@ Un `EventoVial` pasa por cuatro estados:
 | Tramo | Un trozo de calle entre dos intersecciones, en un sentido | Extremos, nombre de la calle, longitud real, tipo de vía, nivel de tráfico actual | Solo se recorre en su sentido. Su costo sube con el nivel de tráfico | Motor core |
 | Ruta | El camino propuesto al conductor | Origen, destino, paradas, tramos, distancia, tiempo estimado, estado | Pasa por las paradas en el orden indicado. Nunca usa un tramo a contramano ni una vía peatonal | Motor core, que la calcula; la app la conserva mientras dura la navegación |
 | Parada | Un punto intermedio de la ruta | Ubicación, orden | Mantiene el orden que eligió el conductor | Motor core y app |
-| LecturaTelemetría | Una medición de posición y velocidad | Posición, velocidad, precisión del GPS, momento, marca de simulada | Se descarta si la precisión es mala o la velocidad es imposible. Nunca se muestra a otro usuario | Backend, que la recibe; motor core, que la analiza |
+| LecturaTelemetría | Una medición de posición del GPS | Posición, precisión del GPS, momento, marca de simulada. La velocidad no viene de la app: la calcula el motor core con dos lecturas seguidas | Se descarta si la precisión es mala o la velocidad calculada es imposible. Nunca se muestra a otro usuario | Backend, que la recibe; motor core, que la analiza |
 
 Una `Ruta` está Calculada cuando se muestra, Activa mientras el conductor navega y Terminada al llegar o cancelar. No se guarda en la base de datos: el sistema no conserva historial de rutas.
 

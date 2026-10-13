@@ -13,7 +13,7 @@ Cubre HU-09 y los requisitos RF-10 y RNF-12.
 | RN-07.3 | El simulador envía todo por la misma API que usa la app. Nunca escribe directo en la base de datos. | Simulación | CU-07 sección 8 |
 | RN-07.4 | Cada usuario fantasma entra con credenciales de prueba, y el backend lo trata como un `Conductor` con marca de simulado. | UsuarioFantasma, Conductor | CU-07 sección 8, HU-09 c.5 |
 | RN-07.5 | Las credenciales de prueba no pasan por Google y solo funcionan en un ambiente que las tenga habilitadas. | Sesión | Propuesta [P-20](../08_decisiones_parametros.md) |
-| RN-07.6 | Todo evento, voto y lectura de telemetría de un usuario fantasma queda marcado como simulado. | EventoVial, Voto, LecturaTelemetría | CU-07 sección 8, HU-09 c.5 |
+| RN-07.6 | Todo evento, voto y lectura de telemetría de un usuario fantasma queda marcado como simulado. | EventoVial, Voto, LecturaTelemetría | CU-07 sección 8, HU-09 c.5; los votos, por analogía |
 | RN-07.7 | Los datos simulados pasan por las mismas reglas que los reales: validación, duplicados, límites y vigencia. | EventoVial | CU-07 paso 3 y sección 8, HU-09 c.1 |
 | RN-07.8 | Los datos simulados se pueden eliminar aparte, sin tocar un solo dato real. | Simulación | CU-07 sección 8, HU-09 c.5, RNF-12 |
 | RN-07.9 | Si la simulación falla o se interrumpe, ningún dato real queda alterado. Lo que ya se envió sigue marcado como simulado. | Simulación | CU-07 garantía mínima, HU-09 c.4 |

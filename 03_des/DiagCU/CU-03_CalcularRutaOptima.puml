@@ -36,7 +36,8 @@ skinparam legend {
 title CU-03: Calcular Ruta Óptima
 
 actor "Conductor" as Conductor
-actor "Motor core (C++)" as Motor <<sistema>>
+actor "Motor core" as Motor <<sistema>>
+actor "Backend Java" as Backend <<sistema>>
 actor "Mapbox" as Mapbox <<sistema externo>>
 
 rectangle "Aplicación Móvil ChuroViaje (motor de ruteo)" {
@@ -49,12 +50,13 @@ Navegación activa"
 }
 
 Conductor --> CU03
+CU03 --> Backend
 CU03 --> Motor
 CU03 --> Mapbox
 CU04 .> CU03 : <<extend>>
 note on link
-  Condición: {se detecta congestión
-  sobre el trayecto de la ruta activa}
+  Condición: {un evento vial vigente afecta
+  el tramo que falta de la ruta activa}
 end note
 
 @enduml

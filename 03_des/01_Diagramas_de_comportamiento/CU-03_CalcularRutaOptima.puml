@@ -1,7 +1,7 @@
 @startuml CU-03_CalcularRutaOptima
 ' CU-03: Calcular Ruta Óptima - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
-' Issue: T-045
+' Issue: T-045 (actualizado en T-086)
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -48,18 +48,22 @@ repeat while (¿Destino\ninválido o fuera\nde cobertura?) is (sí [1a])
 |Conductor|
 :Solicita "Calcular
 ruta";
-|Sistema ChuroViaje|
-:Envía la solicitud
-al motor core;
-|Motor core (C++)|
-if (¿Mapbox\ndisponible?) then (sí)
-  :Obtiene los datos
-viales de Mapbox;
-  :Ejecuta el
-algoritmo
-(Dijkstra/A*);
-  if (¿Existe una ruta\nvehicular?) then (sí)
-    |Sistema ChuroViaje|
+|Backend Java|
+:Valida la solicitud
+y la envía al motor
+core;
+|Motor core|
+:Ajusta los puntos a
+la red de calles que
+tiene en memoria;
+:Ejecuta el
+algoritmo (A*)
+considerando los
+eventos viales
+vigentes;
+if (¿Existe una ruta\nvehicular?) then (sí)
+  |Sistema ChuroViaje|
+  if (¿Carga el mapa\nbase de Mapbox?) then (sí)
     :Dibuja la ruta con
 tiempo y distancia
 estimados;
@@ -71,20 +75,19 @@ de la navegación;
 seguimiento de la
 ruta;
     stop
-  else (no [3b])
-    |Sistema ChuroViaje|
-    #FFF8E1:[3b] Notifica que
-no se encontró una
-ruta válida;
-    stop
-  endif
-else (no [3a])
-  |Sistema ChuroViaje|
-  #FFF8E1:[3a] Informa un
+  else (no [4a])
+    #FFF8E1:[4a] Informa un
 error de servicio
 externo y sugiere
 reintentar más
 tarde;
+    stop
+  endif
+else (no [3a])
+  |Sistema ChuroViaje|
+  #FFF8E1:[3a] Notifica que
+no se encontró una
+ruta válida;
   stop
 endif
 

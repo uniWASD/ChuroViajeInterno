@@ -185,7 +185,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-trafico-tramos" (No ol
 **Issue anterior:** #3 (prototipo de cálculo de velocidad)
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
-**Historia de usuario:** Como sistema, quiero recibir la velocidad y la posición de los conductores mientras tienen la app abierta, para detectar congestión sin depender solo de los reportes manuales.
+**Historia de usuario:** Como sistema, quiero recibir la posición de los conductores mientras tienen la app abierta, para calcular su velocidad y detectar congestión sin depender solo de los reportes manuales.
 
 Este issue cubre la parte del núcleo: analizar las lecturas y decidir si hay congestión.
 
@@ -225,7 +225,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (
 **Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
-**Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema recalcule automáticamente mi ruta si detecta congestión, para evitar demoras sin tener que intervenir manualmente.
+**Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema me proponga una ruta alternativa cuando un evento vial afecte mi camino, para evitar demoras sin tener que buscarla yo.
 
 **Criterios de aceptación**
 - [ ] `revisar_ruta` recibe la posición actual, los identificadores de los tramos que faltan, el destino, las paradas que faltan y los eventos ya avisados.

@@ -79,7 +79,7 @@ Backend Java (valida contra el catálogo) ──> Base de datos ──> App (CU-
 | WhatsApp Cloud API (oficial de Meta) | Descartada | Solo recibe mensajes enviados al número de la empresa; no puede leer grupos existentes. |
 | WhatsApp Groups API (oficial de Meta) | Descartada | Limitada a grupos creados por la propia API y a cuentas con Official Business Account (OBA). |
 | Distribuidores reportando a un número oficial | Descartada | Contradice el alcance del Documento de Visión: el sistema no depende de la colaboración de las gasolineras. |
-| whatsapp-web.js | Alternativa de respaldo | Lee grupos existentes, pero requiere un navegador (Puppeteer) y consume más memoria en el VPS básico. |
+| whatsapp-web.js | Alternativa de respaldo | Lee grupos existentes, pero requiere un navegador (Puppeteer) y consume más memoria en el servidor. |
 | **Baileys** | **Elegida** | Lee grupos existentes, no requiere navegador y consume pocos recursos. |
 
 ### 3.2 Interpretación de mensajes
@@ -97,7 +97,7 @@ Backend Java (valida contra el catálogo) ──> Base de datos ──> App (CU-
 ### Positivas
 
 * Cumple el alcance del Documento de Visión: el dato proviene de los grupos, sin depender de reportes de los usuarios.
-* Bajo consumo de recursos en la extracción, compatible con el VPS básico del proyecto.
+* Bajo consumo de recursos en la extracción, compatible con el servidor del proyecto (la instancia de Oracle Cloud, D-16 de la arquitectura).
 * Extracción y análisis quedan desacoplados: se pueden desarrollar, probar y reemplazar por separado (por ejemplo, cambiar Baileys por whatsapp-web.js o cambiar de LLM).
 * El LLM tolera mejor el lenguaje informal que un conjunto de reglas fijas.
 
@@ -122,7 +122,7 @@ Backend Java (valida contra el catálogo) ──> Base de datos ──> App (CU-
 * Se agrega una **dependencia externa**: el proveedor del LLM.
 * Deben definirse dos contratos: el formato de los mensajes pendientes en el almacenamiento temporal y el formato del resultado que el análisis envía al backend Java.
 * **Tiempo de actualización (resuelto en v1.2):** con lotes cada 5 minutos, un mensaje puede tardar hasta unos 5 minutos más el tiempo de análisis. CU-06 (requisito de rendimiento) y HU-08 (criterio 7) se actualizaron a **menos de 6 minutos**.
-* **Documentación actualizada (v1.3):** CU-06, HU-08, el Documento de Visión v0.4 y la matriz de requisitos (RF-08, RF-09, RNF-04 y RNF-11) reflejan esta decisión.
+* **Documentación actualizada (v1.3):** CU-06, HU-08, el Documento de Visión v0.4 y la matriz de requisitos (RF-08, RF-09, RNF-04 y RNF-11) reflejan esta decisión. El cambio de la v1.4 se llevó a CU-06, HU-08, la Visión v0.5 y la matriz el 13/10/2026.
 
 ---
 

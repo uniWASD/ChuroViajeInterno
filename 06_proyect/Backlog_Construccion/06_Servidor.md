@@ -73,7 +73,7 @@ Lo subes en una nueva rama llamada "feature/TXX-servidor-preparar-instancia" (No
 **Descripción:** Darle al backend una dirección propia con HTTPS. Nginx recibe las peticiones de internet y las pasa al backend, que solo escucha dentro de la máquina.
 
 **Criterios de aceptación**
-- [ ] Hay un dominio propio que apunta a la IP reservada.
+- [ ] Hay un dominio propio que apunta a la IP reservada (D-26).
 - [ ] Nginx atiende HTTPS con un certificado de Let's Encrypt que se renueva solo, y redirige HTTP a HTTPS.
 - [ ] Los puertos 80 y 443 están abiertos en las reglas de la VCN y en el firewall de Ubuntu; el 80 solo redirige a HTTPS y atiende la validación de Let's Encrypt. Ningún otro puerto nuevo ([07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md), Servidor).
 - [ ] Nginx pasa las peticiones al puerto local del backend, que no es accesible desde fuera.
@@ -89,7 +89,7 @@ Lo subes en una nueva rama llamada "feature/TXX-servidor-preparar-instancia" (No
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: `http://dominio` redirige a `https://dominio`, y el certificado es válido en un teléfono.
 
-**Relacionado:** RNF-08 · Visión 4.4 y 6.3 · D-03, D-16
+**Relacionado:** RNF-08 · RNF-14 · Visión 4.4 y 6.3 · D-03, D-16, D-26
 
 Lo subes en una nueva rama llamada "feature/TXX-servidor-dominio-https" (No olvides que el source de la rama es la de develop)
 

@@ -114,7 +114,7 @@ Lo subes en una nueva rama llamada "feature/TXX-java-base-de-datos" (No olvides 
 - [ ] La respuesta trae un JWT de 1 hora, su expiración y un token de renovación válido por 30 días (RN-08.5, RN-08.12).
 - [ ] `POST /sesion/renovar` entrega un JWT nuevo sin pasar por Google mientras el token de renovación siga vigente; vencido, responde 401 (RN-08.12).
 - [ ] Todas las rutas de la API exigen un JWT de conductor vigente, salvo las de `/sesion/*`, que no lo necesitan, y las de `/monitoreo/*`, que exigen la credencial de servicio. Sin la credencial correcta responden 401 (RN-08.11, RNF-08).
-- [ ] `POST /sesion/cerrar` invalida el token de renovación; después, `POST /sesion/renovar` con ese token responde 401.
+- [ ] `POST /sesion/cerrar` invalida el token de renovación; después, `POST /sesion/renovar` con ese token responde 401 (RN-08.14).
 - [ ] Nunca se guardan credenciales de Google; solo el identificador de la cuenta (RN-08.6).
 - [ ] La respuesta de inicio de sesión llega en menos de 3 segundos con red normal (RNF-05).
 
@@ -134,7 +134,7 @@ Lo subes en una nueva rama llamada "feature/TXX-java-base-de-datos" (No olvides 
 - [ ] CP-XX Caso de prueba: con un token de renovación vigente se obtiene un JWT nuevo; con uno de más de 30 días, 401.
 - [ ] CP-XX Caso de prueba: después de cerrar sesión, el token de renovación ya no sirve.
 
-**Relacionado:** RF-11 · RNF-05 · RNF-08 · CU-08 · RN-08.1 a RN-08.12 · P-05
+**Relacionado:** RF-11 · RNF-05 · RNF-08 · CU-08 · RN-08.1 a RN-08.12, RN-08.14 · P-05
 
 Lo subes en una nueva rama llamada "feature/HU10-CU08-java-inicio-sesion" (No olvides que el source de la rama es la de develop)
 
@@ -259,7 +259,7 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-java-registrar-reporte" (N
 **Depende de:** [HU-01][CU-01][Java] Registrar reportes de eventos viales
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
-**Historia de usuario:** Como conductor de la app, quiero ver en el mapa los eventos viales activos reportados por otros conductores, para anticiparme a choques, controles o congestiones en mi ruta.
+**Historia de usuario:** Como conductor de la app, quiero ver en el mapa los eventos viales activos reportados por otros conductores, para anticiparme a accidentes, controles, bloqueos o congestiones en mi ruta.
 
 **Criterios de aceptación**
 - [ ] `GET /eventos` devuelve solo los eventos Activos y Confirmados; los Retirados y Vencidos no salen nunca (RN-02.2).
@@ -339,7 +339,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 **Historia de usuario:** Como conductor de la app, quiero ver la lista de eventos activos y votar si cada uno es real o falso, para que el mapa muestre solo eventos confiables.
 
 **Criterios de aceptación**
-- [ ] `POST /eventos/{id}/votos` registra un voto «real» o «falso» solo sobre eventos Activos o Confirmados, de cualquier origen. Un evento Retirado o Vencido responde 422, y uno que ya no existe, 404 (RN-02.10).
+- [ ] `POST /eventos/{id}/votos` registra un voto «real» o «falso» solo sobre eventos Activos o Confirmados que reportó un conductor; la congestión registrada por telemetría no se vota y responde 422 (D-20). Un evento Retirado o Vencido responde 422, y uno que ya no existe, 404 (RN-02.10).
 - [ ] Un segundo voto del mismo conductor sobre el mismo evento responde 409; la base tampoco lo permite (RN-02.11).
 - [ ] El reportante no puede votar su propio evento: responde 422 (RN-02.12, P-17).
 - [ ] Con 3 votos «falso», el evento pasa a Retirado (RN-02.13, P-01).
@@ -358,7 +358,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 - [ ] CP-XX Caso de prueba: el mismo conductor vota dos veces; el segundo voto responde 409.
 - [ ] CP-XX Caso de prueba: el reportante intenta votar su evento y recibe 422.
 
-**Relacionado:** RF-12 · RNF-09 · CU-02 · RN-02.10 a RN-02.14 · P-01, P-11, P-17
+**Relacionado:** RF-12 · RNF-09 · CU-02 · RN-02.10 a RN-02.14 · D-20 · P-01, P-11, P-17
 
 Lo subes en una nueva rama llamada "feature/HU11-CU02-java-votos" (No olvides que el source de la rama es la de develop)
 
@@ -509,7 +509,7 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-java-confirmar-recarga" (N
 **Depende de:** [T-XXX][Java] Mantener al día el tráfico del motor · [HU-13][CU-04][C++] Detectar congestión con la telemetría
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
-**Historia de usuario:** Como sistema, quiero recibir la velocidad y la posición de los conductores mientras tienen la app abierta, para detectar congestión sin depender solo de los reportes manuales.
+**Historia de usuario:** Como sistema, quiero recibir la posición de los conductores mientras tienen la app abierta, para calcular su velocidad y detectar congestión sin depender solo de los reportes manuales.
 
 **Criterios de aceptación**
 - [ ] `POST /telemetria` solo acepta lecturas de conductores con sesión vigente (RN-04.4).
@@ -549,7 +549,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvid
 **Depende de:** [HU-05][CU-03][Java] Calcular la ruta · [HU-06][CU-04][C++] Revisar la ruta activa
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
-**Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema recalcule automáticamente mi ruta si detecta congestión, para evitar demoras sin tener que intervenir manualmente.
+**Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema me proponga una ruta alternativa cuando un evento vial afecte mi camino, para evitar demoras sin tener que buscarla yo.
 
 **Criterios de aceptación**
 - [ ] `POST /rutas/revision` recibe la posición actual, los tramos que faltan, el destino, las paradas que faltan y los eventos ya avisados en esta ruta (D-12, 05_contratos).
@@ -639,7 +639,7 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-java-soporte-simulador" (N
 **Casos de prueba**
 - [ ] CP-XX Caso de prueba: un evento vencido hace 31 días y sus votos se borran; uno vencido hace 29 días se conserva.
 
-**Relacionado:** RNF-10 · CU-02 · CU-05 · P-21 · [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md)
+**Relacionado:** RNF-10 · RNF-17 · CU-02 · CU-05 · P-21 · [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md)
 
 Lo subes en una nueva rama llamada "feature/TXX-java-limpieza-datos" (No olvides que el source de la rama es la de develop)
 

@@ -1,0 +1,16 @@
+{
+  "name": "churoviaje-t091-simulador-independiente",
+  "version": "1.0.2",
+  "private": true,
+  "type": "module",
+  "description": "Estructura del servicio T-091 estrictamente acotada al issue #43",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node simulator/run-demo.js",
+    "verify": "npm test && npm run demo",
+    "start": "node src/main.js"
+  }
+}

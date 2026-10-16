@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+data/
+sesion_whatsapp/
+node_modules/
+coverage/
+*.log
+.DS_Store

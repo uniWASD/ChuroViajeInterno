@@ -10,7 +10,7 @@ export const NOW=Date.parse('2026-10-15T12:00:00.000Z');
  * registro, por eso NO deben registrarse cierres en hooks posteriores separados.
  */
 export function workspace(t) {
-  const dir=mkdtempSync(join(tmpdir(),'t091-test-'));
+  const dir=mkdtempSync(join(tmpdir(),'churo-whatsapp-test-'));
   const disposers=[];
   if (t) t.after(async()=>{
     let firstError;

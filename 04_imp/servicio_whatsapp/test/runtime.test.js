@@ -34,7 +34,7 @@ test('proceso Node arranca en subprocess real, restaura SQLite y elimina texto v
   store.savePending({id:'m-vencido',group:'grupo-autorizado@g.us',date:new Date(now-32*60000).toISOString(),text});
   store.close();
   const task=spawnService({BACKEND_URL:'http://127.0.0.1:18080',SERVICE_TOKEN:token,
-    ALLOWED_GROUP_IDS:'grupo-autorizado@g.us',SQLITE_PATH:ws.db,POLL_INTERVAL_MS:'1000'});
+    ALLOWED_GROUP_IDS:'grupo-autorizado@g.us',SQLITE_PATH:ws.db,MAINTENANCE_INTERVAL_MS:'1000'});
   ws.addCleanup(async()=>{
     if (task.child.exitCode===null) task.child.kill();
     await task.done;

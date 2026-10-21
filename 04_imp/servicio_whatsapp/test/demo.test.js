@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {runDemo} from '../simulator/run-demo.js';
+import {runDemo} from '../demo/run-demo.js';
 
 test('E2E: CP-26, caducidad, GET y POST con doble HTTP efimero',async()=>{
   const result=await runDemo();

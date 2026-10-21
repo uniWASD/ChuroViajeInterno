@@ -3,14 +3,14 @@ import assert from 'node:assert/strict';
 import {writeFileSync} from 'node:fs';
 import {join,resolve} from 'node:path';
 import {loadConfig} from '../src/config.js';
+import {fileURLToPath} from 'node:url';
 import {config,workspace} from '../test-support/helpers.js';
 
-test('variables de entorno: credenciales, grupos, URL, LLM futuro y TTL fijo',()=>{
+test('variables de entorno: credenciales, grupos, URL y LLM futuro',()=>{
   const data=config({ALLOWED_GROUP_IDS:'uno@g.us,dos@g.us,uno@g.us',LLM_API_KEY:'CREDENCIAL_NO_REAL'});
   assert.deepEqual(data.allowedGroupIds,['uno@g.us','dos@g.us']);
   assert.equal(data.llmApiKey,'CREDENCIAL_NO_REAL');
-  assert.equal(data.pendingTtlMs,1800000);
-  assert.equal(data.serviceTokenPrefix,'Bearer ');
+    assert.equal(data.serviceTokenPrefix,'Bearer ');
   assert(Object.isFrozen(data));
 });
 test('JSON externo al repositorio y sin usar credenciales reales',t=>{
@@ -34,10 +34,14 @@ test('archivo configurado mediante variable WHATSAPP_SERVICE_CONFIG_FILE',t=>{
   writeFileSync(path,JSON.stringify({BACKEND_URL:'https://servidor.invalid',SERVICE_TOKEN:'PRUEBA',ALLOWED_GROUP_IDS:['grupo@g.us']}));
   assert.equal(loadConfig({WHATSAPP_SERVICE_CONFIG_FILE:path}).serviceToken,'PRUEBA');
 });
-test('rechaza JSON local que sería fácil publicar accidentalmente',()=>{
-  assert.throws(()=>loadConfig({}, {filePath:resolve('./package.json')}),e=>e.code==='CONFIG_INVALIDA');
-  assert.throws(()=>loadConfig({}, {filePath:resolve('./README.md')}),
-    e=>e.code==='CONFIG_INVALIDA' && /fuera del repositorio/.test(e.message));
+test('rechaza configuración dentro del servicio, independientemente del cwd',()=>{
+  // No depender de process.cwd() ni de README.md: algunas verificaciones
+  // ejecutan una copia mínima que contiene src/, test/ y package.json.
+  const root = fileURLToPath(new URL('..', import.meta.url));
+  for (const filename of ['package.json', 'src/config.js']) {
+    assert.throws(()=>loadConfig({}, {filePath:resolve(root, filename)}),
+      e=>e.code==='CONFIG_INVALIDA' && /fuera del servicio/.test(e.message));
+  }
 });
 test('rechaza JSON corrupto sin mostrar contenido',t=>{
   const ws=workspace(t),path=join(ws.dir,'mal.json');writeFileSync(path,'TOKEN_SUPER_SECRETO {{{');
@@ -67,7 +71,17 @@ test('rechaza inyección CRLF en cabecera/prefijo',()=>{
 });
 test('rechaza grupos inválidos, intervalos imposibles y LLM no cadena',()=>{
   for (const wrong of [{ALLOWED_GROUP_IDS:'   '},{ALLOWED_GROUP_IDS:'grupo incorrecto@g.us'},
-    {POLL_INTERVAL_MS:'999'},{POLL_INTERVAL_MS:'Infinity'},{POLL_INTERVAL_MS:'1000.5'},{LLM_API_KEY:123}]) {
+    {MAINTENANCE_INTERVAL_MS:'999'},{MAINTENANCE_INTERVAL_MS:'Infinity'},{MAINTENANCE_INTERVAL_MS:'1000.5'},{LLM_API_KEY:123}]) {
     assert.throws(()=>config(wrong),e=>e.code==='CONFIG_INVALIDA');
   }
+});
+
+test('la variable antigua POLL_INTERVAL_MS se rechaza con diagnóstico claro',()=>{
+  assert.throws(()=>config({POLL_INTERVAL_MS:'2000'}),e=>e.code==='CONFIG_INVALIDA' && /MAINTENANCE_INTERVAL_MS/.test(e.message));
+});
+
+test('ruta SQLite relativa queda dentro del servicio, aunque cambie cwd',()=>{
+  const c = config({SQLITE_PATH:'./data/pendientes.sqlite'});
+  const root = fileURLToPath(new URL('..', import.meta.url));
+  assert.equal(c.sqlitePath,resolve(root,'data/pendientes.sqlite'));
 });

@@ -53,7 +53,7 @@ test('rechaza fechas inválidas en lote o avisos antes del HTTP',()=>{
   }
 });
 test('rechaza estado y fila fuera de contrato',()=>{
-  for (const extra of [{estado:'QUIZÁS'},{fila:'INFINITA'},{surtidor:''},{combustible:null}]) {
+  for (const extra of [{estado:'QUIZÁS'},{fila:''},{fila:9},{surtidor:''},{combustible:null}]) {
     assert.throws(()=>validateBatch({...batch,avisos:[{...batch.avisos[0],...extra}]}));
   }
 });

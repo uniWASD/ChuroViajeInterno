@@ -1,4 +1,4 @@
-/** Simulador T-091: SQLite del servicio + doble HTTP efímero SIN lógica de backend. */
+/** Demo local: SQLite del servicio + doble HTTP efímero sin reglas Java. */
 import assert from 'node:assert/strict';
 import {randomBytes} from 'node:crypto';
 import {mkdtempSync,rmSync} from 'node:fs';
@@ -14,7 +14,7 @@ import {createLogger} from '../src/logger.js';
 import {loadConfig} from '../src/config.js';
 
 export async function runDemo() {
-  const dir=mkdtempSync(join(tmpdir(),'t091-issue43-'));
+  const dir=mkdtempSync(join(tmpdir(),'churoviaje-demo-'));
   const path=join(dir,'pendientes.sqlite');
   const token=randomBytes(24).toString('hex');
   let getCount=0, postCount=0, lastBatch=null;
@@ -26,7 +26,7 @@ export async function runDemo() {
     if(req.headers.authorization!==`Bearer ${token}`) return answer(401,{error:'No autorizado'});
     if(req.method==='GET' && req.url==='/monitoreo/surtidores') {
       getCount++;
-      return answer(200,{surtidores:[]});
+      return answer(200,{surtidores:[],combustibles:[]});
     }
     if(req.method==='POST' && req.url==='/monitoreo/resultados') {
       postCount++;
@@ -56,7 +56,7 @@ export async function runDemo() {
     assert.deepEqual(store.getById('CP-26'),{id:'CP-26',grupo:'grupo-demo@g.us',fecha:date,
       texto:text,estado:'PENDIENTE'});
     const columns=store.db.prepare('PRAGMA table_info(mensaje_pendiente)').all().map(row=>row.name);
-    assert.deepEqual(columns,['id','grupo','fecha','fecha_ms','texto','estado','finalizado_ms']);
+    assert.deepEqual(columns,['id','grupo','fecha','fecha_ms','texto','estado','finalizado_ms','recibido_ms']);
     assert(!columns.some(name=>/remitente|autor|telefono|numero|sender|nombre/i.test(name)));
     const viejo=new Date(now-29*60000).toISOString();
     assert.deepEqual(service.ingestText({id:'vencido',group:'grupo-demo@g.us',date:viejo,text}),
@@ -83,7 +83,7 @@ export async function runDemo() {
     reopened.close();reopened=null;
     const client=new BackendClient(config);
     const catalogo=await client.getSurtidores();
-    assert.deepEqual(catalogo,{surtidores:[]});
+    assert.deepEqual(catalogo,{surtidores:[],combustibles:[]});
     const lote={lote:new Date(now).toISOString(),avisos:[{
       surtidor:'EJEMPLO_FICTICIO',combustible:'GASOLINA',estado:'DISPONIBLE',fecha:date
     }]};
@@ -96,7 +96,7 @@ export async function runDemo() {
     assert(!logs.join(' ').includes(text));
     assert(!logs.join(' ').includes(token));
     return {
-      tipo:'SIMULADOR_ESTRICTO_ISSUE43',resultado:'APROBADO',
+      tipo:'DEMO_HTTP_LOCAL',resultado:'APROBADO',
       cp26:{persistenciaTrasReapertura:true,sinRemitente:true,textoEliminado:true},
       mantenimiento:{pendienteVencidoDescartado:true,textoVencidoBorrado:true},
       http:{getStatus:200,postStatus:200,sinCredencial:401},
@@ -114,5 +114,5 @@ export async function runDemo() {
 
 if(process.argv[1] && import.meta.url===pathToFileURL(resolve(process.argv[1])).href) {
   try {process.stdout.write(`${JSON.stringify(await runDemo(),null,2)}\n`);}
-  catch {process.stderr.write('SIMULADOR_FALLIDO: consulte los tests.\n');process.exitCode=1;}
+  catch {process.stderr.write('DEMO_FALLIDA: consulte los tests.\n');process.exitCode=1;}
 }

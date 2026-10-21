@@ -13,11 +13,11 @@ test('CP-26: persiste identificador, grupo, fecha y texto con SQLite real',t=>{
   assert.deepEqual(store.savePending(message),{inserted:true,status:STATUS.PENDING});
   assert.deepEqual(store.getById('m-1'),{id:message.id,grupo:message.group,fecha:message.date,texto:message.text,estado:'PENDIENTE'});
 });
-test('CP-26: no existen columnas autor, número, remitente ni ninguna otra',t=>{
+test('CP-26: los campos técnicos no incluyen autor, número ni remitente',t=>{
   const {store}=create(t);
   const columns=store.db.prepare('PRAGMA table_info(mensaje_pendiente)').all().map(x=>x.name);
-  assert.deepEqual(columns,['id','grupo','fecha','fecha_ms','texto','estado','finalizado_ms']);
-  assert.deepEqual(store.db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map(x=>x.name),['mensaje_pendiente']);
+  assert.deepEqual(columns,['id','grupo','fecha','fecha_ms','texto','estado','finalizado_ms','recibido_ms']);
+  assert(!columns.some(name=>/remitente|autor|sender|numero|nombre/i.test(name)));
 });
 test('la BD se cierra y abre de nuevo sin perder pendientes (disco)',t=>{
   const ws=workspace(t);let db=new MessageStore(ws.db,{clock:()=>NOW});

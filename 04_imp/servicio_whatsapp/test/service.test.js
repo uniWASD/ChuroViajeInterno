@@ -42,7 +42,7 @@ test('grupo autorizado guarda, no envía mensajes',t=>{
 });
 test('grupo no autorizado no escribe en SQLite',t=>{
   const {service,store}=context(t);
-  assert.throws(()=>service.ingestText(msg({group:'otro@g.us'})),e=>e.code==='GRUPO_NO_AUTORIZADO');
+  assert.deepEqual(service.ingestText(msg({group:'otro@g.us'})),{inserted:false,status:'IGNORADO'});
   assert.equal(store.countPending(),0);
 });
 test('vencimiento individual, sin esperar cinco minutos',t=>{

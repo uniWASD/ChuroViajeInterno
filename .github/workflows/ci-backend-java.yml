@@ -1,0 +1,29 @@
+name: CI Backend Java
+
+on:
+  pull_request:
+    branches: [ "develop", "main" ]
+    paths:
+      - '04_imp/backend_java/**'
+      - '.github/workflows/ci-backend-java.yml'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 04_imp/backend_java
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Compilar y ejecutar pruebas (JUnit 5)
+        run: mvn clean test

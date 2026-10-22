@@ -8,7 +8,7 @@ El servicio contiene su **propio SQLite** para mensajes de texto pendientes, con
 
 - Node.js **22.13.0 o posterior**, sin paquetes externos; se utiliza `node:sqlite` integrado en Node.js. Como decisión técnica, no se incorpora un controlador SQLite nativo adicional que obligue a compilar dependencias al desplegar en ARM.
 - Se recomienda usar una versión LTS de Node.js mantenida y fijar la misma versión en el servidor y en la CI. Node 22 puede emitir `ExperimentalWarning` al cargar `node:sqlite`; no equivale a un fallo.
-- Plataformas verificadas: **Linux x86_64 con Node.js 22.16.0** (pruebas y arranque) y **Windows con Node.js 22.18.0** (10 rondas aprobadas de 68 pruebas, demostración HTTP, cobertura y arranque). La prueba de permisos POSIX se omite normalmente en Windows. **Ubuntu Linux ARM queda pendiente de verificación física**.
+- Plataformas verificadas: **Linux x86_64 con Node.js 22.16.0** (pruebas y arranque) y **Windows con Node.js 22.18.0** (10 rondas aprobadas, demostración HTTP, cobertura y arranque). En Windows se omite la prueba de permisos POSIX, pero las demás deben aprobarse. **Ubuntu Linux ARM queda pendiente de verificación física**.
 - La ejecución necesita permisos de escritura sobre el SQLite privado. El servicio fuerza `0600` para el archivo SQLite en POSIX y crea `data/` con permisos restringidos; en Windows se debe aplicar la ACL correspondiente.
 
 ## Pruebas y demostración local
@@ -34,14 +34,14 @@ npm.cmd run demo
 Para reproducir 10 rondas de pruebas, la demostración y el informe de cobertura sin configuración real:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\verificar_windows_T91.ps1 -Rondas 10
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\verificar_windows.ps1 -Rondas 10
 ```
 
-La comprobación guarda los registros en `evidencias_T91_Windows/`. En Windows, las 68 pruebas deben dar **67 aprobadas, 0 fallidas y 1 omitida** (la prueba de permisos POSIX). Conviene extraer primero el ZIP en una carpeta local de ruta corta, por ejemplo `C:\T91\servicio_whatsapp`, para descartar interferencias de unidades sincronizadas o rutas extensas. Las pruebas de despliegue evitan `fs.cpSync` para prevenir un cierre nativo observado en Node.js 22.18.0 sobre Windows. Se verificaron 10 rondas satisfactorias desde una carpeta local; la ejecución original en una unidad sincronizada con ruta larga provocaba el cierre del proceso.
+La comprobación guarda los registros en `evidencias_T91_Windows/`. En Windows deben aprobarse **todas las pruebas, salvo la de permisos POSIX, que se omite en Windows** (0 fallidas). Se recomienda ejecutar desde una ruta local corta, por ejemplo `C:\T91\servicio_whatsapp`, evitando carpetas sincronizadas o rutas extensas. Las pruebas de despliegue evitan `fs.cpSync` para prevenir un cierre nativo observado en Node.js 22.18.0 sobre Windows.
 
 ## Configuración y arranque
 
-El servicio utiliza, por orden de prioridad, **variables de entorno**, un **JSON externo** señalado por `WHATSAPP_SERVICE_CONFIG_FILE` y valores predeterminados cuando existen. Para desarrollo también puede cargarse un `.env` dentro de la carpeta del servicio: el comando `npm start` incluye `--env-file-if-exists=.env`, por lo que **funciona con o sin dicho archivo**. Las variables existentes del entorno prevalecen sobre `.env`.
+El servicio utiliza, por orden de prioridad, **variables de entorno**, un **JSON externo** señalado por `WHATSAPP_SERVICE_CONFIG_FILE` y valores predeterminados cuando existen. Para desarrollo también puede cargarse un `.env` dentro de la carpeta del servicio: el comando `npm start` incluye `--env-file-if-exists=.env`, por lo que **funciona con o sin dicho archivo**. Las variables existentes del entorno prevalecen sobre `.env`. Si no existe `.env`, Node puede mostrar `.env not found. Continuing without it.`; es un aviso informativo, no un error de arranque.
 
 Para desarrollo local en Linux/macOS:
 

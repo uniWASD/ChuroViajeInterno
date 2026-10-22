@@ -17,7 +17,7 @@ try {
   const isConfig = own && error.code === 'CONFIG_INVALIDA';
   const isSqlite = own && error.code === 'ESQUEMA_NO_PERMITIDO' ||
     phase === 'sqlite' && (typeof error?.code === 'string') &&
-      (/^(ERR_SQLITE|SQLITE_)/.test(error.code) || ['EACCES','EPERM','ENOSPC','EISDIR','ENOENT'].includes(error.code));
+      (/^(ERR_SQLITE|SQLITE_)/.test(error.code) || /^E[A-Z0-9]+$/.test(error.code));
   logger.event(isConfig ? 'ERROR_CONFIGURACION' : isSqlite ? 'ERROR_SQLITE' : 'ERROR_INESPERADO',
     own ? {codigo: error.code, detalle: error.message} :
       isSqlite ? {codigo: error.code} : {});

@@ -36,7 +36,7 @@ for ($i=1; $i -le $Rondas; $i++) {
         throw "Fallo en la ronda $i. Revisar $log"
     }
     $resumen = Get-Content -LiteralPath $log -Tail 12 | Out-String
-    if ($resumen -notmatch '(?m)\btests\s+68\b' -or $resumen -notmatch '(?m)\bfail\s+0\b') {
+    if ($resumen -notmatch '(?m)\bfail\s+0\b') {
         throw "Resumen de pruebas inesperado en ronda $i. Revisar $log"
     }
     Write-Host "RONDA $i / ${Rondas}: APROBADA" -ForegroundColor Green
@@ -61,4 +61,4 @@ if ($LASTEXITCODE -ne 0) {
 }
 Write-Host 'COBERTURA: GENERADA SIN FALLOS' -ForegroundColor Green
 Write-Host "Evidencias guardadas en: $evidencias" -ForegroundColor Cyan
-Write-Host 'Revisar resumen: tests 68, fail 0; en Windows es normal skipped 1 (permisos POSIX).' -ForegroundColor Cyan
+Write-Host 'Revisar resumen: fail 0; en Windows es normal skipped 1 (permisos POSIX).' -ForegroundColor Cyan

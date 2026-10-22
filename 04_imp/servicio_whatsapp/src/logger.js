@@ -2,8 +2,8 @@
 const EVENTS = new Set(['SERVICIO_INICIADO','SERVICIO_DETENIDO','MANTENIMIENTO',
   'ERROR_CONFIGURACION','ERROR_SQLITE','ERROR_MANTENIMIENTO','ERROR_INESPERADO']);
 const METRICS = new Set(['caducados','pendientes','depurados']);
-const CODES = new Set(['CONFIG_INVALIDA','ESQUEMA_NO_PERMITIDO','SERVICIO_CERRADO','ERR_SQLITE_ERROR','ERR_SQLITE_CANTOPEN',
-  'EACCES','EPERM','ENOSPC','EISDIR','ENOENT']);
+const CODES = new Set(['CONFIG_INVALIDA','ESQUEMA_NO_PERMITIDO','SERVICIO_CERRADO','ERR_SQLITE_ERROR','ERR_SQLITE_CANTOPEN']);
+const SYSTEM_CODE = /^E[A-Z0-9]+$/;
 // Los únicos detalles registrables son frases fijas del código; nada externo.
 const DETAILS = new Set([
   'Ruta externa de configuración inválida.', 'No se puede leer el archivo de configuración externa.',
@@ -27,7 +27,8 @@ export function createLogger(write = line => process.stdout.write(`${line}\n`)) 
       const safe = {evento};
       for (const [key, value] of Object.entries(data)) {
         if (METRICS.has(key) && Number.isSafeInteger(value) && value >= 0) safe[key] = value;
-        else if (key === 'codigo' && CODES.has(value)) safe[key] = value;
+        else if (key === 'codigo' && (CODES.has(value) ||
+          (typeof value === 'string' && SYSTEM_CODE.test(value)))) safe[key] = value;
         else if (key === 'detalle' && DETAILS.has(value)) safe[key] = value;
       }
       write(JSON.stringify(safe));

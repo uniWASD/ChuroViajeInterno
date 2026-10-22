@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {spawn} from 'node:child_process';
+import {spawn, spawnSync} from 'node:child_process';
 import {DatabaseSync} from 'node:sqlite';
 import {copyFileSync, mkdirSync, readdirSync, readFileSync, writeFileSync} from 'node:fs';
 import {join} from 'node:path';
@@ -167,6 +167,29 @@ test('diagnóstico de fallos: solo se registran código y detalle permitidos', (
   assert.deepEqual(buffer[0], {evento:'ERROR_CONFIGURACION',codigo:'CONFIG_INVALIDA',detalle:'Falta BACKEND_URL.'});
   logger.event('ERROR_INESPERADO', {detalle:'CLAVE_SECRETA',codigo:'CODIGO_NO_PERMITIDO'});
   assert.deepEqual(buffer[1], {evento:'ERROR_INESPERADO'});
+  logger.event('ERROR_SQLITE', {codigo:'EROFS',detalle:'VALOR_PRIVADO'});
+  assert.deepEqual(buffer[2], {evento:'ERROR_SQLITE',codigo:'EROFS'});
+});
+
+test('fallo de arranque: ruta SQLite atravesando archivo informa código nativo sin revelar la ruta', t => {
+  const ws = workspace(t);
+  const fileInPath = join(ws.dir, 'es_archivo');
+  writeFileSync(fileInPath, 'contenido ficticio');
+  const sqlitePath = join(fileInPath, 'subcarpeta', 'pendientes.sqlite');
+  const env = {...process.env, BACKEND_URL:'http://127.0.0.1:18080',
+    SERVICE_TOKEN:'TOKEN_FICTICIO', ALLOWED_GROUP_IDS:'grupo@g.us', SQLITE_PATH:sqlitePath};
+  delete env.WHATSAPP_SERVICE_CONFIG_FILE;
+  delete env.POLL_INTERVAL_MS;
+  const result = spawnSync(process.execPath, ['src/main.js'],
+    {cwd: projectRoot, env, encoding:'utf8', timeout:15000, windowsHide:true});
+  assert.equal(result.status, 1, result.stderr || result.error?.message);
+  const output = result.stdout.trim().split(/\r?\n/).map(line => JSON.parse(line));
+  assert.equal(output.length, 1);
+  assert.equal(output[0].evento, 'ERROR_SQLITE');
+  if (process.platform === 'win32') assert.match(output[0].codigo, /^E[A-Z0-9]+$/);
+  else assert.equal(output[0].codigo, 'ENOTDIR');
+  assert(!result.stdout.includes(sqlitePath));
+  assert(!result.stdout.includes('TOKEN_FICTICIO'));
 });
 
 test('integración: .env opcional carga el arranque en otro directorio sin tocar el repositorio', async t => {

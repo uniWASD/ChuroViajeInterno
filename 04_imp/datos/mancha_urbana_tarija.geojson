@@ -1,0 +1,31 @@
+{
+  "type": "FeatureCollection",
+  "name": "mancha_urbana_tarija",
+  "estado_validacion": "PROVISIONAL",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "nombre": "Borrador de cobertura de Tarija",
+        "fuente": "Polígono aproximado de la guía T-089; no es cartografía oficial",
+        "revision_equipo": "PENDIENTE"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-64.775, -21.495],
+            [-64.745, -21.488],
+            [-64.705, -21.498],
+            [-64.660, -21.545],
+            [-64.665, -21.580],
+            [-64.715, -21.585],
+            [-64.760, -21.565],
+            [-64.780, -21.535],
+            [-64.775, -21.495]
+          ]
+        ]
+      }
+    }
+  ]
+}

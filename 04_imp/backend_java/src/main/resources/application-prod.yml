@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+churoviaje:
+  cobertura:
+    ruta: ${CHUROVIAJE_GEOJSON_PATH}
+    permitir-provisional: false

@@ -1,0 +1,15 @@
+spring:
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: false
+    validate-on-migrate: true
+    clean-disabled: true
+churoviaje:
+  cobertura:
+    ruta: ${CHUROVIAJE_GEOJSON_PATH:../datos/mancha_urbana_tarija.geojson}
+    permitir-provisional: false

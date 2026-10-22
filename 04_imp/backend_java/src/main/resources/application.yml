@@ -1,0 +1,30 @@
+spring:
+  application:
+    name: churoviaje-backend
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: America/La_Paz
+
+# RNF-08: Endpoint de salud que solo responde dentro de la máquina (localhost)
+management:
+  server:
+    address: 127.0.0.1
+    port: ${MANAGEMENT_PORT:8081}
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
+# Secretos leídos de variables de entorno (07_seguridad_privacidad.md)
+churoviaje:
+  seguridad:
+    jwt-secret: ${JWT_SECRET}
+    credencial-servicio: ${SERVICE_CREDENTIAL}
+  llm:
+    api-key: ${LLM_API_KEY}

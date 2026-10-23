@@ -34,6 +34,7 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | D-24 | El buscador de lugares queda fuera de la app hasta que se decida P-19; el destino se marca en el mapa o se elige un surtidor | No hay servicio de búsqueda elegido | Confirmada el 13/10/2026 |
 | D-25 | Los surtidores también se muestran como marcadores en el mapa, además de la lista | CU-05 paso 4 habla de «listado/mapa» | Confirmada el 13/10/2026 |
 | D-26 | El proyecto tiene un dominio propio (unos 15 dólares al año) que apunta a la IP reservada del servidor, con certificado de Let's Encrypt | HTTPS necesita un dominio (Visión 4.4 y 6.3) | Confirmada el 13/10/2026 |
+| D-27 | La versión de Node.js del servidor y de las pruebas del servicio de WhatsApp/LLM queda fija en la 24 hasta el 30/11/2026; después se decide si se pasa a una más nueva | Todos prueban con la misma versión, y la 24 tiene soporte de seguridad hasta abril de 2028, más allá del fin del proyecto | Confirmada el 23/10/2026 |
 
 ## Parámetros
 
@@ -62,5 +63,6 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | P-25 | Tiempo que el motor recuerda un recorrido sin lecturas nuevas | [RN-04.12](04_reglas/CU-04_RecalcularRuta.md) | 5 minutos | Propuesta |
 | P-26 | Tiempo que el aviso de ruta alternativa espera una respuesta | [RN-04.21](04_reglas/CU-04_RecalcularRuta.md) | 15 segundos | Confirmado |
 | P-27 | Cada cuánto se actualizan la lista y los marcadores de surtidores con su vista abierta | [RN-05.17](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md) | 60 segundos | Confirmado |
+| P-28 | Cuánto se conservan, sin texto, las filas terminadas del servicio de WhatsApp/LLM | [RN-06.12](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [06_base_de_datos.md](06_base_de_datos.md) | 24 horas, para no repetir mensajes recibidos al reconectarse; después se borran en el siguiente mantenimiento | Confirmado el 23/10/2026 |
 
 P-07, P-08 y P-10 se cerraron con las decisiones D-09, D-08 y D-12. P-16 quedó sin uso.

@@ -25,12 +25,12 @@ Las horas incluyen las pruebas, la revisión del Pull Request y lo que haga falt
 | Persona | Usuario de GitHub |
 | --- | --- |
 | Alex | NuzEstrada |
-| Antonio | — |
+| Antonio | antoniocuellarca19-byte |
 | Franz | CarlosCaceresAuca |
 | Jorge | jorgecabreraz |
 | Marcelo | MarcelQuiroF |
 
-Cuando el responsable tiene usuario, el issue se le asigna y la línea «Responsable sugerido» sale del cuerpo; si había alguien de apoyo, queda como «Apoyo». Antonio todavía no está en el proyecto: sus issues quedan sin asignar y conservan esa línea. Cuando entre, se pone su usuario en esta tabla y se vuelve a correr el script. «Pruebas de punta a punta», que comparten Jorge y Antonio, por ahora se asigna solo a Jorge.
+Cuando el responsable tiene usuario, el issue se le asigna y la línea «Responsable sugerido» sale del cuerpo; si había alguien de apoyo, queda como «Apoyo». Antonio ya tiene usuario (está en la tabla), así que sus issues se le asignan al correr el script. «Pruebas de punta a punta», que comparten Jorge y Antonio, se asigna a los dos.
 
 ## Estimación por issue
 
@@ -55,7 +55,7 @@ Cuando el responsable tiene usuario, el issue se le asigna y la línea «Respons
 | 16 | #54 | [HU-01][CU-01][Flutter] Reportar un evento vial | 3 | Alex | M | Vista, captura de ubicación con ajuste manual y rechazos |
 | 17 | #55 | [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos | 3 | Antonio | L | La consulta por cambios con marca y bajas es lo delicado; más la tarea periódica y la prueba con 500 eventos |
 | 18 | #56 | [HU-03][CU-02][Flutter] Ver los eventos en el mapa | 3 | Alex | M | Ciclo de 5 segundos, dibujo por color y manejo de errores |
-| 19 | #57 | [HU-08][CU-06][Java] Recibir el análisis de WhatsApp | 3 | Antonio | M | Credencial de servicio, validación por aviso y regla del dato más reciente |
+| 19 | #57 | [HU-08][CU-06][Java] Recibir el análisis de WhatsApp | 3 | Antonio | M | Validación por aviso, regla del dato más reciente y respuesta con aceptados y descartados |
 | 20 | #58 | [HU-05][CU-03][C++] Calcular la ruta óptima con A* | 3 | Marcelo | M | El algoritmo ya existe en Python; se porta con paradas y tiempo estimado |
 | 21 | #59 | [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado | 3 | Franz | L | Salida estructurada de Gemini, enmascarado, ciclos, reintentos y reenvío |
 | 22 | #60 | [T-098][Servidor] Desplegar el backend con el núcleo C++ | 3 | Marcelo | M | Servicio del sistema, compilación ARM, secretos y script de despliegue |

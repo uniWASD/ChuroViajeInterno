@@ -72,12 +72,40 @@ El campo `estado` puede ser `ENCONTRADA`, `SIN_RUTA` o `PUNTO_INVALIDO`; los dos
 
 ## Servicio de WhatsApp/LLM con el backend
 
+### Credencial de servicio
+
+- El servicio envía en cada petición `Authorization: Bearer <credencial>`, la misma cabecera que usa la app.
+- La credencial es un valor fijo y aleatorio. Vive como variable de entorno en el backend y en el servicio, con el mismo valor, y nunca en el repositorio ([D-13](08_decisiones_parametros.md)).
+- El backend la distingue así: si coincide con la configurada, es el servicio; si no coincide pero es un JWT de conductor válido, responde 403; si no es ninguna de las dos, responde 401. Como la credencial es fija, no vence: se cambia a mano en los dos lados.
+- El servicio llama al backend en `http://127.0.0.1:8080`, dentro de la máquina (el puerto por defecto de Spring Boot). Ese puerto no se abre a internet: Nginx es lo único que sale ([D-03](08_decisiones_parametros.md)).
+
+### Operaciones
+
 | Operación | Método y ruta | Qué envía | Qué recibe | Reglas |
 | --- | --- | --- | --- | --- |
-| Leer catálogo de surtidores | `GET /monitoreo/surtidores` | Credencial de servicio | Nombres y alias de los surtidores, y tipos de combustible | [RN-06.7](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [RN-06.8](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
-| Entregar resultado | `POST /monitoreo/resultados` | Credencial de servicio y la lista de avisos del lote | Cuántos avisos se aceptaron y cuáles se descartaron, con el motivo | [RN-06.14](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) a [RN-06.17](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
+| Leer catálogo de surtidores | `GET /monitoreo/surtidores` | Credencial de servicio | Nombres y alias de los surtidores, tipos de combustible y valores de la fila | [RN-06.7](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [RN-06.8](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
+| Entregar resultado | `POST /monitoreo/resultados` | Credencial de servicio y la lista de avisos del lote (hasta 1000) | Cuántos avisos se aceptaron y cuáles se descartaron, con su posición en el lote y el motivo | [RN-06.14](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) a [RN-06.17](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
 
-El servicio toma del backend el catálogo que entrega al LLM. Así hay una sola lista de surtidores y de combustibles en todo el sistema. Un resultado tiene esta forma:
+El servicio toma del backend el catálogo que entrega al LLM. Así hay una sola lista de surtidores y de combustibles en todo el sistema.
+
+### Catálogo (`GET /monitoreo/surtidores`)
+
+La lista de combustibles trae los cuatro del catálogo. «Desconocido» no va en la lista: es un valor fijo de [RN-06.8](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md). Los valores de `filas` son los de [P-15](08_decisiones_parametros.md). Los alias de este ejemplo son inventados.
+
+```json
+{
+  "surtidores": [
+    {"nombre": "Las Vegas", "alias": ["Vegas", "Las Vegas Express"]},
+    {"nombre": "El Portillo", "alias": []}
+  ],
+  "combustibles": ["Gasolina", "Diesel", "Gasolina Premium", "Diesel ULS"],
+  "filas": ["SIN_FILA", "CORTA", "MEDIA", "LARGA"]
+}
+```
+
+### Resultado (`POST /monitoreo/resultados`)
+
+Un resultado tiene esta forma:
 
 ```json
 {
@@ -100,7 +128,35 @@ El servicio toma del backend el catálogo que entrega al LLM. Así hay una sola 
 }
 ```
 
-El campo `fila` solo aparece cuando el mensaje la menciona. Los mensajes descartados por el LLM no viajan al backend.
+- `SIN_FILA` significa que el mensaje dice que no hay fila. Si el campo `fila` no está, el mensaje no la menciona. Un valor de `fila` desconocido se acepta, pero el aviso se guarda sin fila.
+- Los mensajes descartados por el LLM no viajan al backend.
+- Un lote tiene como máximo 1000 avisos; uno más grande responde 400.
+
+La respuesta es siempre 200 con un cuerpo. `indice` es la posición del aviso en el lote, empezando en 0. Ejemplo para el lote de arriba si «El Portillo» no estuviera en el catálogo:
+
+```json
+{
+  "aceptados": 1,
+  "descartados": [
+    {"indice": 1, "motivo": "SURTIDOR_DESCONOCIDO"}
+  ]
+}
+```
+
+- Un aviso válido pero más viejo que el dato actual cuenta como aceptado: no cambia nada ([RN-06.17](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md)). «Descartado» queda solo para los avisos inválidos.
+- Los motivos de descarte son una lista fija ([RN-06.15](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md)): `SURTIDOR_DESCONOCIDO`, `COMBUSTIBLE_INVALIDO`, `ESTADO_INVALIDO`, `FECHA_INVALIDA` y `FORMATO_INVALIDO`.
+- Los errores usan el cuerpo `{codigo, mensaje}`, como el resto de la API.
+
+### Qué hace el servicio con cada respuesta
+
+Se aplica [RN-06.19](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md). El reenvío es seguro porque [RN-06.17](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) evita que un aviso repetido cambie algo.
+
+| Respuesta | Qué hace el servicio |
+| --- | --- |
+| 200 | Terminó, aunque haya descartados. Lo descartado no se reenvía |
+| 5xx, sin conexión o tiempo agotado | Guarda el resultado (sin el texto de los mensajes) y reenvía el mismo lote en el ciclo siguiente |
+| 400 o 422 | No reenvía, porque se atascaría para siempre. Lo registra y lo suelta |
+| 401 o 403 | Es un error de configuración. Conserva el resultado y reintenta mientras se corrige |
 
 ## Respuestas de rechazo
 

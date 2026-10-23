@@ -1,0 +1,15 @@
+{
+  "name": "churoviaje-servicio-whatsapp",
+  "version": "0.1.2",
+  "private": true,
+  "type": "module",
+  "description": "Infraestructura del servicio WhatsApp/LLM de ChuroViaje",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "test": "node --test",
+    "demo": "node demo/run-demo.js",
+    "start": "node --env-file-if-exists=.env src/main.js"
+  }
+}

@@ -1,13 +1,30 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'controllers/map_controller.dart';
 import 'controllers/navigation_controller.dart';
+import 'services/api/api_client.dart';
 import 'views/main/main_screen.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => NavigationController(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => NavigationController(),
+        ),
+        Provider<ApiClient>(
+          create: (_) => ApiClient(),
+          dispose: (_, apiClient) => apiClient.dispose(),
+        ),
+        ChangeNotifierProxyProvider<ApiClient, MapController>(
+  create: (context) => MapController(
+    context.read<ApiClient>(),
+  ),
+  update: (_, apiClient, mapController) =>
+      mapController ?? MapController(apiClient),
+),
+      ],
       child: const ChuroViajeApp(),
     ),
   );

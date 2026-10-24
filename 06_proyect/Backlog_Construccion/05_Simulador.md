@@ -19,7 +19,7 @@ El simulador crea usuarios fantasma que envían eventos y telemetría por la mis
 ### [T-102][Simulador] Estructura y parámetros del simulador
 
 **Tipo:** Tarea de infraestructura (base de CU-07)
-**Tecnología:** Python · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Antonio
+**Tecnología:** Python · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** nada
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:simulador`
 
@@ -54,7 +54,7 @@ Lo subes en una nueva rama llamada "feature/T102-simulador-estructura" (No olvid
 ### [HU-09][CU-07][Simulador] Usuarios fantasma que envían eventos y telemetría
 
 **Caso de uso:** CU-07 — Ejecutar Simulador de Tráfico
-**Tecnología:** Python · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Antonio
+**Tecnología:** Python · **Sprint:** Sprint 6 (19/11–25/11)
 **Depende de:** [T-102][Simulador] Estructura y parámetros del simulador #78 · [HU-09][CU-07][Java] Soporte para el simulador #84 · [T-106][Servidor] Ambiente de pruebas para el simulador #86
 **Etiquetas:** `caso-uso:CU-07` · `tipo:historia-usuario` · `fase:construccion` · `tec:simulador`
 
@@ -90,7 +90,7 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-simulador-usuarios-fantasm
 ### [T-108][Simulador] Pruebas de carga y reporte
 
 **Tipo:** Tarea de pruebas (cubre CU-07 y los requisitos de rendimiento)
-**Tecnología:** Python · **Sprint:** Sprint 7 (26/11–30/11) · **Responsable sugerido:** Antonio, con Marcelo
+**Tecnología:** Python · **Sprint:** Sprint 7 (26/11–30/11) · **Apoyo:** Marcelo
 **Depende de:** [HU-09][CU-07][Simulador] Usuarios fantasma que envían eventos y telemetría #87
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:simulador`
 

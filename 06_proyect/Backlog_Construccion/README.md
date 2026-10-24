@@ -16,7 +16,7 @@ Reemplaza al backlog de la fase de Elaboración, que queda guardado en [Backlog_
 | [06_Servidor.md](06_Servidor.md) | Servidor y despliegue (Oracle Cloud) | Marcelo | 7 |
 | | | **Total** | **55** |
 
-Son 30 issues de historia de usuario y 25 tareas técnicas. El orden en que se crean en GitHub, con su Milestone y sus etiquetas, está en [00_Indice_de_subida.md](00_Indice_de_subida.md). La estimación de tamaño y la carga de cada persona están en [07_Estimacion.md](07_Estimacion.md).
+Son 30 issues de historia de usuario y 25 tareas técnicas. El orden en que se crean en GitHub, con su Milestone y sus etiquetas, está en [00_Indice_de_subida.md](00_Indice_de_subida.md). La estimación de tamaño y la carga de cada persona están en [07_Estimacion.md](07_Estimacion.md), y el camino crítico, en [08_Camino_critico.md](08_Camino_critico.md).
 
 ## Sprints
 
@@ -76,7 +76,7 @@ Los issues se crean en el orden de [00_Indice_de_subida.md](00_Indice_de_subida.
 
 El script [subir_issues.py](subir_issues.py) hace todo esto solo, con GitHub CLI (`gh`) y la cuenta de quien lo ejecuta, que queda como autor de los issues. Primero se ejecuta sin `--crear`, para revisar los issues ya numerados en la carpeta `_simulacion/`, y después con `--crear`. Las instrucciones están al principio del script. Los pasos de abajo describen lo que hace, por si hay que subir algún issue a mano.
 
-Después de la primera subida, cualquier cambio en estos archivos (un issue nuevo, un título, un sprint) se lleva a GitHub con [sincronizar_issues.py](sincronizar_issues.py): compara cada issue con el que está en GitHub, crea los que faltan y actualiza solo los que cambiaron. El responsable y la talla de cada issue se cambian en [07_Estimacion.md](07_Estimacion.md): el mismo script asigna el issue a su responsable y, con `--proyecto 1`, carga los campos «Talla» y «Puntos» del tablero.
+Después de la primera subida, cualquier cambio en estos archivos (un issue nuevo, un título, un sprint) se lleva a GitHub con [sincronizar_issues.py](sincronizar_issues.py): compara cada issue con el que está en GitHub, crea los que faltan y actualiza solo los que cambiaron. El responsable y la talla de cada issue se cambian en [07_Estimacion.md](07_Estimacion.md): el mismo script asigna el issue a su responsable, regenera el camino crítico y, con `--proyecto 1`, carga los campos «Talla» y «Puntos» del tablero.
 
 1. **Numerar.** Los issues van con `T-XXX` y `CP-XX` a propósito. Al crearlos en GitHub, en el orden de los sprints, se reemplaza cada `T-XXX` por el siguiente número libre y cada `CP-XX` por el siguiente caso de prueba. Al 13/10/2026 la última tarea es T-086 y el último caso de prueba es CP-19; confírmalo en [TRAZABILIDAD.md](../TRAZABILIDAD.md) y en GitHub antes de empezar. En la rama, `TXX` toma el mismo número (T-087 → `feature/T87-...`).
 2. **Título y cuerpo.** El título es el encabezado del issue, sin el `###`. El cuerpo es todo lo que sigue hasta la línea horizontal.
@@ -90,7 +90,7 @@ Las etiquetas `tec:flutter`, `tec:java`, `tec:cpp`, `tec:whatsapp-llm`, `tec:sim
 
 - Un issue nunca depende de otro de un sprint posterior.
 - Cuando depende de otro del mismo sprint, avanza con datos falsos que siguen [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md): el wrapper de Java usa un núcleo falso y la app usa respuestas falsas. Se conectan de verdad al fusionarse el otro issue.
-- El camino crítico es el del motor: estructura del núcleo (S1) → red vial (S2) → A* (S3) → tráfico (S4) → congestión y revisión de ruta (S5) → recálculo en Java y en la app (S6). Un retraso ahí mueve CU-03 y CU-04 completos, así que los Pull Requests de ese camino tienen prioridad en las revisiones.
+- El camino crítico, calculado con las dependencias del índice y las tallas, está en [08_Camino_critico.md](08_Camino_critico.md), junto con las cadenas largas dentro de un mismo sprint. Los Pull Requests de ese camino tienen prioridad en las revisiones. La cadena del motor (estructura del núcleo S1 → red vial S2 → A* S3 → tráfico S4 → congestión y revisión de ruta S5 → recálculo en Java y en la app S6) suma menos puntos, pero es la de más riesgo técnico: un retraso ahí mueve CU-03 y CU-04 completos.
 - Desde el sprint 3, cada sprint termina con lo fusionado en `develop` desplegado en el servidor, para probar la app contra el sistema real.
 
 ## Cuándo un issue está terminado

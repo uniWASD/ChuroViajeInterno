@@ -2,7 +2,7 @@
 
 Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre el issue T-092 (#44). Se actualiza a medida que se avanza.
 
-Última actualización: 20 de octubre de 2026.
+Última actualización: 23 de octubre de 2026.
 
 > Esta guía no lleva contraseñas, llaves ni la IP del servidor. La IP pública se comparte por el chat del equipo. Donde aparece `<IP_PUBLICA>`, se reemplaza por esa IP.
 
@@ -12,12 +12,13 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre el is
 |---|---|
 | IP pública reservada y asignada a la instancia | Hecho |
 | Sistema actualizado y reiniciado | Hecho |
-| Usuario `deploy` con una llave por integrante | Hecho. Probada la de Marcelo; faltan Franz, Alex y Jorge |
+| Usuario `deploy` con una llave por integrante | Hecho. Marcelo, Franz, Alex y Jorge ya tienen su llave y Franz ya entró con la suya. La de Antonio se agrega más adelante (T-103 y T-106) |
 | SSH solo con llave, sin root | Hecho y verificado |
-| Reglas de la VCN y del firewall de Ubuntu | Hecho. Falta confirmar en la consola que la instancia no tenga un NSG asignado |
+| Reglas de la VCN y del firewall de Ubuntu | Hecho. Confirmado el 23/10/2026 en la consola: la instancia no tiene ningún NSG asignado |
 | Actualizaciones automáticas de seguridad | Hecho (ya venían activas; se comprobó la configuración) |
 | Java 21 y herramientas de C++ (ARM) | Hecho. OpenJDK 21.0.12, g++ 13.3 y CMake 3.28 sobre aarch64 |
 | Node.js LTS | Hecho. Node.js 24.22 (LTS) y npm 11.19, desde el repositorio de NodeSource |
+| Git en el servidor | Hecho. Instalado; comprobado con `git --version` el 23/10/2026 |
 | PostgreSQL y PostGIS, solo local | Hecho. PostgreSQL 16 con PostGIS 3.4; solo escucha en 127.0.0.1 |
 | Base de datos `churoviaje` y su usuario sin permisos de administrador | Hecho. Usuario `churoviaje_app`, sin atributos de administrador |
 | CP-27 (desde fuera solo responde SSH) | Hecho el 20/10/2026 |
@@ -30,6 +31,7 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre el is
 - Imagen: Ubuntu 24.04 LTS, arquitectura ARM (aarch64)
 - Tamaño: 2 OCPU y 12 GB de RAM (capa gratuita)
 - IP pública: reservada, no cambia al reiniciar
+- Puerto del backend: 8080, solo para la propia máquina. El servicio de WhatsApp lo llama en `127.0.0.1:8080` ([contrato](../../03_des/02_Arquitectura/05_contratos.md))
 
 ## Usuarios y acceso
 
@@ -169,7 +171,7 @@ sudo -u postgres psql -d churoviaje -c "SELECT postgis_version();"
 
 ### 8. Node.js
 
-Se instaló la versión 24, que es la LTS vigente (soporte hasta abril de 2028), desde el repositorio de NodeSource para ARM. La instalación se hizo paso a paso, sin ejecutar el script `curl | bash`, para ver qué se agrega al sistema.
+Se instaló la versión 24, una versión LTS que pasó a mantenimiento el 20 de octubre de 2026 y recibe correcciones de seguridad hasta el 30 de abril de 2028, desde el repositorio de NodeSource para ARM. El equipo mantiene esa versión fija hasta el 30 de noviembre de 2026 ([D-27](../../03_des/02_Arquitectura/08_decisiones_parametros.md)), para que todos prueben con la misma. La instalación se hizo paso a paso, sin ejecutar el script `curl | bash`, para ver qué se agrega al sistema.
 
 ```bash
 sudo apt-get install -y ca-certificates curl gnupg

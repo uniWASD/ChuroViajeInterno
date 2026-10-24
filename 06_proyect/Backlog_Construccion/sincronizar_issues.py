@@ -30,7 +30,8 @@ Uso (desde cualquier carpeta):
 
 Al aplicar, también actualiza los archivos: los números de los issues nuevos
 (índice, dependencias, TRAZABILIDAD.md y estimación), los cuerpos sin la línea
-del responsable y la tabla de carga por persona de 07_Estimacion.md.
+del responsable, la tabla de carga por persona de 07_Estimacion.md y el camino
+crítico de 08_Camino_critico.md.
 """
 import argparse
 import json
@@ -43,6 +44,7 @@ import time
 sys.dont_write_bytecode = True  # no dejar __pycache__ en la carpeta del backlog
 from subir_issues import (AQUI, ARCHIVOS, INDICE, SECCION, COLORES, Error, leer, escribir,
                           leer_issues, enlaces_absolutos, gh)
+from camino_critico import generar as generar_camino_critico
 
 TRAZABILIDAD = os.path.join('..', 'TRAZABILIDAD.md')
 ESTIMACION = '07_Estimacion.md'
@@ -534,7 +536,8 @@ def principal():
 
     escribir_numeros(filas, numeros)
     actualizar_estimacion(filas, numeros, estimacion, escala)
-    print('\nListo. Revisa los archivos (índice, cuerpos, TRAZABILIDAD.md y estimación) y haz commit.')
+    generar_camino_critico(filas, estimacion, escala)
+    print('\nListo. Revisa los archivos (índice, cuerpos, TRAZABILIDAD.md, estimación y camino crítico) y haz commit.')
 
 
 if __name__ == '__main__':

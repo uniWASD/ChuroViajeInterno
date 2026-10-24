@@ -30,29 +30,29 @@ El backend es la única puerta de entrada del sistema y el lugar donde viven los
 **Descripción:** Crear el proyecto Spring Boot con la organización de [02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md), para que cada historia agregue sus piezas en el lugar correcto y nadie mezcle reglas en los controladores.
 
 **Criterios de aceptación**
-- [ ] El proyecto compila y arranca con Java 21 y Spring Boot 3 en `04_imp/backend_java`.
-- [ ] El código está separado en paquetes de controladores REST, servicios del modelo, objetos de dominio, repositorios y motor (`MotorDeRutas`).
-- [ ] Hay tres perfiles de configuración: `dev`, `pruebas` y `prod`. Los secretos se leen de variables de entorno y ninguno está en el repositorio.
-- [ ] Todo rechazo responde con el código HTTP de la tabla «Respuestas de rechazo» de `05_contratos.md` y con un cuerpo `{codigo, mensaje}`, con el mensaje en español listo para mostrar al conductor.
-- [ ] Las fechas viajan en ISO 8601 con zona horaria y las ubicaciones como latitud y longitud en grados decimales, como dicen las convenciones de `05_contratos.md`.
-- [ ] La documentación OpenAPI se genera sola y se puede ver en el perfil `dev`.
-- [ ] Hay un endpoint de salud que solo responde dentro de la máquina, para que el servidor sepa si el backend está vivo; desde internet no se puede llamar (RNF-08).
-- [ ] Las pruebas (JUnit 5) corren con un solo comando, y el README de `04_imp/backend_java` explica cómo compilar, probar y ejecutar.
-- [ ] Dependabot está activo en el repositorio para las dependencias de Java, Flutter, Node.js y Python, y avisa de las actualizaciones de seguridad ([07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md), Servidor).
+- [x] El proyecto compila y arranca con Java 21 y Spring Boot 3 en `04_imp/backend_java`.
+- [x] El código está separado en paquetes de controladores REST, servicios del modelo, objetos de dominio, repositorios y motor (`MotorDeRutas`).
+- [x] Hay tres perfiles de configuración: `dev`, `pruebas` y `prod`. Los secretos se leen de variables de entorno y ninguno está en el repositorio.
+- [x] Todo rechazo responde con el código HTTP de la tabla «Respuestas de rechazo» de `05_contratos.md` y con un cuerpo `{codigo, mensaje}`, con el mensaje en español listo para mostrar al conductor.
+- [x] Las fechas viajan en ISO 8601 con zona horaria y las ubicaciones como latitud y longitud en grados decimales, como dicen las convenciones de `05_contratos.md`.
+- [x] La documentación OpenAPI se genera sola y se puede ver en el perfil `dev`.
+- [x] Hay un endpoint de salud que solo responde dentro de la máquina, para que el servidor sepa si el backend está vivo; desde internet no se puede llamar (RNF-08).
+- [x] Las pruebas (JUnit 5) corren con un solo comando, y el README de `04_imp/backend_java` explica cómo compilar, probar y ejecutar.
+- [x] Dependabot está activo en el repositorio para las dependencias de Java, Flutter, Node.js y Python, y avisa de las actualizaciones de seguridad ([07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md), Servidor).
 
 **Tareas**
-- [ ] Elegir Maven o Gradle y anotarlo en el README.
-- [ ] Crear el proyecto con Spring Web, Spring Security, Spring Data JPA, Validation y Actuator.
-- [ ] Crear los paquetes del MVC y una clase de ejemplo en cada uno.
-- [ ] Implementar el manejador global de errores con los códigos 400, 401, 403, 404, 409, 422, 429 y 503.
-- [ ] Configurar los perfiles y la lectura de variables de entorno.
-- [ ] Agregar springdoc-openapi.
-- [ ] Configurar una acción de GitHub que compile y corra las pruebas en cada Pull Request.
-- [ ] Activar Dependabot para las cinco carpetas de código.
-- [ ] Escribir el README.
+- [x] Elegir Maven o Gradle y anotarlo en el README.
+- [x] Crear el proyecto con Spring Web, Spring Security, Spring Data JPA, Validation y Actuator.
+- [x] Crear los paquetes del MVC y una clase de ejemplo en cada uno.
+- [x] Implementar el manejador global de errores con los códigos 400, 401, 403, 404, 409, 422, 429 y 503.
+- [x] Configurar los perfiles y la lectura de variables de entorno.
+- [x] Agregar springdoc-openapi.
+- [x] Configurar una acción de GitHub que compile y corra las pruebas en cada Pull Request.
+- [x] Activar Dependabot para las cinco carpetas de código.
+- [x] Escribir el README.
 
 **Casos de prueba**
-- [ ] CP-21 Caso de prueba: una petición con un cuerpo mal formado responde 400 con `{codigo, mensaje}` en español.
+- [x] CP-21 Caso de prueba: una petición con un cuerpo mal formado responde 400 con `{codigo, mensaje}` en español.
 
 **Relacionado:** RNF-08 · [02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md) · [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md) · D-01, D-02
 
@@ -63,7 +63,7 @@ Lo subes en una nueva rama llamada "feature/T88-java-estructura-base" (No olvide
 ### [T-089][Java] Base de datos, catálogos y zona de cobertura
 
 **Tipo:** Tarea de infraestructura (datos que usan CU-01, CU-02, CU-03, CU-05 y CU-06)
-**Tecnología:** Java · **Sprint:** Sprint 1 (15/10–21/10) · **Responsable sugerido:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 1 (15/10–21/10)
 **Depende de:** [T-088][Java] Estructura base del backend #40
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -102,7 +102,7 @@ Lo subes en una nueva rama llamada "feature/T89-java-base-de-datos" (No olvides 
 ### [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT
 
 **Caso de uso:** CU-08 — Iniciar Sesión
-**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10)
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41
 **Etiquetas:** `caso-uso:CU-08` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -113,7 +113,7 @@ Lo subes en una nueva rama llamada "feature/T89-java-base-de-datos" (No olvides 
 - [ ] En el primer ingreso se crea el `Conductor`; en los siguientes se reutiliza. La base no permite dos conductores con la misma cuenta de Google (RN-08.4).
 - [ ] La respuesta trae un JWT de 1 hora, su expiración y un token de renovación válido por 30 días (RN-08.5, RN-08.12).
 - [ ] `POST /sesion/renovar` entrega un JWT nuevo sin pasar por Google mientras el token de renovación siga vigente; vencido, responde 401 (RN-08.12).
-- [ ] Todas las rutas de la API exigen un JWT de conductor vigente, salvo las de `/sesion/*`, que no lo necesitan, y las de `/monitoreo/*`, que exigen la credencial de servicio. Sin credencial, o con una vencida, responden 401; con una credencial de otro tipo, como un JWT de conductor en `/monitoreo/*`, responden 403 (RN-08.11, RNF-08).
+- [ ] Todas las rutas de la API exigen un JWT de conductor vigente, salvo las de `/sesion/*`, que no lo necesitan, y las de `/monitoreo/*`, que exigen la credencial de servicio. En las rutas de conductor, sin JWT o con uno vencido, responden 401. En `/monitoreo/*`, sin credencial o con una que no es válida, responden 401, y con el JWT de un conductor vigente, 403 (RN-08.11, RN-06.14, RNF-08).
 - [ ] `POST /sesion/cerrar` invalida el token de renovación; después, `POST /sesion/renovar` con ese token responde 401 (RN-08.14).
 - [ ] Nunca se guardan credenciales de Google; solo el identificador de la cuenta (RN-08.6).
 - [ ] La respuesta de inicio de sesión llega en menos de 3 segundos con red normal (RNF-05).
@@ -126,6 +126,7 @@ Lo subes en una nueva rama llamada "feature/T89-java-base-de-datos" (No olvides 
 - [ ] Configurar el filtro de Spring Security que exige el JWT en todas las demás rutas.
 - [ ] Implementar la renovación y el cierre de sesión, y guardar los tokens de renovación.
 - [ ] Escribir pruebas unitarias del dominio y pruebas de integración de los dos endpoints.
+- [ ] Implementar la credencial de servicio, leída de una variable de entorno (el mismo valor que usa el servicio de WhatsApp), y exigirla en `/monitoreo/*` dentro del filtro de seguridad (D-13, contrato en `05_contratos.md`).
 
 **Casos de prueba**
 - [ ] CP-31 Caso de prueba: primer ingreso con una cuenta válida crea el conductor y devuelve el JWT; el segundo ingreso no crea otro.
@@ -134,7 +135,7 @@ Lo subes en una nueva rama llamada "feature/T89-java-base-de-datos" (No olvides 
 - [ ] CP-34 Caso de prueba: con un token de renovación vigente se obtiene un JWT nuevo; con uno de más de 30 días, 401.
 - [ ] CP-35 Caso de prueba: después de cerrar sesión, el token de renovación ya no sirve.
 
-**Relacionado:** RF-11 · RNF-05 · RNF-08 · CU-08 · RN-08.1 a RN-08.12, RN-08.14 · P-05
+**Relacionado:** RF-11 · RNF-05 · RNF-08 · CU-08 · RN-08.1 a RN-08.12, RN-08.14 · P-05, RN-06.14 · D-13
 
 Lo subes en una nueva rama llamada "feature/HU10-CU08-java-inicio-sesion" (No olvides que el source de la rama es la de develop)
 
@@ -143,7 +144,7 @@ Lo subes en una nueva rama llamada "feature/HU10-CU08-java-inicio-sesion" (No ol
 ### [T-094][Java] Catálogos para la app
 
 **Tipo:** Tarea de desarrollo (cubre CU-01, CU-02 y CU-05; no es una HU específica)
-**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Responsable sugerido:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10)
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -255,7 +256,7 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-java-registrar-reporte" (N
 ### [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Antonio, con Jorge
+**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Apoyo:** Jorge
 **Depende de:** [HU-01][CU-01][Java] Registrar reportes de eventos viales #53
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -292,13 +293,14 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-java-consultar-eventos" (N
 ### [HU-08][CU-06][Java] Recibir el análisis de WhatsApp
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Responsable sugerido:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como sistema, quiero extraer los mensajes de los grupos de WhatsApp monitoreados e interpretarlos por lotes, para mantener actualizado el estado de los surtidores sin depender de reportes manuales.
 
 Este issue cubre la parte del backend: recibir, validar y guardar el resultado del análisis.
+La credencial de servicio la implementa #46; aquí solo se usa para proteger los dos endpoints.
 
 **Criterios de aceptación**
 - [ ] `GET /monitoreo/surtidores` y `POST /monitoreo/resultados` solo aceptan la credencial de servicio; un JWT de conductor responde 403 (RN-06.14, D-13).
@@ -307,11 +309,10 @@ Este issue cubre la parte del backend: recibir, validar y guardar el resultado d
 - [ ] La fila, si viene, debe ser uno de los valores de P-15; si no lo es, el aviso se acepta sin fila.
 - [ ] Un aviso válido se guarda como `EstadoCombustible` con origen WhatsApp y con la fecha del mensaje, no la del análisis (RN-06.16).
 - [ ] Si ya hay un dato más reciente para ese surtidor y tipo, el aviso no lo reemplaza; si el lote trae varios del mismo surtidor y tipo, vale el más reciente (RN-06.17).
-- [ ] La respuesta dice cuántos avisos se aceptaron y cuáles se descartaron, con el motivo.
+- [ ] La respuesta es siempre 200 con el número de avisos aceptados y la lista de descartados, cada uno con su posición en el lote y su motivo (`SURTIDOR_DESCONOCIDO`, `COMBUSTIBLE_INVALIDO`, `ESTADO_INVALIDO`, `FECHA_INVALIDA` o `FORMATO_INVALIDO`). Un aviso válido pero más viejo que el dato actual cuenta como aceptado. Un lote de más de 1000 avisos responde 400.
 
 **Tareas**
 - [ ] Crear la migración de `estado_combustible`, con un solo estado por surtidor, tipo y origen.
-- [ ] Implementar la credencial de servicio, leída de una variable de entorno.
 - [ ] Implementar la validación de `ResultadoAnálisis` y la actualización de `EstadoCombustible`.
 - [ ] Implementar los dos endpoints de monitoreo.
 - [ ] Escribir pruebas con lotes válidos, mezclados y repetidos.
@@ -332,7 +333,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 ### [HU-11][CU-02][Java] Votar eventos
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11) · **Responsable sugerido:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
 **Depende de:** [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos #55
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -437,7 +438,7 @@ Lo subes en una nueva rama llamada "feature/T99-java-trafico-motor" (No olvides 
 ### [HU-07][CU-05][Java] Consultar surtidores cercanos
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11)
 **Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -472,7 +473,7 @@ Lo subes en una nueva rama llamada "feature/HU07-CU05-java-consultar-surtidores"
 ### [HU-12][CU-05][Java] Registrar confirmaciones de recarga
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11) · **Responsable sugerido:** Antonio, con Jorge
+**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11) · **Apoyo:** Jorge
 **Depende de:** [HU-07][CU-05][Java] Consultar surtidores cercanos #69
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -622,7 +623,7 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-java-soporte-simulador" (N
 ### [T-105][Java] Limpieza de datos vencidos
 
 **Tipo:** Tarea de desarrollo (privacidad y mantenimiento; cubre CU-02 y CU-05)
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11) · **Responsable sugerido:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11)
 **Depende de:** [HU-12][CU-05][Java] Registrar confirmaciones de recarga #72
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -651,7 +652,7 @@ Lo subes en una nueva rama llamada "feature/T105-java-limpieza-datos" (No olvide
 ### [T-107][Java] Pruebas de punta a punta
 
 **Tipo:** Tarea de pruebas (cubre los ocho casos de uso)
-**Tecnología:** Java · **Sprint:** Sprint 7 (26/11–30/11) · **Responsable sugerido:** Jorge y Antonio
+**Tecnología:** Java · **Sprint:** Sprint 7 (26/11–30/11)
 **Depende de:** todos los issues de Java
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
 

@@ -50,7 +50,7 @@ Cuando el responsable tiene usuario, el issue se le asigna y la línea «Respons
 | 12 | #50 | [T-096][C++] Cargar la red vial en el núcleo | 2 | Marcelo | M | Carga del archivo en C++, índice espacial y ajuste de puntos a la red |
 | 13 | #51 | [HU-08][CU-06][WhatsApp/LLM] Leer los grupos autorizados | 2 | Franz | M | Baileys, filtros y reconexión; además, conseguir la autorización de los administradores |
 | 14 | #52 | [T-097][Servidor] Dominio, Nginx y HTTPS | 2 | Marcelo | S | Dominio, Nginx y certbot |
-| 56 | #?(orden 56) | [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH | 2 | Marcelo | XS | Pruebas con curl y con Java desde la instancia y una nota en la guía |
+| 56 | #111 | [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH | 2 | Marcelo | XS | Pruebas con curl y con Java desde la instancia y una nota en la guía; Franz apoya con el cliente de prueba |
 | 54 | #93 | [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap | 2 | Franz | M | Recortar y filtrar el extracto, sentidos, tipo de vía y formato acordado con Marcelo |
 | 15 | #53 | [HU-01][CU-01][Java] Registrar reportes de eventos viales | 3 | Jorge | L | EventoVial con muchas reglas, PostGIS, duplicados, límite y transacción |
 | 16 | #54 | [HU-01][CU-01][Flutter] Reportar un evento vial | 3 | Alex | M | Vista, captura de ubicación con ajuste manual y rechazos |
@@ -60,8 +60,8 @@ Cuando el responsable tiene usuario, el issue se le asigna y la línea «Respons
 | 20 | #58 | [HU-05][CU-03][C++] Calcular la ruta óptima con A* | 3 | Marcelo | M | El algoritmo ya existe en Python; se porta con paradas y tiempo estimado |
 | 21 | #59 | [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado | 3 | Franz | L | Salida estructurada de Gemini, enmascarado, ciclos, reintentos y reenvío |
 | 22 | #60 | [T-098][Servidor] Desplegar el backend con el núcleo C++ | 3 | Marcelo | M | Servicio del sistema, compilación ARM, secretos y script de despliegue |
-| 57 | #?(orden 57) | [T-117][Java] Medir la API de ANH y fijar el ciclo de consulta y la vigencia | 3 | Franz | S | Script de medición, tres días de registro y análisis; Franz ya conoce la API por T-115 |
-| 58 | #?(orden 58) | [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo | 3 | Jorge | S | Dos migraciones, un script que propone los pares por nombre y distancia y la revisión a mano |
+| 57 | #112 | [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia | 2 | Franz | S | Medición de tres días con el cliente de `05_pro/PruebaApiANH`, lectura del aviso de ANH y análisis; es sobre todo espera, y Marcelo apoya la pasada desde la instancia |
+| 58 | #113 | [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo | 3 | Franz | S | Dos migraciones, un script que propone los pares por nombre y distancia y la revisión a mano; Antonio apoya porque hizo el catálogo |
 | 23 | #61 | [HU-02][CU-01][Flutter] Guardar y reintentar reportes sin conexión | 4 | Franz | M | Cola con sqflite, detección de red, vigencia y reintentos |
 | 24 | #62 | [HU-04][CU-02][Flutter] Ver eventos guardados sin conexión | 4 | Franz | S | Caché local y marca de desactualizado |
 | 25 | #63 | [HU-11][CU-02][Java] Votar eventos | 4 | Antonio | M | Voto, recuento, cambios de estado y concurrencia |
@@ -70,7 +70,7 @@ Cuando el responsable tiene usuario, el issue se le asigna y la línea «Respons
 | 28 | #66 | [HU-05][CU-03][C++] Tráfico de los eventos en los tramos | 4 | Marcelo | M | Asignar evento a calle en los dos sentidos, niveles, cierre y vencimiento |
 | 29 | #67 | [T-099][Java] Mantener al día el tráfico del motor | 4 | Jorge | M | Eventos internos, reintento sin pérdida y envío al arrancar |
 | 30 | #68 | [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM | 4 | Marcelo | S | Servicio, secretos y vincular el número |
-| 59 | #?(orden 59) | [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH | 4 | Antonio | L | Cliente con reintentos y `Retry-After`, validación de la respuesta, filtros, traducción de litros y fallos parciales |
+| 59 | #114 | [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH | 4 | Franz y Antonio | L | Franz porta el cliente con reintentos y las validaciones de su prototipo; Antonio hace `ReporteANH`, `EstadoCombustible` y la tarea periódica |
 | 31 | #69 | [HU-07][CU-05][Java] Consultar surtidores cercanos | 5 | Antonio | M | Búsqueda por cercanía en PostGIS, dato más reciente y vigencia |
 | 32 | #70 | [HU-05][CU-03][Flutter] Cómo llegar | 5 | Alex | L | Vista con paradas, destino por mapa o por surtidor y dibujo de la ruta |
 | 33 | #71 | [HU-07][CU-05][Flutter] Consultar surtidores cercanos | 5 | Franz | M | Lista, marcadores en el mapa, refresco cada 60 s y presentación del origen |
@@ -103,13 +103,13 @@ En total: 59 issues, 2 XS, 15 S, 30 M y 12 L. No queda ningún XL.
 | Persona | S1 | S2 | S3 | S4 | S5 | S6 | S7 | Total |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Alex | 3 | 8 | 6 | 2 | 8 | 6 | 0 | 33 |
-| Jorge | 3 | 5 | 7 | 5 | 3 | 7 | 2,5 | 32,5 |
-| Antonio | 3 | 7 | 8 | 8 | 8 | 6 | 5,5 | 45,5 |
+| Jorge | 3 | 5 | 5 | 5 | 3 | 7 | 2,5 | 30,5 |
+| Antonio | 3 | 7 | 8 | 5,5 | 8 | 6 | 5,5 | 43 |
 | Marcelo | 5 | 6 | 6 | 5 | 8 | 5 | 5 | 40 |
-| Franz | 2 | 6 | 7 | 5 | 9 | 2 | 0 | 31 |
-| **Sprint** | 16 | 32 | 34 | 25 | 36 | 26 | 13 | 182 |
+| Franz | 2 | 8 | 7 | 7,5 | 9 | 2 | 0 | 35,5 |
+| **Sprint** | 16 | 34 | 32 | 25 | 36 | 26 | 13 | 182 |
 
-«Pruebas de punta a punta» se reparte por mitades entre Jorge y Antonio. La carga cuenta solo al responsable; no cuenta las revisiones de Pull Requests, que recaen sobre todo en Marcelo. Como referencia, un punto equivale a unas 2 o 3 horas.
+«Pruebas de punta a punta» se reparte por mitades entre Jorge y Antonio, y «Consultar el estado de combustible desde ANH», entre Franz y Antonio. La carga cuenta solo al responsable; no cuenta las revisiones de Pull Requests, que recaen sobre todo en Marcelo. Como referencia, un punto equivale a unas 2 o 3 horas.
 
 ## Cambios acordados el 13/10/2026
 
@@ -124,4 +124,11 @@ La primera estimación mostró picos de carga. Para repartirla se acordó:
 
 ## Cambios del 23/10/2026
 
-Al incorporar la API de ANH (T-116) se agregaron cuatro issues. Franz mide la API (T-117) porque ya la investigó en T-115; Jorge vincula las estaciones con el catálogo (T-118); Marcelo comprueba la salida del servidor (T-119), y Antonio hace la consulta periódica (HU-14) en el sprint 4, que era su sprint con menos carga (3 puntos). Con los cuatro issues la carga total pasa de 172 a 182 puntos.
+Al incorporar la API de ANH (T-116) se agregaron cuatro issues, y la mayor parte pasó a Franz porque investigó la API en T-115 y escribió el cliente de prueba:
+
+- T-117 (medir la API y revisar sus condiciones de uso) es de Franz y está en el sprint 2: la medición dura 72 horas y no necesita el servidor, así que conviene empezarla ya. Marcelo apoya la pasada desde la instancia.
+- T-119 (comprobar la salida del servidor) es de Marcelo, con apoyo de Franz, porque el acceso a la instancia es suyo.
+- T-118 (vincular las estaciones con el catálogo) es de Franz, con apoyo de Antonio, que hizo el catálogo y la migración de `estado_combustible`.
+- HU-14 (consulta periódica) se reparte entre Franz y Antonio en el sprint 4: Franz porta el cliente y las validaciones de su prototipo, y Antonio hace los objetos de dominio y la tarea periódica.
+
+Con los cuatro issues la carga total pasa de 172 a 182 puntos. Franz queda con 8 puntos en el sprint 2, 7 en el 3 y 7,5 en el 4; si el sprint 2 se complica, T-117 pasa al sprint 3 sin mover el resto, porque HU-14 es del sprint 4.

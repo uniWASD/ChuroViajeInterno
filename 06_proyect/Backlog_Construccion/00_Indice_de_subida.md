@@ -25,8 +25,8 @@ El script [subir_issues.py](subir_issues.py) hace los pasos 2 a 5 con GitHub CLI
 | Milestone | Fechas | Fecha de cierre | Issues |
 | --- | --- | --- | --- |
 | Sprint 1 | 15/10 – 21/10 | 2026-10-21 | 6 |
-| Sprint 2 | 22/10 – 28/10 | 2026-10-28 | 10 |
-| Sprint 3 | 29/10 – 04/11 | 2026-11-04 | 10 |
+| Sprint 2 | 22/10 – 28/10 | 2026-10-28 | 11 |
+| Sprint 3 | 29/10 – 04/11 | 2026-11-04 | 9 |
 | Sprint 4 | 05/11 – 11/11 | 2026-11-11 | 9 |
 | Sprint 5 | 12/11 – 18/11 | 2026-11-18 | 11 |
 | Sprint 6 | 19/11 – 25/11 | 2026-11-25 | 9 |
@@ -93,7 +93,7 @@ La columna «Depende de» usa el número de orden de esta tabla.
 | 53 | [T-110][Servidor] Despliegue final y revisión de seguridad | [06_Servidor.md](06_Servidor.md) | Sprint 7 | tipo:tarea, fase:construccion, tec:servidor | Todos los de sprints anteriores | 1 | #91 |
 | 54 | [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap | [03_Cpp.md](03_Cpp.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:cpp | 3 | 2 | #93 |
 | 55 | [HU-05][CU-03][Flutter] Navegación activa | [01_Flutter.md](01_Flutter.md) | Sprint 5 | caso-uso:CU-03, tipo:historia-usuario, fase:construccion, tec:flutter | 32 | 2 | #94 |
-| 56 | [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH | [06_Servidor.md](06_Servidor.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:servidor | 6 | 1 |  |
-| 57 | [T-117][Java] Medir la API de ANH y fijar el ciclo de consulta y la vigencia | [02_Java.md](02_Java.md) | Sprint 3 | tipo:prueba, fase:construccion, tec:java | 56 | 2 |  |
-| 58 | [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo | [02_Java.md](02_Java.md) | Sprint 3 | tipo:tarea, fase:construccion, tec:java | 3, 19 | 2 |  |
-| 59 | [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH | [02_Java.md](02_Java.md) | Sprint 4 | caso-uso:CU-09, tipo:historia-usuario, fase:construccion, tec:java | 19, 57, 58 | 5 |  |
+| 56 | [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH | [06_Servidor.md](06_Servidor.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:servidor | 6 | 1 | #111 |
+| 57 | [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia | [02_Java.md](02_Java.md) | Sprint 2 | tipo:prueba, fase:construccion, tec:java | — | 2 | #112 |
+| 58 | [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo | [02_Java.md](02_Java.md) | Sprint 3 | tipo:tarea, fase:construccion, tec:java | 3, 19 | 2 | #113 |
+| 59 | [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH | [02_Java.md](02_Java.md) | Sprint 4 | caso-uso:CU-09, tipo:historia-usuario, fase:construccion, tec:java | 19, 57, 58 | 5 | #114 |

@@ -2,15 +2,15 @@
 
 [Índice del backlog](README.md)
 
-Responsables: Jorge y Antonio; Franz mide la API de ANH y Jorge vincula sus estaciones con los surtidores. Código en `04_imp/backend_java`.
+Responsables: Jorge y Antonio; Franz mide la API de ANH, vincula sus estaciones con los surtidores y hace con Antonio la consulta periódica (HU-14). Código en `04_imp/backend_java`.
 
 El backend es la única puerta de entrada del sistema y el lugar donde viven los objetos de dominio y sus reglas. También contiene el wrapper `MotorDeRutas`, la cara en Java del motor core ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Antes de tomar un issue, lee [02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md), [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md) y el archivo de reglas del caso de uso.
 
 | Sprint | Issues |
 | --- | --- |
 | S1 (15/10–21/10) | Estructura base del backend · Base de datos, catálogos y zona de cobertura |
-| S2 (22/10–28/10) | HU-10 Iniciar sesión con Google y emitir el JWT · Catálogos para la app · Wrapper `MotorDeRutas` |
-| S3 (29/10–04/11) | HU-01 Registrar reportes de eventos viales · HU-03 Consultar eventos vigentes y vencerlos · HU-08 Recibir el análisis de WhatsApp · Medir la API de ANH y fijar el ciclo de consulta · Vincular las estaciones de ANH con los surtidores |
+| S2 (22/10–28/10) | HU-10 Iniciar sesión con Google y emitir el JWT · Catálogos para la app · Wrapper `MotorDeRutas` · Medir la API de ANH y revisar sus condiciones de uso |
+| S3 (29/10–04/11) | HU-01 Registrar reportes de eventos viales · HU-03 Consultar eventos vigentes y vencerlos · HU-08 Recibir el análisis de WhatsApp · Vincular las estaciones de ANH con los surtidores |
 | S4 (05/11–11/11) | HU-11 Votar eventos · HU-05 Calcular la ruta · Mantener al día el tráfico del motor · HU-14 Consultar el estado de combustible desde ANH |
 | S5 (12/11–18/11) | HU-07 Consultar surtidores cercanos · HU-12 Registrar confirmaciones de recarga · HU-13 Recibir telemetría y registrar congestión |
 | S6 (19/11–25/11) | HU-06 Revisar la ruta activa · HU-09 Soporte para el simulador · Limpieza de datos vencidos |
@@ -210,6 +210,42 @@ Lo subes en una nueva rama llamada "feature/T95-java-wrapper-motor" (No olvides 
 
 ---
 
+### [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia
+
+**Tipo:** Tarea de pruebas (cubre CU-09)
+**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Apoyo:** Marcelo
+**Depende de:** nada
+**Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
+
+**Descripción:** La investigación de T-115 dice cómo responde ANH, pero no cada cuánto cambian sus datos ni qué reglas de uso tiene. Esta tarea mide durante 3 días cómo se comporta la API con el cliente de `05_pro/PruebaApiANH`, revisa lo que ANH informa sobre sus condiciones de uso y, con eso, fija los parámetros que quedaron pendientes: cada cuánto se consulta (P-29), cuánto vale un dato de ANH (P-30) y la espera y los reintentos (P-32). También confirma la zona horaria de `updated_at`. Empieza en el equipo de quien la hace, sin esperar al servidor; cuando T-119 termine, el mismo script sigue en la instancia de Oracle Cloud, con apoyo de Marcelo, para comparar los tiempos desde allí. El resultado queda anotado en la arquitectura, para que HU-14 parta de valores confirmados.
+
+**Criterios de aceptación**
+- [ ] Hay un registro de 72 horas seguidas de consultas, las últimas 24 desde la instancia de Oracle Cloud una vez que T-119 esté lista. Cada fila trae la hora, el estado HTTP, el tiempo de respuesta, cuántas estaciones llegaron y la fecha de actualización de cada una. El registro no guarda el cuerpo de las respuestas.
+- [ ] La medición no carga a ANH, que no publica cuotas: consulta como máximo una vez cada 10 minutos, con una pausa de al menos 1 segundo entre peticiones, y sube esa frecuencia solo si el equipo lo justifica por escrito (RN-09.1, RN-09.4).
+- [ ] Se sabe cada cuánto cambian el saldo y la fecha de actualización de una estación, y con eso se fija P-29 sin consultar más de lo necesario (RN-09.1).
+- [ ] Se fija P-30, la vigencia de un dato de ANH contada desde que el backend lo leyó, y queda dicho si se mantienen las 6 horas de RN-05.5 (RN-09.17).
+- [ ] Se confirma si `updated_at` trae zona horaria y qué zona se toma cuando no la trae (RN-09.13).
+- [ ] Se lee una vez lo que responde `GET /api/Disclaimer` y se busca si ANH publica condiciones de uso, cuotas o un contacto. Lo que se encuentre, o que no se encontró nada, queda anotado en la sección «Backend con la API de ANH» de [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md). Si hay un contacto, el equipo decide si les avisa que su API se consultará desde un backend.
+- [ ] Se confirma o ajusta P-32 con los tiempos medidos en los dos lugares y con lo que haga ANH ante las peticiones repetidas (429 o `Retry-After`) (RN-09.4).
+- [ ] P-29, P-30 y P-32 quedan como Confirmada en [08_decisiones_parametros.md](../../03_des/02_Arquitectura/08_decisiones_parametros.md), y los valores iniciales de [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md) y de CU-09 quedan al día.
+
+**Tareas**
+- [ ] Escribir un script de medición a partir del cliente de `05_pro/PruebaApiANH` y dejarlo corriendo cuanto antes.
+- [ ] Cuando T-119 termine, correr el mismo script en la instancia, con Marcelo.
+- [ ] Leer el aviso de ANH y anotar sus condiciones de uso, o su ausencia.
+- [ ] Analizar el registro y proponer los valores.
+- [ ] Actualizar los documentos de arquitectura con los valores confirmados.
+
+**Casos de prueba**
+- [ ] CP-157 Caso de prueba: el registro de medición cubre 72 horas seguidas y cada fila trae hora, estado HTTP, tiempo de respuesta y cantidad de estaciones.
+- [ ] CP-158 Caso de prueba: P-29, P-30 y P-32 figuran como Confirmada, con su valor, en `08_decisiones_parametros.md`, y las condiciones de uso (o su ausencia) están anotadas en `05_contratos.md`.
+
+**Relacionado:** RF-15 · RNF-04 · CU-09 · RN-09.1, RN-09.3, RN-09.4, RN-09.13, RN-09.17 · RN-05.5 · D-29, D-32 · P-29, P-30, P-32 · T-115 · Visión 4.3
+
+Lo subes en una nueva rama llamada "feature/T117-java-medir-api-anh" (No olvides que el source de la rama es la de develop)
+
+---
+
 ## Sprint 3
 
 ### [HU-01][CU-01][Java] Registrar reportes de eventos viales
@@ -329,52 +365,21 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 
 ---
 
-### [T-117][Java] Medir la API de ANH y fijar el ciclo de consulta y la vigencia
-
-**Tipo:** Tarea de pruebas (cubre CU-09)
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
-**Depende de:** [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH #?(orden 56)
-**Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
-
-**Descripción:** Medir durante unos días cómo se comporta la API de ANH y, con eso, fijar los parámetros que quedaron pendientes: cada cuánto se consulta (P-29), cuánto vale un dato de ANH (P-30) y el tiempo de espera y los reintentos (P-32). También confirmar la zona horaria de `updated_at`. El resultado queda anotado en la arquitectura, para que el issue de la consulta (HU-14) parta de valores confirmados.
-
-**Criterios de aceptación**
-- [ ] Hay un registro de al menos 3 días seguidos de consultas desde la instancia, con la hora, el estado HTTP, el tiempo de respuesta, cuántas estaciones llegaron y la fecha de actualización de cada una. El registro no guarda el cuerpo de las respuestas.
-- [ ] Se sabe cada cuánto cambian el saldo y la fecha de actualización de una estación, y con eso se fija P-29 sin consultar más de lo necesario (RN-09.1).
-- [ ] Se fija P-30, la vigencia de un dato de ANH contada desde que el backend lo leyó, y queda dicho si se mantienen las 6 horas de RN-05.5 (RN-09.17).
-- [ ] Se confirma si `updated_at` trae zona horaria y qué zona se toma cuando no la trae (RN-09.13).
-- [ ] Se confirma o ajusta P-32 con los tiempos medidos y con lo que haga ANH ante las peticiones repetidas (429 o `Retry-After`) (RN-09.4).
-- [ ] P-29, P-30 y P-32 quedan como Confirmada en [08_decisiones_parametros.md](../../03_des/02_Arquitectura/08_decisiones_parametros.md), y los valores iniciales de [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md) y de CU-09 quedan al día.
-
-**Tareas**
-- [ ] Escribir un script de medición, que puede partir del cliente de `05_pro/PruebaApiANH`, y dejarlo corriendo en la instancia.
-- [ ] Analizar el registro y proponer los valores.
-- [ ] Actualizar los documentos de arquitectura con los valores confirmados.
-
-**Casos de prueba**
-- [ ] CP-157 Caso de prueba: el registro de medición cubre 72 horas seguidas y cada fila trae hora, estado HTTP, tiempo de respuesta y cantidad de estaciones.
-- [ ] CP-158 Caso de prueba: P-29, P-30 y P-32 figuran como Confirmada, con su valor, en `08_decisiones_parametros.md`.
-
-**Relacionado:** RF-15 · RNF-04 · CU-09 · RN-09.1, RN-09.4, RN-09.13, RN-09.17 · RN-05.5 · D-29, D-32 · P-29, P-30, P-32
-
-Lo subes en una nueva rama llamada "feature/T117-java-medir-api-anh" (No olvides que el source de la rama es la de develop)
-
----
-
 ### [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo
 
 **Tipo:** Tarea de desarrollo (cubre CU-09)
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
+**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Apoyo:** Antonio
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
-**Descripción:** Darle a cada surtidor del catálogo el identificador de su estación en ANH, para que la consulta sepa a qué surtidor pertenece cada dato. ANH devuelve todo el departamento, así que solo se usan las estaciones que están en la mancha urbana y tienen un surtidor en el catálogo. Aquí también se fija la distancia máxima para vincular (P-31) y se deja lista la tabla `estado_combustible` para recibir datos de ANH.
+**Descripción:** Darle a cada surtidor del catálogo el identificador de su estación en ANH, para que la consulta sepa a qué surtidor pertenece cada dato. ANH devuelve todo el departamento, así que solo se usan las estaciones que están en la mancha urbana y tienen un surtidor en el catálogo. Aquí también se fija la distancia máxima para vincular (P-31) y se deja lista la tabla `estado_combustible` para recibir datos de ANH. Como también cruza el catálogo con las estaciones reales de ANH, sirve para revisar la lista de surtidores y alias de #41. Antonio apoya porque hizo el catálogo y la migración de `estado_combustible`.
 
 **Criterios de aceptación**
 - [ ] Una migración agrega `anh_id` a `surtidor`: número entero, opcional y único, de modo que ningún surtidor tiene dos y ningún identificador de ANH pertenece a dos surtidores ([06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md), RN-09.10).
 - [ ] `estado_combustible` tiene `litros` (no negativo, opcional), `estado_anh` (alto, medio o bajo, opcional) y `consultado_en`, y acepta el origen ANH. Si la migración de #57 no los creó, la migración de esta tarea los agrega.
 - [ ] Se comparan las estaciones de Tarija de ANH que están dentro de la mancha urbana con el catálogo, por nombre y por distancia, y con esos pares se fija P-31 (RN-09.10).
 - [ ] Cada vínculo lo revisa a mano una persona del equipo antes de entrar en la migración de datos.
+- [ ] Se revisa la lista de surtidores y alias de #41 contra las estaciones de ANH de la mancha urbana, y se corrige si falta una estación o tiene mal el nombre.
 - [ ] Las estaciones de ANH dentro de la mancha urbana que no están en el catálogo quedan en una lista de candidatas, y el equipo decide si entran al catálogo (RN-09.9).
 - [ ] P-31 queda como Confirmada en [08_decisiones_parametros.md](../../03_des/02_Arquitectura/08_decisiones_parametros.md).
 
@@ -503,12 +508,14 @@ Lo subes en una nueva rama llamada "feature/T99-java-trafico-motor" (No olvides 
 
 **Caso de uso:** CU-09 — Consultar Estado de Combustible desde ANH
 **Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
-**Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57 · [T-117][Java] Medir la API de ANH y fijar el ciclo de consulta y la vigencia #?(orden 57) · [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo #?(orden 58)
+**Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57 · [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia #112 · [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo #113
 **Etiquetas:** `caso-uso:CU-09` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
 **Historia de usuario:** Como sistema, quiero consultar periódicamente la API pública de ANH Abastecimiento, para mantener actualizado el estado de los surtidores con el saldo y el estado que informa ANH, además de los mensajes de WhatsApp.
 
 Este proceso es automático: no tiene vista ni controlador REST. La consulta la hace solo el backend; la app, el simulador y el servicio de WhatsApp/LLM nunca llaman a ANH ([05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md), «Backend con la API de ANH»).
+
+**Reparto sugerido:** Franz y Antonio. Franz porta a Java el cliente y las validaciones del prototipo de `05_pro/PruebaApiANH` (lo que dicen los criterios de las peticiones, las respuestas y las fallas); Antonio hace `ReporteANH`, la actualización de `EstadoCombustible` y la tarea periódica. Cada uno revisa el Pull Request del otro.
 
 **Criterios de aceptación**
 - [ ] Una tarea periódica, con el ciclo de P-29, pide a ANH el listado de estaciones de gasolina y el de diésel de Tarija. Antes busca a Tarija por nombre en el catálogo de departamentos y, si no hay exactamente una, no consulta (RN-09.1, RN-09.2).

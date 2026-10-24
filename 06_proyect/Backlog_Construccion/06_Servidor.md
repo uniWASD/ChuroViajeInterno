@@ -97,7 +97,7 @@ Lo subes en una nueva rama llamada "feature/T97-servidor-dominio-https" (No olvi
 ### [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH
 
 **Tipo:** Tarea de infraestructura (cubre CU-09)
-**Tecnología:** Servidor · **Sprint:** Sprint 2 (22/10–28/10)
+**Tecnología:** Servidor · **Sprint:** Sprint 2 (22/10–28/10) · **Apoyo:** Franz
 **Depende de:** [T-092][Servidor] Preparar la instancia de Oracle Cloud #44
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -111,7 +111,8 @@ Lo subes en una nueva rama llamada "feature/T97-servidor-dominio-https" (No olvi
 - [ ] La guía del servidor anota el resultado, el tiempo de respuesta y si ANH rechaza o limita las peticiones que llegan desde la IP de Oracle.
 
 **Tareas**
-- [ ] Probar con `curl` y con el cliente de prueba de `05_pro/PruebaApiANH` (T-115) desde la instancia.
+- [ ] Probar con `curl` y con el cliente de prueba de `05_pro/PruebaApiANH` (T-115) desde la instancia; Franz entrega el cliente listo para correr en Linux ARM.
+- [ ] Avisar a Franz apenas termine, para que T-117 siga midiendo desde la instancia.
 - [ ] Probar la conexión desde Java con el almacén de certificados de la instancia.
 - [ ] Anotar el resultado en la guía del servidor, en `06_proyect/servidor`.
 

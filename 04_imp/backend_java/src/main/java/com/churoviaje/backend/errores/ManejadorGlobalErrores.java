@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -37,6 +38,13 @@ public class ManejadorGlobalErrores {
     public ResponseEntity<RespuestaRechazo> manejarNoEncontrado(NoResourceFoundException ex) {
         RespuestaRechazo respuesta = new RespuestaRechazo("NO_ENCONTRADO", "El recurso solicitado no existe");
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(respuesta);
+    }
+
+    // JSON mal formados en el cuerpo de la petición
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<RespuestaRechazo> manejarCuerpoMalFormado(HttpMessageNotReadableException ex) {
+        RespuestaRechazo respuesta = new RespuestaRechazo("PETICION_INVALIDA", "La petición no tiene el formato esperado.");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
     }
 
     // Errores del cliente atrapados por Spring (faltan parámetros, método no soportado, etc.)

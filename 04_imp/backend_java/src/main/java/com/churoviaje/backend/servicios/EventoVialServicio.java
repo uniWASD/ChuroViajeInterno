@@ -1,6 +1,6 @@
 package com.churoviaje.backend.servicios;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.springframework.stereotype.Service;
 
@@ -17,8 +17,9 @@ public class EventoVialServicio {
         this.repositorio = repositorio;
     }
 
-    public EventoVial registrarEvento(String tipo, Ubicacion ubicacion, LocalDateTime horaConfirmacion, Integer minutosElegidos) {
-        EventoVial nuevoEvento = new EventoVial(tipo, horaConfirmacion, minutosElegidos);
+    public EventoVial registrarEvento(String tipo, Ubicacion ubicacion, OffsetDateTime horaConfirmacion, Integer minutosElegidos) {
+        // Ahora pasamos la ubicación al constructor de EventoVial
+        EventoVial nuevoEvento = new EventoVial(tipo, horaConfirmacion, minutosElegidos, ubicacion);
         return repositorio.save(nuevoEvento);
     }
 }

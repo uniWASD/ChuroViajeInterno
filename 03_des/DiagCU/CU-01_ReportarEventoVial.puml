@@ -1,6 +1,6 @@
 @startuml CU-01_ReportarEventoVial
 ' CU-01: Reportar Evento Vial
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09)
 ' Issue: T-029 (#8)
 ' Revisión de coherencia (06/10/2026): sin módulo de distribución; los demás conductores reciben el evento por consulta periódica.
 

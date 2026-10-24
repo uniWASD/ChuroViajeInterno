@@ -13,10 +13,10 @@ La arquitectura responde a los requisitos no funcionales de la matriz y respeta 
 | Un evento reportado llega a los demás conductores en 5 a 10 segundos | RNF-01 | La app consulta los eventos cada 5 segundos. No se usan WebSocket ni notificaciones push |
 | La ruta se calcula en menos de 3 segundos | RNF-02 | El cálculo corre en el motor C++, que mantiene la red vial cargada en memoria |
 | Los surtidores cercanos se listan en menos de 3 segundos | RNF-03 | El estado de cada surtidor ya está guardado cuando el conductor pregunta; la búsqueda por cercanía la resuelve PostGIS |
-| El estado de un surtidor se actualiza en menos de 6 minutos | RNF-04 | El servicio de WhatsApp/LLM analiza cada 5 minutos y envía el resultado directo al backend; la app refresca la lista de surtidores cada 60 segundos mientras está abierta |
+| El estado de un surtidor se actualiza en menos de 6 minutos | RNF-04 | El servicio de WhatsApp/LLM analiza cada 5 minutos y envía el resultado directo al backend; el backend guarda lo que lee de ANH en cada consulta ([P-29](08_decisiones_parametros.md)); la app refresca la lista de surtidores cada 60 segundos mientras está abierta |
 | El inicio de sesión tarda menos de 3 segundos | RNF-05 | Tras elegir la cuenta de Google, la app hace una sola llamada al backend |
 | Reportar un evento toma 3 toques como máximo | RNF-06 | La vista de reporte trae el tiempo preseleccionado |
-| El origen del dato de cada surtidor es visible | RNF-07 | El origen (WhatsApp o Conductores) es un atributo obligatorio del estado de combustible |
+| El origen del dato de cada surtidor es visible | RNF-07 | El origen (WhatsApp, Conductores o ANH) es un atributo obligatorio del estado de combustible |
 | Solo entran usuarios con sesión | RNF-08 | Todos los controladores del backend exigen un JWT válido, salvo el de inicio de sesión |
 | No se aceptan reportes, votos ni confirmaciones repetidos | RNF-09 | La regla vive en los objetos de dominio: un voto por conductor y evento, sin reportes ni confirmaciones duplicados en poco tiempo |
 | No se exponen datos de otros usuarios | RNF-10 | Ninguna respuesta del backend incluye quién reportó, votó o confirmó, ni la posición de otro conductor |
@@ -36,17 +36,17 @@ La arquitectura responde a los requisitos no funcionales de la matriz y respeta 
 - **Idioma.** Toda la interfaz está en español.
 - **Infraestructura.** Un solo servidor aloja el backend, el motor core, el servicio de WhatsApp/LLM y la base de datos: la instancia `churoviaje-server` de Oracle Cloud, con procesador ARM, 2 OCPU y 12 GB de memoria ([D-16](08_decisiones_parametros.md)). Cada componente debe consumir poca memoria y compilar para ARM.
 - **Cobertura.** El sistema opera solo en la mancha urbana de Tarija y solo sobre vías vehiculares.
-- **Privacidad.** La ubicación nunca se obtiene en segundo plano. Solo se monitorean grupos de WhatsApp autorizados por su administrador, y al proveedor del LLM se envían únicamente el texto y la fecha de cada mensaje.
+- **Privacidad.** La ubicación nunca se obtiene en segundo plano. Solo se monitorean grupos de WhatsApp autorizados por su administrador, y al proveedor del LLM se envían únicamente el texto y la fecha de cada mensaje. De ANH solo se leen datos públicos de estaciones y no se le envía ningún dato de personas.
 - **Acceso.** No existen contraseñas propias: la identidad la verifica Google.
 - **Plazo y equipo.** Cinco integrantes y una Construcción que va del 2 de octubre al 30 de noviembre de 2026. Cada componente tiene un responsable, por eso las fronteras entre componentes deben quedar claras.
 
 ## Componentes, despliegue y comunicación
 
-ChuroViaje tiene cinco piezas propias, una base de datos y cuatro servicios externos. El backend Java es la única puerta de entrada: la app, el servicio de WhatsApp/LLM y el simulador hablan con él, y solo él habla con el motor core y con la base de datos.
+ChuroViaje tiene cinco piezas propias, una base de datos y cinco servicios externos. El backend Java es la única puerta de entrada: la app, el servicio de WhatsApp/LLM y el simulador hablan con él, y solo él habla con el motor core, con la base de datos y con ANH.
 
-![Componentes de ChuroViaje · 5 piezas propias, 1 base de datos, 4 servicios externos](diagramas/ARQ-01_Componentes.png)
+![Componentes de ChuroViaje · 5 piezas propias, 1 base de datos, 5 servicios externos](diagramas/ARQ-01_Componentes.png)
 
-*Figura: Componentes de ChuroViaje · 5 piezas propias, 1 base de datos, 4 servicios externos. Fuente editable: [ARQ-01_Componentes.puml](diagramas/ARQ-01_Componentes.puml).*
+*Figura: Componentes de ChuroViaje · 5 piezas propias, 1 base de datos, 5 servicios externos. Fuente editable: [ARQ-01_Componentes.puml](diagramas/ARQ-01_Componentes.puml).*
 
 Las flechas van de quien llama a quien responde.
 
@@ -55,7 +55,7 @@ Las flechas van de quien llama a quien responde.
 | Componente | Tecnología | Qué hace | Qué no le corresponde |
 | --- | --- | --- | --- |
 | App móvil | Flutter, SDK de Mapbox | Muestra las pantallas, captura toques y GPS, guarda reportes sin conexión y los últimos eventos conocidos | Decidir reglas de negocio |
-| Backend de gestión | Java, Spring Boot | Recibe todas las peticiones, aplica las reglas en los objetos de dominio, guarda los datos y emite el JWT | Calcular rutas, leer WhatsApp |
+| Backend de gestión | Java, Spring Boot | Recibe todas las peticiones, aplica las reglas en los objetos de dominio, guarda los datos, emite el JWT y consulta a ANH con una tarea periódica | Calcular rutas, leer WhatsApp |
 | Motor core | Núcleo en C++ y wrapper en Java (`MotorDeRutas`) | Mantiene la red vial, calcula y recalcula rutas, y analiza la telemetría para detectar congestión. El wrapper vive dentro del backend y es la única forma de llegar al núcleo | Atender a la app directamente, guardar datos de usuarios |
 | Servicio de WhatsApp/LLM | Node.js, Baileys | Lee los grupos, guarda los mensajes pendientes, los analiza por lotes cada 5 minutos y envía el resultado | Cambiar el estado de un surtidor por su cuenta: eso lo decide el backend |
 | Simulador | Python | Genera usuarios fantasma que envían eventos y telemetría por la misma API que la app | Escribir directo en la base de datos |
@@ -69,6 +69,7 @@ Las flechas van de quien llama a quien responde.
 | Mapbox | Mapa base de la app | La app, con su SDK |
 | Grupos de WhatsApp | Fuente de los avisos de combustible | El servicio de WhatsApp/LLM, en modo solo lectura |
 | Proveedor del LLM | Interpretar los mensajes por lotes | El servicio de WhatsApp/LLM |
+| ANH Abastecimiento | Fuente complementaria de combustible: saldo en litros y estado de cada estación, datos públicos | El backend, en modo solo lectura ([D-28](08_decisiones_parametros.md), [D-29](08_decisiones_parametros.md)) |
 
 ### Comunicación entre componentes
 
@@ -81,8 +82,9 @@ Las flechas van de quien llama a quien responde.
 | Simulador | Backend | La misma API REST que usa la app, con credenciales de prueba | Eventos y telemetría simulados |
 | Backend | Google | HTTPS | Validación del token de identidad |
 | Servicio de WhatsApp/LLM | Proveedor del LLM | HTTPS | Texto y fecha de los mensajes pendientes, sin datos del remitente |
+| Backend | ANH | HTTPS, GET sin credenciales | Consultas del catálogo de departamentos y del listado de estaciones de Tarija; vuelven los litros y el estado de cada estación ([05_contratos.md](05_contratos.md)) |
 
-La app nunca llama al motor core ni al servicio de WhatsApp/LLM. Los eventos nuevos llegan a los demás conductores porque cada app consulta al backend cada 5 segundos.
+La app nunca llama al motor core, al servicio de WhatsApp/LLM ni a ANH. Los eventos nuevos llegan a los demás conductores porque cada app consulta al backend cada 5 segundos.
 
 ### Despliegue
 

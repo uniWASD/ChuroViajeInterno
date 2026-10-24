@@ -13,7 +13,7 @@ Este documento sirve como base de conocimiento sobre la metodología, estructura
 La documentación y el código se organizan según su naturaleza (disciplinas RUP), no por el sprint en el que fueron creados. Cada carpeta cuenta con su propio `README.md` explicativo:
 
 - **01\_bus/**: Modelado del negocio (Justificación, oportunidad de negocio, perfiles de stakeholders).
-- **02\_req/**: Requisitos (Documento de Visión, Especificaciones de Casos de Uso del CU-01 al CU-08).
+- **02\_req/**: Requisitos (Documento de Visión, Especificaciones de Casos de Uso del CU-01 al CU-09).
 - **03\_des/**: Diseño (Arquitectura cliente-servidor, diagramas de comportamiento UML, modelos de BD).
 - **04\_imp/**: Implementación (Código fuente de producción en Flutter, Java y C++).
 - **05\_pro/**: Pruebas (Casos de prueba CP-XX, simuladores de tráfico, pruebas de algoritmos de ruteo y telemetría).
@@ -25,7 +25,7 @@ Existe una regla estricta de trazabilidad en la que un identificador nunca se re
 **Documento de Visión (RQ-XX) → Caso de Uso (CU-XX) → Historia de Usuario (HU-XX) → Tarea (T-XX) → Caso de Prueba (CP-XX)**.
 
 - **RQ-XX**: Requisito de Visión.
-- **CU-XX**: Caso de uso (Actualmente definidos del CU-01 al CU-08).
+- **CU-XX**: Caso de uso (Actualmente definidos del CU-01 al CU-09).
 - **HU-XX**: Historia de usuario (Issue principal en GitHub).
 - **T-XX**: Tarea de desarrollo (Checklist dentro del Issue).
 - **CP-XX**: Caso de prueba (Archivos ubicados en `05_pro/` o `tests/`).

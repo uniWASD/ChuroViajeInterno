@@ -1,6 +1,6 @@
 @startuml CU-06_MonitorearSurtidoresWhatsApp
 ' CU-06: Monitorear Estado de Surtidores vía WhatsApp
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09)
 ' Issue: T-029 (#8); actualizado en T-045 (extracción con Baileys y análisis por lotes con LLM)
 ' Revisión de coherencia (06/10/2026): servicio de WhatsApp/LLM, tipo de combustible obligatorio y fila opcional.
 
@@ -65,6 +65,8 @@ legend bottom
   se analiza en el siguiente ciclo de 5 minutos.
   El backend Java valida el resultado contra el catálogo de surtidores
   y el estado queda disponible para CU-05.
+  Es una de las dos fuentes automáticas del estado de los surtidores;
+  la otra es la consulta a ANH (CU-09).
   Decisión de arquitectura: decision_conexion_whatsapp.md
 endlegend
 

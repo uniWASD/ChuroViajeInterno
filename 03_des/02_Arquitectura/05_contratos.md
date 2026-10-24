@@ -2,7 +2,7 @@
 
 [Índice de la arquitectura](README.md)
 
-Hay tres contratos: el de la app con el backend, el del backend con el motor core y el del servicio de WhatsApp/LLM con el backend. Las rutas son una propuesta de nombres; lo que fija cada contrato es qué dato viaja y quién decide.
+Hay cuatro contratos: el de la app con el backend, el del backend con el motor core, el del servicio de WhatsApp/LLM con el backend y el del backend con la API de ANH. Las rutas son una propuesta de nombres; lo que fija cada contrato es qué dato viaja y quién decide.
 
 ## Convenciones comunes
 
@@ -28,7 +28,7 @@ Hay tres contratos: el de la app con el backend, el del backend con el motor cor
 | Calcular ruta | `POST /rutas` | Origen, destino y paradas | Trazado, distancia y tiempo, con el identificador y el nombre de la calle de cada tramo; o «sin ruta» o «punto inválido» | CU-03 |
 | Revisar ruta activa | `POST /rutas/revision` | Posición actual, tramos que faltan, destino, paradas que faltan y eventos ya avisados | Sin cambios; sin alternativa; o ruta alternativa. Las dos últimas traen el evento que las provocó. Si la red vial cambió, «ruta desactualizada» | CU-04 |
 | Enviar telemetría | `POST /telemetria` | Grupo de lecturas: posición, precisión y momento | Recibido | CU-04 |
-| Consultar surtidores | `GET /surtidores` | Ubicación actual | Surtidores por cercanía, con estado por tipo, fila, origen y fecha | CU-05 |
+| Consultar surtidores | `GET /surtidores` | Ubicación actual | Surtidores por cercanía, con estado por tipo, fila, origen (WhatsApp, Conductores o ANH) y fecha. Si el origen es ANH, también los litros, el estado de ANH y el momento en que el backend lo leyó | CU-05 |
 | Confirmar recarga | `POST /surtidores/{id}/confirmaciones` | Tipo de combustible y ubicación actual | Confirmación aceptada, o motivo del rechazo | CU-05 |
 
 La app nunca envía el momento en que ocurrió un evento ya calculado: manda la hora de confirmación y los minutos elegidos, y el `EventoVial` hace la resta ([RN-01.4](04_reglas/CU-01_ReportarEventoVial.md)).
@@ -157,6 +157,72 @@ Se aplica [RN-06.19](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md). El reenv�
 | 5xx, sin conexión o tiempo agotado | Guarda el resultado (sin el texto de los mensajes) y reenvía el mismo lote en el ciclo siguiente |
 | 400 o 422 | No reenvía, porque se atascaría para siempre. Lo registra y lo suelta |
 | 401 o 403 | Es un error de configuración. Conserva el resultado y reintenta mientras se corrige |
+
+## Backend con la API de ANH
+
+El backend consulta a ANH Abastecimiento, el servicio público de la Agencia Nacional de Hidrocarburos. Es el único componente que lo hace ([D-29](08_decisiones_parametros.md)): la app, el simulador y el servicio de WhatsApp/LLM nunca llaman a ANH. Aquí el backend es el cliente, así que el contrato dice qué pide, qué lee, cuándo acepta una respuesta y qué hace cuando algo sale mal. Lo que ANH responde no es una promesa: ANH no publica condiciones de uso, cuotas ni disponibilidad garantizada, y su respuesta puede cambiar sin aviso. Por eso el backend valida todo lo que recibe.
+
+- La base es `https://abastecimiento.prod.anh.gob.bo/api/`.
+- Todas las llamadas son `GET`, sin cuerpo, sin credencial y sin ningún dato de personas. Piden JSON y se identifican con el nombre del programa.
+- Es HTTPS con TLS 1.2 como mínimo. Se verifican el certificado, su vigencia y el nombre del servidor, y esa verificación no se desactiva nunca ([RN-09.3](04_reglas/CU-09_ConsultarEstadoANH.md)). Una redirección fuera del servidor de ANH, o a HTTP, se detiene.
+- El prototipo de `05_pro/PruebaApiANH` ya probó estas rutas con la consulta del departamento de Tarija: 31 estaciones y 57 registros de estación y combustible.
+
+### Rutas que se usan
+
+| Ruta | Para qué | Cuándo |
+| --- | --- | --- |
+| `GET /departamentos/?producto=0` | Identificar a Tarija en el catálogo de departamentos, buscando la única entrada con el nombre «Tarija». No se supone ningún identificador | Al empezar cada ciclo |
+| `GET /departamentos/?producto=1` | Lo mismo, si el primer catálogo no permite resolver a Tarija por un error que no sea de TLS | Solo como alternativa |
+| `GET /estaciones/?departamento={id}&producto=0` | Estaciones de Tarija con su saldo de gasolina | Cada ciclo |
+| `GET /estaciones/?departamento={id}&producto=1` | Estaciones de Tarija con su saldo de diésel | Cada ciclo |
+
+`{id}` es el identificador que devolvió el catálogo. Un ciclo sin errores hace tres peticiones: un catálogo y dos listados. El prototipo también conoce `GET /estaciones/{id}`, `GET /estaciones/{id}/estado`, `GET /Disclaimer` y `GET /precios/1`, pero el backend no las usa: el detalle de una estación solo sirve para completar el nombre o la ubicación, y el vínculo con el catálogo ya los tiene. Los productos 2 y 3 (Gasolina Premium y Diesel ULS) no se piden, porque no quedaron acreditados en la consulta de prueba.
+
+### Qué se lee de cada estación
+
+| Campo de ANH | Para qué se usa |
+| --- | --- |
+| `id` | Identificar la estación y buscar el surtidor vinculado (`anh_id`). Debe ser un número entero |
+| `departamento_id` | Comprobar que la estación es del departamento pedido, cuando viene |
+| `lat`, `lng` | Comprobar que la estación cae dentro de la mancha urbana y, para vincularla, compararla con el catálogo. No se guardan |
+| `producto_id`, `producto_nombre` | Comprobar que el registro es del combustible que se pidió. El tipo del dato sale del código que se pidió: 0, Gasolina; 1, Diesel |
+| `saldo_litros` | Los litros. Si no es un número válido o es negativo, el dato es «sin saldo» |
+| `saldo_estado` | El estado de ANH: alto, medio o bajo. Se guarda como llega |
+| `updated_at` | La fecha del dato |
+
+Algunas respuestas traen los datos del combustible dentro de una lista `productos`; de ahí se toma solo el combustible pedido. Cualquier otro campo se ignora. En particular, la fecha de última venta y el indicador de venta se descartan apenas llegan, y no se lee ni se guarda la dirección ([RN-09.18](04_reglas/CU-09_ConsultarEstadoANH.md)). ANH no informa cuándo llegó combustible a una estación, y el sistema no inventa ese dato.
+
+### Cuándo se acepta una respuesta
+
+- Es HTTP 200, de contenido JSON y de hasta 10 MiB.
+- Es un objeto con `decCodigo` igual a 1 y la lista de estaciones en `oResultado`. Un `decCodigo` distinto de 1 es un error de ANH, nunca una lista vacía ([RN-09.5](04_reglas/CU-09_ConsultarEstadoANH.md)).
+- Se descarta la respuesta completa si trae estaciones de otro departamento o de otro combustible que el pedido, una estación repetida, un identificador que no es un número entero o señales de paginación, porque el listado estaría incompleto ([RN-09.6](04_reglas/CU-09_ConsultarEstadoANH.md)).
+- Un saldo inválido solo anula el dato de esa estación ([RN-09.7](04_reglas/CU-09_ConsultarEstadoANH.md)).
+- Una estación que no aparece en la respuesta no significa que tenga cero litros: conserva su último dato.
+
+### Espera, reintentos y `Retry-After`
+
+Los valores de partida son los del cliente de prueba ([P-32](08_decisiones_parametros.md)): 12 segundos de espera por petición, 1 reintento y 1 segundo de pausa entre peticiones. Son decisiones del programa, no cuotas publicadas por ANH.
+
+- Se reintenta solo cuando falta conexión, se agota el tiempo o ANH responde 429, 502, 503 o 504. Entre un intento y otro se espera, como mínimo, lo que pida `Retry-After`, que puede venir en segundos o como fecha.
+- Si `Retry-After` pide más de 30 segundos, no se reintenta y el backend no vuelve a consultar hasta pasado ese plazo.
+- Cada combustible se pide por separado. Si uno falla, el otro se actualiza igual ([RN-09.16](04_reglas/CU-09_ConsultarEstadoANH.md)).
+
+### Qué hace el backend con cada respuesta
+
+Se aplican [RN-09.4](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.5](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.6](04_reglas/CU-09_ConsultarEstadoANH.md) y [RN-09.15](04_reglas/CU-09_ConsultarEstadoANH.md). Con cualquier error, cada surtidor conserva su último dato de ANH con su fecha, y el registro del backend anota el motivo ([RN-09.19](04_reglas/CU-09_ConsultarEstadoANH.md)).
+
+| Respuesta | Qué hace el backend |
+| --- | --- |
+| 200 y respuesta válida | Actualiza los surtidores vinculados, según [RN-09.8](04_reglas/CU-09_ConsultarEstadoANH.md) a [RN-09.14](04_reglas/CU-09_ConsultarEstadoANH.md) |
+| 200 pero no es JSON, `decCodigo` distinto de 1, forma inesperada, paginación o más de 10 MiB | Descarta la respuesta completa y no cambia ningún estado. No reintenta, porque repetirla no la arregla |
+| 429, 502, 503 o 504 | Reintenta como dice la sección anterior. Si sigue fallando, termina el ciclo con lo que tiene |
+| Otro error HTTP (400, 401, 403, 404, 500...) | No reintenta y lo registra |
+| Sin conexión, DNS o tiempo agotado | Reintenta y, si sigue fallando, termina el ciclo con lo que tiene |
+| Error de certificado o de TLS | No reintenta, no desactiva la verificación y lo registra como un fallo del servidor o de la conexión |
+| Redirección fuera de ANH o a HTTP | Se detiene y lo registra |
+
+El backend no publica ningún endpoint nuevo para ANH: lo que se guarda se ve en `GET /surtidores`.
 
 ## Respuestas de rechazo
 

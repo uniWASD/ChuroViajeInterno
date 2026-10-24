@@ -421,15 +421,15 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-flutter-telemetria" (No ol
 - [ ] La pestaña Surtidores pide `GET /surtidores` con la ubicación actual y muestra la lista del más cercano al más lejano (RN-05.2).
 - [ ] Mientras la pestaña sigue abierta, la lista se vuelve a pedir cada 60 segundos (RN-05.17, P-27).
 - [ ] Los surtidores también aparecen como marcadores en el Mapa principal, y al tocar uno se ve su estado. Con el mapa abierto, los marcadores se actualizan cada 60 segundos, igual que la lista (RN-05.17, D-25).
-- [ ] Cada surtidor muestra su estado por tipo de combustible, la fila si se conoce, el origen del dato y su fecha (RN-05.4).
-- [ ] El origen WhatsApp y el origen Conductores se distinguen a simple vista (RNF-07).
+- [ ] Cada surtidor muestra su estado por tipo de combustible, la fila si se conoce, el origen del dato y su fecha; si el origen es ANH, muestra también el saldo en litros y el estado de ANH (alto, medio o bajo) (RN-05.4).
+- [ ] Los tres orígenes (WhatsApp, Conductores y ANH) se distinguen a simple vista (RNF-07).
 - [ ] Un surtidor sin datos vigentes muestra «sin información reciente» y un dato sin tipo muestra «Desconocido» (RN-05.5, RN-05.6).
 - [ ] Sin permiso de ubicación, la app explica que lo necesita para ordenar por cercanía y deja concederlo.
 - [ ] La lista aparece en menos de 3 segundos (RNF-03).
 
 **Tareas**
 - [ ] Implementar la vista Surtidores y su controlador de combustible.
-- [ ] Diseñar la presentación del origen del dato.
+- [ ] Diseñar la presentación del origen del dato y del saldo y el estado de ANH.
 - [ ] Escribir pruebas del controlador con respuestas falsas.
 
 **Casos de prueba**
@@ -437,7 +437,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-flutter-telemetria" (No ol
 - [ ] CP-109 Caso de prueba: un surtidor sin datos muestra «sin información reciente».
 - [ ] CP-110 Caso de prueba: con el mapa abierto, un dato nuevo de un surtidor cambia su marcador en menos de 2 minutos, sin tocar la pantalla.
 
-**Relacionado:** RF-07 · RNF-03 · RNF-04 · RNF-07 · CU-05 · RN-05.2 a RN-05.6, RN-05.17 · D-23, D-25 · P-27
+**Relacionado:** RF-07 · RNF-03 · RNF-04 · RNF-07 · CU-05 · RN-05.2 a RN-05.6, RN-05.17 · RN-09.12 · D-23, D-25, D-31 · P-27
 
 Lo subes en una nueva rama llamada "feature/HU07-CU05-flutter-surtidores" (No olvides que el source de la rama es la de develop)
 
@@ -518,7 +518,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 
 ### [T-104][Flutter] Política de privacidad
 
-**Tipo:** Tarea de documentación (cubre CU-04, CU-06 y CU-08)
+**Tipo:** Tarea de documentación (cubre CU-04, CU-06, CU-08 y CU-09)
 **Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
 **Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59 · [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta #75
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
@@ -529,6 +529,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 - [ ] La política dice qué datos se recogen y para qué: la cuenta de Google, la ubicación solo con la app abierta, la telemetría sin datos del conductor, y los reportes, votos y confirmaciones, que nunca se muestran con su autor (RNF-10, RNF-13).
 - [ ] Dice cuánto se guarda cada dato, según [06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md).
 - [ ] Dice que el texto y la fecha de los mensajes de los grupos se envían al proveedor del LLM, y que en la capa gratuita de Gemini ese proveedor puede usarlos para mejorar sus productos y que pueden leerlos revisores humanos (Visión 6.3, D-17).
+- [ ] Dice que parte del estado de los surtidores viene de datos públicos de ANH, que no incluyen datos de personas, y que el backend consulta a ANH sin enviarle datos de los conductores (RN-09.3).
 - [ ] Está publicada en una página del dominio del proyecto y se puede abrir desde la vista Inicio de sesión, antes de entrar.
 - [ ] Está escrita en español claro, sin lenguaje legal innecesario.
 
@@ -538,8 +539,8 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 - [ ] Publicarla en el dominio (Nginx) y agregar el enlace en la app.
 
 **Casos de prueba**
-- [ ] CP-133 Caso de prueba: desde la vista Inicio de sesión, sin cuenta, se abre la política y menciona al proveedor del LLM.
+- [ ] CP-133 Caso de prueba: desde la vista Inicio de sesión, sin cuenta, se abre la política y menciona al proveedor del LLM y a ANH.
 
-**Relacionado:** RNF-10 · RNF-11 · RNF-13 · RNF-16 · RNF-17 · Visión 6.3 · D-17 · [07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md)
+**Relacionado:** RNF-10 · RNF-11 · RNF-13 · RNF-16 · RNF-17 · Visión 6.3 · RN-09.3 · D-17 · [07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md)
 
 Lo subes en una nueva rama llamada "feature/T104-flutter-politica-privacidad" (No olvides que el source de la rama es la de develop)

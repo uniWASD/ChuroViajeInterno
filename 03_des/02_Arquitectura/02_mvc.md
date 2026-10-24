@@ -22,8 +22,9 @@ Los dos recuadros resaltados son los únicos lugares donde hay reglas de negocio
 ## Cómo se organiza el modelo
 
 - **Objetos de dominio.** Cada uno guarda sus datos y hace cumplir sus propias reglas. Un `EventoVial` sabe si sigue vigente y si un conductor ya lo votó; nadie más lo calcula por él.
-- **Servicios del modelo.** Hay uno por proceso. Coordinan a los objetos de dominio y a los repositorios para completar un caso de uso, pero no deciden reglas.
+- **Servicios del modelo.** Hay uno por proceso. Coordinan a los objetos de dominio y a los repositorios para completar un caso de uso, pero no deciden reglas. La única excepción es el ciclo de una fuente automática, que describe la regla de reparto 6.
 - **Repositorios.** Guardan y recuperan objetos de dominio en PostgreSQL. No contienen reglas.
+- **Cliente de ANH.** Hace las llamadas HTTPS a ANH con la espera y los reintentos que le fija la tarea periódica, y entrega las respuestas al modelo. No decide qué se acepta: validar lo que ANH responde y traducir sus litros lo hace `ReporteANH` ([CU-09](04_reglas/CU-09_ConsultarEstadoANH.md)).
 - **Motor core.** Es la parte del modelo que conoce la red vial. Tiene dos partes ([D-15](08_decisiones_parametros.md)):
   - **Wrapper `MotorDeRutas`, en Java.** Es lo único que el resto del modelo ve: un objeto Java más dentro del backend. Traduce cada llamada a un mensaje para el núcleo, pone en fila las peticiones y vuelve a arrancar el núcleo si deja de responder. No decide reglas.
   - **Núcleo, en C++.** Mantiene la red vial en memoria y hace cumplir las reglas de los objetos de dominio que viven en el motor core, como `RedVial` y `Tramo`. Corre como un proceso aparte y solo habla con el wrapper, por pipe.
@@ -32,12 +33,12 @@ Los dos recuadros resaltados son los únicos lugares donde hay reglas de negocio
 
 ## Reglas de reparto
 
-1. **Una regla, un solo lugar.** Toda regla de negocio está en un objeto de dominio del backend o del motor core.
+1. **Una regla, un solo lugar.** Toda regla de negocio está en un objeto de dominio del backend o del motor core. Las reglas de ciclo de una fuente automática (cada cuánto consulta, espera, reintentos y registro) son la excepción y se explican en la regla 6.
 2. **La app no es fuente de verdad.** Lo que la app valida es para comodidad del conductor; el backend vuelve a validarlo siempre.
 3. **Excepción sin conexión.** La app repite una sola regla, porque debe funcionar sin red: la vigencia de un reporte que espera en la cola local (HU-02). Usa los tiempos de vigencia que el backend le entrega, no valores propios.
 4. **Un solo camino.** Una petición va de la vista al controlador y del controlador al modelo; la respuesta vuelve por el mismo camino. Los controladores no se llaman entre sí.
 5. **Clientes sin vista.** El servicio de WhatsApp/LLM y el simulador no tienen vista: entran al backend por un controlador REST, igual que la app.
-6. **Reglas del monitoreo.** El servicio de WhatsApp/LLM cumple las reglas de su propio proceso (qué guarda, cuándo analiza, qué descarta). Lo que se acepta como estado de un surtidor lo decide el modelo del backend.
+6. **Reglas de las fuentes automáticas.** El servicio de WhatsApp/LLM cumple las reglas de su propio proceso (qué guarda, cuándo analiza, qué descarta). La consulta a ANH la hace una tarea periódica dentro del backend, que es un servicio del modelo y no tiene controlador REST. Esa tarea cumple las reglas de su ciclo (RN-09.1 a RN-09.4, RN-09.16 y RN-09.19) y los objetos de dominio `ReporteANH`, `Surtidor` y `EstadoCombustible` cumplen todas las demás. En los dos casos, lo que se acepta como estado de un surtidor lo decide el modelo del backend.
 
 ## Vistas de la app
 
@@ -49,7 +50,7 @@ Los dos recuadros resaltados son los únicos lugares donde hay reglas de negocio
 | Lista y detalle de eventos | CU-02 | Tipo y antigüedad de cada evento, los botones para votar real o falso y la marca de confirmado |
 | Cómo llegar | CU-03 | Origen, destino y paradas; la ruta con su tiempo y su distancia; el botón para iniciar |
 | Navegación activa | CU-03, CU-04 | La calle que sigue y el sentido del giro, que la app calcula con el trazado ([D-22](08_decisiones_parametros.md)); si un evento afecta lo que falta de la ruta, el aviso de ruta alternativa para aceptar o rechazar, que se cierra solo a los 15 segundos ([D-19](08_decisiones_parametros.md)) |
-| Surtidores | CU-05 | Cada surtidor con su estado por tipo de combustible, la fila, el origen del dato y su fecha. Mientras está abierta, se actualiza cada 60 segundos |
+| Surtidores | CU-05 | Cada surtidor con su estado por tipo de combustible, la fila, el origen del dato (WhatsApp, Conductores o ANH) y su fecha. Si el origen es ANH, también el saldo en litros y el estado de ANH (alto, medio o bajo). Mientras está abierta, se actualiza cada 60 segundos |
 | Pregunta de recarga | CU-05 | «¿Acabas de recargar combustible?» y, si la respuesta es sí, los tipos de combustible |
 
-CU-06 no tiene vista: es un proceso automático. CU-07 se opera por línea de comandos o con un archivo de configuración.
+CU-06 y CU-09 no tienen vista: son procesos automáticos. CU-07 se opera por línea de comandos o con un archivo de configuración.

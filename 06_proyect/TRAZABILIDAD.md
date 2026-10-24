@@ -39,8 +39,9 @@
 | RF-14 · RNF-13 · RNF-17 · RNF-18 | CU-04 | HU-13 | [RN-04.1 a RN-04.12, RN-04.20](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #73 · C++ · Sprint 5 | feature/HU13-CU04-cpp-detectar-congestion | CP-114 a CP-118 | Pendiente |
 | RF-14 · RNF-13 · RNF-17 · RNF-18 | CU-04 | HU-13 | [RN-04.1 a RN-04.12, RN-04.20](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #74 · Java · Sprint 5 | feature/HU13-CU04-java-telemetria | CP-119 a CP-121 | Pendiente |
 | RF-14 · RNF-13 · RNF-17 · RNF-18 | CU-04 | HU-13 | [RN-04.1 a RN-04.12, RN-04.20](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #75 · Flutter · Sprint 5 | feature/HU13-CU04-flutter-telemetria | CP-122, CP-123 | Pendiente |
+| RF-15 · RNF-04 · RNF-07 | CU-09 | HU-14 | [RN-09.1 a RN-09.19](../03_des/02_Arquitectura/04_reglas/CU-09_ConsultarEstadoANH.md) | #?(orden 59) · Java · Sprint 4 | feature/HU14-CU09-java-consultar-anh | CP-161 a CP-165 | Pendiente |
 
-Las filas de los issues #2 a #29 son trabajos de la fase de Elaboración (prototipos e investigaciones). Las de los issues #39 a #91 son de la Construcción y salen del [backlog de Construcción](Backlog_Construccion/README.md); en la columna Issue llevan su tecnología y su sprint. Una historia queda completa cuando están cerrados todos sus issues de Construcción y los de la tabla de tareas técnicas que cumplen alguna de sus reglas (ver «De historia de usuario a issues» en el README del backlog).
+Las filas de los issues #2 a #29 son trabajos de la fase de Elaboración (prototipos e investigaciones). Las de los issues #39 a #91 y las de la API de ANH (HU-14 y T-117 a T-119) son de la Construcción y salen del [backlog de Construcción](Backlog_Construccion/README.md); en la columna Issue llevan su tecnología y su sprint. Una historia queda completa cuando están cerrados todos sus issues de Construcción y los de la tabla de tareas técnicas que cumplen alguna de sus reglas (ver «De historia de usuario a issues» en el README del backlog).
 
 RNF-15 (toda la app en español) aplica a todas las historias.
 
@@ -69,13 +70,18 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-101 Prueba con mensajes reales | CU-06 | #77 · WhatsApp/LLM · Sprint 5 | feature/T101-llm-prueba-mensajes-reales | CP-127 | Pendiente |
 | T-102 Estructura y parámetros del simulador | CU-07 | #78 · Simulador · Sprint 5 | feature/T102-simulador-estructura | CP-128 | Pendiente |
 | T-103 Respaldos de la base de datos y registros | Todos | #79 · Servidor · Sprint 6 | feature/T103-servidor-respaldos | CP-129 | Pendiente |
-| T-104 Política de privacidad | CU-04, CU-06, CU-08 | #81 · Flutter · Sprint 6 | feature/T104-flutter-politica-privacidad | CP-133 | Pendiente |
+| T-104 Política de privacidad | CU-04, CU-06, CU-08, CU-09 | #81 · Flutter · Sprint 6 | feature/T104-flutter-politica-privacidad | CP-133 | Pendiente |
 | T-105 Limpieza de datos vencidos | CU-02, CU-05 | #85 · Java · Sprint 6 | feature/T105-java-limpieza-datos | CP-144 | Pendiente |
 | T-106 Ambiente de pruebas para el simulador | CU-07 | #86 · Servidor · Sprint 6 | feature/T106-servidor-ambiente-pruebas | CP-145 | Pendiente |
-| T-107 Pruebas de punta a punta | Todos | #88 · Java · Sprint 7 | feature/T107-java-pruebas-punta-a-punta | CP-149, CP-150 | Pendiente |
+| T-107 Pruebas de punta a punta | Todos | #88 · Java · Sprint 7 | feature/T107-java-pruebas-punta-a-punta | CP-149, CP-150, CP-166 | Pendiente |
 | T-108 Pruebas de carga y reporte | CU-07 | #89 · Simulador · Sprint 7 | feature/T108-simulador-pruebas-carga | CP-151, CP-152 | Pendiente |
 | T-109 Rendimiento con la red real de Tarija | CU-03, CU-04 | #90 · C++ · Sprint 7 | feature/T109-cpp-rendimiento | CP-153 | Pendiente |
 | T-110 Despliegue final y revisión de seguridad | Todos | #91 · Servidor · Sprint 7 | feature/T110-servidor-despliegue-final | CP-154 | Pendiente |
 | T-111 Preparar la red vial de Tarija desde OpenStreetMap | CU-03, CU-04 | #93 · C++ · Sprint 2 | feature/T111-red-vial-preparacion | CP-45, CP-46 | Pendiente |
 | T-113 Contrato del servicio de WhatsApp con el backend | CU-06 | #102 · Docs · Sprint 2 | feature/T113-docs-contrato-whatsapp | — | Completado |
-| T-114 Ajustes del backlog, la guía del servidor y la trazabilidad tras el contrato | CU-06 | #104 · Docs · Sprint 2 | feature/T114-actualizar-backlog-trazabilidad | — | Pendiente |
+| T-114 Ajustes del backlog, la guía del servidor y la trazabilidad tras el contrato | CU-06 | #104 · Docs · Sprint 2 | feature/T114-actualizar-backlog-trazabilidad | — | Completado |
+| T-115 Investigación de la API de ANH para obtener la disponibilidad de combustible | CU-09 | #105 · Investigación · Sprint 2 | feature/T115-investigacion-api-anh | — | En progreso |
+| T-116 Incorporar la API de ANH como fuente complementaria de combustible en la documentación | CU-05, CU-06, CU-09 | #106 · Docs · Sprint 2 | feature/T116-docs-api-anh | — | En progreso |
+| T-117 Medir la API de ANH y fijar el ciclo de consulta y la vigencia | CU-09 | #?(orden 57) · Java · Sprint 3 | feature/T117-java-medir-api-anh | CP-157, CP-158 | Pendiente |
+| T-118 Vincular las estaciones de ANH con los surtidores del catálogo | CU-09 | #?(orden 58) · Java · Sprint 3 | feature/T118-java-vincular-estaciones-anh | CP-159, CP-160 | Pendiente |
+| T-119 Comprobar la salida del servidor hacia la API de ANH | CU-09 | #?(orden 56) · Servidor · Sprint 2 | feature/T119-servidor-salida-anh | CP-156 | Pendiente |

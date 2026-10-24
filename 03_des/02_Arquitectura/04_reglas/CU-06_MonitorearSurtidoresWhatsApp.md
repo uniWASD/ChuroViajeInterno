@@ -2,7 +2,7 @@
 
 [Índice de reglas](README.md) · [Índice de la arquitectura](../README.md)
 
-Cubre HU-08 y los requisitos RF-08, RF-09, RNF-04 y RNF-11. Las reglas RN-06.1 a RN-06.13, RN-06.18 y RN-06.19 las cumple el servicio de WhatsApp/LLM; de RN-06.14 a RN-06.17, el modelo del backend.
+Cubre HU-08 y los requisitos RF-08, RF-09, RNF-04 y RNF-11. Las reglas RN-06.1 a RN-06.13, RN-06.18 y RN-06.19 las cumple el servicio de WhatsApp/LLM; de RN-06.14 a RN-06.17, el modelo del backend. WhatsApp es una de las dos fuentes automáticas del estado de los surtidores; la otra es la consulta a ANH ([CU-09](CU-09_ConsultarEstadoANH.md)). Ninguna reemplaza a la otra ni a las confirmaciones de los conductores.
 
 ## Reglas
 
@@ -24,7 +24,7 @@ Cubre HU-08 y los requisitos RF-08, RF-09, RNF-04 y RNF-11. Las reglas RN-06.1 a
 | RN-06.14 | El backend acepta resultados únicamente del servicio autorizado. | Sesión | [D-13](../08_decisiones_parametros.md) |
 | RN-06.15 | El backend valida cada aviso por separado: el surtidor debe estar en el catálogo, por nombre o por alias, y el tipo, el estado y el formato deben ser válidos. El aviso que falla se descarta y los demás del lote siguen su curso. | ResultadoAnálisis, Surtidor | CU-06 ext. 4a, HU-08 c.9 |
 | RN-06.16 | Un aviso válido se convierte en un `EstadoCombustible` con origen WhatsApp y con la fecha del mensaje, no la del análisis. | EstadoCombustible | CU-06 paso 4 |
-| RN-06.17 | Si para ese surtidor y tipo ya existe un dato más reciente, el aviso no lo reemplaza. Si el lote trae varios avisos del mismo surtidor y tipo, vale el más reciente. | EstadoCombustible | CU-05 sección 8, decisión de WhatsApp 4 |
+| RN-06.17 | Si para ese surtidor y tipo ya existe un dato de WhatsApp más reciente, el aviso no lo reemplaza. La comparación es solo entre datos del mismo origen: un dato de Conductores o de ANH no impide guardar el aviso, y cuál de los tres se muestra lo decide [RN-05.3](CU-05_ConsultarDisponibilidadCombustible.md). Si el lote trae varios avisos del mismo surtidor y tipo, vale el más reciente. | EstadoCombustible | CU-05 sección 8, decisión de WhatsApp 4, [D-28](../08_decisiones_parametros.md) |
 | RN-06.18 | El servicio envía el resultado al backend apenas termina el análisis, para que el estado se vea en la app en menos de 6 minutos desde que llegó el mensaje. | Servicio de WhatsApp/LLM | CU-06 sección 7, HU-08 c.7, RNF-04 |
 | RN-06.19 | Si el backend no recibe el resultado, el servicio lo guarda, ya sin el texto de los mensajes, y lo reenvía en el ciclo siguiente. | Servicio de WhatsApp/LLM | CU-06 ext. 4b |
 

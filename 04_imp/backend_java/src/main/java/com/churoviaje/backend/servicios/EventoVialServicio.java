@@ -1,20 +1,24 @@
 package com.churoviaje.backend.servicios;
 
-import com.churoviaje.backend.dominio.EventoVial;
-import com.churoviaje.backend.repositorios.EventoVialRepositorio;
+import java.time.LocalDateTime;
+
 import org.springframework.stereotype.Service;
+
+import com.churoviaje.backend.dominio.EventoVial;
+import com.churoviaje.backend.dominio.Ubicacion;
+import com.churoviaje.backend.repositorios.EventoVialRepositorio;
 
 @Service
 public class EventoVialServicio {
 
-    private final EventoVialRepositorio eventoVialRepositorio;
+    private final EventoVialRepositorio repositorio;
 
-    public EventoVialServicio(EventoVialRepositorio eventoVialRepositorio) {
-        this.eventoVialRepositorio = eventoVialRepositorio;
+    public EventoVialServicio(EventoVialRepositorio repositorio) {
+        this.repositorio = repositorio;
     }
 
-    public EventoVial registrarEjemplo(EventoVial evento) {
-        // Coordinación básica con el repositorio sin implementar lógica de negocio definitiva todavía
-        return eventoVialRepositorio.save(evento);
+    public EventoVial registrarEvento(String tipo, Ubicacion ubicacion, LocalDateTime horaConfirmacion, Integer minutosElegidos) {
+        EventoVial nuevoEvento = new EventoVial(tipo, horaConfirmacion, minutosElegidos);
+        return repositorio.save(nuevoEvento);
     }
 }

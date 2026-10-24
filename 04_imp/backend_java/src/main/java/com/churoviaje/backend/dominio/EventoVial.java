@@ -1,37 +1,38 @@
 package com.churoviaje.backend.dominio;
 
-import jakarta.persistence.*;
-import java.time.OffsetDateTime;
+import java.time.LocalDateTime;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+// TODO HU-01 (#53): Implementar modelo completo y tabla evento_vial
 @Entity
 @Table(name = "eventos_viales")
 public class EventoVial {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
     private String tipo;
+    private LocalDateTime fechaOcurrencia;
 
-    @Embedded
-    private Ubicacion ubicacion;
+    public EventoVial() {}
 
-    private OffsetDateTime fechaOcurrencia;
-
-    protected EventoVial() {}
-
-    public EventoVial(String tipo, Ubicacion ubicacion, OffsetDateTime horaConfirmacion, int minutosElegidos) {
+    public EventoVial(String tipo, LocalDateTime horaConfirmacion, Integer minutosElegidos) {
         this.tipo = tipo;
-        this.ubicacion = ubicacion;
-        // RN-01.4 (05_contratos.md): El EventoVial hace la resta de los minutos elegidos
         this.fechaOcurrencia = horaConfirmacion.minusMinutes(minutosElegidos);
-    }
-
-    public boolean sigueVigente(OffsetDateTime ahora) {
-        return fechaOcurrencia.plusMinutes(60).isAfter(ahora);
     }
 
     public Long getId() { return id; }
     public String getTipo() { return tipo; }
-    public Ubicacion getUbicacion() { return ubicacion; }
-    public OffsetDateTime getFechaOcurrencia() { return fechaOcurrencia; }
+    public LocalDateTime getFechaOcurrencia() { return fechaOcurrencia; }
+    
+    // Método temporal para satisfacer el DTO de respuesta
+    public Ubicacion getUbicacion() {
+        return new Ubicacion(java.math.BigDecimal.ZERO, java.math.BigDecimal.ZERO);
+    }
 }

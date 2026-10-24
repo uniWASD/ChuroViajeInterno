@@ -1,5 +1,5 @@
 @startuml ARQ-03_ModeloDominio
-' ARQ-03: Modelo de dominio de ChuroViaje (19 objetos en 6 áreas)
+' ARQ-03: Modelo de dominio de ChuroViaje (20 objetos en 6 áreas)
 ' Fuente: Documento de Arquitectura de Software, sección 5 (06/10/2026)
 ' Además de los vínculos del dibujo del documento, incluye los que describen
 ' las tablas de la sección 5 (tipo y ubicación del evento, surtidor y tipo del estado, conductor de la sesión).
@@ -52,9 +52,10 @@ package "Combustible" {
   class EstadoCombustible <<concentra reglas>>
 }
 
-package "WhatsApp" {
+package "Fuentes automáticas" {
   class "ResultadoAnálisis" as ResultadoAnalisis
   class MensajePendiente
+  class ReporteANH
 }
 
 ' Vínculos que muestra el dibujo del documento
@@ -70,6 +71,7 @@ Ruta --> Tramo : recorre
 Ruta *-- Parada : tiene
 ConfirmacionRecarga --> EstadoCombustible : actualiza
 ResultadoAnalisis --> EstadoCombustible : actualiza
+ReporteANH --> EstadoCombustible : actualiza
 MensajePendiente --> ResultadoAnalisis : se analiza en
 
 ' Vínculos que describen las tablas de la sección 5
@@ -78,5 +80,6 @@ EventoVial --> TipoEvento : es de un
 EventoVial --> Ubicacion : ocurre en
 EstadoCombustible --> Surtidor : de un
 EstadoCombustible --> TipoCombustible : de un
+ReporteANH --> Surtidor : se vincula con
 
 @enduml

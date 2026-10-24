@@ -1,8 +1,9 @@
 @startuml CU-05_ConsultarDisponibilidadCombustible
 ' CU-05: Consultar Disponibilidad de Combustible
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09)
 ' Issue: T-029 (#8)
-' Revisión de coherencia (06/10/2026): sin API externa; fuentes WhatsApp y Conductores, siempre por tipo de combustible (catálogo de tipos).
+' Revisión de coherencia (06/10/2026): entonces sin API externa; fuentes WhatsApp y Conductores, siempre por tipo de combustible (catálogo de tipos).
+' Revisión T-116 (23/10/2026): tercera fuente, ANH (CU-09).
 
 left to right direction
 skinparam shadowing false
@@ -48,8 +49,9 @@ CU05 --> Backend
 
 legend bottom
   El backend entrega el dato más reciente de cada surtidor,
-  por tipo de combustible: monitoreo de WhatsApp (CU-06)
-  o confirmación de conductores (HU-12), indicando el origen.
+  por tipo de combustible: monitoreo de WhatsApp (CU-06),
+  consulta a ANH (CU-09) o confirmación de conductores (HU-12),
+  indicando el origen.
   Tipos: Gasolina, Diesel, Gasolina Premium y Diesel ULS
   ("Desconocido" si un mensaje no lo indica).
 endlegend

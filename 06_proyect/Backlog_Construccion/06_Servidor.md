@@ -13,7 +13,7 @@ Dos cosas que hay que tener presentes durante toda la Construcción:
 | Sprint | Issues |
 | --- | --- |
 | S1 (15/10–21/10) | Preparar la instancia de Oracle Cloud |
-| S2 (22/10–28/10) | Dominio, Nginx y HTTPS |
+| S2 (22/10–28/10) | Dominio, Nginx y HTTPS · Comprobar la salida del servidor hacia la API de ANH |
 | S3 (29/10–04/11) | Desplegar el backend con el núcleo C++ |
 | S4 (05/11–11/11) | Desplegar el servicio de WhatsApp/LLM |
 | S6 (19/11–25/11) | Ambiente de pruebas para el simulador · Respaldos de la base de datos y registros |
@@ -91,6 +91,36 @@ Lo subes en una nueva rama llamada "feature/T92-servidor-preparar-instancia" (No
 **Relacionado:** RNF-08 · RNF-14 · Visión 4.4 y 6.3 · D-03, D-16, D-26
 
 Lo subes en una nueva rama llamada "feature/T97-servidor-dominio-https" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH
+
+**Tipo:** Tarea de infraestructura (cubre CU-09)
+**Tecnología:** Servidor · **Sprint:** Sprint 2 (22/10–28/10)
+**Depende de:** [T-092][Servidor] Preparar la instancia de Oracle Cloud #44
+**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
+
+**Descripción:** Antes de que el backend dependa de ANH, comprobar desde la instancia de Oracle Cloud que las consultas llegan: la salida HTTPS hacia el servidor de ANH, la verificación de su certificado con los certificados de la instancia y la respuesta en el formato que describe el informe técnico de ANH (T-115). La instancia es ARM, sale a internet por la red de Oracle y puede comportarse distinto del equipo donde se hizo la prueba.
+
+**Criterios de aceptación**
+- [ ] Desde la instancia, la consulta del catálogo de departamentos de ANH responde 200, con `decCodigo` igual a 1, por HTTPS y con el certificado verificado; en ningún momento se desactiva la verificación (RN-09.3).
+- [ ] Desde la instancia, el listado de estaciones de Tarija de gasolina responde 200 y trae estaciones con saldo.
+- [ ] El almacén de certificados de Java de la instancia valida el certificado de ANH; si no lo valida, se anota qué certificado falta y se instala, sin saltarse la verificación.
+- [ ] La salida hacia ANH no abre ningún puerto de entrada nuevo ([07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md), Servidor).
+- [ ] La guía del servidor anota el resultado, el tiempo de respuesta y si ANH rechaza o limita las peticiones que llegan desde la IP de Oracle.
+
+**Tareas**
+- [ ] Probar con `curl` y con el cliente de prueba de `05_pro/PruebaApiANH` (T-115) desde la instancia.
+- [ ] Probar la conexión desde Java con el almacén de certificados de la instancia.
+- [ ] Anotar el resultado en la guía del servidor, en `06_proyect/servidor`.
+
+**Casos de prueba**
+- [ ] CP-156 Caso de prueba: desde la instancia, el listado de estaciones de Tarija de gasolina responde 200 con el certificado verificado y trae al menos una estación con saldo.
+
+**Relacionado:** RF-15 · RNF-14 · CU-09 · RN-09.3 · D-29 · Visión 4.3 y 6.3
+
+Lo subes en una nueva rama llamada "feature/T119-servidor-salida-anh" (No olvides que el source de la rama es la de develop)
 
 ---
 

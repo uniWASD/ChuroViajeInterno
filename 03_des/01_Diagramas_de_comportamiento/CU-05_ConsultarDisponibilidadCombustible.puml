@@ -1,8 +1,8 @@
 @startuml CU-05_ConsultarDisponibilidadCombustible
 ' CU-05: Consultar Disponibilidad de Combustible - Diagrama de comportamiento (actividad)
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09), secciones 4 y 6
 ' Issue: T-045 (actualizado en T-086)
-' Revisión de coherencia (06/10/2026): sin API oficial; dato más reciente por tipo de combustible y confirmación de recarga con tipo (4a).
+' Revisión de coherencia (06/10/2026): entonces sin API oficial; dato más reciente por tipo de combustible y confirmación de recarga con tipo (4a).
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -46,8 +46,8 @@ cercanos;
 dato más reciente
 de cada surtidor y
 tipo de combustible
-(WhatsApp o
-Conductores);
+(WhatsApp,
+Conductores o ANH);
 |Sistema ChuroViaje|
 if (¿Hay un dato\nvigente para el\nsurtidor?) then (sí)
   :Muestra el estado

@@ -1,6 +1,6 @@
 @startuml CU-02_VisualizarEventosViales
 ' CU-02: Visualizar Eventos Viales
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09)
 ' Issue: T-029 (#8)
 ' Revisión de coherencia (06/10/2026): actualización cada 5 s y voto real/falso (HU-11).
 

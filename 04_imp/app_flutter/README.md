@@ -16,10 +16,14 @@ lib/
 ├── config/
 │   └── app_config.dart
 ├── controllers/
+│   ├── map_controller.dart
 │   └── navigation_controller.dart
 ├── services/
 │   └── api/
 │       └── api_client.dart
+├── models/
+├── storage/
+│   └── .gitkeep
 ├── views/
 │   ├── main/
 │   │   └── main_screen.dart
@@ -33,7 +37,8 @@ lib/
 
 test/
 ├── widget_test.dart
-└── api_client_test.dart
+├── api_client_test.dart
+└── map_controller_test.dart
 ```
 
 ### Responsabilidades

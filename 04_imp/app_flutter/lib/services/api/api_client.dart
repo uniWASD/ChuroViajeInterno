@@ -21,10 +21,13 @@ class ApiException implements Exception {
 
 class ApiClient {
   final http.Client _client;
+  final Duration timeoutDuration;
   String? _token;
 
-  ApiClient({http.Client? client})
-      : _client = client ?? http.Client();
+  ApiClient({
+    http.Client? client,
+    this.timeoutDuration = const Duration(seconds: 10),
+  }) : _client = client ?? http.Client();
 
   void setToken(String? token) {
     _token = token;
@@ -48,42 +51,66 @@ class ApiClient {
   }
 
   Future<dynamic> get(String path) async {
-    try {
-      final response = await _client.get(
-        _buildUri(path),
-        headers: _headers,
-      );
-      return _handleResponse(response);
-    } on ApiException {
-      rethrow;
-    } catch (_) {
-      throw const ApiException(
-        codigo: 'ERROR_RED',
-        mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
-      );
-    }
+  try {
+    final response = await _client
+        .get(
+          _buildUri(path),
+          headers: _headers,
+        )
+        .timeout(
+          timeoutDuration,
+          onTimeout: () {
+            throw const ApiException(
+              codigo: 'TIEMPO_ESPERA',
+              mensaje:
+                  'El servidor tardó demasiado en responder. Inténtalo de nuevo.',
+            );
+          },
+        );
+
+    return _handleResponse(response);
+  } on ApiException {
+    rethrow;
+  } catch (_) {
+    throw const ApiException(
+      codigo: 'ERROR_RED',
+      mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+    );
   }
+}
 
   Future<dynamic> post(
-    String path, {
-    Object? body,
-  }) async {
-    try {
-      final response = await _client.post(
-        _buildUri(path),
-        headers: _headers,
-        body: body == null ? null : jsonEncode(body),
-      );
-      return _handleResponse(response);
-    } on ApiException {
-      rethrow;
-    } catch (_) {
-      throw const ApiException(
-        codigo: 'ERROR_RED',
-        mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
-      );
-    }
+  String path, {
+  Object? body,
+}) async {
+  try {
+    final response = await _client
+        .post(
+          _buildUri(path),
+          headers: _headers,
+          body: body == null ? null : jsonEncode(body),
+        )
+        .timeout(
+          timeoutDuration,
+          onTimeout: () {
+            throw const ApiException(
+              codigo: 'TIEMPO_ESPERA',
+              mensaje:
+                  'El servidor tardó demasiado en responder. Inténtalo de nuevo.',
+            );
+          },
+        );
+
+    return _handleResponse(response);
+  } on ApiException {
+    rethrow;
+  } catch (_) {
+    throw const ApiException(
+      codigo: 'ERROR_RED',
+      mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+    );
   }
+}
 
   dynamic _handleResponse(http.Response response) {
     dynamic data;

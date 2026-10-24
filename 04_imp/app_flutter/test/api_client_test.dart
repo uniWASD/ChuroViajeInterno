@@ -86,5 +86,50 @@ void main() {
 
       api.dispose();
     });
+    
+        test('GET identifica cuando se agota el tiempo de espera', () async {
+      final mockClient = MockClient((request) async {
+        await Future<void>.delayed(const Duration(seconds: 1));
+        return http.Response('{}', 200);
+      });
+
+      final api = ApiClient(
+        client: mockClient,
+        timeoutDuration: const Duration(milliseconds: 100),
+      );
+
+      await expectLater(
+        api.get('/prueba'),
+        throwsA(
+          isA<ApiException>()
+              .having((error) => error.codigo, 'codigo', 'TIEMPO_ESPERA'),
+        ),
+      );
+
+      api.dispose();
+    });
+
+    test('POST identifica cuando se agota el tiempo de espera', () async {
+      final mockClient = MockClient((request) async {
+        await Future<void>.delayed(const Duration(seconds: 1));
+        return http.Response('{}', 200);
+      });
+
+      final api = ApiClient(
+        client: mockClient,
+        timeoutDuration: const Duration(milliseconds: 100),
+      );
+
+      await expectLater(
+        api.post('/prueba', body: {'dato': 'prueba'}),
+        throwsA(
+          isA<ApiException>()
+              .having((error) => error.codigo, 'codigo', 'TIEMPO_ESPERA'),
+        ),
+      );
+
+      api.dispose();
+    });
+
   });
 }

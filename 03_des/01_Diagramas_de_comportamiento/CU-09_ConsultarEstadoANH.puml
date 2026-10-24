@@ -1,0 +1,113 @@
+@startuml CU-09_ConsultarEstadoANH
+' CU-09: Consultar Estado de Combustible desde ANH - Diagrama de comportamiento (actividad)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09), secciones 4 y 6
+' Issue: T-116 (#106).
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 200
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-09: Consultar Estado de Combustible desde ANH\nDiagrama de actividad
+
+|Backend Java|
+start
+:Se cumple el
+ciclo de consulta;
+:Pide a ANH la
+gasolina y el
+diésel de Tarija;
+|API de ANH|
+:Responde con las
+estaciones del
+departamento, su
+saldo, estado y
+fecha;
+|Backend Java|
+if (¿Recibió respuesta\nde cada\ncombustible?) then (sí)
+  if (¿La respuesta\nes válida y\ncompleta?) then (sí)
+    :Ignora las
+estaciones fuera de
+la mancha urbana o
+sin vincular a un
+surtidor;
+    if (¿Tiene saldo\nválido y fecha?) then (sí)
+      :Traduce los litros:
+0 es agotado,
+más de 0 es
+disponible;
+      if (¿Es más reciente\nque el dato de ANH\nque ya hay?) then (sí)
+        :Actualiza el
+estado del
+surtidor con
+origen "ANH";
+        :El estado queda
+disponible para
+las consultas
+(CU-05);
+      else (no [6b])
+        #FFF8E1:[6b] No reemplaza el
+dato guardado y
+solo actualiza el
+momento de la
+lectura;
+      endif
+    else (no [6a])
+      #FFF8E1:[6a] No crea ni cambia
+ningún estado
+para esa
+estación;
+    endif
+  else (no [4a])
+    #FFF8E1:[4a] Descarta la
+respuesta completa
+y conserva el
+último dato de
+cada surtidor;
+  endif
+else (no [2a])
+  #FFF8E1:[2a] Reintenta una vez
+y, si sigue
+fallando, conserva
+el último dato de
+cada surtidor con
+su fecha;
+  if (¿Respondió bien\nel otro\ncombustible?) then (sí [2b])
+    #FFF8E1:[2b] Actualiza los
+surtidores con el
+combustible que
+sí respondió;
+  else (no)
+  endif
+endif
+:Deja el resumen
+del ciclo en el
+registro;
+stop
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo y flechas de retorno etiquetadas: extensiones y flujos alternativos
+  (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

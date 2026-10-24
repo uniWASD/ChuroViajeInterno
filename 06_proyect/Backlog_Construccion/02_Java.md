@@ -2,7 +2,7 @@
 
 [Índice del backlog](README.md)
 
-Responsables: Jorge y Antonio. Código en `04_imp/backend_java`.
+Responsables: Jorge y Antonio; Franz mide la API de ANH y Jorge vincula sus estaciones con los surtidores. Código en `04_imp/backend_java`.
 
 El backend es la única puerta de entrada del sistema y el lugar donde viven los objetos de dominio y sus reglas. También contiene el wrapper `MotorDeRutas`, la cara en Java del motor core ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Antes de tomar un issue, lee [02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md), [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md) y el archivo de reglas del caso de uso.
 
@@ -10,8 +10,8 @@ El backend es la única puerta de entrada del sistema y el lugar donde viven los
 | --- | --- |
 | S1 (15/10–21/10) | Estructura base del backend · Base de datos, catálogos y zona de cobertura |
 | S2 (22/10–28/10) | HU-10 Iniciar sesión con Google y emitir el JWT · Catálogos para la app · Wrapper `MotorDeRutas` |
-| S3 (29/10–04/11) | HU-01 Registrar reportes de eventos viales · HU-03 Consultar eventos vigentes y vencerlos · HU-08 Recibir el análisis de WhatsApp |
-| S4 (05/11–11/11) | HU-11 Votar eventos · HU-05 Calcular la ruta · Mantener al día el tráfico del motor |
+| S3 (29/10–04/11) | HU-01 Registrar reportes de eventos viales · HU-03 Consultar eventos vigentes y vencerlos · HU-08 Recibir el análisis de WhatsApp · Medir la API de ANH y fijar el ciclo de consulta · Vincular las estaciones de ANH con los surtidores |
+| S4 (05/11–11/11) | HU-11 Votar eventos · HU-05 Calcular la ruta · Mantener al día el tráfico del motor · HU-14 Consultar el estado de combustible desde ANH |
 | S5 (12/11–18/11) | HU-07 Consultar surtidores cercanos · HU-12 Registrar confirmaciones de recarga · HU-13 Recibir telemetría y registrar congestión |
 | S6 (19/11–25/11) | HU-06 Revisar la ruta activa · HU-09 Soporte para el simulador · Limpieza de datos vencidos |
 | S7 (26/11–30/11) | Pruebas de punta a punta |
@@ -308,11 +308,12 @@ La credencial de servicio la implementa #46; aquí solo se usa para proteger los
 - [ ] Cada aviso del lote se valida por separado: surtidor del catálogo por nombre o alias, tipo, estado y formato válidos. El aviso que falla se descarta y los demás siguen (RN-06.15).
 - [ ] La fila, si viene, debe ser uno de los valores de P-15; si no lo es, el aviso se acepta sin fila.
 - [ ] Un aviso válido se guarda como `EstadoCombustible` con origen WhatsApp y con la fecha del mensaje, no la del análisis (RN-06.16).
-- [ ] Si ya hay un dato más reciente para ese surtidor y tipo, el aviso no lo reemplaza; si el lote trae varios del mismo surtidor y tipo, vale el más reciente (RN-06.17).
+- [ ] Si ya hay un dato de WhatsApp más reciente para ese surtidor y tipo, el aviso no lo reemplaza; un dato de Conductores o de ANH no lo impide, y cuál de los tres se muestra lo decide #69. Si el lote trae varios del mismo surtidor y tipo, vale el más reciente (RN-06.17).
 - [ ] La respuesta es siempre 200 con el número de avisos aceptados y la lista de descartados, cada uno con su posición en el lote y su motivo (`SURTIDOR_DESCONOCIDO`, `COMBUSTIBLE_INVALIDO`, `ESTADO_INVALIDO`, `FECHA_INVALIDA` o `FORMATO_INVALIDO`). Un aviso válido pero más viejo que el dato actual cuenta como aceptado. Un lote de más de 1000 avisos responde 400.
+- [ ] La tabla `estado_combustible` acepta los tres orígenes (WhatsApp, Conductores y ANH) y ya tiene las columnas `litros` (no negativo, opcional), `estado_anh` (alto, medio o bajo, opcional) y `consultado_en`, que usa CU-09 ([06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md), RN-09.12, RN-09.13).
 
 **Tareas**
-- [ ] Crear la migración de `estado_combustible`, con un solo estado por surtidor, tipo y origen.
+- [ ] Crear la migración de `estado_combustible`, con un solo estado por surtidor, tipo y origen (WhatsApp, Conductores o ANH), y con las columnas `litros`, `estado_anh` y `consultado_en` para que CU-09 no necesite otra migración de esa tabla.
 - [ ] Implementar la validación de `ResultadoAnálisis` y la actualización de `EstadoCombustible`.
 - [ ] Implementar los dos endpoints de monitoreo.
 - [ ] Escribir pruebas con lotes válidos, mezclados y repetidos.
@@ -322,9 +323,74 @@ La credencial de servicio la implementa #46; aquí solo se usa para proteger los
 - [ ] CP-69 Caso de prueba: un aviso de las 15:00 no reemplaza un dato del mismo surtidor y tipo de las 15:10.
 - [ ] CP-70 Caso de prueba: una petición con el JWT de un conductor responde 403.
 
-**Relacionado:** RF-08 · RF-09 · RNF-04 · CU-06 · RN-06.14 a RN-06.17 · D-13 · P-15 · [decision_conexion_whatsapp.md](../../05_pro/ComWhatsapp/decision_conexion_whatsapp.md)
+**Relacionado:** RF-08 · RF-09 · RNF-04 · CU-06 · RN-06.14 a RN-06.17 · RN-09.12, RN-09.13 · D-13 · P-15 · [decision_conexion_whatsapp.md](../../05_pro/ComWhatsapp/decision_conexion_whatsapp.md)
 
 Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [T-117][Java] Medir la API de ANH y fijar el ciclo de consulta y la vigencia
+
+**Tipo:** Tarea de pruebas (cubre CU-09)
+**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
+**Depende de:** [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH #?(orden 56)
+**Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
+
+**Descripción:** Medir durante unos días cómo se comporta la API de ANH y, con eso, fijar los parámetros que quedaron pendientes: cada cuánto se consulta (P-29), cuánto vale un dato de ANH (P-30) y el tiempo de espera y los reintentos (P-32). También confirmar la zona horaria de `updated_at`. El resultado queda anotado en la arquitectura, para que el issue de la consulta (HU-14) parta de valores confirmados.
+
+**Criterios de aceptación**
+- [ ] Hay un registro de al menos 3 días seguidos de consultas desde la instancia, con la hora, el estado HTTP, el tiempo de respuesta, cuántas estaciones llegaron y la fecha de actualización de cada una. El registro no guarda el cuerpo de las respuestas.
+- [ ] Se sabe cada cuánto cambian el saldo y la fecha de actualización de una estación, y con eso se fija P-29 sin consultar más de lo necesario (RN-09.1).
+- [ ] Se fija P-30, la vigencia de un dato de ANH contada desde que el backend lo leyó, y queda dicho si se mantienen las 6 horas de RN-05.5 (RN-09.17).
+- [ ] Se confirma si `updated_at` trae zona horaria y qué zona se toma cuando no la trae (RN-09.13).
+- [ ] Se confirma o ajusta P-32 con los tiempos medidos y con lo que haga ANH ante las peticiones repetidas (429 o `Retry-After`) (RN-09.4).
+- [ ] P-29, P-30 y P-32 quedan como Confirmada en [08_decisiones_parametros.md](../../03_des/02_Arquitectura/08_decisiones_parametros.md), y los valores iniciales de [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md) y de CU-09 quedan al día.
+
+**Tareas**
+- [ ] Escribir un script de medición, que puede partir del cliente de `05_pro/PruebaApiANH`, y dejarlo corriendo en la instancia.
+- [ ] Analizar el registro y proponer los valores.
+- [ ] Actualizar los documentos de arquitectura con los valores confirmados.
+
+**Casos de prueba**
+- [ ] CP-157 Caso de prueba: el registro de medición cubre 72 horas seguidas y cada fila trae hora, estado HTTP, tiempo de respuesta y cantidad de estaciones.
+- [ ] CP-158 Caso de prueba: P-29, P-30 y P-32 figuran como Confirmada, con su valor, en `08_decisiones_parametros.md`.
+
+**Relacionado:** RF-15 · RNF-04 · CU-09 · RN-09.1, RN-09.4, RN-09.13, RN-09.17 · RN-05.5 · D-29, D-32 · P-29, P-30, P-32
+
+Lo subes en una nueva rama llamada "feature/T117-java-medir-api-anh" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo
+
+**Tipo:** Tarea de desarrollo (cubre CU-09)
+**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
+**Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
+**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
+
+**Descripción:** Darle a cada surtidor del catálogo el identificador de su estación en ANH, para que la consulta sepa a qué surtidor pertenece cada dato. ANH devuelve todo el departamento, así que solo se usan las estaciones que están en la mancha urbana y tienen un surtidor en el catálogo. Aquí también se fija la distancia máxima para vincular (P-31) y se deja lista la tabla `estado_combustible` para recibir datos de ANH.
+
+**Criterios de aceptación**
+- [ ] Una migración agrega `anh_id` a `surtidor`: número entero, opcional y único, de modo que ningún surtidor tiene dos y ningún identificador de ANH pertenece a dos surtidores ([06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md), RN-09.10).
+- [ ] `estado_combustible` tiene `litros` (no negativo, opcional), `estado_anh` (alto, medio o bajo, opcional) y `consultado_en`, y acepta el origen ANH. Si la migración de #57 no los creó, la migración de esta tarea los agrega.
+- [ ] Se comparan las estaciones de Tarija de ANH que están dentro de la mancha urbana con el catálogo, por nombre y por distancia, y con esos pares se fija P-31 (RN-09.10).
+- [ ] Cada vínculo lo revisa a mano una persona del equipo antes de entrar en la migración de datos.
+- [ ] Las estaciones de ANH dentro de la mancha urbana que no están en el catálogo quedan en una lista de candidatas, y el equipo decide si entran al catálogo (RN-09.9).
+- [ ] P-31 queda como Confirmada en [08_decisiones_parametros.md](../../03_des/02_Arquitectura/08_decisiones_parametros.md).
+
+**Tareas**
+- [ ] Escribir la migración de `anh_id` y, si hace falta, la de las columnas de `estado_combustible`.
+- [ ] Escribir un script que lea las estaciones de ANH y proponga los pares con su distancia.
+- [ ] Revisar los pares con el equipo y cargar los vínculos confirmados.
+- [ ] Escribir las pruebas de integridad de las dos tablas.
+
+**Casos de prueba**
+- [ ] CP-159 Caso de prueba: asignar el mismo `anh_id` a dos surtidores falla por la restricción de unicidad.
+- [ ] CP-160 Caso de prueba: `estado_combustible` guarda un dato con origen ANH, 0 litros, estado «bajo» y `consultado_en`, y rechaza un dato con litros negativos.
+
+**Relacionado:** RF-15 · CU-09 · RN-09.9, RN-09.10, RN-09.12, RN-09.13 · D-30, D-31 · P-31
+
+Lo subes en una nueva rama llamada "feature/T118-java-vincular-estaciones-anh" (No olvides que el source de la rama es la de develop)
 
 ---
 
@@ -433,6 +499,51 @@ Lo subes en una nueva rama llamada "feature/T99-java-trafico-motor" (No olvides 
 
 ---
 
+### [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH
+
+**Caso de uso:** CU-09 — Consultar Estado de Combustible desde ANH
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
+**Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57 · [T-117][Java] Medir la API de ANH y fijar el ciclo de consulta y la vigencia #?(orden 57) · [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo #?(orden 58)
+**Etiquetas:** `caso-uso:CU-09` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
+
+**Historia de usuario:** Como sistema, quiero consultar periódicamente la API pública de ANH Abastecimiento, para mantener actualizado el estado de los surtidores con el saldo y el estado que informa ANH, además de los mensajes de WhatsApp.
+
+Este proceso es automático: no tiene vista ni controlador REST. La consulta la hace solo el backend; la app, el simulador y el servicio de WhatsApp/LLM nunca llaman a ANH ([05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md), «Backend con la API de ANH»).
+
+**Criterios de aceptación**
+- [ ] Una tarea periódica, con el ciclo de P-29, pide a ANH el listado de estaciones de gasolina y el de diésel de Tarija. Antes busca a Tarija por nombre en el catálogo de departamentos y, si no hay exactamente una, no consulta (RN-09.1, RN-09.2).
+- [ ] Toda llamada es un GET por HTTPS, sin credenciales, con el certificado verificado; una redirección fuera de ANH o a HTTP se detiene (RN-09.3).
+- [ ] Cada petición espera lo que dice P-32 y se reintenta solo ante falta de conexión, tiempo agotado o respuesta 429, 502, 503 o 504; respeta `Retry-After` y deja una pausa entre peticiones (RN-09.4).
+- [ ] Una respuesta solo se acepta si es 200, JSON de hasta 10 MiB y `decCodigo` igual a 1. Se descarta completa si trae otro departamento u otro combustible, estaciones repetidas, identificadores no enteros o paginación (RN-09.5, RN-09.6).
+- [ ] Un saldo no válido o negativo se trata como «sin saldo», y los demás datos siguen su curso (RN-09.7).
+- [ ] Se ignoran las estaciones fuera de la mancha urbana o sin vincular a un surtidor; las que están dentro de la mancha y sin vincular se anotan en el registro como candidatas (RN-09.8, RN-09.9).
+- [ ] Los litros se traducen así: 0 es agotado, más de 0 es disponible y sin saldo es sin dato, que no crea ni cambia ningún estado. Los litros y el estado de ANH se guardan tal como llegan, y el estado nunca se convierte en agotado (RN-09.11, RN-09.12).
+- [ ] El dato válido se guarda como `EstadoCombustible` con origen ANH, el tipo Gasolina o Diesel, la fecha `updated_at` (sin zona horaria se toma la de Tarija; sin fecha no se guarda) y el momento de la lectura en `consultado_en` (RN-09.13).
+- [ ] Un dato más viejo no reemplaza a uno de ANH más reciente; con la misma fecha solo se actualiza `consultado_en`. La comparación es solo entre datos de ANH (RN-09.14).
+- [ ] Si ANH falla, cada surtidor conserva su último dato de ANH con su fecha, y un fallo nunca se convierte en cero litros. Si falla un combustible, el otro se actualiza igual (RN-09.15, RN-09.16).
+- [ ] La vigencia de P-30 se cuenta desde `consultado_en` (RN-09.17).
+- [ ] No se guardan la fecha de última venta ni el indicador de venta, la dirección ni la zona de la estación, las respuestas completas ni las estaciones ignoradas. Cada ciclo deja en el registro un resumen con las rutas, el estado de cada una y cuántas estaciones llegaron, se aceptaron y se ignoraron (RN-09.18, RN-09.19).
+- [ ] El dato de ANH sale en `GET /surtidores` con origen ANH, litros y estado de ANH (lo muestra #69).
+
+**Tareas**
+- [ ] Implementar el cliente de ANH con su tiempo de espera, reintentos, `Retry-After` y la lectura segura de la respuesta.
+- [ ] Implementar `ReporteANH`: validación de la respuesta, filtro de zona y de catálogo y traducción de los litros.
+- [ ] Implementar la tarea periódica y la actualización de `EstadoCombustible`.
+- [ ] Escribir las pruebas con un servidor de ANH falso que responda con los casos de los criterios; el ejemplo de respuesta sale del informe técnico de ANH (T-115).
+
+**Casos de prueba**
+- [ ] CP-161 Caso de prueba: ANH responde con tres estaciones, una vinculada con 0 litros, otra con 150 litros fuera de la mancha urbana y otra sin vincular; solo la primera crea un estado agotado con origen ANH.
+- [ ] CP-162 Caso de prueba: ANH responde 503 en todos los intentos; ningún estado cambia y cada surtidor conserva su último dato de ANH con su fecha.
+- [ ] CP-163 Caso de prueba: la respuesta trae una estación de otro departamento; se descarta completa y no se actualiza ningún estado.
+- [ ] CP-164 Caso de prueba: una estación llega con saldo «abc» y otra con 20 litros; la primera queda sin dato y la segunda queda disponible.
+- [ ] CP-165 Caso de prueba: un dato de ANH con fecha anterior al ya guardado no lo reemplaza.
+
+**Relacionado:** RF-15 · RNF-04 · RNF-07 · CU-09 · RN-09.1 a RN-09.19 · D-28 a D-32 · P-29, P-30, P-32
+
+Lo subes en una nueva rama llamada "feature/HU14-CU09-java-consultar-anh" (No olvides que el source de la rama es la de develop)
+
+---
+
 ## Sprint 5
 
 ### [HU-07][CU-05][Java] Consultar surtidores cercanos
@@ -446,25 +557,25 @@ Lo subes en una nueva rama llamada "feature/T99-java-trafico-motor" (No olvides 
 
 **Criterios de aceptación**
 - [ ] `GET /surtidores` recibe la ubicación actual y devuelve los surtidores ordenados del más cercano al más lejano, con la búsqueda por cercanía en PostGIS (RN-05.2).
-- [ ] Para cada surtidor y tipo de combustible sale un solo dato: el más reciente, venga de WhatsApp o de Conductores (RN-05.3).
-- [ ] Cada dato trae disponibilidad, tipo, origen y fecha; la fila solo si se conoce (RN-05.4, RNF-07).
-- [ ] Un dato de más de 6 horas no cuenta, y un surtidor sin datos vigentes sale como «sin información reciente» (RN-05.5).
-- [ ] Un dato de WhatsApp sin tipo sale con el tipo Desconocido (RN-05.6).
+- [ ] Para cada surtidor y tipo de combustible sale un solo dato: el más reciente, venga de WhatsApp, de Conductores o de ANH (RN-05.3).
+- [ ] Cada dato trae disponibilidad, tipo, origen y fecha; la fila solo si se conoce. Si el origen es ANH, trae también los litros y el estado de ANH (RN-05.4, RNF-07).
+- [ ] Un dato de más de 6 horas no cuenta (en un dato de ANH, las horas se cuentan desde que el backend lo leyó), y un surtidor sin datos vigentes sale como «sin información reciente» (RN-05.5, RN-09.17, P-30).
+- [ ] Un dato de WhatsApp sin tipo sale con el tipo Desconocido; los datos de ANH siempre traen el tipo del combustible consultado (RN-05.6).
 - [ ] Nunca sale quién aportó el dato (RN-05.7).
 - [ ] La respuesta llega en menos de 3 segundos (RNF-03).
 
 **Tareas**
-- [ ] Implementar en `EstadoCombustible` la elección del dato más reciente y la vigencia de 6 horas.
+- [ ] Implementar en `EstadoCombustible` la elección del dato más reciente entre los tres orígenes y la vigencia de 6 horas (desde `consultado_en` en los datos de ANH).
 - [ ] Implementar la consulta por cercanía en el repositorio.
 - [ ] Implementar el servicio y el controlador de surtidores.
-- [ ] Escribir pruebas con datos de ambos orígenes y datos vencidos.
+- [ ] Escribir pruebas con datos de los tres orígenes y datos vencidos.
 
 **Casos de prueba**
 - [ ] CP-102 Caso de prueba: un surtidor con Gasolina «agotado» por WhatsApp a las 10:00 y «disponible» por Conductores a las 10:30 muestra disponible, origen Conductores, 10:30.
 - [ ] CP-103 Caso de prueba: un surtidor cuyo último dato es de hace 7 horas sale como «sin información reciente».
 - [ ] CP-104 Caso de prueba: desde la Plaza, el primer surtidor de la lista es el más cercano.
 
-**Relacionado:** RF-07 · RNF-03 · RNF-07 · CU-05 · RN-05.1 a RN-05.7
+**Relacionado:** RF-07 · RNF-03 · RNF-07 · CU-05 · RN-05.1 a RN-05.7 · RN-09.12, RN-09.17 · D-28, D-31 · P-30
 
 Lo subes en una nueva rama llamada "feature/HU07-CU05-java-consultar-surtidores" (No olvides que el source de la rama es la de develop)
 
@@ -651,7 +762,7 @@ Lo subes en una nueva rama llamada "feature/T105-java-limpieza-datos" (No olvide
 
 ### [T-107][Java] Pruebas de punta a punta
 
-**Tipo:** Tarea de pruebas (cubre los ocho casos de uso)
+**Tipo:** Tarea de pruebas (cubre los nueve casos de uso)
 **Tecnología:** Java · **Sprint:** Sprint 7 (26/11–30/11)
 **Depende de:** todos los issues de Java
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
@@ -664,14 +775,15 @@ Lo subes en una nueva rama llamada "feature/T105-java-limpieza-datos" (No olvide
 - [ ] Cada fallo encontrado tiene su issue `tipo:bug` con el CP que lo detectó.
 
 **Tareas**
-- [ ] Escribir las pruebas de los flujos de CU-01 a CU-08.
+- [ ] Escribir las pruebas de los flujos de CU-01 a CU-09; en el de CU-09, la consulta usa un servidor de ANH falso.
 - [ ] Revisar que cada endpoint de `05_contratos.md` está implementado y documentado en OpenAPI.
 - [ ] Abrir los issues de los fallos y corregir los que sean del backend.
 
 **Casos de prueba**
 - [ ] CP-149 Caso de prueba: un evento reportado por un conductor llega a otro en su siguiente consulta, en menos de 10 segundos (RNF-01).
 - [ ] CP-150 Caso de prueba: un bloqueo reportado cambia la ruta calculada después entre los mismos puntos.
+- [ ] CP-166 Caso de prueba: con un ANH falso que informa 0 litros de Gasolina en un surtidor vinculado, `GET /surtidores` lo muestra agotado con origen ANH; si después ANH responde 503, el dato anterior sigue ahí.
 
-**Relacionado:** RNF-01 · RNF-02 · RNF-03 · CU-01 a CU-08
+**Relacionado:** RNF-01 · RNF-02 · RNF-03 · CU-01 a CU-09
 
 Lo subes en una nueva rama llamada "feature/T107-java-pruebas-punta-a-punta" (No olvides que el source de la rama es la de develop)

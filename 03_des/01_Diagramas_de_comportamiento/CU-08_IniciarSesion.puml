@@ -1,6 +1,6 @@
 @startuml CU-08_IniciarSesion
 ' CU-08: Iniciar Sesión - Diagrama de comportamiento (actividad)
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09), secciones 4 y 6
 ' Issue: T-045 (actualizado en T-086)
 
 skinparam shadowing false

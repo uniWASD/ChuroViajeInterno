@@ -1,6 +1,6 @@
 @startuml CU-07_EjecutarSimuladorTrafico
 ' CU-07: Ejecutar Simulador de Tráfico - Diagrama de comportamiento (actividad)
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08), secciones 4 y 6
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09), secciones 4 y 6
 ' Issue: T-045
 ' Revisión de coherencia (06/10/2026): el script envía los datos al backend por su API.
 

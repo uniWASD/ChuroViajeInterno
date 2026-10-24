@@ -2,7 +2,8 @@
 ' ARQ-01: Componentes, despliegue y comunicación de ChuroViaje
 ' Fuente: Documento de Arquitectura de Software, sección 3 (06/10/2026)
 ' Decisiones: D-03 (el backend es la única puerta de entrada), D-08 (Mapbox solo da el mapa base de la app),
-' D-15 (el motor core tiene una cara en Java, el wrapper MotorDeRutas, que habla con el núcleo C++ por pipe)
+' D-15 (el motor core tiene una cara en Java, el wrapper MotorDeRutas, que habla con el núcleo C++ por pipe),
+' D-28 y D-29 (ANH es una fuente complementaria y la consulta el backend con una tarea periódica)
 
 left to right direction
 skinparam monochrome true
@@ -36,6 +37,7 @@ cloud "Google Sign-In\nverifica la identidad" as google
 cloud "Mapbox\nmapa base de la app" as mapbox
 cloud "Proveedor del LLM\ninterpreta los mensajes" as llm
 cloud "Grupos de WhatsApp\nmonitoreados" as grupos
+cloud "ANH Abastecimiento\nsaldo y estado de las\nestaciones (datos públicos)" as anh
 
 sim --> backend : HTTPS y JWT
 app --> backend : HTTPS y JWT
@@ -47,5 +49,6 @@ backend --> bd
 wa --> backend : resultado del análisis\n(HTTP local)
 wa --> llm : texto y fecha (HTTPS)
 wa --> grupos : solo lectura
+backend --> anh : consulta periódica\n(HTTPS, GET)
 
 @enduml

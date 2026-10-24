@@ -2,9 +2,9 @@
 
 [Índice del backlog](README.md)
 
-Este archivo dice en qué orden se crean los 55 issues del backlog en GitHub y con qué Milestone y etiquetas. El texto de cada issue sigue en su archivo por tecnología; aquí solo está el orden, para que cada issue se cree después de los issues de los que depende y se pueda enlazar con su número.
+Este archivo dice en qué orden se crean los 59 issues del backlog en GitHub y con qué Milestone y etiquetas. El texto de cada issue sigue en su archivo por tecnología; aquí solo está el orden, para que cada issue se cree después de los issues de los que depende y se pueda enlazar con su número.
 
-Los 53 primeros se crearon el 13/10/2026 con [subir_issues.py](subir_issues.py), que les asignó T-087 a T-110 y CP-20 a CP-154. Las filas 54 y 55 salieron después, al dividir #50 y #70 según la [estimación](07_Estimacion.md), y se crean con [sincronizar_issues.py](sincronizar_issues.py). Por eso dos filas anteriores, la 12 y la 45, dependen de ellas.
+Los 53 primeros se crearon el 13/10/2026 con [subir_issues.py](subir_issues.py), que les asignó T-087 a T-110 y CP-20 a CP-154. Las filas 54 y 55 salieron después, al dividir #50 y #70 según la [estimación](07_Estimacion.md), y se crean con [sincronizar_issues.py](sincronizar_issues.py). Por eso dos filas anteriores, la 12 y la 45, dependen de ellas. Las filas 56 a 59 salieron el 23/10/2026, al incorporar la API de ANH como fuente complementaria (T-116), y también se crean con sincronizar_issues.py; sus tareas son T-117 a T-119 y sus casos de prueba, CP-156 a CP-165. La fila 50 recibió además el CP-166.
 
 ## Pasos para subir
 
@@ -25,9 +25,9 @@ El script [subir_issues.py](subir_issues.py) hace los pasos 2 a 5 con GitHub CLI
 | Milestone | Fechas | Fecha de cierre | Issues |
 | --- | --- | --- | --- |
 | Sprint 1 | 15/10 – 21/10 | 2026-10-21 | 6 |
-| Sprint 2 | 22/10 – 28/10 | 2026-10-28 | 9 |
-| Sprint 3 | 29/10 – 04/11 | 2026-11-04 | 8 |
-| Sprint 4 | 05/11 – 11/11 | 2026-11-11 | 8 |
+| Sprint 2 | 22/10 – 28/10 | 2026-10-28 | 10 |
+| Sprint 3 | 29/10 – 04/11 | 2026-11-04 | 10 |
+| Sprint 4 | 05/11 – 11/11 | 2026-11-11 | 9 |
 | Sprint 5 | 12/11 – 18/11 | 2026-11-18 | 11 |
 | Sprint 6 | 19/11 – 25/11 | 2026-11-25 | 9 |
 | Sprint 7 | 26/11 – 30/11 | 2026-11-30 | 4 |
@@ -87,9 +87,13 @@ La columna «Depende de» usa el número de orden de esta tabla.
 | 47 | [T-105][Java] Limpieza de datos vencidos | [02_Java.md](02_Java.md) | Sprint 6 | tipo:tarea, fase:construccion, tec:java | 34 | 1 | #85 |
 | 48 | [T-106][Servidor] Ambiente de pruebas para el simulador | [06_Servidor.md](06_Servidor.md) | Sprint 6 | tipo:tarea, fase:construccion, tec:servidor | 22 | 1 | #86 |
 | 49 | [HU-09][CU-07][Simulador] Usuarios fantasma que envían eventos y telemetría | [05_Simulador.md](05_Simulador.md) | Sprint 6 | caso-uso:CU-07, tipo:historia-usuario, fase:construccion, tec:simulador | 40, 46, 48 | 3 | #87 |
-| 50 | [T-107][Java] Pruebas de punta a punta | [02_Java.md](02_Java.md) | Sprint 7 | tipo:prueba, fase:construccion, tec:java | Todos los de Java | 2 | #88 |
+| 50 | [T-107][Java] Pruebas de punta a punta | [02_Java.md](02_Java.md) | Sprint 7 | tipo:prueba, fase:construccion, tec:java | Todos los de Java | 3 | #88 |
 | 51 | [T-108][Simulador] Pruebas de carga y reporte | [05_Simulador.md](05_Simulador.md) | Sprint 7 | tipo:prueba, fase:construccion, tec:simulador | 49 | 2 | #89 |
 | 52 | [T-109][C++] Rendimiento con la red real de Tarija | [03_Cpp.md](03_Cpp.md) | Sprint 7 | tipo:prueba, fase:construccion, tec:cpp | 38, 51 | 1 | #90 |
 | 53 | [T-110][Servidor] Despliegue final y revisión de seguridad | [06_Servidor.md](06_Servidor.md) | Sprint 7 | tipo:tarea, fase:construccion, tec:servidor | Todos los de sprints anteriores | 1 | #91 |
 | 54 | [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap | [03_Cpp.md](03_Cpp.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:cpp | 3 | 2 | #93 |
 | 55 | [HU-05][CU-03][Flutter] Navegación activa | [01_Flutter.md](01_Flutter.md) | Sprint 5 | caso-uso:CU-03, tipo:historia-usuario, fase:construccion, tec:flutter | 32 | 2 | #94 |
+| 56 | [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH | [06_Servidor.md](06_Servidor.md) | Sprint 2 | tipo:tarea, fase:construccion, tec:servidor | 6 | 1 |  |
+| 57 | [T-117][Java] Medir la API de ANH y fijar el ciclo de consulta y la vigencia | [02_Java.md](02_Java.md) | Sprint 3 | tipo:prueba, fase:construccion, tec:java | 56 | 2 |  |
+| 58 | [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo | [02_Java.md](02_Java.md) | Sprint 3 | tipo:tarea, fase:construccion, tec:java | 3, 19 | 2 |  |
+| 59 | [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH | [02_Java.md](02_Java.md) | Sprint 4 | caso-uso:CU-09, tipo:historia-usuario, fase:construccion, tec:java | 19, 57, 58 | 5 |  |

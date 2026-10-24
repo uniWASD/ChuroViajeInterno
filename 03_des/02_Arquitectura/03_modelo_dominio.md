@@ -2,13 +2,13 @@
 
 [Índice de la arquitectura](README.md)
 
-El modelo tiene 19 objetos de dominio repartidos en seis áreas. Cada objeto guarda sus datos y hace cumplir las reglas que le pertenecen; las reglas completas, con su código, están en [04_reglas](04_reglas/README.md).
+El modelo tiene 20 objetos de dominio repartidos en seis áreas. Cada objeto guarda sus datos y hace cumplir las reglas que le pertenecen; las reglas completas, con su código, están en [04_reglas](04_reglas/README.md).
 
-![Modelo de dominio · 6 áreas, 19 objetos y los vínculos entre áreas](diagramas/ARQ-03_ModeloDominio.png)
+![Modelo de dominio · 6 áreas, 20 objetos y los vínculos entre áreas](diagramas/ARQ-03_ModeloDominio.png)
 
-*Figura: Modelo de dominio · 6 áreas, 19 objetos y los vínculos entre áreas. Fuente editable: [ARQ-03_ModeloDominio.puml](diagramas/ARQ-03_ModeloDominio.puml).*
+*Figura: Modelo de dominio · 6 áreas, 20 objetos y los vínculos entre áreas. Fuente editable: [ARQ-03_ModeloDominio.puml](diagramas/ARQ-03_ModeloDominio.puml).*
 
-Casi todo termina en dos objetos: lo que reportan los conductores y la telemetría acaba en un `EventoVial`, y lo que llega de WhatsApp y de las recargas acaba en un `EstadoCombustible`.
+Casi todo termina en dos objetos: lo que reportan los conductores y la telemetría acaba en un `EventoVial`, y lo que llega de WhatsApp, de ANH y de las recargas acaba en un `EstadoCombustible`.
 
 ## Acceso
 
@@ -51,17 +51,18 @@ La congestión no es un objeto aparte. Cuando el motor core la detecta por telem
 
 | Objeto | Qué representa | Datos principales | Reglas que cuida | Vive en |
 | --- | --- | --- | --- | --- |
-| Surtidor | Una estación de servicio del catálogo | Nombre, alias con los que la gente lo nombra, ubicación | Solo los surtidores del catálogo pueden recibir un estado | Backend |
+| Surtidor | Una estación de servicio del catálogo | Nombre, alias con los que la gente lo nombra, ubicación, identificador de ANH si lo tiene | Solo los surtidores del catálogo pueden recibir un estado. Cada identificador de ANH pertenece a un solo surtidor | Backend |
 | TipoCombustible | El catálogo de combustibles | Gasolina, Diesel, Gasolina Premium, Diesel ULS y Desconocido | Todo dato de un surtidor lleva uno de estos tipos. Desconocido solo puede venir de WhatsApp | Backend |
-| EstadoCombustible | Lo último que se sabe de un combustible en un surtidor | Surtidor, tipo, disponibilidad (disponible o agotado), fila aproximada si se conoce, origen (WhatsApp o Conductores), fecha del dato | Para cada surtidor y tipo vale el dato más reciente. Pasada su vigencia se muestra como «sin información reciente» | Backend |
+| EstadoCombustible | Lo último que se sabe de un combustible en un surtidor | Surtidor, tipo, disponibilidad (disponible o agotado), fila aproximada si se conoce, origen (WhatsApp, Conductores o ANH), fecha del dato. Si el origen es ANH, además los litros, el estado de ANH (alto, medio o bajo) y el momento en que el backend lo leyó | Para cada surtidor y tipo vale el dato más reciente de los tres orígenes. Pasada su vigencia se muestra como «sin información reciente». Los litros de ANH nunca son negativos y el estado de ANH no cambia la disponibilidad | Backend |
 | ConfirmaciónRecarga | El aviso de un conductor que acaba de recargar | Conductor, surtidor, tipo de combustible, fecha | Marca ese combustible como disponible con origen Conductores. No se repite en poco tiempo | Backend |
 
-## Monitoreo de WhatsApp
+## Fuentes automáticas de combustible
 
 | Objeto | Qué representa | Datos principales | Reglas que cuida | Vive en |
 | --- | --- | --- | --- | --- |
 | MensajePendiente | Un mensaje de un grupo que espera análisis | Identificador, grupo, fecha y hora, texto, estado (pendiente, procesado o descartado) | Nunca guarda número ni nombre del remitente. Su texto se borra al analizarse o al superar su vigencia | Servicio de WhatsApp/LLM |
 | ResultadoAnálisis | Lo que el LLM entendió de un lote | Por cada aviso: surtidor, tipo de combustible, estado, fila si se menciona y fecha del mensaje | Solo se acepta el aviso que nombra un surtidor del catálogo y cumple el formato | Servicio de WhatsApp/LLM, que lo arma; backend, que lo valida |
+| ReporteANH | Lo que ANH informa de una estación y un combustible en una consulta | Identificador de la estación en ANH, combustible, litros, estado de ANH, fecha de actualización, ubicación y momento de la consulta | Solo se acepta si la respuesta cumple el formato. Ignora las estaciones fuera de la mancha urbana o sin vincular a un surtidor. Traduce 0 litros a agotado y más de 0 a disponible; sin saldo no es cero. No guarda la fecha de última venta | Backend |
 
 ## Pruebas de carga
 
@@ -80,9 +81,14 @@ La congestión no es un objeto aparte. Cuando el motor core la detecta por telem
 | Colores de evento | Rojo para accidentes y azul para controles policiales. Los de bloqueo, otro y congestión los fija el diseño | Visión 1.2.1, HU-03 |
 | Tiempos que ofrece el reporte | Ahora mismo, hace 5 minutos (marcado), hace 10 minutos y hace 30 minutos | HU-01 c.2 y decisión [D-09](08_decisiones_parametros.md) |
 | Tipos de combustible | Gasolina, Diesel, Gasolina Premium, Diesel ULS; Desconocido cuando el mensaje no lo indica | CU-05, sección 8 |
-| Vigencia del estado de un surtidor | 6 horas sin dato nuevo | CU-05, sección 8 |
+| Vigencia del estado de un surtidor | 6 horas sin dato nuevo. Para ANH se cuentan desde que el backend lo leyó, y el valor lo fija [P-30](08_decisiones_parametros.md) | CU-05, sección 8, CU-09 |
 | Vigencia de un mensaje pendiente | 30 minutos sin analizar | CU-06, sección 8 |
 | Ciclo de análisis de mensajes | Cada 5 minutos, solo si hay pendientes | CU-06 |
+| Ciclo de consulta a ANH | Lo fija [P-29](08_decisiones_parametros.md) con la tarea T-117 | CU-09, decisión [D-29](08_decisiones_parametros.md) |
+| Combustibles que se piden a ANH | Gasolina y Diesel | CU-09, prototipo de `05_pro/PruebaApiANH` |
+| Traducción de los litros de ANH | 0 litros, agotado. Más de 0, disponible. Sin saldo, sin dato | CU-09, decisión [D-31](08_decisiones_parametros.md) |
+| Distancia máxima para vincular una estación de ANH con un surtidor | La fija [P-31](08_decisiones_parametros.md) con la tarea T-118 | CU-09, decisión [D-30](08_decisiones_parametros.md) |
+| Espera y reintentos de la consulta a ANH | 12 segundos por petición, 1 reintento y 1 segundo entre peticiones | [P-32](08_decisiones_parametros.md) |
 | Consulta de eventos desde la app | Cada 5 segundos | CU-02, sección 8 |
 | Red vial | Extracto de OpenStreetMap de la mancha urbana de Tarija, solo con vías vehiculares | Decisión [D-08](08_decisiones_parametros.md) |
 | Niveles de tráfico de un tramo | Fluido, moderado, congestionado y muy congestionado, con costo multiplicado por 1,0, 1,5, 2,5 y 4,0 | Prototipo de `05_pro/PruebaCalculoRuta`, a ajustar con pruebas |

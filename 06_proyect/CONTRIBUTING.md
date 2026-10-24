@@ -31,7 +31,7 @@ Todo en el proyecto se puede rastrear con esta cadena:
 | Artefacto | Prefijo | Ejemplo | Dónde vive |
 |---|---|---|---|
 | Requisito | RF-XX / RNF-XX | RF-05 | Matriz de requisitos (`02_req/pdf/matriz_de_requisitos_churoviaje.md`) |
-| Caso de uso | CU-XX | CU-04 | Documento de Casos de Uso (CU-01 a CU-08) |
+| Caso de uso | CU-XX | CU-04 | Documento de Casos de Uso (CU-01 a CU-09) |
 | Historia de usuario | HU-XX | HU-12 | Issue de GitHub |
 | Tarea de desarrollo | T-XX | T-034 | Checklist dentro del Issue de la HU |
 | Caso de prueba | CP-XX | CP-09 | `05_pro/` o carpeta `tests/` del repo |
@@ -50,6 +50,7 @@ Lista de casos de uso vigentes:
 | CU-06 | Monitorear Estado de Surtidores vía WhatsApp |
 | CU-07 | Ejecutar Simulador de Tráfico |
 | CU-08 | Iniciar Sesión |
+| CU-09 | Consultar Estado de Combustible desde ANH |
 
 ## 4. Ramas (branches)
 
@@ -73,7 +74,7 @@ Reglas:
 
 | Label | Uso |
 |---|---|
-| `caso-uso:CU-01` … `caso-uso:CU-08` | Identifica a qué caso de uso pertenece el Issue |
+| `caso-uso:CU-01` … `caso-uso:CU-09` | Identifica a qué caso de uso pertenece el Issue |
 | `tipo:historia-usuario` | El Issue es una historia de usuario |
 | `tipo:tarea` | El Issue es una tarea puntual (no ligada a una HU completa) |
 | `tipo:bug` | Defecto encontrado (en desarrollo o en pruebas) |
@@ -166,7 +167,7 @@ Archivo: `06_proyect/TRAZABILIDAD.md`. Se actualiza cada vez que se cierra una h
 
 ### Resumen
 
-1. Lee el Documento de Visión y los Casos de Uso (CU-01 a CU-08) antes de tomar una tarea.
+1. Lee el Documento de Visión y los Casos de Uso (CU-01 a CU-09) antes de tomar una tarea.
 2. Busca en el tablero una tarjeta en "Por hacer" o pide que te asignen una.
 3. Crea tu rama desde `develop` con el patrón `feature/HUxx-CUxx-nombre-corto`.
 4. Commitea con el formato de la sección 9.

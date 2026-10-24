@@ -1,6 +1,6 @@
 @startuml CU-07_EjecutarSimuladorTrafico
 ' CU-07: Ejecutar Simulador de Tráfico
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09)
 ' Issue: T-029 (#8)
 
 left to right direction

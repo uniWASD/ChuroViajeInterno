@@ -1,6 +1,6 @@
 @startuml CU-04_RecalcularRuta
 ' CU-04: Recalcular Ruta
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09)
 ' Issue: T-029 (#8)
 
 left to right direction

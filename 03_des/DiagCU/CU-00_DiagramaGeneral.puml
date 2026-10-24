@@ -1,8 +1,9 @@
 @startuml CU-00_DiagramaGeneral
-' Diagrama de Casos de Uso - Sistema ChuroViaje (CU-01 a CU-08)
-' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-08)
+' Diagrama de Casos de Uso - Sistema ChuroViaje (CU-01 a CU-09)
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09)
 ' Issue: T-029 (#8)
-' Revisión de coherencia (06/10/2026): sin API externa de surtidores, con proveedor del LLM y sesión obligatoria.
+' Revisión de coherencia (06/10/2026): con proveedor del LLM y sesión obligatoria.
+' Revisión T-116 (23/10/2026): se agrega CU-09 y la API de ANH Abastecimiento como sistema externo (fuente complementaria de combustible).
 
 left to right direction
 skinparam shadowing false
@@ -34,18 +35,20 @@ skinparam legend {
   FontSize 12
 }
 
-title Diagrama de Casos de Uso - Sistema ChuroViaje (CU-01 a CU-08)
+title Diagrama de Casos de Uso - Sistema ChuroViaje (CU-01 a CU-09)
 
 ' Actores principales (izquierda)
 actor "Conductor" as Conductor
 actor "Desarrollador /\nAdministrador" as Dev
 actor "Proceso de monitoreo\n(automático)" as Monitor <<proceso>>
+actor "Proceso de consulta\na ANH (automático)" as Consulta <<proceso>>
 
 ' Actores secundarios externos (derecha)
 actor "Google Sign-In" as Google <<sistema externo>>
 actor "Mapbox" as Mapbox <<sistema externo>>
 actor "Grupos de WhatsApp\nmonitoreados" as WA <<sistema externo>>
 actor "Proveedor del LLM" as LLM <<sistema externo>>
+actor "API de ANH\nAbastecimiento" as ANH <<sistema externo>>
 actor "Script de simulación\n(Python)" as Script <<sistema>>
 
 rectangle "Sistema ChuroViaje" {
@@ -60,6 +63,7 @@ Navegación activa"
   usecase "CU-04\nRecalcular Ruta" as CU04
   usecase "CU-05\nConsultar Disponibilidad\nde Combustible" as CU05
   usecase "CU-06\nMonitorear Estado de\nSurtidores vía WhatsApp" as CU06
+  usecase "CU-09\nConsultar Estado de\nCombustible desde ANH" as CU09
   usecase "CU-07\nEjecutar Simulador\nde Tráfico" as CU07
 }
 
@@ -71,6 +75,7 @@ Conductor --> CU03
 Conductor --> CU04
 Conductor --> CU05
 Monitor --> CU06
+Consulta --> CU09
 Dev --> CU07
 
 ' Relaciones entre casos de uso
@@ -86,6 +91,7 @@ CU08 --> Google
 CU03 --> Mapbox
 CU06 --> WA
 CU06 --> LLM
+CU09 --> ANH
 CU07 --> Script
 
 
@@ -96,6 +102,8 @@ legend bottom left
   especificación, porque el alcance (SUD) de esos casos es la app móvil.
   La sesión iniciada (CU-08) es precondición de CU-01 a CU-05; CU-01 además la
   incluye para reautenticar al conductor cuando el token expira.
+  CU-06 y CU-09 son las dos fuentes automáticas del estado de los surtidores;
+  su resultado llega al conductor por CU-05.
 endlegend
 
 @enduml

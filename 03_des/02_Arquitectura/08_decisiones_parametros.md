@@ -35,6 +35,11 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | D-25 | Los surtidores también se muestran como marcadores en el mapa, además de la lista | CU-05 paso 4 habla de «listado/mapa» | Confirmada el 13/10/2026 |
 | D-26 | El proyecto tiene un dominio propio (unos 15 dólares al año) que apunta a la IP reservada del servidor, con certificado de Let's Encrypt | HTTPS necesita un dominio (Visión 4.4 y 6.3) | Confirmada el 13/10/2026 |
 | D-27 | La versión de Node.js del servidor y de las pruebas del servicio de WhatsApp/LLM queda fija en la 24 hasta el 30/11/2026; después se decide si se pasa a una más nueva | Todos prueban con la misma versión, y la 24 tiene soporte de seguridad hasta abril de 2028, más allá del fin del proyecto | Confirmada el 23/10/2026 |
+| D-28 | ANH Abastecimiento es una fuente complementaria de combustible. Su dato entra como un `EstadoCombustible` con origen ANH, y el monitoreo de WhatsApp y las confirmaciones de los conductores se mantienen | ANH da el saldo en litros y el estado de cada estación, pero no publica condiciones de uso, cuotas ni disponibilidad garantizada; con tres fuentes, el sistema sigue funcionando si una falla | Propuesta |
+| D-29 | La consulta a ANH la hace el backend Java con una tarea periódica; la app nunca llama a ANH. El cliente en Python de `05_pro/PruebaApiANH` queda como prototipo de referencia | Una sola consulta centralizada evita que cada app llame a ANH, y el prototipo ya probó las rutas, la validación y los reintentos | Propuesta |
+| D-30 | Cada estación de ANH se vincula a un surtidor del catálogo por su identificador. Las estaciones que no están en el catálogo o que caen fuera de la mancha urbana se ignoran | ANH devuelve todo el departamento: en la prueba llegaron 31 estaciones, también de Bermejo y Yacuiba | Propuesta |
+| D-31 | Un saldo de 0 litros es agotado, uno mayor que 0 es disponible y sin saldo es sin dato. Se guardan los litros y el estado de ANH (alto, medio o bajo) tal como llegan, y el estado no se convierte en agotado | El estado «bajo» no tiene un umbral definido: en la prueba, 37 litros y 0 litros salieron los dos como «bajo». Convertirlo en agotado perdería información | Propuesta |
+| D-32 | Si ANH falla, el surtidor conserva el último dato de ANH con su fecha; un fallo nunca se convierte en cero litros, y el dato vence por vigencia | Que ANH no responda no significa que no haya combustible | Propuesta |
 
 ## Parámetros
 
@@ -64,5 +69,9 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | P-26 | Tiempo que el aviso de ruta alternativa espera una respuesta | [RN-04.21](04_reglas/CU-04_RecalcularRuta.md) | 15 segundos | Confirmado |
 | P-27 | Cada cuánto se actualizan la lista y los marcadores de surtidores con su vista abierta | [RN-05.17](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md) | 60 segundos | Confirmado |
 | P-28 | Cuánto se conservan, sin texto, las filas terminadas del servicio de WhatsApp/LLM | [RN-06.12](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [06_base_de_datos.md](06_base_de_datos.md) | 24 horas, para no repetir mensajes recibidos al reconectarse; después se borran en el siguiente mantenimiento | Confirmado el 23/10/2026 |
+| P-29 | Cada cuánto el backend consulta a ANH | [RN-09.1](04_reglas/CU-09_ConsultarEstadoANH.md) | Se fija con la tarea T-117 | Pendiente |
+| P-30 | Vigencia del dato de ANH | [RN-05.5](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md) | Hoy los datos valen 6 horas (RN-05.5); se fija con la tarea T-117 | Pendiente |
+| P-31 | Distancia máxima para vincular una estación de ANH con un surtidor del catálogo | [RN-09.10](04_reglas/CU-09_ConsultarEstadoANH.md) | Se fija con la tarea T-118 | Pendiente |
+| P-32 | Tiempo de espera y reintentos de la consulta a ANH | [RN-09.4](04_reglas/CU-09_ConsultarEstadoANH.md) | Partir de los del cliente de prueba: 12 segundos por petición, 1 reintento y 1 segundo entre peticiones | Propuesta |
 
 P-07, P-08 y P-10 se cerraron con las decisiones D-09, D-08 y D-12. P-16 quedó sin uso.

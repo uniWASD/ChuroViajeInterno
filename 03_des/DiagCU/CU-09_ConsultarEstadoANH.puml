@@ -1,0 +1,64 @@
+@startuml CU-09_ConsultarEstadoANH
+' CU-09: Consultar Estado de Combustible desde ANH
+' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09)
+' Issue: T-116 (#106). La investigación de la API está en T-115 (#105).
+
+left to right direction
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  ArrowColor #2F5D8A
+}
+skinparam rectangle {
+  BorderColor #2F5D8A
+  FontStyle bold
+}
+skinparam actor {
+  BorderColor #2F5D8A
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam ArrowColor #2F5D8A
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 12
+}
+
+title CU-09: Consultar Estado de Combustible desde ANH
+
+actor "Proceso de consulta\na ANH (automático)" as Consulta <<proceso>>
+actor "API de ANH\nAbastecimiento" as ANH <<sistema externo>>
+
+rectangle "Backend de ChuroViaje (módulo de combustible)" {
+  usecase "CU-09\nConsultar Estado de\nCombustible desde ANH" as CU09
+}
+
+Consulta --> CU09
+CU09 --> ANH
+note on link
+  Solo lecturas GET por HTTPS, sin credenciales
+  y sin datos de personas. ANH devuelve todo
+  el departamento de Tarija: el backend se queda
+  solo con las estaciones vinculadas a un surtidor
+  del catálogo dentro de la mancha urbana.
+end note
+
+legend bottom
+  Disparador: se cumple el ciclo de consulta del backend.
+  El backend valida la respuesta y traduce los litros:
+  0 es agotado, más de 0 es disponible y sin saldo es sin dato.
+  Si ANH falla, cada surtidor conserva su último dato con su fecha.
+  El estado queda disponible para CU-05, con origen ANH.
+  Es una de las dos fuentes automáticas; la otra es CU-06.
+endlegend
+
+@enduml

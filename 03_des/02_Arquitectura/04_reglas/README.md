@@ -8,6 +8,8 @@ El código se lee así: [RN-01.4](CU-01_ReportarEventoVial.md) es la cuarta regl
 
 Algunas reglas son de funcionamiento de la app: cada cuánto consulta, qué hace sin red o cuándo obtiene la ubicación. Su responsable es un controlador de la app, porque no deciden qué es válido; eso lo decide siempre el modelo.
 
+Otras son reglas del ciclo de una fuente automática: cada cuánto consulta a ANH, cuánto espera, cuántas veces reintenta y qué deja en el registro (CU-09). Su responsable es la tarea periódica del backend, un servicio del modelo, y tampoco deciden qué es válido: eso lo hacen `ReporteANH` y `EstadoCombustible`.
+
 Cada archivo trae, además de las reglas, el recorrido del proceso. Cada proceso se describe como el camino de una petición: qué hace la vista, qué hace cada controlador y en qué punto el modelo aplica cada regla.
 
 | Caso de uso | Historias de usuario | Reglas |
@@ -20,3 +22,4 @@ Cada archivo trae, además de las reglas, el recorrido del proceso. Cada proceso
 | [CU-06 — Monitorear estado de surtidores vía WhatsApp](CU-06_MonitorearSurtidoresWhatsApp.md) | HU-08 | 19 |
 | [CU-07 — Ejecutar simulador de tráfico](CU-07_EjecutarSimuladorTrafico.md) | HU-09 | 13 |
 | [CU-08 — Iniciar sesión](CU-08_IniciarSesion.md) | HU-10 | 14 |
+| [CU-09 — Consultar estado de combustible desde ANH](CU-09_ConsultarEstadoANH.md) | HU-14 | 19 |

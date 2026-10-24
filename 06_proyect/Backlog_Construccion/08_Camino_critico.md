@@ -111,7 +111,8 @@ flowchart TB
         i13["#51 · WhatsApp/LLM<br/>Leer los grupos autorizados<br/>Franz · M"]
         i14["#52 · Servidor<br/>Dominio, Nginx y HTTPS<br/>Marcelo · S"]
         i54["#93 · C++<br/>Preparar la red vial de Tarija desde OpenStreetMap<br/>Franz · M"]
-        i56["orden 56 · Servidor<br/>Comprobar la salida del servidor hacia la API de ANH<br/>Marcelo · XS"]
+        i56["#111 · Servidor<br/>Comprobar la salida del servidor hacia la API de ANH<br/>Marcelo · XS"]
+        i57["#112 · Java<br/>Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia<br/>Franz · S"]
     end
     subgraph S3["Sprint 3"]
     direction LR
@@ -123,8 +124,7 @@ flowchart TB
         i20["#58 · C++<br/>Calcular la ruta óptima con A*<br/>Marcelo · M"]
         i21["#59 · WhatsApp/LLM<br/>Analizar los mensajes por lotes y enviar el resultado<br/>Franz · L"]
         i22["#60 · Servidor<br/>Desplegar el backend con el núcleo C++<br/>Marcelo · M"]
-        i57["orden 57 · Java<br/>Medir la API de ANH y fijar el ciclo de consulta y la vigencia<br/>Franz · S"]
-        i58["orden 58 · Java<br/>Vincular las estaciones de ANH con los surtidores del catálogo<br/>Jorge · S"]
+        i58["#113 · Java<br/>Vincular las estaciones de ANH con los surtidores del catálogo<br/>Franz · S"]
     end
     subgraph S4["Sprint 4"]
     direction LR
@@ -136,7 +136,7 @@ flowchart TB
         i28["#66 · C++<br/>Tráfico de los eventos en los tramos<br/>Marcelo · M"]
         i29["#67 · Java<br/>Mantener al día el tráfico del motor<br/>Jorge · M"]
         i30["#68 · Servidor<br/>Desplegar el servicio de WhatsApp/LLM<br/>Marcelo · S"]
-        i59["orden 59 · Java<br/>Consultar el estado de combustible desde ANH<br/>Antonio · L"]
+        i59["#114 · Java<br/>Consultar el estado de combustible desde ANH<br/>Franz y Antonio · L"]
     end
     subgraph S5["Sprint 5"]
     direction LR
@@ -201,7 +201,6 @@ flowchart TB
     i8 --> i22
     i11 --> i22
     i12 --> i22
-    i56 --> i57
     i19 --> i58
     i16 --> i23
     i18 --> i24
@@ -259,10 +258,10 @@ flowchart TB
     classDef marcelo fill:#e2d9f3,stroke:#666,color:#000
     classDef franz fill:#f8d7da,stroke:#666,color:#000
     class i1,i7,i10,i16,i18,i26,i32,i42,i45,i55 alex
-    class i2,i11,i15,i27,i29,i36,i44,i46,i50,i58 jorge
-    class i3,i8,i9,i17,i19,i25,i31,i34,i40,i47,i49,i51,i59 antonio
+    class i2,i11,i15,i27,i29,i36,i44,i46,i50 jorge
+    class i3,i8,i9,i17,i19,i25,i31,i34,i40,i47,i49,i51 antonio
     class i4,i6,i12,i14,i20,i22,i28,i30,i35,i38,i41,i48,i52,i53,i56 marcelo
-    class i5,i13,i21,i23,i24,i33,i37,i39,i43,i54,i57 franz
+    class i5,i13,i21,i23,i24,i33,i37,i39,i43,i54,i57,i58,i59 franz
     style i2 stroke:#d73a49,stroke-width:3px
     style i3 stroke:#d73a49,stroke-width:3px
     style i8 stroke:#d73a49,stroke-width:3px
@@ -276,7 +275,7 @@ flowchart TB
     style i49 stroke:#d73a49,stroke-width:3px
     style i51 stroke:#d73a49,stroke-width:3px
     style i52 stroke:#d73a49,stroke-width:3px
-    linkStyle 0,2,3,14,18,34,41,55,73,77,79,81 stroke:#d73a49,stroke-width:3px
+    linkStyle 0,2,3,14,18,33,40,54,72,76,78,80 stroke:#d73a49,stroke-width:3px
 ```
 
 Colores: azul Alex, verde Jorge, amarillo Antonio, lila Marcelo, rosado Franz.

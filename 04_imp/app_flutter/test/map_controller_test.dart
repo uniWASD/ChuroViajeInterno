@@ -9,7 +9,7 @@ void main() {
   group('MapController', () {
     test('Captura el error cuando el servidor no está disponible', () async {
       final mockClient = MockClient((request) async {
-        throw Exception('Servidor fuera de servicio');
+        throw http.ClientException('Servidor fuera de servicio');
       });
 
       final apiClient = ApiClient(client: mockClient);
@@ -28,23 +28,25 @@ void main() {
       apiClient.dispose();
     });
 
-    test('Actualiza el estado cuando recibe una respuesta del servidor',
-        () async {
-      final mockClient = MockClient((request) async {
-        return http.Response('{}', 200);
-      });
+    test(
+      'Actualiza el estado cuando recibe una respuesta del servidor',
+      () async {
+        final mockClient = MockClient((request) async {
+          return http.Response('{}', 200);
+        });
 
-      final apiClient = ApiClient(client: mockClient);
-      final controller = MapController(apiClient);
+        final apiClient = ApiClient(client: mockClient);
+        final controller = MapController(apiClient);
 
-      await controller.checkConnection();
+        await controller.checkConnection();
 
-      expect(controller.isLoading, isFalse);
-      expect(controller.isConnected, isTrue);
-      expect(controller.errorMessage, isNull);
+        expect(controller.isLoading, isFalse);
+        expect(controller.isConnected, isTrue);
+        expect(controller.errorMessage, isNull);
 
-      controller.dispose();
-      apiClient.dispose();
-    });
+        controller.dispose();
+        apiClient.dispose();
+      },
+    );
   });
 }

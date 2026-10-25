@@ -1,4 +1,4 @@
-﻿enum AppEnvironment { development, testing, production }
+enum AppEnvironment { development, testing, production }
 
 class AppConfig {
   static const String _environment = String.fromEnvironment(
@@ -43,7 +43,20 @@ class AppConfig {
     }
   }
 
-  static bool get isProduction =>
-      environment == AppEnvironment.production;
-}
+  static bool get isProduction => environment == AppEnvironment.production;
+  static void validar() {
+    final uri = Uri.tryParse(apiBaseUrl);
 
+    if (apiBaseUrl.isEmpty || uri == null || !uri.hasAuthority) {
+      throw StateError(
+        'Falta una dirección válida del backend para el ambiente $_environment.',
+      );
+    }
+
+    if (isProduction && uri.scheme != 'https') {
+      throw StateError(
+        'En producción la dirección del backend debe usar HTTPS.',
+      );
+    }
+  }
+}

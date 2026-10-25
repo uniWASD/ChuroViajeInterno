@@ -1,4 +1,6 @@
-﻿import 'dart:convert';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -34,11 +36,10 @@ class ApiClient {
   }
 
   Map<String, String> get _headers => {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        if (_token != null && _token!.isNotEmpty)
-          'Authorization': 'Bearer $_token',
-      };
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    if (_token != null && _token!.isNotEmpty) 'Authorization': 'Bearer $_token',
+  };
 
   Uri _buildUri(String path) {
     final baseUrl = AppConfig.apiBaseUrl;
@@ -50,67 +51,44 @@ class ApiClient {
     return Uri.parse('$normalizedBase$normalizedPath');
   }
 
-  Future<dynamic> get(String path) async {
-  try {
-    final response = await _client
-        .get(
-          _buildUri(path),
-          headers: _headers,
-        )
-        .timeout(
-          timeoutDuration,
-          onTimeout: () {
-            throw const ApiException(
-              codigo: 'TIEMPO_ESPERA',
-              mensaje:
-                  'El servidor tardó demasiado en responder. Inténtalo de nuevo.',
-            );
-          },
-        );
+  Future<dynamic> get(String path) {
+    return _send(() => _client.get(_buildUri(path), headers: _headers));
+  }
 
-    return _handleResponse(response);
-  } on ApiException {
-    rethrow;
-  } catch (_) {
-    throw const ApiException(
-      codigo: 'ERROR_RED',
-      mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+  Future<dynamic> post(String path, {Object? body}) {
+    return _send(
+      () => _client.post(
+        _buildUri(path),
+        headers: _headers,
+        body: body == null ? null : jsonEncode(body),
+      ),
     );
   }
-}
 
-  Future<dynamic> post(
-  String path, {
-  Object? body,
-}) async {
-  try {
-    final response = await _client
-        .post(
-          _buildUri(path),
-          headers: _headers,
-          body: body == null ? null : jsonEncode(body),
-        )
-        .timeout(
-          timeoutDuration,
-          onTimeout: () {
-            throw const ApiException(
-              codigo: 'TIEMPO_ESPERA',
-              mensaje:
-                  'El servidor tardó demasiado en responder. Inténtalo de nuevo.',
-            );
-          },
-        );
-
-    return _handleResponse(response);
-  } on ApiException {
-    rethrow;
-  } catch (_) {
-    throw const ApiException(
-      codigo: 'ERROR_RED',
-      mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
-    );
+  Future<dynamic> _send(Future<http.Response> Function() peticion) async {
+    try {
+      final response = await peticion().timeout(timeoutDuration);
+      return _handleResponse(response);
+    } on ApiException {
+      rethrow;
+    } on TimeoutException {
+      throw const ApiException(
+        codigo: 'TIEMPO_ESPERA',
+        mensaje:
+            'El servidor tardó demasiado en responder. Inténtalo de nuevo.',
+      );
+    } on SocketException {
+      throw const ApiException(
+        codigo: 'ERROR_RED',
+        mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+      );
+    } on http.ClientException {
+      throw const ApiException(
+        codigo: 'ERROR_RED',
+        mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+      );
+    }
   }
-}
 
   dynamic _handleResponse(http.Response response) {
     dynamic data;
@@ -118,8 +96,14 @@ class ApiClient {
     if (response.body.isNotEmpty) {
       try {
         data = jsonDecode(utf8.decode(response.bodyBytes));
-      } catch (_) {
-        data = null;
+      } on FormatException {
+        if (response.statusCode >= 200 && response.statusCode < 300) {
+          throw ApiException(
+            codigo: 'RESPUESTA_INVALIDA',
+            mensaje: 'El servidor devolvió una respuesta inválida.',
+            statusCode: response.statusCode,
+          );
+        }
       }
     }
 
@@ -130,7 +114,8 @@ class ApiClient {
     if (data is Map<String, dynamic>) {
       throw ApiException(
         codigo: data['codigo']?.toString() ?? 'ERROR_SERVIDOR',
-        mensaje: data['mensaje']?.toString() ??
+        mensaje:
+            data['mensaje']?.toString() ??
             'Ocurrió un error al comunicarse con el servidor.',
         statusCode: response.statusCode,
       );

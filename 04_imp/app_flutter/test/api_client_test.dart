@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
@@ -10,10 +10,7 @@ void main() {
   group('ApiClient', () {
     test('Incluye el JWT en la petición', () async {
       final mockClient = MockClient((request) async {
-        expect(
-          request.headers['Authorization'],
-          'Bearer token-prueba',
-        );
+        expect(request.headers['Authorization'], 'Bearer token-prueba');
 
         return http.Response(
           jsonEncode({'ok': true}),
@@ -55,11 +52,7 @@ void main() {
                 'mensaje',
                 'Debes iniciar sesión.',
               )
-              .having(
-                (error) => error.statusCode,
-                'statusCode',
-                401,
-              ),
+              .having((error) => error.statusCode, 'statusCode', 401),
         ),
       );
 
@@ -68,7 +61,7 @@ void main() {
 
     test('Controla los fallos de conexión', () async {
       final mockClient = MockClient((request) async {
-        throw Exception('Servidor fuera de servicio');
+        throw http.ClientException('Servidor fuera de servicio');
       });
 
       final api = ApiClient(client: mockClient);
@@ -86,8 +79,8 @@ void main() {
 
       api.dispose();
     });
-    
-        test('GET identifica cuando se agota el tiempo de espera', () async {
+
+    test('GET identifica cuando se agota el tiempo de espera', () async {
       final mockClient = MockClient((request) async {
         await Future<void>.delayed(const Duration(seconds: 1));
         return http.Response('{}', 200);
@@ -101,8 +94,11 @@ void main() {
       await expectLater(
         api.get('/prueba'),
         throwsA(
-          isA<ApiException>()
-              .having((error) => error.codigo, 'codigo', 'TIEMPO_ESPERA'),
+          isA<ApiException>().having(
+            (error) => error.codigo,
+            'codigo',
+            'TIEMPO_ESPERA',
+          ),
         ),
       );
 
@@ -123,13 +119,15 @@ void main() {
       await expectLater(
         api.post('/prueba', body: {'dato': 'prueba'}),
         throwsA(
-          isA<ApiException>()
-              .having((error) => error.codigo, 'codigo', 'TIEMPO_ESPERA'),
+          isA<ApiException>().having(
+            (error) => error.codigo,
+            'codigo',
+            'TIEMPO_ESPERA',
+          ),
         ),
       );
 
       api.dispose();
     });
-
   });
 }

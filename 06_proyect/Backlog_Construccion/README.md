@@ -9,7 +9,7 @@ Reemplaza al backlog de la fase de Elaboración, que queda guardado en [Backlog_
 | Archivo | Tecnología | Responsables | Issues |
 | --- | --- | --- | --- |
 | [01_Flutter.md](01_Flutter.md) | App Flutter | Alex; Franz en los modos sin conexión, los surtidores, la telemetría y la política de privacidad | 15 |
-| [02_Java.md](02_Java.md) | Backend Java | Jorge y Antonio; Franz mide la API de ANH y Jorge vincula sus estaciones con los surtidores | 21 |
+| [02_Java.md](02_Java.md) | Backend Java | Jorge y Antonio; Franz mide la API de ANH, vincula sus estaciones con los surtidores y hace con Antonio la consulta periódica (HU-14) | 21 |
 | [03_Cpp.md](03_Cpp.md) | Núcleo C++ del motor core | Marcelo; Franz prepara la red vial | 8 |
 | [04_WhatsApp_LLM.md](04_WhatsApp_LLM.md) | Servicio de WhatsApp/LLM (Node.js) | Franz | 4 |
 | [05_Simulador.md](05_Simulador.md) | Simulador (Python) | Antonio | 3 |
@@ -25,8 +25,8 @@ La Construcción va del 2 de octubre al 30 de noviembre de 2026. Del 2 al 14 de 
 | Sprint | Fechas | Objetivo |
 | --- | --- | --- |
 | Sprint 1 | 15/10 – 21/10 | Bases: proyectos, base de datos, servidor y protocolo del núcleo |
-| Sprint 2 | 22/10 – 28/10 | Inicio de sesión, red vial de Tarija, wrapper del motor, lectura de WhatsApp y salida del servidor hacia ANH |
-| Sprint 3 | 29/10 – 04/11 | Reportar y ver eventos, A*, análisis con LLM, primer despliegue y preparación de la consulta a ANH |
+| Sprint 2 | 22/10 – 28/10 | Inicio de sesión, red vial de Tarija, wrapper del motor, lectura de WhatsApp, salida del servidor hacia ANH y medición de su API |
+| Sprint 3 | 29/10 – 04/11 | Reportar y ver eventos, A*, análisis con LLM, primer despliegue y vínculo de las estaciones de ANH con los surtidores |
 | Sprint 4 | 05/11 – 11/11 | Votos, ruta en el backend, tráfico en el motor, modos sin conexión y consulta a ANH |
 | Sprint 5 | 12/11 – 18/11 | Ruta en la app, telemetría, congestión y surtidores |
 | Sprint 6 | 19/11 – 25/11 | Recálculo de ruta, pregunta de recarga, simulador y política de privacidad |
@@ -41,8 +41,8 @@ En esta tabla los títulos van abreviados; el título completo es el encabezado 
 | Sprint | Flutter | Java | C++ | WhatsApp/LLM | Simulador | Servidor |
 | --- | --- | --- | --- | --- | --- | --- |
 | S1 | Estructura base de la app | Estructura base del backend · Base de datos, catálogos y zona de cobertura | Estructura del núcleo y protocolo por pipe | Estructura del servicio | — | Preparar la instancia de Oracle Cloud |
-| S2 | HU-10 Iniciar sesión · Mapa base con Mapbox | HU-10 Iniciar sesión y JWT · Catálogos para la app · Wrapper `MotorDeRutas` | Preparar y cargar la red vial | HU-08 Leer los grupos autorizados | — | Dominio, Nginx y HTTPS · Salida hacia la API de ANH |
-| S3 | HU-03 Ver los eventos en el mapa · HU-01 Reportar un evento vial | HU-01 Registrar reportes · HU-03 Consultar y vencer eventos · HU-08 Recibir el análisis de WhatsApp · Medir la API de ANH · Vincular las estaciones de ANH | HU-05 Calcular la ruta óptima con A* | HU-08 Analizar los mensajes por lotes | — | Desplegar el backend con el núcleo C++ |
+| S2 | HU-10 Iniciar sesión · Mapa base con Mapbox | HU-10 Iniciar sesión y JWT · Catálogos para la app · Wrapper `MotorDeRutas` · Medir la API de ANH | Preparar y cargar la red vial | HU-08 Leer los grupos autorizados | — | Dominio, Nginx y HTTPS · Salida hacia la API de ANH |
+| S3 | HU-03 Ver los eventos en el mapa · HU-01 Reportar un evento vial | HU-01 Registrar reportes · HU-03 Consultar y vencer eventos · HU-08 Recibir el análisis de WhatsApp · Vincular las estaciones de ANH | HU-05 Calcular la ruta óptima con A* | HU-08 Analizar los mensajes por lotes | — | Desplegar el backend con el núcleo C++ |
 | S4 | HU-11 Lista de eventos y votos · HU-02 Reportes sin conexión · HU-04 Eventos sin conexión | HU-11 Votar eventos · HU-05 Calcular la ruta · Mantener al día el tráfico del motor · HU-14 Consultar el estado de combustible desde ANH | HU-05 Tráfico de los eventos en los tramos | — | — | Desplegar el servicio de WhatsApp/LLM |
 | S5 | HU-05 Cómo llegar · HU-05 Navegación activa · HU-13 Enviar telemetría · HU-07 Consultar surtidores | HU-07 Consultar surtidores · HU-12 Confirmaciones de recarga · HU-13 Telemetría y congestión | HU-13 Detectar congestión · HU-06 Revisar la ruta activa | Prueba con mensajes reales | Estructura y parámetros | — |
 | S6 | HU-12 Preguntar por la recarga · HU-06 Aviso de ruta alternativa · Política de privacidad | HU-06 Revisar la ruta activa · HU-09 Soporte para el simulador · Limpieza de datos vencidos | — | — | HU-09 Usuarios fantasma | Ambiente de pruebas · Respaldos y registros |
@@ -67,7 +67,7 @@ Cada historia de usuario se reparte en issues por tecnología, y algunas de sus 
 | HU-11 | CU-02 | Java S4 · Flutter S4 | Mantener al día el tráfico del motor S4 (RN-02.15) · HU-09 Java S6 (RN-02.16) | RN-02.10 a RN-02.16 |
 | HU-12 | CU-05 | Java S5 · Flutter S6 | — | RN-05.8 a RN-05.16 |
 | HU-13 | CU-04 | C++ S5 · Java S5 · Flutter S5 | HU-09 Java S6 (RN-04.20, junto con C++ S5) | RN-04.1 a RN-04.12, RN-04.20 |
-| HU-14 | CU-09 | Java S4 | Salida hacia ANH, Servidor S2 (RN-09.3) · Medir la API de ANH, Java S3 (RN-09.1, RN-09.4, RN-09.13, RN-09.17) · Vincular las estaciones, Java S3 (RN-09.9, RN-09.10, RN-09.12, RN-09.13) · Pruebas de punta a punta, Java S7 | RN-09.1 a RN-09.19 |
+| HU-14 | CU-09 | Java S4 | Salida hacia ANH, Servidor S2 (RN-09.3) · Medir la API de ANH, Java S2 (RN-09.1, RN-09.4, RN-09.13, RN-09.17) · Vincular las estaciones, Java S3 (RN-09.9, RN-09.10, RN-09.12, RN-09.13) · Pruebas de punta a punta, Java S7 | RN-09.1 a RN-09.19 |
 
 Las 154 reglas de `04_reglas` están citadas en al menos un issue.
 
@@ -141,7 +141,7 @@ Estos detalles no cambian la arquitectura y quedaron dentro de los issues. Si el
 | Precisión del LLM | El equipo fija el mínimo aceptable antes de medirla | WhatsApp/LLM S5 |
 | Zona horaria de `updated_at` de ANH | Si el dato no trae zona horaria se toma la de Tarija (UTC-4); T-117 lo confirma | Java S3 y S4 |
 | Vigencia del dato de ANH | Se cuenta desde que el backend lo leyó (`consultado_en`), no desde `updated_at` | Java S4 |
-| Asignación de los issues de ANH | Propuesta: Marcelo T-119, Franz T-117, Jorge T-118 y Antonio HU-14; el equipo puede cambiarla en `07_Estimacion.md` | Servidor S2, Java S3 y S4 |
+| Asignación de los issues de ANH | Franz hace T-117 (sprint 2) y T-118 (con apoyo de Antonio); Marcelo, T-119 con apoyo de Franz; y Franz con Antonio, HU-14. El equipo puede cambiarla en `07_Estimacion.md` | Servidor S2, Java S2 a S4 |
 | Respuesta «No» a la pregunta de recarga | No se vuelve a preguntar mientras el conductor siga detenido junto a ese surtidor | Flutter S6 |
 | Fallo de la revisión de ruta | Sin red o con 503, la app sigue con la ruta actual sin mostrar un error y reintenta en el siguiente ciclo | Flutter S6 |
 
@@ -160,3 +160,4 @@ Estos detalles no cambian la arquitectura y quedaron dentro de los issues. Si el
 | ANH no tiene condiciones de uso, cuotas ni disponibilidad garantizadas, y su respuesta puede cambiar sin aviso | WhatsApp y Conductores siguen funcionando si ANH falla; el backend valida cada respuesta, descarta la que no cumple el formato y conserva el último dato con su fecha (RN-09.5, RN-09.15, D-32) |
 | ANH bloquea o limita las consultas desde la IP de Oracle, o el certificado de ANH no se valida desde la instancia | T-119 lo comprueba en el sprint 2, antes de construir la consulta; nunca se desactiva la verificación del certificado (RN-09.3) |
 | El saldo de ANH no coincide con la realidad de la estación | Se muestra con su origen y su fecha, y el estado de ANH nunca se convierte en agotado; un mensaje más reciente de WhatsApp o de Conductores lo reemplaza (D-31, RN-05.3) |
+| Franz concentra el trabajo de ANH: 8 puntos en el sprint 2 y 9 en el 5, y en el sprint 3 también hace el análisis con LLM | T-117 es sobre todo espera, porque el script corre solo; si el sprint 2 se complica pasa al 3 sin mover el resto. Si el análisis con LLM se atrasa, Antonio o Jorge, que tiene 5 puntos en el sprint 3, toma T-118 |

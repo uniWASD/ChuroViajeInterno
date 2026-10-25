@@ -39,7 +39,7 @@
 | RF-14 · RNF-13 · RNF-17 · RNF-18 | CU-04 | HU-13 | [RN-04.1 a RN-04.12, RN-04.20](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #73 · C++ · Sprint 5 | feature/HU13-CU04-cpp-detectar-congestion | CP-114 a CP-118 | Pendiente |
 | RF-14 · RNF-13 · RNF-17 · RNF-18 | CU-04 | HU-13 | [RN-04.1 a RN-04.12, RN-04.20](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #74 · Java · Sprint 5 | feature/HU13-CU04-java-telemetria | CP-119 a CP-121 | Pendiente |
 | RF-14 · RNF-13 · RNF-17 · RNF-18 | CU-04 | HU-13 | [RN-04.1 a RN-04.12, RN-04.20](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #75 · Flutter · Sprint 5 | feature/HU13-CU04-flutter-telemetria | CP-122, CP-123 | Pendiente |
-| RF-15 · RNF-04 · RNF-07 | CU-09 | HU-14 | [RN-09.1 a RN-09.19](../03_des/02_Arquitectura/04_reglas/CU-09_ConsultarEstadoANH.md) | #?(orden 59) · Java · Sprint 4 | feature/HU14-CU09-java-consultar-anh | CP-161 a CP-165 | Pendiente |
+| RF-15 · RNF-04 · RNF-07 | CU-09 | HU-14 | [RN-09.1 a RN-09.19](../03_des/02_Arquitectura/04_reglas/CU-09_ConsultarEstadoANH.md) | #114 · Java · Sprint 4 | feature/HU14-CU09-java-consultar-anh | CP-161 a CP-165 | Pendiente |
 
 Las filas de los issues #2 a #29 son trabajos de la fase de Elaboración (prototipos e investigaciones). Las de los issues #39 a #91 y las de la API de ANH (HU-14 y T-117 a T-119) son de la Construcción y salen del [backlog de Construcción](Backlog_Construccion/README.md); en la columna Issue llevan su tecnología y su sprint. Una historia queda completa cuando están cerrados todos sus issues de Construcción y los de la tabla de tareas técnicas que cumplen alguna de sus reglas (ver «De historia de usuario a issues» en el README del backlog).
 
@@ -82,6 +82,6 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-114 Ajustes del backlog, la guía del servidor y la trazabilidad tras el contrato | CU-06 | #104 · Docs · Sprint 2 | feature/T114-actualizar-backlog-trazabilidad | — | Completado |
 | T-115 Investigación de la API de ANH para obtener la disponibilidad de combustible | CU-09 | #105 · Investigación · Sprint 2 | feature/T115-investigacion-api-anh | — | En progreso |
 | T-116 Incorporar la API de ANH como fuente complementaria de combustible en la documentación | CU-05, CU-06, CU-09 | #106 · Docs · Sprint 2 | feature/T116-docs-api-anh | — | En progreso |
-| T-117 Medir la API de ANH y fijar el ciclo de consulta y la vigencia | CU-09 | #?(orden 57) · Java · Sprint 3 | feature/T117-java-medir-api-anh | CP-157, CP-158 | Pendiente |
-| T-118 Vincular las estaciones de ANH con los surtidores del catálogo | CU-09 | #?(orden 58) · Java · Sprint 3 | feature/T118-java-vincular-estaciones-anh | CP-159, CP-160 | Pendiente |
-| T-119 Comprobar la salida del servidor hacia la API de ANH | CU-09 | #?(orden 56) · Servidor · Sprint 2 | feature/T119-servidor-salida-anh | CP-156 | Pendiente |
+| T-117 Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia | CU-09 | #112 · Java · Sprint 2 | feature/T117-java-medir-api-anh | CP-157, CP-158 | Pendiente |
+| T-118 Vincular las estaciones de ANH con los surtidores del catálogo | CU-09 | #113 · Java · Sprint 3 | feature/T118-java-vincular-estaciones-anh | CP-159, CP-160 | Pendiente |
+| T-119 Comprobar la salida del servidor hacia la API de ANH | CU-09 | #111 · Servidor · Sprint 2 | feature/T119-servidor-salida-anh | CP-156 | Pendiente |

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/navigation_controller.dart';
@@ -20,10 +20,7 @@ class MainScreen extends StatelessWidget {
     return Consumer<NavigationController>(
       builder: (context, controller, child) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('ChuroViaje'),
-            centerTitle: true,
-          ),
+          appBar: AppBar(title: const Text('ChuroViaje'), centerTitle: true),
           body: IndexedStack(
             index: controller.selectedIndex,
             children: _screens,

@@ -1,24 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
-import 'package:app_flutter/controllers/map_controller.dart';
-import 'package:app_flutter/controllers/navigation_controller.dart';
+import 'package:app_flutter/app_providers.dart';
 import 'package:app_flutter/services/api/api_client.dart';
 import 'package:app_flutter/views/main/main_screen.dart';
 
 void main() {
-  Widget createTestApp({http.Client? client}) {
-    final apiClient = ApiClient(client: client);
+  Widget createTestApp({ApiClient? apiClient}) {
+    final client =
+        apiClient ??
+        ApiClient(client: MockClient((_) async => http.Response('{}', 200)));
 
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => NavigationController()),
-        Provider<ApiClient>.value(value: apiClient),
-        ChangeNotifierProvider(create: (_) => MapController(apiClient)),
-      ],
+      providers: createAppProviders(apiClient: client),
       child: const MaterialApp(
         locale: Locale('es'),
         supportedLocales: [Locale('es')],
@@ -76,12 +74,16 @@ void main() {
     expect(materialApp.supportedLocales, contains(const Locale('es')));
   });
 
-  testWidgets('Muestra el error de conexión y mantiene la pantalla principal', (
+  testWidgets('CP-20: muestra el error de red sin cerrar la pantalla', (
     tester,
   ) async {
-    final mockClient = MockClientError();
+    final apiClient = ApiClient(
+      client: MockClient((_) async {
+        throw http.ClientException('Servidor fuera de servicio');
+      }),
+    );
 
-    await tester.pumpWidget(createTestApp(client: mockClient));
+    await tester.pumpWidget(createTestApp(apiClient: apiClient));
 
     await tester.tap(find.text('Probar conexión'));
     await tester.pump();
@@ -94,11 +96,4 @@ void main() {
     expect(find.text('ChuroViaje'), findsOneWidget);
     expect(find.text('Probar conexión'), findsOneWidget);
   });
-}
-
-class MockClientError extends http.BaseClient {
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    throw http.ClientException('Servidor fuera de servicio');
-  }
 }

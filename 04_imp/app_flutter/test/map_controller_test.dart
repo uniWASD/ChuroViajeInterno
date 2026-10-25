@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -48,5 +50,30 @@ void main() {
         apiClient.dispose();
       },
     );
+
+    test('Informa el error del servidor aunque haya respondido', () async {
+      final mockClient = MockClient((request) async {
+        expect(request.url.path, '/catalogos');
+        return http.Response(
+          jsonEncode({
+            'codigo': 'NO_AUTORIZADO',
+            'mensaje': 'Debes iniciar sesión.',
+          }),
+          401,
+          headers: {'content-type': 'application/json'},
+        );
+      });
+
+      final apiClient = ApiClient(client: mockClient);
+      final controller = MapController(apiClient);
+
+      await controller.checkConnection();
+
+      expect(controller.isConnected, isTrue);
+      expect(controller.errorMessage, 'Debes iniciar sesión.');
+
+      controller.dispose();
+      apiClient.dispose();
+    });
   });
 }

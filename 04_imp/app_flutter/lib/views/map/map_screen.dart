@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../config/app_config.dart';
 import '../../controllers/map_controller.dart';
 
 class MapScreen extends StatelessWidget {
@@ -20,10 +21,7 @@ class MapScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 const Text(
                   'Mapa',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 8),
                 const Text(
@@ -31,65 +29,63 @@ class MapScreen extends StatelessWidget {
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
-                FilledButton.icon(
-                  onPressed: controller.isLoading
-                      ? null
-                      : controller.checkConnection,
-                  icon: controller.isLoading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : const Icon(Icons.cloud_outlined),
-                  label: Text(
-                    controller.isLoading
-                        ? 'Conectando...'
-                        : 'Probar conexión',
-                  ),
-                ),
-                if (controller.errorMessage != null) ...[
-                  const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .errorContainer,
-                      borderRadius: BorderRadius.circular(12),
+                if (!AppConfig.isProduction) ...[
+                  FilledButton.icon(
+                    onPressed: controller.isLoading
+                        ? null
+                        : controller.checkConnection,
+                    icon: controller.isLoading
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.cloud_outlined),
+                    label: Text(
+                      controller.isLoading
+                          ? 'Conectando...'
+                          : 'Probar conexión',
                     ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onErrorContainer,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            controller.errorMessage!,
-                            style: TextStyle(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onErrorContainer,
+                  ),
+                  if (controller.errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.errorContainer,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onErrorContainer,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              controller.errorMessage!,
+                              style: TextStyle(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onErrorContainer,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ] else if (controller.isConnected) ...[
-                  const SizedBox(height: 16),
-                  const Text(
-                    'Respuesta recibida del servidor.',
-                    style: TextStyle(color: Colors.green),
-                  ),
+                  ] else if (controller.isConnected) ...[
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Respuesta recibida del servidor.',
+                      style: TextStyle(color: Colors.green),
+                    ),
+                  ],
                 ],
               ],
             ),

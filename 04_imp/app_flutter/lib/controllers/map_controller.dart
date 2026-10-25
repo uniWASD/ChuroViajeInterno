@@ -28,7 +28,7 @@ class MapController extends ChangeNotifier {
       // incluso si la petición requiere autenticación.
       if (error.statusCode != null) {
         _isConnected = true;
-        _errorMessage = null;
+        _errorMessage = error.mensaje;
       } else {
         _isConnected = false;
         _errorMessage = error.mensaje;

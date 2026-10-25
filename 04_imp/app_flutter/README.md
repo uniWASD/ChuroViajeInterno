@@ -4,8 +4,7 @@ Aplicación móvil del proyecto ChuroViaje, desarrollada con Flutter y Dart. Est
 
 ## Requisitos
 
-* Flutter SDK.
-* Dart SDK compatible con la versión de Flutter instalada.
+* Flutter SDK **3.47.2** (Dart 3.13.2).
 * Android Studio o un dispositivo Android para ejecutar la aplicación.
 * Un emulador Android o dispositivo físico para probar la conexión con el backend.
 
@@ -22,6 +21,7 @@ lib/
 │   └── api/
 │       └── api_client.dart
 ├── models/
+│   └── .gitkeep
 ├── storage/
 │   └── .gitkeep
 ├── views/
@@ -44,7 +44,7 @@ test/
 ### Responsabilidades
 
 * **Views:** muestran la interfaz y reciben las interacciones del usuario. No realizan peticiones HTTP directamente.
-* **Controllers:** gestionan el estado y la lógica de cada pantalla o flujo. Las futuras funcionalidades que consuman el backend deben pasar por sus controladores.
+* **Controllers:** gestionan el estado y convierten interacciones en peticiones. No aplican reglas de negocio, el backend vuelve a validar todas las reglas y los controladores no se llaman entre sí (ver `03_des/02_Arquitectura/02_mvc.md`, reglas 2 y 4).
 * **Services:** contienen la comunicación con servicios externos. `ApiClient` centraliza las peticiones HTTP.
 * **Config:** define el entorno y la dirección base del backend.
 * **Tests:** verifican el comportamiento de la interfaz y del cliente HTTP.
@@ -84,7 +84,7 @@ Variables disponibles:
 flutter run --dart-define=APP_ENV=development --dart-define=API_URL_DEV=http://10.0.2.2:8080
 ```
 
-`10.0.2.2` permite acceder desde el emulador Android al equipo anfitrión. En un dispositivo físico, normalmente se necesita la dirección IP local del equipo que ejecuta el backend.
+`10.0.2.2` permite acceder desde el emulador Android al equipo anfitrión; solo sirve en ese emulador. En el simulador de iOS se usa `localhost`. En un dispositivo físico, normalmente se necesita la dirección IP local del equipo que ejecuta el backend.
 
 ### Entorno de pruebas
 
@@ -130,6 +130,8 @@ Para ejecutar todas las pruebas automatizadas:
 flutter test
 ```
 
+La prueba de widget **CP-20** simula el backend apagado y comprueba que se muestra el error de red sin cerrar la pantalla principal.
+
 Para analizar el código:
 
 ```bash
@@ -141,3 +143,5 @@ flutter analyze
 Esta entrega proporciona la estructura inicial de la aplicación, la navegación principal, la gestión de estado con Provider, la configuración por entornos y un cliente HTTP centralizado.
 
 Las funcionalidades de mapas, eventos y surtidores se incorporarán en etapas posteriores.
+
+El botón «Probar conexión» es temporal y solo aparece fuera de producción; se retirará en T-093 al incorporar el mapa base.

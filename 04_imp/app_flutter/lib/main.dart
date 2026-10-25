@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
+import 'app_providers.dart';
 import 'config/app_config.dart';
-
-import 'package:flutter_localizations/flutter_localizations.dart';
-
-import 'controllers/map_controller.dart';
-import 'controllers/navigation_controller.dart';
-import 'services/api/api_client.dart';
 import 'views/main/main_screen.dart';
 
 void main() {
@@ -15,18 +11,7 @@ void main() {
 
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => NavigationController()),
-        Provider<ApiClient>(
-          create: (_) => ApiClient(),
-          dispose: (_, apiClient) => apiClient.dispose(),
-        ),
-        ChangeNotifierProxyProvider<ApiClient, MapController>(
-          create: (context) => MapController(context.read<ApiClient>()),
-          update: (_, apiClient, mapController) =>
-              mapController ?? MapController(apiClient),
-        ),
-      ],
+      providers: createAppProviders(),
       child: const ChuroViajeApp(),
     ),
   );

@@ -38,7 +38,7 @@ class ApiClient {
   Map<String, String> get _headers => {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-    if (_token != null && _token!.isNotEmpty) 'Authorization': 'Bearer $_token',
+    if (_token != null && _token!.isNotEmpty) 'Authorization': _token!,
   };
 
   Uri _buildUri(String path) {

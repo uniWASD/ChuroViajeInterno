@@ -10,7 +10,7 @@ void main() {
   group('ApiClient', () {
     test('Incluye el JWT en la petición', () async {
       final mockClient = MockClient((request) async {
-        expect(request.headers['Authorization'], 'Bearer token-prueba');
+        expect(request.headers['Authorization'], 'token-prueba');
 
         return http.Response(
           jsonEncode({'ok': true}),
@@ -59,6 +59,25 @@ void main() {
       api.dispose();
     });
 
+    test('Rechaza una respuesta exitosa con JSON inválido', () async {
+      final mockClient = MockClient((request) async {
+        return http.Response('no es json', 200);
+      });
+
+      final api = ApiClient(client: mockClient);
+
+      await expectLater(
+        api.get('/prueba'),
+        throwsA(
+          isA<ApiException>()
+              .having((error) => error.codigo, 'codigo', 'RESPUESTA_INVALIDA')
+              .having((error) => error.statusCode, 'statusCode', 200),
+        ),
+      );
+
+      api.dispose();
+    });
+
     test('Controla los fallos de conexión', () async {
       final mockClient = MockClient((request) async {
         throw http.ClientException('Servidor fuera de servicio');
@@ -79,6 +98,21 @@ void main() {
 
       api.dispose();
     });
+
+    test(
+      'Propaga errores inesperados sin convertirlos en error de red',
+      () async {
+        final mockClient = MockClient((request) async {
+          throw StateError('Error de programación');
+        });
+
+        final api = ApiClient(client: mockClient);
+
+        await expectLater(api.get('/prueba'), throwsA(isA<StateError>()));
+
+        api.dispose();
+      },
+    );
 
     test('GET identifica cuando se agota el tiempo de espera', () async {
       final mockClient = MockClient((request) async {

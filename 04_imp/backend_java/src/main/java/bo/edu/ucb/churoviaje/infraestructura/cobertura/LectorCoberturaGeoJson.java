@@ -63,7 +63,8 @@ public final class LectorCoberturaGeoJson {
                     || !punto.get(0).isNumber() || !punto.get(1).isNumber()) {
                 throw new IllegalArgumentException("Cada coordenada debe ser [longitud, latitud]");
             }
-            vertices.add(new Coordenada(punto.get(0).asDouble(), punto.get(1).asDouble()));
+            // GeoJSON/RFC 7946 usa [longitud, latitud]; se invierte SOLO en el adaptador.
+            vertices.add(new Coordenada(punto.get(1).asDouble(), punto.get(0).asDouble()));
         }
         return new Anillo(vertices);
     }

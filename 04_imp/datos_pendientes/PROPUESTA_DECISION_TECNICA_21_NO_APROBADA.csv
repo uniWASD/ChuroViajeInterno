@@ -1,0 +1,22 @@
+﻿nombre_prototipo;id_anh;decision_tecnica;motivo;revision_franz;aprobado_equipo;estado_cobertura
+Las Vegas;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+Don Daniel;2804;INCLUIR;"Identidad ANH dentro de referencia; cobertura final pendiente";NO;NO;PROVISIONAL
+Tacuarandi;2339;INCLUIR;"Identidad ANH dentro de referencia; cobertura final pendiente";NO;NO;PROVISIONAL
+Campesino;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+YPFB Morros Blancos;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+Agrupa;2390;INCLUIR;"Identidad ANH dentro de referencia; cobertura final pendiente";NO;NO;PROVISIONAL
+El Portillo;2472;INCLUIR;"Identidad ANH dentro de referencia; cobertura final pendiente";NO;NO;PROVISIONAL
+Moto Mendez;2627;EXCLUIR;Fuera del perimetro de referencia;NO;NO;PROVISIONAL
+Ex Terminal;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+Sointa;2364;INCLUIR;"Identidad ANH dentro de referencia; cobertura final pendiente";NO;NO;PROVISIONAL
+Panamericano;2388;INCLUIR;"Identidad ANH dentro de referencia; cobertura final pendiente";NO;NO;PROVISIONAL
+San Jorge;2688;INCLUIR;"Identidad ANH dentro de referencia; cobertura final pendiente";NO;NO;PROVISIONAL
+San Geronimo;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+El Molle;2977;EXCLUIR;Fuera del perimetro de referencia;NO;NO;PROVISIONAL
+Surtidor Tarija;2386;INCLUIR;"Identidad ANH dentro de referencia; cobertura final pendiente";NO;NO;PROVISIONAL
+San Martin;2979;EXCLUIR;Fuera del perimetro de referencia;NO;NO;PROVISIONAL
+Pimentel;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+Villanueva;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+YPFB Parada Chaco;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+Domingo Savio;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL
+Coliseo Universitario;;EXCLUIR;"Sin identidad ANH univoca; excluir de primera carga";NO;NO;PROVISIONAL

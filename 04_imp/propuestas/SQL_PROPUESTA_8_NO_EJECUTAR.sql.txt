@@ -1,0 +1,32 @@
+-- *** PROPUESTA NO APROBADA: NO EJECUTAR, NO RENOMBRAR A V2 ***
+-- T-089 / Issue #41. Datos transcritos de la salida ANH proporcionada por el usuario.
+-- La exactitud final se confirma cotejando SHA-256 snapshot ANH real antes de V2.
+-- No se crean marcas de aprobacion ni alias comunitarios. Poligonos PROVISIONAL.
+-- NO colocar en db/migration; solo para que el equipo revise el SQL.
+BEGIN;
+-- Prototipo Agrupa | ANH 2390 | coordenadas de la evidencia del usuario
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('AGRUPA S.R.L.', ST_SetSRID(ST_MakePoint(-64.7487867, -21.5111041), 4326)::geography);
+-- Prototipo Don Daniel | ANH 2804 | coordenadas de la evidencia del usuario
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('ESTACION DE SERVICIO "DON DANIEL"', ST_SetSRID(ST_MakePoint(-64.7382423, -21.5133312), 4326)::geography);
+-- Prototipo El Portillo | ANH 2472 | coordenadas de la evidencia del usuario
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('ESTACION DE SERVICIOS EL PORTILLO S.R.L.', ST_SetSRID(ST_MakePoint(-64.6700224, -21.5666524), 4326)::geography);
+-- Prototipo Panamericano | ANH 2388 | coordenadas de la evidencia del usuario
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('ESTACION DE SERVICIO "PANAMERICANO"', ST_SetSRID(ST_MakePoint(-64.711626, -21.5441213), 4326)::geography);
+-- Prototipo San Jorge | ANH 2688 | coordenadas de la evidencia del usuario
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('ESTACION DE SERVICIO SAN JORGE S.R.L.', ST_SetSRID(ST_MakePoint(-64.6905788, -21.5538205), 4326)::geography);
+-- Prototipo Sointa | ANH 2364 | coordenadas de la evidencia del usuario
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('SOINTA S.R.L.', ST_SetSRID(ST_MakePoint(-64.7075786, -21.5420577), 4326)::geography);
+-- Prototipo Surtidor Tarija | ANH 2386 | coordenadas de la evidencia del usuario
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('ESTACION DE SERVICIOS TARIJA S.R.L.', ST_SetSRID(ST_MakePoint(-64.74234, -21.53627), 4326)::geography);
+-- Prototipo Tacuarandi | ANH 2339 | coordenadas de la evidencia del usuario
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('TACUARANDI S.R.L.', ST_SetSRID(ST_MakePoint(-64.7016073, -21.5461962), 4326)::geography);
+INSERT INTO surtidor_alias(surtidor_id,alias) SELECT id, 'agrupa s r l' FROM surtidor WHERE nombre = 'AGRUPA S.R.L.';
+INSERT INTO surtidor_alias(surtidor_id,alias) SELECT id, 'estacion de servicio don daniel' FROM surtidor WHERE nombre = 'ESTACION DE SERVICIO "DON DANIEL"';
+INSERT INTO surtidor_alias(surtidor_id,alias) SELECT id, 'estacion de servicios el portillo s r l' FROM surtidor WHERE nombre = 'ESTACION DE SERVICIOS EL PORTILLO S.R.L.';
+INSERT INTO surtidor_alias(surtidor_id,alias) SELECT id, 'estacion de servicio panamericano' FROM surtidor WHERE nombre = 'ESTACION DE SERVICIO "PANAMERICANO"';
+INSERT INTO surtidor_alias(surtidor_id,alias) SELECT id, 'estacion de servicio san jorge s r l' FROM surtidor WHERE nombre = 'ESTACION DE SERVICIO SAN JORGE S.R.L.';
+INSERT INTO surtidor_alias(surtidor_id,alias) SELECT id, 'sointa s r l' FROM surtidor WHERE nombre = 'SOINTA S.R.L.';
+INSERT INTO surtidor_alias(surtidor_id,alias) SELECT id, 'estacion de servicios tarija s r l' FROM surtidor WHERE nombre = 'ESTACION DE SERVICIOS TARIJA S.R.L.';
+INSERT INTO surtidor_alias(surtidor_id,alias) SELECT id, 'tacuarandi s r l' FROM surtidor WHERE nombre = 'TACUARANDI S.R.L.';
+COMMIT;
+-- FIN: requiere firmas y salida del generador original antes de entrar en Flyway.

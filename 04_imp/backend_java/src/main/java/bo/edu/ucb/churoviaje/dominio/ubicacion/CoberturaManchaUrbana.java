@@ -15,7 +15,7 @@ public final class CoberturaManchaUrbana {
     }
 
     public boolean contiene(double latitud, double longitud) {
-        Coordenada punto = new Coordenada(longitud, latitud);
+        Coordenada punto = new Coordenada(latitud, longitud);
         return poligonos.stream().anyMatch(poligono -> poligono.contiene(punto));
     }
 

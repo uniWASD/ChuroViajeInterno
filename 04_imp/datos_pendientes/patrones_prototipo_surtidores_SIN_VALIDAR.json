@@ -1,0 +1,86 @@
+{
+  "fuente": "05_pro/PruebaClasificacion/Clasificador_Surtidores.py, variable SURTIDORES",
+  "advertencia": "Los patrones son del clasificador de WhatsApp; NO acreditan nombres o apodos oficiales de ANH. No cargar como datos reales.",
+  "surtidores": {
+    "Las Vegas": [
+      "\\blas\\s*vegas\\b",
+      "\\bla\\s*vegas\\b",
+      "\\bvegas\\b",
+      "\\bmas\\s*vegas\\b"
+    ],
+    "Don Daniel": [
+      "\\bdon\\s*daniel\\b",
+      "\\bdaniel\\b"
+    ],
+    "Tacuarandi": [
+      "\\btacuarandi\\b",
+      "\\btacurandi\\b"
+    ],
+    "Campesino": [
+      "\\bcampesino\\b"
+    ],
+    "YPFB Morros Blancos": [
+      "\\bypfb\\b.*\\bmorros\\b",
+      "\\bmorros\\s*blancos\\b",
+      "\\bypfb\\b(?!.*\\b(?:campesino|parada|chaco)\\b)"
+    ],
+    "Agrupa": [
+      "\\bagrupa\\b"
+    ],
+    "El Portillo": [
+      "\\bportillo\\b"
+    ],
+    "Moto Mendez": [
+      "\\bmoto\\s*m[eé]ndez\\b",
+      "\\bmoto\\s*mende[sz]\\b"
+    ],
+    "Ex Terminal": [
+      "\\bex\\s*terminal\\b",
+      "\\bexterminal\\b",
+      "\\bla\\s*terminal\\b",
+      "\\blaterminal\\b"
+    ],
+    "Sointa": [
+      "\\bsointa\\b",
+      "\\bsointar\\b"
+    ],
+    "Panamericano": [
+      "\\bpanamericano\\b"
+    ],
+    "San Jorge": [
+      "\\bsan\\s*jorge\\b",
+      "\\bsan\\s*gorje\\b"
+    ],
+    "San Geronimo": [
+      "\\bsan\\s*ger[oó]nimo\\b"
+    ],
+    "El Molle": [
+      "\\bel\\s*molle\\b",
+      "\\bmolle\\b"
+    ],
+    "Surtidor Tarija": [
+      "\\bsurtidor\\s*tarija\\b",
+      "\\bel\\s*tarija\\b"
+    ],
+    "San Martin": [
+      "\\bsan\\s*mart[ií]n\\b"
+    ],
+    "Pimentel": [
+      "\\bpimentel\\b"
+    ],
+    "Villanueva": [
+      "\\bvillanueva\\b",
+      "\\bvilla\\s*nueva\\b"
+    ],
+    "YPFB Parada Chaco": [
+      "\\bparada\\s*chaco\\b"
+    ],
+    "Domingo Savio": [
+      "\\bdomingo\\s*savio\\b"
+    ],
+    "Coliseo Universitario": [
+      "\\bcoliseo\\s*universitario\\b",
+      "\\bcoliseo\\s*univ\\b"
+    ]
+  }
+}

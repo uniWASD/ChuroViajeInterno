@@ -1,7 +1,7 @@
 package bo.edu.ucb.churoviaje.infraestructura.persistencia;
 
-import bo.edu.ucb.churoviaje.dominio.catalogo.ClaveAlias;
 import bo.edu.ucb.churoviaje.dominio.catalogo.Surtidor;
+import bo.edu.ucb.churoviaje.dominio.catalogo.BuscadorSurtidores;
 import bo.edu.ucb.churoviaje.dominio.catalogo.TipoCombustible;
 import bo.edu.ucb.churoviaje.dominio.catalogo.TipoEvento;
 import bo.edu.ucb.churoviaje.dominio.ubicacion.Coordenada;
@@ -14,7 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class CatalogosJdbc {
+public class CatalogosJdbc implements BuscadorSurtidores {
     private final JdbcTemplate jdbc;
 
     public CatalogosJdbc(JdbcTemplate jdbc) {
@@ -34,7 +34,7 @@ public class CatalogosJdbc {
     }
 
     public List<Surtidor> surtidoresCercanos(double latitud, double longitud) {
-        new Coordenada(longitud, latitud);
+        new Coordenada(latitud, longitud);
         Map<Long, List<String>> aliases = new HashMap<>();
         jdbc.query("SELECT surtidor_id, alias FROM surtidor_alias ORDER BY alias", filas -> {
             while (filas.next()) {
@@ -47,14 +47,15 @@ public class CatalogosJdbc {
                 SELECT s.id, s.nombre, ST_X(s.ubicacion::geometry) AS longitud,
                        ST_Y(s.ubicacion::geometry) AS latitud
                 FROM surtidor s
-                ORDER BY ST_Distance(s.ubicacion, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography)
+                ORDER BY ST_Distance(s.ubicacion, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography), s.id
                 """, (fila, indice) -> new Surtidor(fila.getLong("id"), fila.getString("nombre"),
-                new Coordenada(fila.getDouble("longitud"), fila.getDouble("latitud")),
+                new Coordenada(fila.getDouble("latitud"), fila.getDouble("longitud")),
                 aliases.getOrDefault(fila.getLong("id"), List.of())), longitud, latitud);
     }
 
-    public Optional<Long> buscarPorNombreOAlias(String texto) {
-        String clave = ClaveAlias.normalizar(texto);
+    /** La clave ya debe venir normalizada por el servicio del modelo. */
+    @Override
+    public Optional<Long> buscarPorAliasNormalizado(String clave) {
         List<Long> ids = jdbc.queryForList("""
                 SELECT s.id FROM surtidor s
                 JOIN surtidor_alias a ON a.surtidor_id = s.id
@@ -63,4 +64,10 @@ public class CatalogosJdbc {
         return ids.stream().findFirst();
     }
 
+
+    /** Adaptador cómodo: nombre oficial solo si figura como alias normalizado en V2. */
+    public Optional<Long> buscarPorNombreOAlias(String texto) {
+        String clave = bo.edu.ucb.churoviaje.dominio.catalogo.ClaveAlias.normalizar(texto);
+        return buscarPorAliasNormalizado(clave);
+    }
 }

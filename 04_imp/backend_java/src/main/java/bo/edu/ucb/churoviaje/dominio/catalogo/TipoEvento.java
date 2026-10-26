@@ -7,7 +7,7 @@ public record TipoEvento(String codigo, String nombre, String color, int vigenci
     public TipoEvento {
         Objects.requireNonNull(codigo);
         Objects.requireNonNull(nombre);
-        if (color == null || !color.matches("#[0-9a-fA-F]{6}")) {
+        if (color != null && !color.matches("#[0-9a-fA-F]{6}")) {
             throw new IllegalArgumentException("El color debe ser hexadecimal");
         }
         if (vigenciaMinutos <= 0) {

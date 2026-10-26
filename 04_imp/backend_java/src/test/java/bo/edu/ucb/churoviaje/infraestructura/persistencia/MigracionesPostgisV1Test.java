@@ -22,7 +22,8 @@ class MigracionesPostgisV1Test {
             .withPassword("temporal_no_real");
 
     @Test
-    void migracionV1FuncionaEnDosBasesLimpiasYEsReproducible() throws Exception {
+    void v1OriginalMasAjusteV1_1EsReproducible() throws Exception {
+        // CP-23 (etapa V1 + V1.1) · D-04/D-10/P-06: esquema y catálogos sin colores provisionales finales.
         String primera = crearBaseVacia("t089_v1_primera");
         String segunda = crearBaseVacia("t089_v1_segunda");
 
@@ -32,14 +33,14 @@ class MigracionesPostgisV1Test {
             Flyway flyway = Flyway.configure()
                     .dataSource(url, postgres.getUsername(), postgres.getPassword())
                     .locations("classpath:db/migration")
-                    .target(MigrationVersion.fromVersion("1"))
+                    .target(MigrationVersion.fromVersion("1.1"))
                     .cleanDisabled(true)
                     .load();
 
-            assertEquals(1, flyway.migrate().migrationsExecuted);
+            assertEquals(2, flyway.migrate().migrationsExecuted);
             flyway.validate();
             assertEquals(0, flyway.migrate().migrationsExecuted);
-            comprobarV1(url);
+            comprobarCatalogosV1Ajustada(url);
         }
 
         assertEquals(firma(primera), firma(segunda));
@@ -54,9 +55,10 @@ class MigracionesPostgisV1Test {
         return postgres.getJdbcUrl().replace("/" + postgres.getDatabaseName(), "/" + nombre);
     }
 
-    private void comprobarV1(String url) throws Exception {
+    private void comprobarCatalogosV1Ajustada(String url) throws Exception {
         assertEquals(1, contar(url, "SELECT COUNT(*) FROM pg_extension WHERE extname = 'postgis'"));
         assertEquals(1, contar(url, "SELECT COUNT(*) FROM flyway_schema_history WHERE version = '1' AND success"));
+        assertEquals(1, contar(url, "SELECT COUNT(*) FROM flyway_schema_history WHERE version = '1.1' AND success"));
 
         for (String tabla : List.of("tipo_evento", "tipo_combustible", "surtidor", "surtidor_alias")) {
             assertEquals(1, contar(url, "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_name = '" + tabla + "'"));
@@ -66,12 +68,16 @@ class MigracionesPostgisV1Test {
         assertEquals(4, contar(url, "SELECT COUNT(*) FROM tipo_evento WHERE reportable AND vigencia_minutos = 60"));
         assertEquals(1, contar(url, "SELECT COUNT(*) FROM tipo_evento WHERE codigo = 'CONGESTION' AND NOT reportable AND vigencia_minutos = 30"));
         assertEquals(5, contar(url, "SELECT COUNT(*) FROM tipo_combustible"));
+        // La corrección en V1.1 limpia los colores provisionales de la V1 INTACTA.
+        assertEquals(5, contar(url, "SELECT COUNT(*) FROM tipo_evento WHERE color IS NULL"));
 
         for (String codigo : List.of("GASOLINA", "DIESEL", "GASOLINA_PREMIUM", "DIESEL_ULS", "DESCONOCIDO")) {
             assertEquals(1, contar(url, "SELECT COUNT(*) FROM tipo_combustible WHERE codigo = '" + codigo + "'"));
         }
 
         assertEquals(1, contar(url, "SELECT COUNT(*) FROM pg_constraint WHERE conname = 'fk_surtidor_alias_surtidor' AND contype = 'f'"));
+        assertEquals(2, contar(url, "SELECT COUNT(*) FROM pg_constraint WHERE conrelid = 'surtidor_alias'::regclass AND contype = 'c'"));
+        assertEquals(1, contar(url, "SELECT COUNT(*) FROM pg_constraint WHERE conname = 'ck_surtidor_alias_normalizado' AND contype = 'c'"));
         assertEquals(1, contar(url, "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public' AND tablename = 'surtidor' AND indexname = 'idx_surtidor_ubicacion'"));
         assertEquals(1, contar(url, "SELECT CASE WHEN ST_DWithin(ST_SetSRID(ST_MakePoint(-64.734297, -21.533912), 4326)::geography, ST_SetSRID(ST_MakePoint(-64.734297, -21.533912), 4326)::geography, 1) THEN 1 ELSE 0 END"));
         assertEquals(0, contar(url, "SELECT COUNT(*) FROM surtidor"));
@@ -92,7 +98,7 @@ class MigracionesPostgisV1Test {
              var sentencia = conexion.createStatement();
              var filas = sentencia.executeQuery("""
                     SELECT
-                      (SELECT string_agg(codigo || ':' || nombre || ':' || color || ':' || vigencia_minutos || ':' || reportable, ';' ORDER BY codigo) FROM tipo_evento)
+                      (SELECT string_agg(codigo || ':' || nombre || ':' || COALESCE(color, '[PENDIENTE_P06]') || ':' || vigencia_minutos || ':' || reportable, ';' ORDER BY codigo) FROM tipo_evento)
                       || '|'
                       || (SELECT string_agg(codigo || ':' || nombre, ';' ORDER BY codigo) FROM tipo_combustible)
                     """)) {

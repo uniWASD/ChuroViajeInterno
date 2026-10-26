@@ -17,7 +17,4 @@ public final class UbicacionFueraCoberturaException extends RuntimeException {
                 "UBICACION_FUERA_COBERTURA", "La ubicación está fuera de la mancha urbana de Tarija");
     }
 
-    public static UbicacionFueraCoberturaException paraRuta() {
-        return new UbicacionFueraCoberturaException("UBICACION_INVALIDA", "Origen o destino inválido");
-    }
 }

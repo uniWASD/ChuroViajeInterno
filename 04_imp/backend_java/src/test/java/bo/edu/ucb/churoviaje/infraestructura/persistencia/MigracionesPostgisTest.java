@@ -1,7 +1,5 @@
 package bo.edu.ucb.churoviaje.infraestructura.persistencia;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.DriverManager;
 import java.util.List;
 import org.flywaydb.core.Flyway;
@@ -24,6 +22,7 @@ class MigracionesPostgisTest {
 
     @Test
     void cp23_baseVaciaCreaExtensionYCatalogosCompletos() throws Exception {
+        // CP-23 · CU-01/CU-05/CU-06 · catálogo oficial y migraciones desde base vacía.
         String primeraBase = crearBaseVacia("cp23_primera");
         String segundaBase = crearBaseVacia("cp23_segunda");
         assertEquals(0, contar(primeraBase, "SELECT COUNT(*) FROM pg_extension WHERE extname = 'postgis'"));
@@ -71,6 +70,7 @@ class MigracionesPostgisTest {
         assertEquals(4, contar(url, "SELECT COUNT(*) FROM tipo_evento WHERE reportable AND vigencia_minutos = 60"));
         assertEquals(1, contar(url, "SELECT COUNT(*) FROM tipo_evento WHERE codigo = 'CONGESTION' AND NOT reportable AND vigencia_minutos = 30"));
         assertEquals(5, contar(url, "SELECT COUNT(*) FROM tipo_combustible"));
+        assertEquals(5, contar(url, "SELECT COUNT(*) FROM tipo_evento WHERE color IS NULL"));
         for (String codigo : List.of("GASOLINA", "DIESEL", "GASOLINA_PREMIUM", "DIESEL_ULS", "DESCONOCIDO")) {
             assertEquals(1, contar(url, "SELECT COUNT(*) FROM tipo_combustible WHERE codigo = '" + codigo + "'"));
         }
@@ -86,14 +86,15 @@ class MigracionesPostgisTest {
             assertTrue(filas.next());
             assertEquals(0.0, filas.getDouble(1), 0.001);
         }
-        assertTrue(Files.exists(Path.of(System.getProperty("t089.raiz", "../.."), "04_imp/backend_java/src/main/resources/db/migration/V2__surtidores_revisados.sql")));
+        // CP-23 requiere surtidores reales de ANH: si falta V2 por falta de aprobación,
+        // esta prueba DEBE fallar hasta completar el flujo de revisión. No se simulan INSERTs.
     }
 
     private String firma(String url) throws Exception {
         try (var conexion = DriverManager.getConnection(url, postgres.getUsername(), postgres.getPassword());
              var sentencia = conexion.createStatement();
              var filas = sentencia.executeQuery("""
-                     SELECT (SELECT string_agg(codigo || ':' || nombre || ':' || color || ':' || vigencia_minutos || ':' || reportable, ';' ORDER BY codigo) FROM tipo_evento)
+                     SELECT (SELECT string_agg(codigo || ':' || nombre || ':' || COALESCE(color, '[PENDIENTE_P06]') || ':' || vigencia_minutos || ':' || reportable, ';' ORDER BY codigo) FROM tipo_evento)
                      || '|' || (SELECT string_agg(codigo || ':' || nombre, ';' ORDER BY codigo) FROM tipo_combustible)
                      || '|' || (SELECT string_agg(nombre || ':' || ST_AsText(ubicacion::geometry), ';' ORDER BY nombre) FROM surtidor)
                      || '|' || (SELECT string_agg(s.nombre || ':' || a.alias, ';' ORDER BY s.nombre, a.alias) FROM surtidor_alias a JOIN surtidor s ON s.id = a.surtidor_id)

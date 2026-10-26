@@ -1,0 +1,27 @@
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+# Java / IDE
+**/target/
+**/build/
+**/.gradle/
+.idea/
+*.iml
+.classpath
+.project
+# Python / extracciones locales de ANH (no versionar ubicaciones ni saldos)
+__pycache__/
+*.py[cod]
+.pytest_cache/
+**/salida_tarija/
+**/datos_tarija.json
+**/estaciones_tarija.csv
+**/estaciones_tarija.geojson
+# Evaluación y revisión locales derivadas de snapshots ANH (revisar antes de commitear)
+**/evaluacion_T089.json
+**/revision_urbana_PENDIENTE.json
+**/surtidores_anh_revision_PENDIENTE.csv

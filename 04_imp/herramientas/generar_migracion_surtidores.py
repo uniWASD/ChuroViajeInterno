@@ -1,149 +1,184 @@
+"""Genera la V2 de Flyway EXCLUSIVAMENTE desde estación ANH y aprobación humana.
+
+Ningún CSV del prototipo (con coordenadas guía o apodos no verificados)
+puede atravesar este validador; el destino queda intacto si una prueba falla.
+"""
+from __future__ import annotations
+
 import argparse
 import csv
 import json
-import re
-import unicodedata
 from pathlib import Path
 
-NOMBRES_PROTOTIPO = (
-    "Las Vegas", "Don Daniel", "Tacuarandi", "Campesino", "YPFB Morros Blancos",
-    "Agrupa", "El Portillo", "Moto Mendez", "Ex Terminal", "Sointa",
-    "Panamericano", "San Jorge", "San Geronimo", "El Molle", "Surtidor Tarija",
-    "San Martin", "Pimentel", "Villanueva", "YPFB Parada Chaco",
-    "Domingo Savio", "Coliseo Universitario"
-)
+from validacion_anh_t089 import (ADICIONALES_PENDIENTES, PROTOTIPO_LEGADO,
+                                  clave, dentro_cobertura, numero_coordenada,
+                                  validar_cobertura_aprobada, verificar_snapshot_anh, fuente_ubicacion_registro)
 
 
-def normalizar(texto):
-    base = unicodedata.normalize("NFD", texto)
-    base = "".join(letra for letra in base if not unicodedata.combining(letra))
-    clave = re.sub(r"[^a-z0-9 ]", " ", base.lower())
-    clave = " ".join(clave.split())
-    if not clave:
-        raise ValueError("Un alias está vacío")
-    return clave
-
-
-def entre_segmentos(a, b, p):
-    cruz = (b[0] - a[0]) * (p[1] - a[1]) - (b[1] - a[1]) * (p[0] - a[0])
-    return abs(cruz) < 1e-12 and min(a[0], b[0]) - 1e-12 <= p[0] <= max(a[0], b[0]) + 1e-12 and min(a[1], b[1]) - 1e-12 <= p[1] <= max(a[1], b[1]) + 1e-12
-
-
-def posicion_anillo(anillo, punto):
-    dentro = False
-    for i in range(len(anillo) - 1):
-        a, b = anillo[i], anillo[i + 1]
-        if entre_segmentos(a, b, punto):
-            return "BORDE"
-        if (a[1] > punto[1]) != (b[1] > punto[1]):
-            interseccion = a[0] + (b[0] - a[0]) * (punto[1] - a[1]) / (b[1] - a[1])
-            if punto[0] < interseccion:
-                dentro = not dentro
-    return "DENTRO" if dentro else "FUERA"
-
-
-def dentro_poligono(anillos, punto):
-    exterior = posicion_anillo(anillos[0], punto)
-    if exterior == "FUERA":
-        return False
-    if exterior == "BORDE":
-        return True
-    for hueco in anillos[1:]:
-        situacion = posicion_anillo(hueco, punto)
-        if situacion == "BORDE":
-            return True
-        if situacion == "DENTRO":
-            return False
-    return True
-
-
-def dentro_geojson(documento, punto):
-    elementos = documento.get("features", [documento])
-    for elemento in elementos:
-        geometria = elemento.get("geometry", elemento)
-        tipo = geometria.get("type")
-        coordenadas = geometria.get("coordinates", [])
-        poligonos = [coordenadas] if tipo == "Polygon" else coordenadas if tipo == "MultiPolygon" else []
-        if any(dentro_poligono(poligono, punto) for poligono in poligonos):
-            return True
-    return False
-
-
-def literal(texto):
+def literal(texto: str) -> str:
     return "'" + texto.replace("'", "''") + "'"
 
 
-def generar(archivo_csv, archivo_geojson, destino):
-    cobertura = json.loads(archivo_geojson.read_text(encoding="utf-8"))
-    if cobertura.get("estado_validacion") != "APROBADO":
-        raise ValueError("La cobertura debe estar validada antes de generar la migración definitiva")
-    if not all(feature.get("properties", {}).get("revision_equipo") == "APROBADO"
-               for feature in cobertura.get("features", [])):
-        raise ValueError("Falta la revisión cartográfica del equipo")
-    with archivo_csv.open(encoding="utf-8-sig", newline="") as entrada:
-        registros = list(csv.DictReader(entrada))
-    encontrados = {fila["nombre"] for fila in registros}
-    if len(registros) != len(encontrados) or not set(NOMBRES_PROTOTIPO).issubset(encontrados):
-        raise ValueError("La revisión debe incluir las 21 entradas del prototipo sin duplicados; se permiten adicionales aprobadas")
+def validar_acta_21(acta: Path, nombres_incluidos: set[str]) -> None:
+    """Toda la lista del prototipo debe tener INCLUIR/EXCLUIR y doble revisión."""
+    with acta.open(encoding='utf-8-sig', newline='') as archivo:
+        lector = csv.DictReader(archivo)
+        if not lector.fieldnames or not {
+                'nombre', 'revision_franz', 'aprobado_equipo', 'decision',
+                'motivo_exclusion'}.issubset(lector.fieldnames):
+            raise ValueError('Acta del prototipo: columnas obligatorias ausentes')
+        filas = list(lector)
+    if len(filas) != len(PROTOTIPO_LEGADO) or {r['nombre'] for r in filas} != set(PROTOTIPO_LEGADO):
+        raise ValueError('El acta debe resolver EXACTAMENTE las 21 filas del prototipo')
+    for fila in filas:
+        nombre = fila['nombre']
+        if fila['revision_franz'].strip().upper() != 'SI' or fila['aprobado_equipo'].strip().upper() != 'SI':
+            raise ValueError(f'Acta del prototipo sin doble aprobación: {nombre}')
+        decision = fila['decision'].strip().upper()
+        if decision == 'EXCLUIR':
+            if not fila['motivo_exclusion'].strip() or nombre in nombres_incluidos:
+                raise ValueError(f'Acta del prototipo: exclusión incoherente de {nombre}')
+        elif decision == 'INCLUIR':
+            if nombre not in nombres_incluidos or fila['motivo_exclusion'].strip():
+                raise ValueError(f'Acta del prototipo: inclusión sin ANH/conciliación: {nombre}')
+        else:
+            raise ValueError(f'Acta del prototipo con decisión pendiente: {nombre}')
+
+
+def generar(archivo_csv: Path, archivo_geojson: Path, archivo_api_json: Path,
+            acta_prototipo: Path, destino: Path) -> tuple[int, int]:
+    cobertura = json.loads(archivo_geojson.read_text(encoding='utf-8'))
+    validar_cobertura_aprobada(cobertura)
+    _, estaciones, sha256, _ = verificar_snapshot_anh(archivo_api_json)
+    with archivo_csv.open(encoding='utf-8-sig', newline='') as entrada:
+        lector = csv.DictReader(entrada)
+        obligatorias = {'estacion_id_anh', 'nombre', 'nombre_prototipo', 'aliases', 'longitud', 'latitud',
+                        'fuente_ubicacion', 'revision_franz', 'aprobado_equipo', 'decision',
+                        'motivo_exclusion', 'sha256_snapshot_anh'}
+        if not lector.fieldnames or not obligatorias.issubset(lector.fieldnames):
+            raise ValueError('Formato CSV inválido: use preparar_revision_anh.py')
+        filas = list(lector)
+    if not filas:
+        raise ValueError('Sin surtidores aprobados: prohibido crear una V2 vacía')
+
     seleccionados = []
-    aliases = {}
-    for fila in registros:
-        nombre = fila["nombre"]
-        if fila["revision_franz"].upper() != "SI" or fila["aprobado_equipo"].upper() != "SI":
-            raise ValueError(f"Falta revisión de Franz/equipo para {nombre}")
-        decision = fila["decision"].upper()
-        if decision == "EXCLUIR":
-            if not fila["motivo_exclusion"].strip():
-                raise ValueError(f"Debe justificarse la exclusión de {nombre}")
-            continue
-        if decision != "INCLUIR":
-            raise ValueError(f"No se ha decidido sobre {nombre}")
+    nombres: set[str] = set()
+    prototipos_conciliados: set[str] = set()
+    ids: set[int] = set()
+    aliases: dict[str, int] = {}
+    for fila in filas:
         try:
-            longitud = float(fila["longitud"])
-            latitud = float(fila["latitud"])
-        except ValueError as exc:
-            raise ValueError(f"No hay coordenadas verificables para {nombre}") from exc
-        if not (-180 <= longitud <= 180 and -90 <= latitud <= 90):
-            raise ValueError(f"Coordenadas fuera de rango para {nombre}")
-        if not fila["fuente_ubicacion"].strip() or fila["fuente_ubicacion"].startswith("GUIA_SIN_VERIFICAR"):
-            raise ValueError(f"Falta fuente geográfica confiable para {nombre}")
-        if not dentro_geojson(cobertura, (longitud, latitud)):
-            raise ValueError(f"El surtidor {nombre} queda fuera de la cobertura validada")
-        lista_aliases = [nombre] + [alias.strip() for alias in fila["aliases"].split("|") if alias.strip()]
-        for alias in lista_aliases:
-            clave = normalizar(alias)
-            anterior = aliases.get(clave)
-            if anterior is not None and anterior != nombre:
-                raise ValueError(f"Alias ambiguo {clave}: {anterior} y {nombre}")
-            aliases[clave] = nombre
-        seleccionados.append((nombre, longitud, latitud))
+            sid = int(fila['estacion_id_anh'])
+        except (ValueError, TypeError) as exc:
+            raise ValueError('Estación sin ID ANH verificable') from exc
+        if sid in ids or sid not in estaciones:
+            raise ValueError(f'ID ANH duplicado o ausente del snapshot: {sid}')
+        ids.add(sid)
+        reg = estaciones[sid]
+        if fila['sha256_snapshot_anh'] != sha256:
+            raise ValueError(f'Snapshot ANH cambió desde la revisión de estación {sid}')
+        if (fila['nombre'] != reg.get('nombre_estacion') or not fila['nombre'].strip()
+                or fila['fuente_ubicacion'] != fuente_ubicacion_registro(reg)):
+            raise ValueError(f'Estación {sid}: nombre/fuente no coinciden con la API ANH')
+        lat = numero_coordenada(reg.get('latitud'), 90)
+        lon = numero_coordenada(reg.get('longitud'), 180)
+        if lat is None or lon is None or (lat == 0 and lon == 0):
+            raise ValueError(f'Estación {sid}: la API no proporciona coordenadas utilizables')
+        try:
+            misma_posicion = (float(fila['longitud']) == lon and float(fila['latitud']) == lat)
+        except (ValueError, TypeError) as exc:
+            raise ValueError(f'Estación {sid}: coordenadas vacías') from exc
+        if not misma_posicion:
+            raise ValueError(f'Estación {sid}: las coordenadas no coinciden con la API ANH')
+        if not dentro_cobertura(cobertura, lon, lat):
+            raise ValueError(f'Estación {sid} fuera de la cobertura urbana APROBADA de Tarija')
+        if clave(fila['nombre']) in {clave(n) for n in ADICIONALES_PENDIENTES}:
+            raise ValueError(f'Estación {sid}: propuesta adicional expresamente fuera del alcance T-089')
+        # No se tienen alias coloquiales en ANH. Solo nombre oficial normalizado,
+        # como clave de búsqueda derivada y documentada; NO inventar sobrenombres.
+        if fila['aliases'].strip():
+            raise ValueError(f'Estación {sid}: el cliente ANH no acredita alias; deje este campo vacío')
+        decision = fila['decision'].strip().upper()
+        if decision == 'PENDIENTE':
+            # Publicación parcial necesita decisión humana; no ignorar registros inconclusos.
+            raise ValueError(f'Estación {sid}: decisión pendiente de revisión')
+        if (fila['revision_franz'].strip().upper() != 'SI'
+                or fila['aprobado_equipo'].strip().upper() != 'SI'):
+            raise ValueError(f'Estación {sid}: falta revisión de Franz o aprobación de Marcelo')
+        if decision == 'EXCLUIR':
+            if not fila['motivo_exclusion'].strip():
+                raise ValueError(f'Estación {sid}: exclusión sin motivo')
+            continue
+        if decision != 'INCLUIR':
+            raise ValueError(f'Estación {sid}: decisión no válida: {decision}')
+        if fila['motivo_exclusion'].strip():
+            raise ValueError(f'Estación {sid}: motivo de exclusión en fila incluida')
+        nombre_prototipo = fila['nombre_prototipo'].strip()
+        if nombre_prototipo not in PROTOTIPO_LEGADO:
+            raise ValueError(f'Estación {sid}: falta conciliación con uno de los 21 surtidores del prototipo')
+        if nombre_prototipo in prototipos_conciliados:
+            raise ValueError(f'Estación {sid}: prototipo duplicado en conciliación: {nombre_prototipo}')
+        prototipos_conciliados.add(nombre_prototipo)
+        nombre = fila['nombre']
+        if len(nombre) > 120 or any(ord(caracter) < 32 for caracter in nombre):
+            raise ValueError(f'Estación {sid}: nombre ANH supera el límite VARCHAR(120) o contiene controles')
+        if nombre in nombres:
+            raise ValueError(f'Nombre oficial duplicado para IDs distintos: {nombre}')
+        nombres.add(nombre)
+        alias_oficial = clave(nombre)
+        anterior = aliases.get(alias_oficial)
+        if anterior is not None and anterior != sid:
+            raise ValueError(f'Nombres normalizados ambiguos: ANH ids {anterior} y {sid}')
+        if len(alias_oficial) > 120:
+            raise ValueError(f'Estación {sid}: clave normalizada supera VARCHAR(120)')
+        aliases[alias_oficial] = sid
+        seleccionados.append((sid, nombre, lon, lat))
+    validar_acta_21(acta_prototipo, prototipos_conciliados)
     if not seleccionados:
-        raise ValueError("No hay surtidores aprobados para publicar")
-    lineas = []
-    for nombre, longitud, latitud in seleccionados:
+        raise ValueError('Sin surtidores verificados APROBADOS; prohibido crear una V2 vacía')
+    # Estaciones posteriores a la revisión NO se agregan automáticamente.
+    lineas = [
+        '-- T-089 / Issue #41: estaciones urbanas de Tarija extraídas de ANH,',
+        '-- georreferenciadas y aprobadas por Franz y Marcelo antes de generar.',
+        f'-- SHA-256 del JSON ANH usado como fuente: {sha256}',
+        '-- Coordenadas según API ANH [longitud, latitud] para PostGIS 4326.',
+        '-- No contiene saldo, estado ni alias conversacionales no reportados por ANH.',
+    ]
+    for sid, nombre, lon, lat in seleccionados:
+        lineas.extend([
+            f'-- ANH estacion_id={sid}',
+            f'INSERT INTO surtidor (nombre, ubicacion) VALUES ({literal(nombre)}, '
+            f'ST_SetSRID(ST_MakePoint({repr(lon)}, {repr(lat)}), 4326)::geography);',
+        ])
+    for alias, sid in sorted(aliases.items()):
+        nombre = next(n for identificador, n, _, _ in seleccionados if identificador == sid)
         lineas.append(
-            f"INSERT INTO surtidor (nombre, ubicacion) VALUES ({literal(nombre)}, "
-            f"ST_SetSRID(ST_MakePoint({longitud:.8f}, {latitud:.8f}), 4326)::geography);"
+            'INSERT INTO surtidor_alias (surtidor_id, alias) '
+            f'SELECT id, {literal(alias)} FROM surtidor WHERE nombre = {literal(nombre)};'
         )
-    for alias, nombre in sorted(aliases.items()):
-        lineas.append(
-            f"INSERT INTO surtidor_alias (surtidor_id, alias) "
-            f"SELECT id, {literal(alias)} FROM surtidor WHERE nombre = {literal(nombre)};"
-        )
+    if destino.exists():
+        raise FileExistsError('Migración V2 existente: Flyway prohíbe sobrescribir migraciones publicadas; revise el historial')
     destino.parent.mkdir(parents=True, exist_ok=True)
-    destino.write_text("\n".join(lineas) + "\n", encoding="utf-8")
+    temp = destino.with_name(destino.name + '.tmp')
+    try:
+        temp.write_text('\n'.join(lineas) + '\n', encoding='utf-8')
+        temp.replace(destino)
+    finally:
+        temp.unlink(missing_ok=True)
     return len(seleccionados), len(aliases)
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--csv", type=Path, required=True)
-    parser.add_argument("--geojson", type=Path, required=True)
-    parser.add_argument("--salida", type=Path, required=True)
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--csv', type=Path, required=True, help='CSV preparado desde ANH, luego aprobado')
+    parser.add_argument('--geojson', type=Path, required=True, help='cobertura aprobada')
+    parser.add_argument('--api-json', type=Path, required=True, help='mismo JSON ANH que originó el CSV')
+    parser.add_argument('--acta-prototipo', type=Path, required=True, help='21 entradas revisadas por Franz y Marcelo')
+    parser.add_argument('--salida', type=Path, required=True)
     args = parser.parse_args()
-    cantidad, cantidad_aliases = generar(args.csv, args.geojson, args.salida)
-    print(f"Migración generada: {cantidad} surtidores y {cantidad_aliases} alias")
+    cantidad, aliases = generar(args.csv, args.geojson, args.api_json, args.acta_prototipo, args.salida)
+    print(f'V2 preparada desde ANH con {cantidad} estaciones y {aliases} claves oficiales normalizadas.')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

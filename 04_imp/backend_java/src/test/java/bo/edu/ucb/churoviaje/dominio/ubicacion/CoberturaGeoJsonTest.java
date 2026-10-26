@@ -2,7 +2,7 @@ package bo.edu.ucb.churoviaje.dominio.ubicacion;
 
 import bo.edu.ucb.churoviaje.infraestructura.cobertura.LectorCoberturaGeoJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.file.Path;
+
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,19 +12,25 @@ class CoberturaGeoJsonTest {
 
     @Test
     void cp22_plazaDentroSanLorenzoFuera() throws Exception {
-        var documento = mapper.readTree(Path.of(System.getProperty("t089.raiz", "../.."), "04_imp/datos/mancha_urbana_tarija.geojson").toFile());
+        // CP-22 · CU-01/CU-03 · RN-01.6 / RN-03.3. Geometría provisional de prueba, NO definitiva.
+        var documento = mapper.readTree(getClass().getResourceAsStream(
+                "/fixtures/mancha_urbana_tarija_provisional.geojson"));
         CoberturaManchaUrbana cobertura = lector.leer(documento);
-        Ubicacion plaza = new Ubicacion(-21.533912, -64.734297, OrigenUbicacion.GPS);
+        Ubicacion centroTarija = new Ubicacion(-21.5355, -64.7296, OrigenUbicacion.GPS);
         Ubicacion sanLorenzo = new Ubicacion(-21.418100, -64.749400, OrigenUbicacion.AJUSTE_MANUAL);
-        assertTrue(plaza.estaDentroDeManchaUrbana(cobertura));
+        assertTrue(centroTarija.estaDentroDeManchaUrbana(cobertura));
         assertFalse(sanLorenzo.estaDentroDeManchaUrbana(cobertura));
-        assertDoesNotThrow(() -> plaza.validarParaReporte(cobertura));
+        assertDoesNotThrow(() -> centroTarija.validarParaReporte(cobertura));
         assertEquals("UBICACION_FUERA_COBERTURA", assertThrows(
                 UbicacionFueraCoberturaException.class,
                 () -> sanLorenzo.validarParaReporte(cobertura)).getCodigo());
-        assertEquals("Origen o destino inválido", assertThrows(
-                UbicacionFueraCoberturaException.class,
-                () -> sanLorenzo.validarParaRuta(cobertura)).getMessage());
+        assertEquals(ResultadoUbicacionRuta.VALIDA, centroTarija.validarParaRuta(cobertura));
+        assertEquals(ResultadoUbicacionRuta.PUNTO_INVALIDO, sanLorenzo.validarParaRuta(cobertura));
+        assertEquals("Origen o destino inválido",
+                sanLorenzo.validarParaRuta(cobertura).mensajeContrato());
+        ValidadorPuntosRuta validador = new ValidadorPuntosRuta(cobertura);
+        assertEquals(ResultadoUbicacionRuta.PUNTO_INVALIDO,
+                validador.validar(centroTarija, centroTarija, java.util.List.of(sanLorenzo)));
     }
 
     @Test

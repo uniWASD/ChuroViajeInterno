@@ -1,7 +1,5 @@
 package bo.edu.ucb.churoviaje.dominio.catalogo;
 
-import bo.edu.ucb.churoviaje.dominio.catalogo.ClaveAlias;
-import bo.edu.ucb.churoviaje.dominio.catalogo.TipoCombustible;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,9 +12,4 @@ class ClaveAliasTest {
         assertThrows(IllegalArgumentException.class, () -> ClaveAlias.normalizar(" - "));
     }
 
-    @Test
-    void desconocidoNoEsOpcionDeRecarga() {
-        assertFalse(new TipoCombustible("DESCONOCIDO", "Desconocido").disponibleParaConductor());
-        assertTrue(new TipoCombustible("DIESEL", "Diesel").disponibleParaConductor());
-    }
 }

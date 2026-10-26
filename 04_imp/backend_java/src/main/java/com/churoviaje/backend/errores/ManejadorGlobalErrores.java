@@ -29,8 +29,12 @@ public class ManejadorGlobalErrores {
    // Errores de validación de campos (@Valid)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RespuestaRechazo> manejarValidacion(MethodArgumentNotValidException ex) {
-        // Tomamos el primer error de validación detectado
-        String mensaje = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        String mensaje = "Los datos enviados no son válidos";
+        
+        if (!ex.getBindingResult().getFieldErrors().isEmpty()) {
+            mensaje = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
+        }
+        
         RespuestaRechazo respuesta = new RespuestaRechazo("PETICION_INVALIDA", mensaje);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
     }

@@ -1,0 +1,85 @@
+@startuml CU-03_CalcularRutaOptima
+' CU-03: Calcular Ruta Óptima - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-03), secciones 4 y 6; reglas RN-03.1 a RN-03.18
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-03: Calcular Ruta Óptima\nDiagrama de actividad
+
+|Conductor|
+start
+repeat
+  |Conductor|
+  :Ingresa origen, destino y,\nsi quiere, paradas intermedias;
+  :Solicita "Calcular ruta";
+  |App ChuroViaje|
+  :Comprueba que haya origen y destino\ny envía la solicitud con el JWT;
+  |Backend Java|
+  :Comprueba el JWT y el formato;
+  :Valida que los puntos estén\ndentro de la mancha urbana de Tarija;
+  |Motor core (C++)|
+  :Ajusta cada punto a la intersección\nvehicular más cercana de la red vial;
+backward:[1a] Informa "Origen o destino inválido"\ny la app pide al conductor otro punto;
+repeat while (¿Algún punto es inválido\no queda fuera de cobertura?) is (sí [1a]) not (no)
+:Ejecuta A* (Dijkstra como alternativa)\nsobre la red vial con el tráfico de los\neventos vigentes (un bloqueo cierra el tramo);
+note right
+  El costo de un tramo es su longitud por el factor
+  de su nivel de tráfico. La respuesta debe llegar
+  en menos de 3 segundos.
+end note
+if (¿Existe un camino vehicular\nentre los puntos?) then (sí)
+  :Arma la Ruta, pasando por las paradas\nen su orden, con distancia y tiempo estimado;
+  |Backend Java|
+  :Recibe la ruta del motor core\ny la devuelve a la app;
+  |App ChuroViaje|
+  :Dibuja la ruta en el mapa con\nel tiempo y la distancia estimados;
+  if (¿Carga el mapa base de Mapbox?) then (sí)
+  else (no [4a])
+    #FFF8E1:[4a] Informa un error de servicio externo;
+    #FFF8E1:[4a] Sugiere reintentar más tarde\n(el cálculo no depende de Mapbox);
+    stop
+  endif
+  |Conductor|
+  :Revisa tiempo y distancia\ny confirma el inicio de la navegación;
+  |App ChuroViaje|
+  :La ruta pasa a Activa y la app\nempieza a seguirla;
+  note right: El servidor no guarda la ruta.
+  stop
+else (no [3a])
+  |App ChuroViaje|
+  #FFF8E1:[3a] Notifica "No se encontró una ruta válida";
+  stop
+endif
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo: extensiones y flujos alternativos (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

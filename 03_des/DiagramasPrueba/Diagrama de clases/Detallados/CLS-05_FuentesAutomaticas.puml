@@ -1,0 +1,115 @@
+@startuml CLS-05_FuentesAutomaticas
+' CLS-05: Diagrama de clases - Fuentes automáticas de combustible (WhatsApp/LLM y ANH)
+' Fuente: 03_modelo_dominio.md; reglas de CU-06 (RN-06.x) y CU-09 (RN-09.x); decision_conexion_whatsapp.md
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #2F5D8A
+skinparam class {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  HeaderBackgroundColor #D5E4F5
+  AttributeFontSize 11
+}
+skinparam enum {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam package {
+  BorderColor #8AA6C4
+  FontColor #1B365D
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty members
+
+title Fuentes automáticas de combustible\nDiagrama de clases
+
+package "Servicio de WhatsApp/LLM" {
+  class MensajePendiente {
+    -id : String
+    -grupo : String
+    -fechaHora : Instant
+    -texto : String
+    -estado : EstadoMensaje
+    +estaVencido(ahora) : boolean  <<RN-06.11>>
+    +textoParaLLM() : String  <<RN-06.6>>
+    +marcarProcesado()  <<RN-06.12>>
+    +descartar()  <<RN-06.11>>
+  }
+  class "ResultadoAnálisis" as ResultadoAnalisis {
+    -avisos : List<AvisoCombustible>
+    +avisosValidos(catalogo) : List<AvisoCombustible>  <<RN-06.15>>
+  }
+  class AvisoCombustible <<valor>> {
+    -surtidor : String
+    -tipoCombustible : String
+    -disponible : boolean
+    -fila : String [0..1]
+    -fechaMensaje : Instant
+  }
+}
+
+package "Backend Java" {
+  class ReporteANH {
+    -idEstacionAnh : Long
+    -combustible : String
+    -litros : double [0..1]
+    -estadoAnh : EstadoAnh
+    -actualizadoEn : Instant
+    -ubicacion : Ubicacion
+    -consultadoEn : Instant
+    +esRespuestaValida() : boolean  <<RN-09.5, RN-09.6>>
+    +tieneSaldoValido() : boolean  <<RN-09.7>>
+    +estaEnTarija() : boolean  <<RN-09.8>>
+    +traducirLitros() : Disponibilidad  <<RN-09.11>>
+  }
+  class Surtidor <<ver CLS-04>>
+  class EstadoCombustible <<ver CLS-04>>
+  class "Ubicación" as Ubicacion <<ver CLS-02>>
+}
+
+enum EstadoMensaje {
+  PENDIENTE
+  PROCESADO
+  DESCARTADO
+}
+enum Disponibilidad {
+  DISPONIBLE
+  AGOTADO
+  SIN_DATO
+}
+
+MensajePendiente --> EstadoMensaje
+MensajePendiente "1..*" ..> "0..1" ResultadoAnalisis : se analiza en
+ResultadoAnalisis "1" *-- "0..*" AvisoCombustible : contiene
+AvisoCombustible ..> Surtidor : nombra (por nombre o alias)
+ResultadoAnalisis ..> EstadoCombustible : actualiza\n(origen WhatsApp)
+ReporteANH "*" --> "0..1" Surtidor : se vincula con
+ReporteANH "*" --> "1" Ubicacion
+ReporteANH ..> EstadoCombustible : actualiza\n(origen ANH)
+ReporteANH ..> Disponibilidad
+
+note bottom of MensajePendiente
+  Nunca guarda número ni nombre del remitente. Su texto se borra al analizarse
+  o al superar 30 minutos sin analizarse. Solo viajan al LLM el texto y la fecha,
+  con los teléfonos enmascarados.
+end note
+
+note bottom of ReporteANH
+  0 litros es agotado; más de 0 es disponible; sin saldo es sin dato y no cambia
+  ningún estado. Ignora estaciones fuera de la mancha urbana o sin vincular.
+  No guarda la fecha de última venta.
+end note
+
+@enduml

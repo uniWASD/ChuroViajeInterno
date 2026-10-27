@@ -1,0 +1,100 @@
+@startuml CLS-01_Acceso_PruebasDeCarga
+' CLS-01: Diagrama de clases - Acceso y pruebas de carga
+' Fuente: 03_modelo_dominio.md; reglas CU-08 (RN-08.x), CU-07 (RN-07.x) y RN-01.9
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #2F5D8A
+skinparam class {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  HeaderBackgroundColor #D5E4F5
+  AttributeFontSize 11
+}
+skinparam enum {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam package {
+  BorderColor #8AA6C4
+  FontColor #1B365D
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty members
+
+title Acceso y pruebas de carga\nDiagrama de clases
+
+class Conductor {
+  -id : Long
+  -googleId : String
+  -fechaAlta : Instant
+  -simulado : boolean
+  +superaLimiteDeReportes(ahora) : boolean  <<RN-01.9>>
+  +esSimulado() : boolean
+}
+
+class "Sesión" as Sesion {
+  -emitidaEn : Instant
+  -expiraEn : Instant
+  -tokenDeRenovacion : String
+  +estaVigente(ahora) : boolean  <<RN-08.12>>
+  +renovar() : Sesion  <<RN-08.11>>
+  +invalidar()  <<RN-08.14>>
+}
+
+class "Simulación" as Simulacion {
+  -cantidadUsuarios : int
+  -cantidadRutas : int
+  -eventosAEnviar : int
+  -limitesPermitidos : Limites
+  +validarParametros() : boolean  <<RN-07.1>>
+  +ejecutar()  <<RN-07.3>>
+  +eliminarDatosSimulados()  <<RN-07.8>>
+}
+
+class UsuarioFantasma {
+  -credencialesDePrueba : String
+  -rutaQueRecorre : Ruta
+  +iniciarSesionDePrueba() : Sesion  <<RN-07.5>>
+  +enviarEvento()  <<RN-07.6>>
+  +enviarTelemetria()  <<RN-07.6>>
+}
+
+class "Ubicación" as Ubicacion <<ver CLS-02>>
+class Ruta <<ver CLS-03>>
+
+Conductor "1" -- "0..*" Sesion : tiene
+UsuarioFantasma --|> Conductor : es un
+Simulacion "1" o-- "1..*" UsuarioFantasma : crea
+UsuarioFantasma ..> Ruta : recorre
+
+note right of Conductor
+  Hay un solo conductor por cuenta de Google
+  y se crea en el primer inicio de sesión (RN-08.4).
+  Su identidad nunca sale en una respuesta
+  a otro usuario.
+end note
+
+note bottom of Sesion
+  JWT de 1 hora, renovable durante 30 días sin
+  volver a pasar por Google. Sin sesión vigente
+  no se atiende ninguna petición.
+end note
+
+note bottom of UsuarioFantasma
+  Para el backend es un Conductor con marca de
+  simulado; todo lo que envía queda marcado.
+end note
+
+@enduml

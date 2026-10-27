@@ -1,0 +1,100 @@
+@startuml CU-04_RecalcularRuta
+' CU-04: Recalcular Ruta - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-04), secciones 4 y 6; reglas RN-04.1 a RN-04.21 (incluye la telemetría de HU-13)
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-04: Recalcular Ruta\nDiagrama de actividad
+
+|App ChuroViaje|
+start
+:Con la ruta Activa, la app envía su posición\nsolo mientras está abierta en pantalla;
+|Motor core (C++)|
+if (¿Qué origen tiene el evento\nque afecta la ruta?) then (reporte de otro\nconductor (CU-01))
+  |Backend Java|
+  :Hay un EventoVial vigente\nreportado por un conductor;
+else (congestión por\ntelemetría)
+  |Motor core (C++)|
+  :Descarta la lectura si su precisión es peor\nque 50 m o implica más de 150 km/h;
+  :Descarta los giros (25 km/h o menos\ncon cambio de dirección mayor a 40°);
+  :Calcula la velocidad y asigna la lectura\nal tramo vehicular donde va el vehículo;
+  if (¿Lleva 2 minutos seguidos por debajo de la mitad\nde la velocidad esperada de la vía?) then (sí)
+    |Backend Java|
+    if (¿El tramo ya tiene una\ncongestión vigente?) then (sí)
+      :Actualiza el momento de\nla congestión existente;
+    else (no)
+      :Registra un EventoVial de tipo\nCongestión con origen Telemetría;
+    endif
+  else (no)
+    |Motor core (C++)|
+    :No se registra ningún evento;
+    stop
+  endif
+endif
+|Backend Java|
+if (¿El evento cae sobre un tramo que\nal conductor todavía le falta recorrer?) then (sí)
+else (no)
+  :No hay recálculo y la ruta sigue igual;
+  stop
+endif
+|Motor core (C++)|
+:Calcula una alternativa desde la posición\nactual, conservando destino y paradas que faltan;
+:La compara con la ruta actual\ncon el tráfico al día;
+if (¿Existe una alternativa viable\ny de menor costo?) then (sí)
+  |Backend Java|
+  if (¿Ya se propuso una alternativa por\neste evento en esta ruta?) then (no)
+    |App ChuroViaje|
+    :Muestra el aviso de ruta alternativa sin\ninterrumpir la navegación (15 segundos);
+    |Conductor|
+    :Responde al aviso (o lo deja pasar);
+    |App ChuroViaje|
+    if (¿Qué responde el conductor?) then (acepta)
+      :Actualiza las indicaciones: la alternativa\npasa a ser la ruta Activa;
+    elseif (¿Rechaza el cambio?) then (sí [3a])
+      #FFF8E1:[3a] Mantiene la ruta original\ny muestra el evento sobre ella;
+    else (no responde en 15 s [4a])
+      #FFF8E1:[4a] El aviso se cierra solo y sigue la ruta\noriginal; el evento cuenta como ya avisado;
+    endif
+  else (sí)
+    |Backend Java|
+    :No repite la propuesta\n(un evento genera una sola por ruta);
+  endif
+else (no [2a])
+  |App ChuroViaje|
+  #FFF8E1:[2a] Mantiene la ruta original;
+  #FFF8E1:[2a] Notifica al conductor el evento\nque afecta su ruta;
+endif
+stop
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo: extensiones y flujos alternativos (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

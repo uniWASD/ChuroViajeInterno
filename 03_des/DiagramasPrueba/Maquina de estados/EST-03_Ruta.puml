@@ -1,0 +1,41 @@
+@startuml EST-03_Ruta
+' Diagrama de estados general: Ruta
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 22
+skinparam state {
+  BackgroundColor white
+  BorderColor #222222
+  BorderThickness 1.5
+  StartColor #222222
+  EndColor #222222
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+hide empty description
+
+title Diagrama de estados: Ruta
+
+state Calculada
+state Activa
+state Terminada
+
+[*] --> Calculada : motor core\narma la ruta
+Calculada --> Activa : conductor\ninicia navegación
+Activa --> Activa : acepta ruta\nalternativa
+Activa --> Terminada : llega al destino\no cancela
+Calculada --> Terminada : cancela
+Terminada --> [*]
+
+@enduml

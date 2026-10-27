@@ -1,0 +1,109 @@
+@startuml CU-09_ConsultarEstadoANH
+' CU-09: Consultar Estado de Combustible desde ANH - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-09); reglas RN-09.1 a RN-09.19 (02_Arquitectura/04_reglas)
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-09: Consultar Estado de Combustible desde ANH\nDiagrama de actividad
+
+|Tarea periódica del backend|
+start
+:Se cumple el ciclo de consulta;
+:Pide a ANH el catálogo de departamentos\n(GET por HTTPS, sin credenciales);
+|ANH|
+:Responde con el catálogo;
+|Tarea periódica del backend|
+if (¿Hay exactamente una entrada\nllamada Tarija?) then (sí)
+else (no)
+  #FFF8E1:No consulta ni supone ningún identificador;
+  :Deja el resumen del ciclo en el registro;
+  stop
+endif
+repeat
+  |Tarea periódica del backend|
+  :Pide las estaciones de Tarija del siguiente\ncombustible (gasolina, luego diésel);
+  note right
+    Espera máxima por petición y reintentos solo si falta
+    conexión, se agota el tiempo o ANH responde 429, 502,
+    503 o 504. Hay una pausa entre peticiones.
+  end note
+  |ANH|
+  if (¿Responde la petición?) then (sí)
+    :Entrega las estaciones del departamento:\nubicación, saldo en litros, estado y updated_at;
+    |Modelo del backend|
+    if (¿La respuesta es válida?) then (sí)
+      note right
+        HTTP 200, JSON de hasta 10 MiB y decCodigo igual a 1;
+        sin otro departamento u otro combustible, sin
+        estaciones repetidas ni señales de paginación.
+      end note
+      while (¿Quedan estaciones por revisar?) is (sí)
+        if (¿Está dentro de la mancha\nurbana de Tarija?) then (sí)
+          if (¿Está vinculada a un surtidor\ndel catálogo por su identificador de ANH?) then (sí)
+            if (¿El saldo es un número válido\ny no es negativo?) then (sí)
+              :Traduce los litros: 0 es agotado\ny más de 0 es disponible;
+              if (¿updated_at está presente\ny se entiende?) then (sí)
+                if (¿Ya hay un dato de ANH\nmás reciente para ese surtidor y tipo?) then (sí [6b])
+                  #FFF8E1:[6b] No lo reemplaza (con la misma fecha solo\nactualiza el momento de la lectura);
+                else (no)
+                  :Guarda el EstadoCombustible con origen ANH: tipo pedido,\nlitros, estado de ANH, updated_at y momento de lectura;
+                endif
+              else (no)
+                #FFF8E1:No guarda el dato: sin fecha no se sabe\nsi es el más reciente;
+              endif
+            else (no [4b])
+              #FFF8E1:[4b] Lo trata como "sin saldo": no crea\nni cambia ningún estado;
+            endif
+          else (no [5b])
+            #FFF8E1:[5b] Ignora la estación y la anota en el registro\ncomo candidata a entrar al catálogo;
+          endif
+        else (no [5a])
+          #FFF8E1:[5a] Ignora la estación (Bermejo, Yacuiba\nu otra ciudad del departamento);
+        endif
+      endwhile (no)
+    else (no [4a])
+      #FFF8E1:[4a] Descarta la respuesta completa sin cambiar\nningún estado; cada surtidor conserva su último dato;
+    endif
+  else (no [2a])
+    |Tarea periódica del backend|
+    #FFF8E1:[2a] Registra el fallo; cada surtidor conserva\nsu último dato de ANH con su fecha;
+    #FFF8E1:[2a] Un fallo nunca se toma como cero litros;
+  endif
+  |Tarea periódica del backend|
+repeat while (¿Falta consultar el otro combustible?) is (sí [2b]) not (no)
+:Deja en el registro el resumen del ciclo\n(rutas, estado HTTP, estaciones recibidas,\naceptadas e ignoradas y motivo de cada falla);
+stop
+
+legend bottom
+  Azul: escenario principal de éxito.
+  Amarillo: extensiones y flujos alternativos, con su referencia entre corchetes.
+  Si falla la consulta de un combustible, el otro se actualiza igual [2b].
+endlegend
+
+@enduml

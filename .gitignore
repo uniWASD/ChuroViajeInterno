@@ -2,3 +2,4 @@ comandosPersonales.md
 prs.json
 issues.json
 __pycache__/
+sincronizar_issues.py

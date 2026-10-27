@@ -1,0 +1,71 @@
+@startuml ACT-03_Rutas
+' Diagrama de actividad general: calcular y recalcular ruta (CU-03 y CU-04)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 22
+skinparam activity {
+  BackgroundColor white
+  BorderColor #222222
+  BorderThickness 1.5
+  DiamondBackgroundColor white
+  DiamondBorderColor #222222
+  StartColor #222222
+  EndColor #222222
+}
+skinparam swimlane {
+  BorderColor #333333
+  BorderThickness 1
+  TitleFontStyle bold
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+
+title Diagrama de actividad: calcular y recalcular ruta
+
+|Conductor|
+start
+:Ingresar origen\ny destino;
+:Solicitar ruta;
+|App|
+:Enviar solicitud;
+|Backend|
+:Validar puntos;
+|Motor core|
+:Calcular ruta óptima;
+if (¿Existe ruta?) then (no)
+  |App|
+  :Informar que no\nhay ruta;
+  stop
+else (sí)
+  |App|
+  :Mostrar ruta, tiempo\ny distancia;
+  |Conductor|
+  :Iniciar navegación;
+  |App|
+  :Seguir la ruta;
+  |Backend|
+  if (¿Un evento afecta\nel tramo que falta?) then (sí)
+    |Motor core|
+    :Calcular ruta\nalternativa;
+    if (¿La alternativa\nes mejor?) then (sí)
+      |App|
+      :Proponer\nalternativa;
+      |Conductor|
+      :Aceptar o rechazar;
+    endif
+  endif
+  stop
+endif
+
+@enduml

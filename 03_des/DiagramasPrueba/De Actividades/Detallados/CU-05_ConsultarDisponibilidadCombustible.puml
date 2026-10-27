@@ -1,0 +1,91 @@
+@startuml CU-05_ConsultarDisponibilidadCombustible
+' CU-05: Consultar Disponibilidad de Combustible - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-05), secciones 4 y 6; reglas RN-05.1 a RN-05.17
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-05: Consultar Disponibilidad de Combustible\nDiagrama de actividad
+
+|Conductor|
+start
+fork
+  :Abre el módulo de combustible\n(pestaña Surtidores);
+  |App ChuroViaje|
+  :Obtiene la ubicación actual del conductor;
+  repeat
+    :Pide al backend los surtidores cercanos;
+    |Backend Java|
+    :Comprueba el JWT de la sesión;
+    :Ordena los surtidores del catálogo\ndel más cercano al más lejano;
+    :Para cada surtidor y tipo elige el dato más\nreciente entre WhatsApp, Conductores y ANH;
+    if (¿El surtidor tiene algún dato\nde menos de 6 horas?) then (sí)
+      :Entrega disponibilidad, tipo, fila (si se conoce),\norigen y fecha; con litros y estado si el origen es ANH;
+    else (no [3a])
+      #FFF8E1:[3a] Lo entrega como\n"sin información reciente";
+    endif
+    |App ChuroViaje|
+    :Muestra la lista y los marcadores del mapa\nsin datos de quien aportó cada dato;
+    |Conductor|
+    :Revisa el listado o el mapa;
+    |App ChuroViaje|
+    :Espera 60 segundos;
+  repeat while (¿La vista Surtidores o el\nMapa siguen abiertos?) is (sí) not (no)
+fork again
+  |App ChuroViaje|
+  #FFF8E1:[*a] Con la app abierta, detecta que el conductor lleva\n3 minutos detenido a menos de 50 m de un surtidor;
+  if (¿Ya preguntó por ese surtidor\nen los últimos 60 minutos?) then (no)
+    #FFF8E1:[*a] Pregunta "¿Acabas de recargar combustible?";
+    |Conductor|
+    if (¿Responde "Sí"?) then (sí)
+      #FFF8E1:[*a] Elige el tipo: Gasolina, Diesel,\nGasolina Premium o Diesel ULS;
+      |App ChuroViaje|
+      #FFF8E1:[*a] Envía surtidor, tipo y ubicación con el JWT;
+      |Backend Java|
+      if (¿Está junto al surtidor y no repite\nuna confirmación reciente?) then (sí)
+        #FFF8E1:[*a] Marca ese combustible como disponible,\ncon origen Conductores y fecha de la confirmación;
+        #FFF8E1:[*a] Los demás lo ven en su siguiente consulta\nsi es más reciente que el de WhatsApp o ANH;
+      else (no)
+        #FFF8E1:[*a] No registra la confirmación;
+      endif
+    else (no o cierra la pregunta)
+      #FFF8E1:[*a] No se registra ningún cambio;
+    endif
+  else (sí)
+    :No vuelve a preguntar;
+  endif
+end fork
+stop
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo: extensiones y flujos alternativos (sección 6), con su referencia entre corchetes.
+  Las dos ramas ocurren en paralelo mientras la app está abierta.
+endlegend
+
+@enduml

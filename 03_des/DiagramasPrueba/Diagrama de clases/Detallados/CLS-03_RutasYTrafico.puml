@@ -1,0 +1,133 @@
+@startuml CLS-03_RutasYTrafico
+' CLS-03: Diagrama de clases - Rutas y tráfico (motor core)
+' Fuente: 03_modelo_dominio.md, 02_mvc.md (wrapper MotorDeRutas); reglas de CU-03 (RN-03.x) y CU-04 (RN-04.x)
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #2F5D8A
+skinparam class {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  HeaderBackgroundColor #D5E4F5
+  AttributeFontSize 11
+}
+skinparam enum {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam package {
+  BorderColor #8AA6C4
+  FontColor #1B365D
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty members
+
+title Rutas y tráfico (motor core)\nDiagrama de clases
+
+class MotorDeRutas <<wrapper Java>> {
+  +calcularRuta(origen, destino, paradas) : Ruta  <<RN-03.15>>
+  +proponerAlternativa(ruta, posicion) : Ruta  <<RN-04.15>>
+  +analizarTelemetria(lecturas)  <<RN-04.12>>
+  +notificarEvento(evento)
+}
+
+class RedVial {
+  -intersecciones : List<Interseccion>
+  +ajustarAInterseccion(ubicacion) : Interseccion  <<RN-03.4>>
+  +buscarRuta(origen, destino) : Ruta  <<RN-03.10, RN-03.11>>
+}
+
+class Tramo {
+  -extremoInicial : Interseccion
+  -extremoFinal : Interseccion
+  -nombreCalle : String
+  -longitud : double
+  -tipoVia : TipoVia
+  -nivelTrafico : NivelTrafico
+  +costo() : double  <<RN-03.8>>
+  +actualizarNivel(eventos)  <<RN-03.9>>
+  +estaCerrado() : boolean  <<RN-03.9>>
+  +velocidadEsperada() : double  <<RN-04.9>>
+}
+
+class Ruta {
+  -distancia : double
+  -tiempoEstimado : Duration
+  -estado : EstadoRuta
+  +costoTotal() : double  <<RN-03.10>>
+  +tiempoTotal() : Duration  <<RN-03.14>>
+  +activar()  <<RN-03.17>>
+  +terminar()
+  +esAfectadaPor(evento) : boolean  <<RN-04.14>>
+}
+
+class Parada {
+  -orden : int
+}
+
+class "LecturaTelemetría" as LecturaTelemetria {
+  -posicion : Ubicacion
+  -precision : double
+  -momento : Instant
+  -simulada : boolean
+  +calcularVelocidad(anterior) : double  <<RN-04.5>>
+  +esValida() : boolean  <<RN-04.6>>
+  +esGiro(anterior) : boolean  <<RN-04.7>>
+}
+
+class "Ubicación" as Ubicacion <<ver CLS-02>>
+class EventoVial <<ver CLS-02>>
+
+enum NivelTrafico {
+  FLUIDO (x1,0)
+  MODERADO (x1,5)
+  CONGESTIONADO (x2,5)
+  MUY_CONGESTIONADO (x4,0)
+}
+enum EstadoRuta {
+  CALCULADA
+  ACTIVA
+  TERMINADA
+}
+enum TipoVia {
+  VIA_RAPIDA
+  AVENIDA_PRINCIPAL
+  ZONA_RESIDENCIAL
+}
+
+MotorDeRutas ..> RedVial : consulta
+MotorDeRutas ..> Ruta : entrega
+RedVial "1" *-- "1..*" Tramo : contiene
+Ruta "*" --> "1..*" Tramo : recorre
+Ruta "1" *-- "0..*" Parada : tiene
+Parada "*" --> "1" Ubicacion
+Ruta "*" --> "1" Ubicacion : origen y destino
+Tramo ..> EventoVial : su nivel depende de
+LecturaTelemetria "*" --> "1" Tramo : se asigna a
+Tramo --> NivelTrafico
+Tramo --> TipoVia
+Ruta --> EstadoRuta
+
+note bottom of Tramo
+  Un tramo se recorre solo en su sentido: una calle de doble
+  sentido son dos tramos. Costo = longitud x factor de tráfico.
+  Un bloqueo vigente cierra el tramo.
+end note
+
+note bottom of Ruta
+  No se guarda en la base de datos: la app la conserva
+  mientras dura la navegación (sin historial de rutas).
+end note
+
+@enduml

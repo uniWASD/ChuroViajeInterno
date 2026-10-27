@@ -1,0 +1,64 @@
+@startuml ACT-02_EventosViales
+' Diagrama de actividad general: reportar, ver y votar eventos viales (CU-01 y CU-02)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 22
+skinparam activity {
+  BackgroundColor white
+  BorderColor #222222
+  BorderThickness 1.5
+  DiamondBackgroundColor white
+  DiamondBorderColor #222222
+  StartColor #222222
+  EndColor #222222
+}
+skinparam swimlane {
+  BorderColor #333333
+  BorderThickness 1
+  TitleFontStyle bold
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+
+title Diagrama de actividad: eventos viales
+
+|Conductor|
+start
+:Reportar evento\nen el mapa;
+:Elegir tipo\ny confirmar;
+|App|
+:Obtener ubicación;
+if (¿Hay conexión?) then (no)
+  :Guardar reporte\nen cola local;
+  :Esperar conexión;
+endif
+:Enviar reporte;
+|Backend|
+:Validar reporte;
+if (¿Reporte válido?) then (sí)
+  :Registrar evento\ncomo activo;
+  |Otros conductores|
+  :Consultar eventos\ncada 5 segundos;
+  :Ver el evento\nen el mapa;
+  :Votar si es\nreal o falso;
+  |Backend|
+  :Retirar o confirmar\nel evento según los votos;
+  stop
+else (no)
+  |App|
+  :Mostrar motivo\ndel rechazo;
+  stop
+endif
+
+@enduml

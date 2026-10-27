@@ -1,0 +1,97 @@
+@startuml CU-08_IniciarSesion
+' CU-08: Iniciar Sesión - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-08), secciones 4 y 6; reglas RN-08.1 a RN-08.14
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-08: Iniciar Sesión\nDiagrama de actividad
+
+|App ChuroViaje|
+start
+:Al abrir la app busca el\ntoken de renovación guardado;
+if (¿Hay un token de renovación vigente?) then (sí)
+  :Abre directo el Mapa principal, aunque el JWT\nesté vencido o no haya conexión;
+  :Al volver la red renueva el JWT\nsin intervención del conductor;
+  stop
+else (no)
+  :Muestra la vista Inicio de sesión;
+endif
+|Conductor|
+:Presiona "Iniciar sesión con Google";
+|App ChuroViaje|
+:Abre el selector de cuentas de Google;
+|Conductor|
+:Elige su cuenta y autoriza el acceso;
+if (¿Autoriza el acceso?) then (sí)
+else (no [2a])
+  |App ChuroViaje|
+  #FFF8E1:[2a] Cancela el inicio de sesión;
+  #FFF8E1:[2a] Vuelve a Inicio de sesión sin autenticar;
+  stop
+endif
+|Google Sign-In|
+:Verifica la identidad y entrega a la app\nel token de identidad;
+|App ChuroViaje|
+if (¿Hay conexión para enviarlo?) then (sí)
+  :Envía el token al backend\n(única petición que viaja sin JWT);
+else (no [4a])
+  #FFF8E1:[4a] Notifica el error de red;
+  #FFF8E1:[4a] Permite reintentar con Google;
+  stop
+endif
+|Backend Java|
+:Valida el token de identidad con Google;
+if (¿El token es válido y no expiró?) then (sí)
+  :Busca o crea el Conductor\n(uno solo por cuenta de Google);
+  :Emite un JWT propio (1 hora) y un token\nde renovación (30 días);
+else (no [3a])
+  #FFF8E1:[3a] Rechaza la solicitud sin emitir ningún token;
+  |App ChuroViaje|
+  #FFF8E1:[3a] Muestra un mensaje de error y permite reintentar;
+  stop
+endif
+|App ChuroViaje|
+:Guarda los tokens en el\nalmacenamiento seguro del teléfono;
+:Abre la vista Mapa principal;
+|Conductor|
+if (¿Toca "Cerrar sesión" en el menú de la cuenta?) then (sí [*a])
+  |Backend Java|
+  #FFF8E1:[*a] Invalida el token de renovación;
+  |App ChuroViaje|
+  #FFF8E1:[*a] Borra del teléfono los tokens, la cola\nde reportes y los datos guardados;
+  #FFF8E1:[*a] Vuelve a la pantalla de inicio de sesión;
+endif
+stop
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo: extensiones y flujos alternativos (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

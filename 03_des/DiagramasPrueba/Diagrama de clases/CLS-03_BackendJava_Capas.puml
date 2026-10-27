@@ -1,0 +1,86 @@
+@startuml CLS-03_BackendJava_Capas
+' Diagrama de clases general: controladores, servicios y repositorios del backend (Java + Spring)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor white
+  BorderColor #555555
+  HeaderBackgroundColor #E6E6E6
+  FontStyle bold
+  AttributeFontSize 12
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam packageStyle rectangle
+skinparam package {
+  BorderColor #999999
+  BackgroundColor white
+}
+hide circle
+hide empty members
+
+title Diagrama de clases: Backend Java (controladores y servicios)
+
+class SesionController {
+  + iniciarSesion()
+  + cerrarSesion()
+}
+class EventoController {
+  + registrarEvento()
+  + listarEventos()
+  + votar()
+}
+class RutaController {
+  + calcularRuta()
+  + revisarRuta()
+  + recibirTelemetria()
+}
+class CombustibleController {
+  + listarSurtidores()
+  + confirmarRecarga()
+  + recibirResultadoAnalisis()
+}
+
+class ServicioSesion
+class ServicioEventos
+class ServicioRutas
+class ServicioCombustible
+class TareaConsultaANH {
+  + consultar()
+}
+class ClienteANH {
+  + pedirEstaciones()
+}
+class MotorDeRutas {
+  + calcularRuta()
+  + analizarTelemetria()
+}
+class Repositorios {
+  + guardar()
+  + buscar()
+}
+
+SesionController --> ServicioSesion
+EventoController --> ServicioEventos
+RutaController --> ServicioRutas
+CombustibleController --> ServicioCombustible
+TareaConsultaANH --> ClienteANH
+TareaConsultaANH --> ServicioCombustible
+ServicioRutas --> MotorDeRutas
+ServicioSesion --> Repositorios
+ServicioEventos --> Repositorios
+ServicioCombustible --> Repositorios
+
+@enduml

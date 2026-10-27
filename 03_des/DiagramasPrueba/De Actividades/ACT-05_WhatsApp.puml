@@ -1,0 +1,56 @@
+@startuml ACT-05_WhatsApp
+' Diagrama de actividad general: monitoreo de surtidores vía WhatsApp (CU-06)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 22
+skinparam activity {
+  BackgroundColor white
+  BorderColor #222222
+  BorderThickness 1.5
+  DiamondBackgroundColor white
+  DiamondBorderColor #222222
+  StartColor #222222
+  EndColor #222222
+}
+skinparam swimlane {
+  BorderColor #333333
+  BorderThickness 1
+  TitleFontStyle bold
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+
+title Diagrama de actividad: monitoreo de WhatsApp
+
+|Grupos de WhatsApp|
+start
+:Llega un mensaje\nsobre combustible;
+|Servicio WhatsApp/LLM|
+:Guardar mensaje\npendiente;
+:Esperar ciclo\nde 5 minutos;
+if (¿Hay mensajes\npendientes?) then (sí)
+  :Enviar lote al LLM;
+  |Proveedor LLM|
+  :Interpretar mensajes;
+  |Servicio WhatsApp/LLM|
+  :Enviar resultado\nal backend;
+  |Backend|
+  :Validar contra el catálogo\nde surtidores;
+  :Actualizar estado\ndel surtidor;
+  |Servicio WhatsApp/LLM|
+  :Borrar texto de\nlos mensajes;
+endif
+stop
+
+@enduml

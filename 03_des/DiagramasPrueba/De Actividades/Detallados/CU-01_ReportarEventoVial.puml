@@ -1,0 +1,95 @@
+@startuml CU-01_ReportarEventoVial
+' CU-01: Reportar Evento Vial - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-01), secciones 4 y 6; reglas RN-01.1 a RN-01.17 (02_Arquitectura/04_reglas)
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-01: Reportar Evento Vial\nDiagrama de actividad
+
+|Conductor|
+start
+:Abre el mapa y presiona\n"Reportar evento";
+|App ChuroViaje|
+:Muestra el modal con los tipos de evento\ny "Hace 5 minutos" marcado por defecto;
+|Conductor|
+:Elige el tipo de evento\n(accidente, control policial,\nbloqueo u otro);
+:Cambia el tiempo si hace falta\n(ahora mismo, 10 o 30 minutos);
+:Confirma el envío del reporte;
+|App ChuroViaje|
+if (¿El GPS responde?) then (sí)
+  :Toma la ubicación del GPS;
+else (no)
+  #FFF8E1:Pide ajustar el punto\nmanualmente sobre el mapa;
+endif
+if (¿Hay conexión a internet?) then (sí)
+else (no [3a])
+  #FFF8E1:[3a] Guarda el reporte\nen la cola local;
+  #FFF8E1:[3a] Espera a que vuelva\nla conexión;
+  if (¿El reporte sigue vigente\nsegún su tipo de evento?) then (sí)
+    #FFF8E1:[3a] Reintenta el envío\nautomáticamente;
+  else (no)
+    #FFF8E1:[3a] Lo saca de la cola\ny avisa al conductor;
+    stop
+  endif
+endif
+repeat
+  |App ChuroViaje|
+  :Envía el reporte con el JWT\n(tipo, momento y ubicación);
+  |Backend Java|
+  :Comprueba el JWT de la sesión;
+backward:[4a] La app renueva la sesión sin\nintervención o, si no puede, pide\niniciar sesión (CU-08);
+repeat while (¿El JWT venció?) is (sí [4a]) not (no)
+:Valida el reporte;
+note right
+  Ubicación dentro de la mancha urbana de Tarija,
+  evento aún vigente, no duplicado (mismo tipo a menos
+  de 100 m y 10 min) y máximo 5 reportes en 10 minutos.
+end note
+if (¿Acepta el reporte?) then (sí)
+  :Registra el EventoVial en estado Activo,\ncon origen Conductor y sin votos;
+  :Confirma el registro;
+  |App ChuroViaje|
+  :Muestra la confirmación al conductor;
+  |Demás conductores|
+  :Reciben el evento en su siguiente\nconsulta periódica (CU-02);
+  :Lo ven en su mapa en 5-10 segundos;
+  stop
+else (no [4b])
+  |App ChuroViaje|
+  #FFF8E1:[4b] Muestra el motivo del rechazo\n(fuera de Tarija, vencido, repetido\no límite de reportes superado);
+  #FFF8E1:[4b] El reporte no se registra;
+  stop
+endif
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo: extensiones y flujos alternativos (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

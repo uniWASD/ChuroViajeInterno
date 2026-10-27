@@ -1,0 +1,53 @@
+@startuml EST-06_EstadoCombustible
+' EST-06: Máquina de estados del dato de un surtidor (por surtidor y tipo de combustible)
+' Fuente: 03_modelo_dominio.md (EstadoCombustible); CU-05, CU-06, CU-09; reglas RN-05.3, RN-05.5, RN-05.11, RN-05.12, RN-06.16, RN-06.17, RN-09.11 a RN-09.14, RN-09.17
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: estado de combustible de un surtidor y tipo
+
+state "Sin información\nreciente" as SinInfo
+state "Disponible" as Disponible
+state "Agotado" as Agotado
+
+SinInfo : Sin dato, o el último dato superó las 6 horas
+Disponible : Se muestra el dato más reciente de WhatsApp,\nConductores o ANH
+Agotado : Solo lo marcan WhatsApp o ANH (0 litros)
+
+[*] --> SinInfo : surtidor del catálogo sin ningún dato
+SinInfo --> Disponible : llega un dato «disponible»\nde WhatsApp, Conductores o ANH (más de 0 L)
+SinInfo --> Agotado : llega un dato «agotado»\nde WhatsApp o de ANH (0 L)
+Disponible --> Agotado : dato más reciente «agotado»\nde WhatsApp o ANH con 0 litros\n[RN-05.3, RN-09.11]
+Agotado --> Disponible : dato más reciente «disponible»: WhatsApp,\nANH con más de 0 L o confirmación de recarga\n[RN-05.3, RN-05.11]
+Disponible --> Disponible : dato más reciente que actualiza\nfila, origen y fecha [RN-06.17, RN-09.14]
+Disponible --> SinInfo : pasan 6 horas sin dato nuevo\n[RN-05.5, RN-09.17]
+Agotado --> SinInfo : pasan 6 horas sin dato nuevo\n[RN-05.5, RN-09.17]
+
+note bottom of Agotado
+  La confirmación de un conductor solo puede decir que hay combustible:
+  nunca lleva a Agotado [RN-05.12]. Un dato de ANH sin saldo no crea
+  ni cambia ningún estado [RN-09.11].
+end note
+
+@enduml

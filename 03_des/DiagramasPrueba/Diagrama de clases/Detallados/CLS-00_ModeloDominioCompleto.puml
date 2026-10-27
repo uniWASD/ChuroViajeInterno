@@ -1,0 +1,208 @@
+@startuml CLS-00_ModeloDominioCompleto
+' CLS-00: Diagrama de clases del modelo de dominio completo (20 objetos en 6 áreas), con atributos
+' Fuente: 02_Arquitectura/03_modelo_dominio.md, 06_base_de_datos.md y reglas por caso de uso.
+' Los tipos de los atributos son indicativos; las operaciones se detallan en los diagramas CLS-01 a CLS-05.
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #2F5D8A
+skinparam class {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  HeaderBackgroundColor #D5E4F5
+  AttributeFontSize 11
+}
+skinparam enum {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam package {
+  BorderColor #8AA6C4
+  FontColor #1B365D
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty members
+left to right direction
+
+title Modelo de dominio de ChuroViaje\nDiagrama de clases (atributos)
+
+package "Acceso" {
+  class Conductor {
+    -id
+    -googleId
+    -fechaAlta
+    -simulado
+  }
+  class Sesion as "Sesión" {
+    -emitidaEn
+    -expiraEn
+    -tokenDeRenovacion
+  }
+}
+
+package "Pruebas de carga" {
+  class Simulacion as "Simulación" {
+    -cantidadUsuarios
+    -cantidadRutas
+    -eventosAEnviar
+    -limitesPermitidos
+  }
+  class UsuarioFantasma {
+    -credencialesDePrueba
+    -rutaQueRecorre
+  }
+}
+
+package "Eventos viales" {
+  class TipoEvento {
+    -codigo
+    -nombre
+    -color
+    -vigenciaMinutos
+    -reportable
+  }
+  class EventoVial #FFE9E9 {
+    -id
+    -ocurrioEn
+    -registradoEn
+    -origen
+    -nivel
+    -estado
+    -votosReal
+    -votosFalso
+    -simulado
+  }
+  class Voto {
+    -valor
+    -fecha
+    -simulado
+  }
+  class Ubicacion as "Ubicación" {
+    -latitud
+    -longitud
+    -obtenidaPor
+  }
+}
+
+package "Rutas y tráfico" {
+  class RedVial {
+    -intersecciones
+  }
+  class Tramo {
+    -nombreCalle
+    -longitud
+    -tipoVia
+    -nivelTrafico
+  }
+  class Ruta {
+    -distancia
+    -tiempoEstimado
+    -estado
+  }
+  class Parada {
+    -orden
+  }
+  class LecturaTelemetria as "LecturaTelemetría" {
+    -precision
+    -momento
+    -simulada
+  }
+}
+
+package "Combustible" {
+  class Surtidor {
+    -id
+    -nombre
+    -alias
+    -anhId
+  }
+  class TipoCombustible {
+    -codigo
+    -nombre
+  }
+  class EstadoCombustible #FFE9E9 {
+    -origen
+    -disponible
+    -fila
+    -fechaDelDato
+    -litros
+    -estadoAnh
+    -consultadoEn
+  }
+  class ConfirmacionRecarga as "ConfirmaciónRecarga" {
+    -fecha
+  }
+}
+
+package "Fuentes automáticas" {
+  class MensajePendiente {
+    -id
+    -grupo
+    -fechaHora
+    -texto
+    -estado
+  }
+  class ResultadoAnalisis as "ResultadoAnálisis" {
+    -avisos
+  }
+  class ReporteANH {
+    -idEstacionAnh
+    -litros
+    -estadoAnh
+    -actualizadoEn
+    -consultadoEn
+  }
+}
+
+' Acceso y pruebas de carga
+Conductor "1" -- "0..*" Sesion : tiene
+UsuarioFantasma --|> Conductor
+Simulacion "1" o-- "1..*" UsuarioFantasma : crea
+
+' Eventos viales
+Conductor "0..1" <-- "0..*" EventoVial : reporta
+EventoVial "*" --> "1" TipoEvento : es de un
+EventoVial "*" --> "1" Ubicacion : ocurre en
+Voto "*" --> "1" EventoVial : sobre
+Voto "*" --> "1" Conductor : emitido por
+LecturaTelemetria "*" ..> "0..*" EventoVial : genera congestión
+
+' Rutas y tráfico
+RedVial "1" *-- "1..*" Tramo : contiene
+Ruta "*" --> "1..*" Tramo : recorre
+Ruta "1" *-- "0..*" Parada : tiene
+Parada "*" --> "1" Ubicacion
+EventoVial "*" ..> "0..*" Tramo : encarece
+LecturaTelemetria "*" --> "1" Tramo : se asigna a
+
+' Combustible
+EstadoCombustible "*" --> "1" Surtidor : de un
+EstadoCombustible "*" --> "1" TipoCombustible : de un
+ConfirmacionRecarga "*" --> "1" Conductor : hecha por
+ConfirmacionRecarga "*" --> "1" Surtidor : en un
+ConfirmacionRecarga ..> EstadoCombustible : actualiza
+Surtidor "*" --> "1" Ubicacion
+
+' Fuentes automáticas
+MensajePendiente "1..*" ..> "0..1" ResultadoAnalisis : se analiza en
+ResultadoAnalisis ..> EstadoCombustible : actualiza
+ReporteANH ..> EstadoCombustible : actualiza
+ReporteANH "*" --> "0..1" Surtidor : se vincula con
+
+legend bottom
+  Rosado: EventoVial y EstadoCombustible concentran las reglas del dominio.
+  Las rutas, la telemetría y la red vial viven en el motor core; los mensajes pendientes, en el servicio de WhatsApp/LLM.
+endlegend
+
+@enduml

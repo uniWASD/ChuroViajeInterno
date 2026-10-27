@@ -1,0 +1,83 @@
+@startuml CLS-05_ServicioWhatsAppLLM
+' Diagrama de clases general: servicio de WhatsApp/LLM (Node.js + Baileys)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor white
+  BorderColor #555555
+  HeaderBackgroundColor #E6E6E6
+  FontStyle bold
+  AttributeFontSize 12
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam packageStyle rectangle
+skinparam package {
+  BorderColor #999999
+  BackgroundColor white
+}
+hide circle
+hide empty members
+
+title Diagrama de clases: Servicio WhatsApp/LLM (Node.js)
+
+class ClienteBaileys {
+  - sesion
+  + conectar()
+  + recibirMensaje()
+}
+class MensajePendiente {
+  - id
+  - grupo
+  - fechaHora
+  - texto
+  - estado
+  + marcarProcesado()
+}
+class AlmacenMensajes {
+  + guardar()
+  + obtenerPendientes()
+  + borrarTexto()
+}
+class "ProcesoAnálisis" as ProcesoAnalisis {
+  - cicloMinutos
+  + ejecutarCiclo()
+}
+class ClienteLLM {
+  + analizarLote()
+}
+class "ResultadoAnálisis" as ResultadoAnalisis {
+  - avisos
+}
+class AvisoCombustible {
+  - surtidor
+  - tipoCombustible
+  - estado
+  - fila
+  - fechaMensaje
+}
+class ClienteBackend {
+  + enviarResultado()
+}
+
+ClienteBaileys --> AlmacenMensajes : guarda
+AlmacenMensajes "1" o-- "0..*" MensajePendiente
+ProcesoAnalisis --> AlmacenMensajes : lee pendientes
+ProcesoAnalisis --> ClienteLLM : envía lote
+ClienteLLM --> ResultadoAnalisis : devuelve
+ResultadoAnalisis "1" *-- "0..*" AvisoCombustible
+ProcesoAnalisis --> ClienteBackend : envía resultado
+
+@enduml

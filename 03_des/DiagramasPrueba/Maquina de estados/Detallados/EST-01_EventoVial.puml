@@ -1,0 +1,63 @@
+@startuml EST-01_EventoVial
+' EST-01: Máquina de estados de EventoVial
+' Fuente: 03_modelo_dominio.md (cuatro estados); reglas RN-01.10, RN-02.2 a RN-02.4, RN-02.13, RN-02.14, RN-04.10, RN-04.11; 06_base_de_datos.md (P-21)
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: EventoVial
+
+state "Activo" as Activo
+state "Confirmado" as Confirmado
+state "Retirado" as Retirado
+state "Vencido" as Vencido
+
+Activo : Se muestra en el mapa y en la lista
+Activo : Admite votos si lo reportó un conductor
+Confirmado : Se muestra con su marca de confirmado
+Confirmado : Ya no se retira por votos: solo vence
+Retirado : Deja de mostrarse y de pesar en las rutas
+Vencido : Deja de mostrarse y de pesar en las rutas
+
+[*] --> Activo : reporte aceptado (origen Conductor, sin votos)\no congestión detectada (origen Telemetría)\n[RN-01.10, RN-04.10]
+Activo --> Activo : voto aceptado sin llegar al umbral\n[RN-02.11]
+Activo --> Activo : nueva lectura lenta en el mismo tramo:\nactualiza el momento de la congestión\n[RN-04.11]
+Activo --> Confirmado : llega a 3 votos «real»\n[RN-02.14]
+Activo --> Retirado : llega a 3 votos «falso»\n[RN-02.13]
+Activo --> Vencido : supera la vigencia de su tipo\n[RN-02.3, RN-02.4]
+Confirmado --> Vencido : supera la vigencia de su tipo\n[RN-02.4]
+Retirado --> [*] : se borra 30 días después\n[P-21]
+Vencido --> [*] : se borra 30 días después\n[P-21]
+
+note left of Activo
+  Vigencia, contada desde que ocurrió el evento:
+  congestión 30 minutos; accidente, control
+  policial, bloqueo y otro 60 minutos.
+end note
+
+note bottom of Confirmado
+  Un evento Confirmado no pasa a Retirado.
+  La congestión detectada por telemetría no se vota.
+end note
+
+@enduml

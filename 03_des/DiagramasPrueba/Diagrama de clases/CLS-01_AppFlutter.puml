@@ -1,0 +1,90 @@
+@startuml CLS-01_AppFlutter
+' Diagrama de clases general: app móvil (Flutter)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor white
+  BorderColor #555555
+  HeaderBackgroundColor #E6E6E6
+  FontStyle bold
+  AttributeFontSize 12
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam packageStyle rectangle
+skinparam package {
+  BorderColor #999999
+  BackgroundColor white
+}
+hide circle
+hide empty members
+
+title Diagrama de clases: App móvil (Flutter)
+
+class ControladorSesion {
+  - jwt
+  - tokenRenovacion
+  + iniciarSesion()
+  + renovarSesion()
+  + cerrarSesion()
+}
+class ControladorMapa {
+  - eventos
+  + consultarEventos()
+  + votarEvento()
+}
+class ControladorReporte {
+  - colaLocal
+  + reportarEvento()
+  + reenviarCola()
+}
+class ControladorRuta {
+  - rutaActiva
+  + calcularRuta()
+  + iniciarNavegacion()
+  + responderAlternativa()
+}
+class ControladorCombustible {
+  - surtidores
+  + consultarSurtidores()
+  + confirmarRecarga()
+}
+class ControladorTelemetria {
+  - permisoUbicacion
+  + enviarPosicion()
+}
+class ClienteApi {
+  - urlBase
+  + enviar(peticion)
+}
+class AlmacenLocal {
+  - tokens
+  - eventosGuardados
+  - colaReportes
+  + guardar()
+  + borrarTodo()
+}
+
+ControladorSesion --> ClienteApi : usa
+ControladorMapa --> ClienteApi : usa
+ControladorReporte --> ClienteApi : usa
+ControladorRuta --> ClienteApi : usa
+ControladorCombustible --> ClienteApi : usa
+ControladorTelemetria --> ClienteApi : usa
+ControladorSesion --> AlmacenLocal : guarda tokens
+ControladorMapa --> AlmacenLocal : guarda eventos
+ControladorReporte --> AlmacenLocal : guarda cola
+
+@enduml

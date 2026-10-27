@@ -2,5 +2,6 @@
   "plantuml.diagramsRoot": "",
   "plantuml.exportOutDir": "",
   "plantuml.exportSubFolder": false,
-  "plantuml.exportFormat": "png"
+  "plantuml.exportFormat": "png",
+  "cmake.sourceDirectory": "D:/Universidad/Semestre 6/Talles SIinf/proyecto/ChuroViajeInterno/05_pro/PruebaCalculoRuta/cpp"
 }

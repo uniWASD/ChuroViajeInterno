@@ -1,0 +1,51 @@
+@startuml EST-05_MensajePendiente
+' EST-05: Máquina de estados de MensajePendiente (servicio de WhatsApp/LLM)
+' Fuente: 03_modelo_dominio.md (pendiente, procesado, descartado); CU-06; reglas RN-06.3 a RN-06.5, RN-06.10 a RN-06.12
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: MensajePendiente
+
+state "Pendiente" as Pendiente
+state "Procesado" as Procesado
+state "Descartado" as Descartado
+
+Pendiente : Guardado con su texto, sin número ni nombre del remitente
+Procesado : El texto ya se borró
+Descartado : El texto ya se borró
+
+[*] --> Pendiente : llega un mensaje de texto de un grupo autorizado\n[RN-06.3, RN-06.4]
+Pendiente --> Pendiente : el LLM no está disponible o responde con error:\nse reintenta en el siguiente ciclo [RN-06.10]
+Pendiente --> Procesado : el LLM lo analiza en el ciclo de 5 minutos:\nse borra el texto [RN-06.12]
+Pendiente --> Descartado : lleva más de 30 minutos sin analizarse:\nse borra el texto [RN-06.11, RN-06.12]
+Procesado --> [*]
+Descartado --> [*]
+
+note right of Procesado
+  Un mensaje que es una pregunta, es ambiguo o no nombra
+  un surtidor reconocible se analiza, pero no cambia
+  ningún estado de surtidor [RN-06.9].
+end note
+
+@enduml

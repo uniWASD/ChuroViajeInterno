@@ -1,0 +1,58 @@
+@startuml ACT-01_InicioDeSesion
+' Diagrama de actividad general: inicio de sesión (CU-08)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 22
+skinparam activity {
+  BackgroundColor white
+  BorderColor #222222
+  BorderThickness 1.5
+  DiamondBackgroundColor white
+  DiamondBorderColor #222222
+  StartColor #222222
+  EndColor #222222
+}
+skinparam swimlane {
+  BorderColor #333333
+  BorderThickness 1
+  TitleFontStyle bold
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+
+title Diagrama de actividad: inicio de sesión
+
+|Conductor|
+start
+:Abrir la app;
+|App|
+:Mostrar inicio de sesión;
+repeat
+  |Conductor|
+  :Elegir cuenta de Google;
+  |Google|
+  :Verificar identidad;
+  |App|
+  :Enviar token al backend;
+  |Backend|
+  :Validar token de Google;
+backward:Mostrar error;
+repeat while (¿Token válido?) is (no) not (sí)
+:Crear o buscar al conductor;
+:Emitir JWT y token de renovación;
+|App|
+:Guardar sesión y abrir el mapa;
+stop
+
+@enduml

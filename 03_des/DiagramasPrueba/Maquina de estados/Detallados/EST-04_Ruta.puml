@@ -1,0 +1,55 @@
+@startuml EST-04_Ruta
+' EST-04: Máquina de estados de una Ruta (incluye el recálculo de CU-04)
+' Fuente: 03_modelo_dominio.md (Calculada, Activa, Terminada); CU-03 paso 5; CU-04; reglas RN-03.17, RN-04.13 a RN-04.21
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: Ruta
+
+state "Calculada" as Calculada
+state "Activa" as Activa {
+  state "Siguiendo\nla ruta" as Siguiendo
+  state "Evaluando\nevento" as Evaluando
+  state "Propuesta\nmostrada" as Propuesta
+  [*] --> Siguiendo
+  Siguiendo --> Evaluando : un evento vigente cae sobre un tramo\nque todavía falta recorrer\n[RN-04.14]
+  Evaluando --> Siguiendo : no hay alternativa mejor: mantiene la ruta\ny avisa del evento [RN-04.16]\no ya se propuso por ese evento [RN-04.19]
+  Evaluando --> Propuesta : hay una alternativa de menor costo\n[RN-04.16]
+  Propuesta --> Siguiendo : el conductor acepta:\nla alternativa pasa a ser la ruta Activa
+  Propuesta --> Siguiendo : el conductor rechaza: sigue la original\ncon el evento a la vista [RN-04.18]
+  Propuesta --> Siguiendo : no responde en 15 s: el aviso se cierra\ny el evento cuenta como ya avisado [RN-04.21]
+}
+state "Terminada" as Terminada
+
+Calculada : Se muestra con su trazado, tiempo y distancia
+Activa : La app la sigue y envía su posición\nmientras está abierta
+Terminada : No se guarda: el sistema no conserva\nhistorial de rutas
+
+[*] --> Calculada : el motor core arma la ruta de menor costo\n[RN-03.10]
+Calculada --> Activa : el conductor confirma el inicio\n[RN-03.17]
+Calculada --> Terminada : el conductor cancela
+Activa --> Terminada : llega al destino o cancela
+Terminada --> [*]
+
+@enduml

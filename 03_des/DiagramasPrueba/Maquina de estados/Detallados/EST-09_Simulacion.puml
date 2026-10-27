@@ -1,0 +1,55 @@
+@startuml EST-09_Simulacion
+' EST-09: Máquina de estados de una Simulación de carga
+' Fuente: CU-07 (secciones 4 y 6); reglas RN-07.1, RN-07.2, RN-07.4, RN-07.5, RN-07.8 a RN-07.11
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: Simulación de carga
+
+state "Configurada" as Configurada
+state "Validando\nparámetros" as Validando
+state "Rechazada" as Rechazada
+state "Ejecutando" as Ejecutando
+state "Finalizada" as Finalizada
+state "Interrumpida" as Interrumpida
+state "Datos simulados\neliminados" as Eliminados
+
+Configurada : Usuarios fantasma, rutas y eventos\npor línea de comandos o archivo [RN-07.2]
+Rechazada : No se ejecuta e indica los límites permitidos
+Ejecutando : Cada usuario fantasma envía eventos y telemetría\npor la API de la app, con sesión de prueba\n[RN-07.3, RN-07.4, RN-07.5]
+Interrumpida : Ningún dato real queda alterado [RN-07.9]
+
+[*] --> Configurada : el desarrollador define los parámetros
+Configurada --> Validando : el desarrollador ejecuta el simulador
+Validando --> Rechazada : parámetros inválidos o por encima de los límites\n[RN-07.1, CU-07 ext. 1a]
+Validando --> Ejecutando : parámetros válidos: crea los usuarios fantasma
+Ejecutando --> Ejecutando : el backend no soporta la carga: degrada su\ndesempeño y lo anota en los registros\n(no cuenta como fallo) [RN-07.10]
+Ejecutando --> Finalizada : se enviaron todos los eventos\nel backend registra la prueba [RN-07.11]
+Ejecutando --> Interrumpida : la simulación falla o se interrumpe
+Finalizada --> Eliminados : el desarrollador revisa las métricas y\nelimina los datos simulados [RN-07.8]
+Interrumpida --> Eliminados : elimina los datos simulados [RN-07.8]
+Rechazada --> [*]
+Eliminados --> [*]
+
+@enduml

@@ -1,0 +1,113 @@
+@startuml CLS-04_Combustible
+' CLS-04: Diagrama de clases - Combustible
+' Fuente: 03_modelo_dominio.md, 06_base_de_datos.md; reglas de CU-05 (RN-05.x) y CU-09 (RN-09.x)
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #2F5D8A
+skinparam class {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  HeaderBackgroundColor #D5E4F5
+  AttributeFontSize 11
+}
+skinparam enum {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam package {
+  BorderColor #8AA6C4
+  FontColor #1B365D
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty members
+
+title Combustible\nDiagrama de clases
+
+class Surtidor {
+  -id : Long
+  -nombre : String
+  -alias : List<String>
+  -anhId : Long [0..1]
+  +tieneAlias(nombre) : boolean  <<RN-06.15>>
+  +estaJuntoA(ubicacion) : boolean  <<RN-05.13>>
+  +distanciaA(ubicacion) : double  <<RN-05.2>>
+}
+
+class TipoCombustible {
+  -codigo : String
+  -nombre : String
+}
+
+class EstadoCombustible #FFE9E9 {
+  -origen : OrigenDato
+  -disponible : boolean
+  -fila : String [0..1]
+  -fechaDelDato : Instant
+  -litros : double [0..1]
+  -estadoAnh : EstadoAnh [0..1]
+  -consultadoEn : Instant [0..1]
+  +estaVigente(ahora) : boolean  <<RN-05.5, RN-09.17>>
+  +esMasRecienteQue(otro) : boolean  <<RN-05.3>>
+  +reemplazaA(anterior) : boolean  <<RN-06.17, RN-09.14>>
+}
+
+class "ConfirmaciónRecarga" as ConfirmacionRecarga {
+  -fecha : Instant
+  +estaJunto() : boolean  <<RN-05.13>>
+  +esRepetida() : boolean  <<RN-05.14>>
+  +aplicar() : EstadoCombustible  <<RN-05.11, RN-05.12>>
+}
+
+class Conductor <<ver CLS-01>>
+class "Ubicación" as Ubicacion <<ver CLS-02>>
+
+enum OrigenDato {
+  WHATSAPP
+  CONDUCTORES
+  ANH
+}
+enum EstadoAnh {
+  ALTO
+  MEDIO
+  BAJO
+}
+enum "Tipos del catálogo" as Tipos {
+  GASOLINA
+  DIESEL
+  GASOLINA_PREMIUM
+  DIESEL_ULS
+  DESCONOCIDO
+}
+
+Surtidor "*" --> "1" Ubicacion : ubicado en
+EstadoCombustible "*" --> "1" Surtidor : de un
+EstadoCombustible "*" --> "1" TipoCombustible : de un
+EstadoCombustible --> OrigenDato
+EstadoCombustible --> EstadoAnh
+ConfirmacionRecarga "*" --> "1" Conductor : hecha por
+ConfirmacionRecarga "*" --> "1" Surtidor : en un
+ConfirmacionRecarga "*" --> "1" TipoCombustible : de un
+ConfirmacionRecarga ..> EstadoCombustible : actualiza
+TipoCombustible .. Tipos
+
+note bottom of EstadoCombustible
+  Para cada surtidor y tipo se muestra el dato más reciente de los tres orígenes.
+  Pasadas 6 horas sin dato nuevo se muestra "sin información reciente".
+  "Desconocido" solo puede venir de WhatsApp; la confirmación de un conductor
+  solo puede decir que hay combustible. Los litros de ANH nunca son negativos y
+  el estado de ANH no cambia la disponibilidad.
+end note
+
+@enduml

@@ -1,0 +1,56 @@
+@startuml EST-03_Sesion
+' EST-03: Máquina de estados de la sesión del conductor
+' Fuente: CU-08 (secciones 4, 6 y 8); reglas RN-08.2, RN-08.3, RN-08.5, RN-08.8 a RN-08.12, RN-08.14
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: sesión del conductor
+
+state "Sin sesión" as SinSesion
+state "Autenticando\ncon Google" as Autenticando
+state "Sesión activa" as Activa {
+  state "JWT vigente" as JwtVigente
+  state "JWT vencido" as JwtVencido
+  state "Renovando JWT" as Renovando
+  [*] --> JwtVigente
+  JwtVigente --> JwtVencido : pasa 1 hora\n[RN-08.12]
+  JwtVencido --> Renovando : hay conexión\n(la app lo intenta sola)
+  JwtVencido --> JwtVencido : sin conexión: sigue entrando al mapa\n[RN-08.10]
+  Renovando --> JwtVigente : el backend emite un JWT nuevo\n[RN-08.11]
+}
+
+SinSesion : Única vista disponible: Inicio de sesión\n[RN-08.2]
+Activa : Token de renovación guardado en el teléfono\n[RN-08.7]
+
+state AlAbrir <<choice>>
+[*] --> AlAbrir : el conductor abre la app
+AlAbrir --> SinSesion : [sin token de renovación vigente]
+AlAbrir --> Activa : [con token de renovación vigente]\nentra directo al mapa [RN-08.10]
+SinSesion --> Autenticando : presiona «Iniciar sesión con Google»
+Autenticando --> SinSesion : cancela, rechaza permisos, token de Google\ninválido o error de red\n[RN-08.3, RN-08.8, RN-08.9]
+Autenticando --> Activa : el backend valida a Google y emite\nJWT (1 h) y token de renovación (30 días)\n[RN-08.5]
+Renovando --> SinSesion : el token de renovación venció (30 días)\no fue invalidado\n[RN-08.12]
+Activa --> SinSesion : «Cerrar sesión»: el backend invalida el token\ny la app borra tokens, cola y datos\n[RN-08.14]
+
+@enduml

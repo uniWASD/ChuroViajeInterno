@@ -1,0 +1,42 @@
+@startuml EST-02_Sesion
+' Diagrama de estados general: sesión del conductor
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 22
+skinparam state {
+  BackgroundColor white
+  BorderColor #222222
+  BorderThickness 1.5
+  StartColor #222222
+  EndColor #222222
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+hide empty description
+
+title Diagrama de estados: Sesión
+
+state "Sin sesión" as SinSesion
+state "Sesión activa" as Activa
+state "JWT vencido" as Vencido
+
+[*] --> SinSesion
+SinSesion --> Activa : inicia sesión\ncon Google
+Activa --> Vencido : pasa 1 hora
+Vencido --> Activa : renueva el JWT
+Vencido --> SinSesion : vence el token\nde renovación
+Activa --> SinSesion : cierra sesión
+SinSesion --> [*]
+
+@enduml

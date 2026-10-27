@@ -1,0 +1,81 @@
+@startuml CLS-04_MotorCore_Cpp
+' Diagrama de clases general: motor core (wrapper Java + núcleo C++)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor white
+  BorderColor #555555
+  HeaderBackgroundColor #E6E6E6
+  FontStyle bold
+  AttributeFontSize 12
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam packageStyle rectangle
+skinparam package {
+  BorderColor #999999
+  BackgroundColor white
+}
+hide circle
+hide empty members
+
+title Diagrama de clases: Motor core (C++)
+
+class "MotorDeRutas (Java)" as MotorDeRutas {
+  + calcularRuta()
+  + analizarTelemetria()
+  + notificarEvento()
+}
+class "NucleoCpp" as Nucleo {
+  - redVial
+  + ejecutarAEstrella()
+}
+class RedVial {
+  - intersecciones
+  + ajustarPunto()
+  + buscarRuta()
+}
+class Tramo {
+  - nombreCalle
+  - longitud
+  - tipoVia
+  - nivelTrafico
+  + costo()
+}
+class Ruta {
+  - distancia
+  - tiempoEstimado
+  - estado
+  + costoTotal()
+}
+class Parada {
+  - orden
+}
+class "LecturaTelemetría" as LecturaTelemetria {
+  - posicion
+  - precision
+  - momento
+  + calcularVelocidad()
+  + esValida()
+}
+
+MotorDeRutas --> Nucleo : pipe
+Nucleo "1" --> "1" RedVial
+RedVial "1" *-- "1..*" Tramo
+Ruta "0..*" -- "1..*" Tramo : recorre
+Ruta "1" *-- "0..*" Parada
+LecturaTelemetria "0..*" -- "1" Tramo : se asigna a
+
+@enduml

@@ -1,0 +1,97 @@
+@startuml CU-06_MonitorearSurtidoresWhatsApp
+' CU-06: Monitorear Estado de Surtidores vía WhatsApp - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-06), secciones 4 y 6; reglas RN-06.1 a RN-06.19; decision_conexion_whatsapp.md
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-06: Monitorear Estado de Surtidores vía WhatsApp\nDiagrama de actividad
+
+|Servicio WhatsApp/LLM|
+start
+:Monitorea en modo solo lectura los grupos\nde WhatsApp autorizados con el número dedicado;
+while (¿Hay conexión con WhatsApp?) is (no [1a])
+  #FFF8E1:[1a] Reintenta la conexión periódicamente;
+  #FFF8E1:[1a] Los surtidores conservan su último\nestado y su fecha de actualización;
+endwhile (sí)
+|Grupos de WhatsApp|
+:Llega un mensaje nuevo a un grupo de la lista;
+|Servicio WhatsApp/LLM|
+if (¿Es un mensaje de texto?) then (sí)
+  :Lo guarda como MensajePendiente (identificador, grupo,\nfecha y texto), sin número ni nombre del remitente;
+else (no)
+  :Lo ignora (imágenes, audios, stickers y avisos);
+  stop
+endif
+:Se cumple el ciclo de 5 minutos;
+:Descarta los mensajes con más de\n30 minutos sin analizarse;
+if (¿Quedan mensajes pendientes?) then (sí)
+  :Arma el lote ordenado por fecha, solo con texto y\nfecha, y con los teléfonos del texto enmascarados;
+  |Proveedor del LLM|
+  :Interpreta el lote de mensajes;
+  if (¿El LLM responde correctamente?) then (sí)
+    :Identifica por mensaje: surtidor, tipo de combustible\n("Desconocido" si no se indica), estado y fila si se menciona;
+    |Servicio WhatsApp/LLM|
+    #FFF8E1:[3a] Descarta preguntas, mensajes ambiguos\no sin surtidor identificable;
+    :Envía el resultado estructurado al backend;
+    |Backend Java|
+    if (¿Recibe el resultado?) then (sí)
+      :Verifica que viene del servicio autorizado;
+      :Valida cada aviso contra el catálogo de surtidores\n(nombre o alias), tipo, estado y formato;
+      if (¿El aviso es válido?) then (sí)
+        :Crea o actualiza el EstadoCombustible con origen\nWhatsApp y la fecha del mensaje;
+        note right: No reemplaza un dato de WhatsApp más reciente.
+        :El estado queda disponible\npara las consultas (CU-05);
+      else (no [4a])
+        #FFF8E1:[4a] Descarta ese aviso sin actualizar\nningún estado; los demás siguen su curso;
+      endif
+    else (no [4b])
+      |Servicio WhatsApp/LLM|
+      #FFF8E1:[4b] Guarda el resultado, ya sin el texto de\nlos mensajes, y lo reenvía en el siguiente ciclo;
+    endif
+    |Servicio WhatsApp/LLM|
+    :Borra el texto de los mensajes\ny los marca como procesados;
+    stop
+  else (no [3c])
+    |Servicio WhatsApp/LLM|
+    #FFF8E1:[3c] Los mensajes siguen pendientes\npara el siguiente ciclo;
+    #FFF8E1:[3c] Los estados de los surtidores\nquedan en su último valor conocido;
+    stop
+  endif
+else (no [3b])
+  #FFF8E1:[3b] No hace el análisis ni llama al LLM;
+  #FFF8E1:[3b] Espera al siguiente ciclo;
+  stop
+endif
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo: extensiones y flujos alternativos (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

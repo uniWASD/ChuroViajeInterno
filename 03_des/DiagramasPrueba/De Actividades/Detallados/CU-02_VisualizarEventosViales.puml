@@ -1,0 +1,92 @@
+@startuml CU-02_VisualizarEventosViales
+' CU-02: Visualizar Eventos Viales - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-02), secciones 4 y 6; reglas RN-02.1 a RN-02.16
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-02: Visualizar Eventos Viales\nDiagrama de actividad
+
+|Conductor|
+start
+:Abre la app;
+|App ChuroViaje|
+:Pide los permisos y carga\nel mapa base (Mapbox);
+repeat
+  :Pide al backend los eventos activos;
+  if (¿Hay conexión y el backend responde?) then (sí)
+    |Backend Java|
+    :Comprueba el JWT de la sesión;
+    :Toma los eventos Activos y Confirmados\nque siguen vigentes;
+    :Arma la lista sin datos personales\n(tipo, ubicación, cuándo ocurrió,\nconfirmado y origen);
+    |App ChuroViaje|
+    :Actualiza el mapa y la caché local;
+    #FFF8E1:[3a] Quita del mapa los eventos que\nvencieron o fueron retirados;
+    :Dibuja cada evento con el\ncolor de su tipo;
+  else (no [2a])
+    #FFF8E1:[2a] Conserva los últimos eventos\nque mostró (caché local);
+    #FFF8E1:[2a] Avisa "No se pudo actualizar eventos"\no que la información puede estar desactualizada;
+  endif
+  |Conductor|
+  if (¿Toca un evento del mapa?) then (sí)
+    |App ChuroViaje|
+    :Muestra su tipo y hace cuánto ocurrió;
+    |Conductor|
+    if (¿Abre la lista de eventos y vota?) then (sí [5a])
+      #FFF8E1:[5a] Vota "real" o "falso";
+      |Backend Java|
+      if (¿Admite el voto?) then (sí)
+        #FFF8E1:[5a] Registra el voto y recuenta;
+        if (¿Llegó a 3 votos "falso"?) then (sí)
+          #FFF8E1:[5a] El evento pasa a Retirado y\ndesaparece del mapa de todos;
+        elseif (¿Llegó a 3 votos "real"?) then (sí)
+          #FFF8E1:[5a] El evento pasa a Confirmado y\nya no se retira por votos;
+        else (no)
+          :El evento sigue Activo;
+        endif
+      else (no)
+        #FFF8E1:[5a] Rechaza el voto\n(ya votó, es su propio reporte,\nes congestión o ya no está vigente);
+      endif
+    endif
+  endif
+  |App ChuroViaje|
+  :Espera 5 segundos;
+repeat while (¿El mapa sigue abierto?) is (sí) not (no)
+stop
+
+note right
+  Vigencia de un evento, contada desde que ocurrió:
+  congestión 30 minutos; los demás tipos 60 minutos.
+end note
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo: extensiones y flujos alternativos (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

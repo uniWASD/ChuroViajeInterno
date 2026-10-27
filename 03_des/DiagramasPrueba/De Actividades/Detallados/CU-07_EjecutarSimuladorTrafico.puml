@@ -1,0 +1,79 @@
+@startuml CU-07_EjecutarSimuladorTrafico
+' CU-07: Ejecutar Simulador de Tráfico - Diagrama de actividad
+' Fuente: Especificación de Casos de Uso (CU-07), secciones 4 y 6; reglas RN-07.1 a RN-07.13
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam activity {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+}
+skinparam swimlane {
+  BorderColor #2F5D8A
+  TitleFontStyle bold
+  TitleFontColor #1B365D
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+
+title CU-07: Ejecutar Simulador de Tráfico\nDiagrama de actividad
+
+|Desarrollador|
+start
+:Define los parámetros de carga (usuarios fantasma,\nrutas y eventos) por línea de comandos o archivo;
+:Ejecuta el simulador;
+|Simulador (Python)|
+if (¿Los parámetros son válidos y\nestán dentro de los límites?) then (sí)
+else (no [1a])
+  #FFF8E1:[1a] Rechaza la ejecución;
+  #FFF8E1:[1a] Indica los límites permitidos;
+  stop
+endif
+:Crea los usuarios fantasma;
+|Backend Java|
+:Cada usuario fantasma obtiene una sesión con credenciales\nde prueba (un Conductor con marca de simulado);
+repeat
+  |Simulador (Python)|
+  :Cada usuario envía eventos y telemetría\npor la misma API que usa la app;
+  |Backend Java|
+  :Aplica las mismas reglas que a los datos reales\n(JWT, validación, duplicados, límites y vigencia);
+  :Marca todo lo recibido como simulado;
+  if (¿El backend soporta la carga?) then (sí)
+  else (no [3a])
+    #FFF8E1:[3a] Degrada su desempeño\n(no cuenta como fallo del caso de uso);
+    #FFF8E1:[3a] Lo deja anotado en los registros;
+  endif
+repeat while (¿Quedan eventos por enviar?) is (sí) not (no)
+|Backend Java|
+:Registra la prueba de carga en los logs;
+|Desarrollador|
+:Observa las métricas de rendimiento;
+:Elimina los datos simulados\nsin tocar ningún dato real;
+stop
+
+note right
+  Si la simulación falla o se interrumpe, ningún
+  dato real queda alterado y lo ya enviado sigue
+  marcado como simulado.
+end note
+
+legend bottom
+  Azul: escenario principal de éxito (sección 4).
+  Amarillo: extensiones y flujos alternativos (sección 6), con su referencia entre corchetes.
+endlegend
+
+@enduml

@@ -1,0 +1,56 @@
+@startuml ACT-04_Combustible
+' Diagrama de actividad general: consultar combustible y confirmar recarga (CU-05)
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 22
+skinparam activity {
+  BackgroundColor white
+  BorderColor #222222
+  BorderThickness 1.5
+  DiamondBackgroundColor white
+  DiamondBorderColor #222222
+  StartColor #222222
+  EndColor #222222
+}
+skinparam swimlane {
+  BorderColor #333333
+  BorderThickness 1
+  TitleFontStyle bold
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+
+title Diagrama de actividad: consulta de combustible
+
+|Conductor|
+start
+:Abrir módulo\nde combustible;
+|App|
+:Obtener ubicación;
+:Pedir surtidores\ncercanos;
+|Backend|
+:Elegir el dato más\nreciente de cada surtidor;
+|App|
+:Mostrar surtidores\ny su estado;
+|Conductor|
+if (¿Acaba de recargar\ncombustible?) then (sí)
+  :Confirmar el tipo\nde combustible;
+  |App|
+  :Enviar confirmación;
+  |Backend|
+  :Actualizar estado\ndel surtidor;
+endif
+stop
+
+@enduml

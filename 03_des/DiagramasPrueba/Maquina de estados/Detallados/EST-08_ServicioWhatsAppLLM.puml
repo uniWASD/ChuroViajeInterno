@@ -1,0 +1,59 @@
+@startuml EST-08_ServicioWhatsAppLLM
+' EST-08: Máquina de estados del servicio de WhatsApp/LLM (conexión y ciclo de análisis en paralelo)
+' Fuente: CU-06 (ext. 1a, 3b, 3c, 4b); decision_conexion_whatsapp.md; reglas RN-06.1, RN-06.5, RN-06.10 a RN-06.13, RN-06.18, RN-06.19
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: servicio de WhatsApp/LLM
+
+state "Servicio de WhatsApp/LLM" as Servicio {
+  state "Conexión con WhatsApp" as Conexion {
+    state "Conectando" as Conectando
+    state "Conectado" as Conectado
+    state "Reintentando" as Reintentando
+    [*] --> Conectando
+    Conectando --> Conectado : sesión del número dedicado activa
+    Conectado --> Reintentando : se pierde la conexión [RN-06.13]
+    Reintentando --> Reintentando : reintento periódico\nlos surtidores conservan su último estado
+    Reintentando --> Conectado : se restablece la conexión
+    Conectado : Lee solo mensajes de texto de los grupos\nautorizados, en modo solo lectura\n[RN-06.1, RN-06.2]
+  }
+  --
+  state "Ciclo de análisis" as Ciclo {
+    state "Esperando" as Esperando
+    state "Revisando\npendientes" as Revisando
+    state "Analizando\ncon el LLM" as Analizando
+    state "Enviando\nal backend" as Enviando
+    [*] --> Esperando
+    Esperando --> Revisando : pasan 5 minutos [RN-06.5]
+    Revisando --> Esperando : no hay pendientes: no llama al LLM\n[RN-06.5]
+    Revisando --> Analizando : hay pendientes: descarta los de más de 30 min\ny envía el lote [RN-06.11]
+    Analizando --> Esperando : el LLM falla: los mensajes siguen pendientes\n[RN-06.10]
+    Analizando --> Enviando : respuesta estructurada del LLM
+    Enviando --> Esperando : el backend recibe: borra el texto\ny marca procesados [RN-06.12]
+    Enviando --> Esperando : el backend no recibe: guarda el resultado sin\ntexto y lo reenvía en el siguiente ciclo [RN-06.19]
+  }
+}
+
+@enduml

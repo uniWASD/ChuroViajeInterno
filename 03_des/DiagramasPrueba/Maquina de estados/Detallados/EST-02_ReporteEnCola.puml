@@ -1,0 +1,59 @@
+@startuml EST-02_ReporteEnCola
+' EST-02: Máquina de estados de un reporte de evento vial en la app (cola local)
+' Fuente: CU-01 (ext. 3a, 4a, 4b); reglas RN-01.7 a RN-01.9, RN-01.13 a RN-01.16; HU-02
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: reporte de evento vial en la app
+
+state "Confirmado por\nel conductor" as Confirmado
+state "En cola local\n(pendiente)" as EnCola
+state "Verificando\nvigencia" as Verificando
+state "Enviando" as Enviando
+state "Esperando\nsesión" as EsperandoSesion
+state "Aceptado" as Aceptado
+state "Rechazado" as Rechazado
+state "Descartado\npor vencido" as Descartado
+
+Confirmado : Tipo, momento y ubicación (GPS o ajuste manual)
+EnCola : Guardado en el teléfono; se muestra como pendiente
+Aceptado : El backend registró el EventoVial como Activo
+Rechazado : Fuera de Tarija, vencido, repetido o límite superado
+
+[*] --> Confirmado : el conductor confirma el envío
+Confirmado --> Enviando : hay conexión a internet
+Confirmado --> EnCola : no hay conexión\n[RN-01.13]
+EnCola --> Verificando : vuelve la conexión
+Verificando --> Enviando : sigue vigente según su tipo
+Verificando --> Descartado : ya superó la vigencia\nla app avisa al conductor\n[RN-01.14]
+Enviando --> Aceptado : el backend acepta\n[RN-01.10]
+Enviando --> Rechazado : el backend rechaza\n[RN-01.7, RN-01.8, RN-01.9]
+Enviando --> EsperandoSesion : el JWT expiró\n[RN-01.16]
+EsperandoSesion --> Enviando : la app renueva la sesión\no el conductor inicia sesión (CU-08)
+Enviando --> EnCola : el reenvío falla varias veces seguidas\nnunca se descarta en silencio\n[RN-01.15]
+Aceptado --> [*] : la app notifica el envío
+Rechazado --> [*] : la app muestra el motivo\nel reporte no se registra
+Descartado --> [*]
+
+@enduml

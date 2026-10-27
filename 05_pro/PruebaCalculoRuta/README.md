@@ -19,3 +19,7 @@ pip install -r requirements.txt
 python -m pytest -v
 python demo_ruteo.py
 ```
+
+## Versión en C++
+
+El motor ya fue portado a C++ en [`cpp/`](cpp/README.md): recibe coordenadas por consola y devuelve la mejor ruta por consola.

@@ -1,0 +1,56 @@
+@startuml EST-07_PreguntaRecarga
+' EST-07: Máquina de estados de la pregunta «¿Acabas de recargar combustible?» en la app
+' Fuente: CU-05 ext. *a (HU-12); reglas RN-05.8 a RN-05.14, RN-05.16
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam wrapWidth 220
+skinparam ArrowColor #2F5D8A
+skinparam state {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  StartColor #2F5D8A
+  EndColor #2F5D8A
+  AttributeFontSize 11
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty description
+
+title Máquina de estados: confirmación de recarga en la app
+
+state "Monitoreando\nposición" as Monitoreando
+state "Detenido junto\na un surtidor" as Detenido
+state "Preguntando\n«¿Acabas de recargar?»" as Preguntando
+state "Eligiendo tipo\nde combustible" as Eligiendo
+state "Enviando\nconfirmación" as Enviando
+
+Monitoreando : App abierta con permiso de ubicación
+Eligiendo : Gasolina, Diesel, Gasolina Premium o Diesel ULS\n(«Desconocido» no es una opción) [RN-05.9]
+
+[*] --> Monitoreando
+Monitoreando --> Detenido : lleva 3 minutos detenido a menos de 50 m\nde un surtidor del catálogo [RN-05.8]
+Detenido --> Preguntando : no se preguntó por ese surtidor\nen los últimos 60 minutos
+Detenido --> Monitoreando : ya se preguntó por ese surtidor en ese lapso\n[RN-05.14]
+Preguntando --> Eligiendo : responde «Sí»
+Preguntando --> Monitoreando : responde «No» o cierra la pregunta\nno se registra nada [RN-05.10]
+Eligiendo --> Enviando : elige un tipo
+Eligiendo --> Monitoreando : cierra sin elegir\nno se registra nada [RN-05.10]
+Enviando --> Monitoreando : el backend acepta: el surtidor queda disponible\ncon origen Conductores [RN-05.11]
+Enviando --> Monitoreando : el backend rechaza: está lejos del surtidor\no repite una confirmación reciente [RN-05.13, RN-05.14]
+
+note right of Preguntando
+  La pregunta no interrumpe la consulta de surtidores
+  ni la navegación y se responde en dos toques como
+  máximo [RN-05.16].
+end note
+
+@enduml

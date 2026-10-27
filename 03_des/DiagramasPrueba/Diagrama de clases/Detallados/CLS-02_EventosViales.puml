@@ -1,0 +1,129 @@
+@startuml CLS-02_EventosViales
+' CLS-02: Diagrama de clases - Eventos viales
+' Fuente: 03_modelo_dominio.md; reglas de CU-01 (RN-01.x), CU-02 (RN-02.x) y CU-04 (RN-04.10, RN-04.11)
+
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 12
+skinparam classAttributeIconSize 0
+skinparam ArrowColor #2F5D8A
+skinparam class {
+  BackgroundColor #EAF2FB
+  BorderColor #2F5D8A
+  HeaderBackgroundColor #D5E4F5
+  AttributeFontSize 11
+}
+skinparam enum {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam package {
+  BorderColor #8AA6C4
+  FontColor #1B365D
+  BackgroundColor #FFFFFF
+}
+skinparam note {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+}
+skinparam legend {
+  BackgroundColor #FFF8E1
+  BorderColor #C9A227
+  FontSize 11
+}
+hide empty members
+
+title Eventos viales\nDiagrama de clases
+
+class TipoEvento {
+  -codigo : String
+  -nombre : String
+  -color : String
+  -vigenciaMinutos : int
+  -reportable : boolean
+  +esReportable() : boolean  <<RN-01.3>>
+  +vigencia() : Duration  <<RN-02.3>>
+}
+
+class EventoVial #FFE9E9 {
+  -id : Long
+  -ocurrioEn : Instant
+  -registradoEn : Instant
+  -origen : OrigenEvento
+  -nivel : NivelCongestion [0..1]
+  -estado : EstadoEvento
+  -votosReal : int
+  -votosFalso : int
+  -simulado : boolean
+  +estaVigente(ahora) : boolean  <<RN-02.3>>
+  +esDuplicadoDe(otro) : boolean  <<RN-01.8>>
+  +admiteVotos() : boolean  <<RN-02.10>>
+  +registrarVoto(voto)  <<RN-02.13, RN-02.14>>
+  +vencer()  <<RN-02.4>>
+  +actualizarMomento(ahora)  <<RN-04.11>>
+}
+
+class Voto {
+  -valor : ValorVoto
+  -fecha : Instant
+  -simulado : boolean
+  +esDelReportante() : boolean  <<RN-02.12>>
+}
+
+class "Ubicación" as Ubicacion {
+  -latitud : double
+  -longitud : double
+  -obtenidaPor : MetodoUbicacion
+  +estaEnTarija() : boolean  <<RN-01.6>>
+  +distanciaA(otra) : double
+}
+
+class Conductor <<ver CLS-01>>
+class LecturaTelemetria as "LecturaTelemetría" <<ver CLS-03>>
+class Tramo <<ver CLS-03>>
+
+enum EstadoEvento {
+  ACTIVO
+  CONFIRMADO
+  RETIRADO
+  VENCIDO
+}
+enum OrigenEvento {
+  CONDUCTOR
+  TELEMETRIA
+}
+enum NivelCongestion {
+  CONGESTIONADO
+  MUY_CONGESTIONADO
+}
+enum ValorVoto {
+  REAL
+  FALSO
+}
+enum MetodoUbicacion {
+  GPS
+  AJUSTE_MANUAL
+}
+
+EventoVial "*" --> "1" TipoEvento : es de un
+EventoVial "*" --> "1" Ubicacion : ocurre en
+EventoVial "*" --> "0..1" Conductor : reportante
+Voto "*" --> "1" EventoVial : sobre
+Voto "*" --> "1" Conductor : emitido por
+LecturaTelemetria "*" ..> EventoVial : genera congestión
+EventoVial "*" ..> "0..*" Tramo : encarece / cierra
+EventoVial --> EstadoEvento
+EventoVial --> OrigenEvento
+EventoVial --> NivelCongestion
+Voto --> ValorVoto
+Ubicacion --> MetodoUbicacion
+
+note bottom of EventoVial
+  Reporte aceptado: nace Activo, origen Conductor y sin votos (RN-01.10).
+  Congestión: origen Telemetría, sin reportante, no se vota (RN-02.10).
+  Un voto por conductor y evento (RN-02.11).
+  3 votos "falso" lo retiran; 3 votos "real" lo confirman (valores iniciales).
+  Vigencia: congestión 30 min; accidente, control policial, bloqueo y otro 60 min.
+end note
+
+@enduml

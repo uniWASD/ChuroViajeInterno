@@ -1,6 +1,6 @@
 package com.churoviaje.backend.controladores;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,16 +27,16 @@ public class EventoVialControlador {
         this.eventoVialServicio = eventoVialServicio;
     }
 
-    // 1. DTO de entrada: Solo acepta lo que dicta el contrato
+    // 1. DTO de entrada: Solo acepta lo que dicta el contrato con mensajes personalizados
     public record PeticionReporteEvento(
-            @NotBlank String tipo,
-            @NotNull @Valid Ubicacion ubicacion,
-            @NotNull LocalDateTime horaConfirmacion,
-            @NotNull Integer minutosElegidos
+            @NotBlank(message = "Falta el tipo de evento") String tipo,
+            @NotNull(message = "Falta la ubicación") @Valid Ubicacion ubicacion,
+            @NotNull(message = "Falta la hora de confirmación") OffsetDateTime horaConfirmacion,
+            @NotNull(message = "Faltan los minutos elegidos") Integer minutosElegidos
     ) {}
 
     // 2. DTO de salida: No expone la entidad JPA
-    public record EventoVialResponseDto(Long id, String tipo, Ubicacion ubicacion, LocalDateTime momentoOcurrencia) {}
+    public record EventoVialResponseDto(Long id, String tipo, Ubicacion ubicacion, OffsetDateTime momentoOcurrencia) {}
 
     @PostMapping
     public ResponseEntity<EventoVialResponseDto> reportarEvento(@Valid @RequestBody PeticionReporteEvento peticion) {

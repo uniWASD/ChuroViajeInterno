@@ -16,11 +16,11 @@ updates:
       interval: "weekly"
 
   - package-ecosystem: "pip"
-    directory: "/04_imp/servicio_llm"
+    directory: "/04_imp/simulador"
     schedule:
       interval: "weekly"
 
-  - package-ecosystem: "pip"
-    directory: "/04_imp/simulador"
+  - package-ecosystem: "github-actions"
+    directory: "/"
     schedule:
       interval: "weekly"

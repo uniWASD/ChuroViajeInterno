@@ -26,4 +26,4 @@ jobs:
           cache: 'maven'
 
       - name: Compilar y ejecutar pruebas (JUnit 5)
-        run: mvn clean test
+        run: ./mvnw -B clean test

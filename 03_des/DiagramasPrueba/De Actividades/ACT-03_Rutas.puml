@@ -47,25 +47,24 @@ if (¿Existe ruta?) then (no)
   |App|
   :Informar que no\nhay ruta;
   stop
-else (sí)
-  |App|
-  :Mostrar ruta, tiempo\ny distancia;
-  |Conductor|
-  :Iniciar navegación;
-  |App|
-  :Seguir la ruta;
-  |Backend|
-  if (¿Un evento afecta\nel tramo que falta?) then (sí)
-    |Motor core|
-    :Calcular ruta\nalternativa;
-    if (¿La alternativa\nes mejor?) then (sí)
-      |App|
-      :Proponer\nalternativa;
-      |Conductor|
-      :Aceptar o rechazar;
-    endif
-  endif
-  stop
 endif
+|App|
+:Mostrar ruta, tiempo\ny distancia;
+|Conductor|
+:Iniciar navegación;
+|Motor core|
+:Evaluar eventos del\ntramo restante;
+if (¿Hay alternativa\nmejor?) then (sí)
+  |App|
+  :Proponer alternativa;
+  |Conductor|
+  :Aceptar o rechazar;
+else (no)
+  |App|
+  :Continuar ruta actual;
+endif
+|App|
+:Llegar al destino;
+stop
 
 @enduml

@@ -37,6 +37,5 @@ Activa --> Vencido : pasa 1 hora
 Vencido --> Activa : renueva el JWT
 Vencido --> SinSesion : vence el token\nde renovación
 Activa --> SinSesion : cierra sesión
-SinSesion --> [*]
 
 @enduml

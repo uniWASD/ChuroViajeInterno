@@ -1,0 +1,60 @@
+@startuml SEC-02_ReportarEvento
+' Diagrama de secuencia general: reportar un evento vial
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 8
+skinparam sequence {
+  ParticipantBackgroundColor white
+  ParticipantBorderColor #222222
+  ActorBackgroundColor white
+  ActorBorderColor #222222
+  LifeLineBorderColor #555555
+  LifeLineBackgroundColor white
+  GroupBorderColor #777777
+  GroupBackgroundColor white
+  ArrowThickness 1.2
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam database {
+  BackgroundColor white
+  BorderColor #222222
+}
+skinparam responseMessageBelowArrow true
+hide footbox
+autonumber
+
+title Diagrama de secuencia: Reportar evento vial
+
+actor Conductor
+participant "App Flutter" as App
+participant "Backend Java" as Backend
+database PostgreSQL as BD
+
+Conductor -> App : Reportar evento
+App -> Backend : POST /eventos (tipo, ubicación)
+Backend -> Backend : Validar datos y vigencia
+Backend -> BD : Guardar evento (Activo)
+BD --> Backend : Evento
+Backend --> App : Evento registrado
+App --> Conductor : Confirmación
+
+group Otros conductores
+  App -> Backend : GET /eventos (zona)
+  Backend -> BD : Consultar eventos vigentes
+  BD --> Backend : Lista de eventos
+  Backend --> App : Eventos cercanos
+end
+
+@enduml

@@ -1,0 +1,68 @@
+@startuml SEC-07_ConsultaCombustible
+' Diagrama de secuencia general: consulta ANH y confirmación de combustible
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 8
+skinparam sequence {
+  ParticipantBackgroundColor white
+  ParticipantBorderColor #222222
+  ActorBackgroundColor white
+  ActorBorderColor #222222
+  LifeLineBorderColor #555555
+  LifeLineBackgroundColor white
+  GroupBorderColor #777777
+  GroupBackgroundColor white
+  ArrowThickness 1.2
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam database {
+  BackgroundColor white
+  BorderColor #222222
+}
+skinparam responseMessageBelowArrow true
+hide footbox
+autonumber
+
+title Diagrama de secuencia: Combustible (ANH y conductor)
+
+actor Conductor
+participant "App Flutter" as App
+participant "Backend Java" as Backend
+participant "API de la ANH" as ANH
+database PostgreSQL as BD
+
+group Consulta periódica
+  Backend -> ANH : Pedir estaciones
+  ANH --> Backend : Litros por estación
+  Backend -> BD : Actualizar estado de surtidores
+end
+
+group Consulta del conductor
+  Conductor -> App : Ver surtidores
+  App -> Backend : GET /surtidores
+  Backend -> BD : Estados vigentes
+  BD --> Backend : Surtidores
+  Backend --> App : Lista de surtidores
+  App --> Conductor : Mostrar estado
+end
+
+group Confirmación de recarga
+  Conductor -> App : Confirmar que cargó
+  App -> Backend : POST /recargas
+  Backend -> BD : Guardar confirmación y actualizar estado
+  Backend --> App : OK
+end
+
+@enduml

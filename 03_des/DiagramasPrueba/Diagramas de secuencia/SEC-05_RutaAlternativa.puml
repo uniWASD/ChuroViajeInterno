@@ -1,0 +1,63 @@
+@startuml SEC-05_RutaAlternativa
+' Diagrama de secuencia general: navegación y ruta alternativa
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 8
+skinparam sequence {
+  ParticipantBackgroundColor white
+  ParticipantBorderColor #222222
+  ActorBackgroundColor white
+  ActorBorderColor #222222
+  LifeLineBorderColor #555555
+  LifeLineBackgroundColor white
+  GroupBorderColor #777777
+  GroupBackgroundColor white
+  ArrowThickness 1.2
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam database {
+  BackgroundColor white
+  BorderColor #222222
+}
+skinparam responseMessageBelowArrow true
+hide footbox
+autonumber
+
+title Diagrama de secuencia: Navegación y ruta alternativa
+
+actor Conductor
+participant "App Flutter" as App
+participant "Backend Java" as Backend
+participant "Motor core" as Core
+
+Conductor -> App : Iniciar navegación
+App -> Backend : Ruta activa
+
+loop durante el viaje
+  App -> Backend : POST /telemetria (posición)
+  Backend -> Core : Analizar posición y evento en el tramo
+  Core --> Backend : ¿Hay mejor alternativa?
+  opt alternativa mejor
+    Backend --> App : Ruta alternativa
+    App --> Conductor : Proponer cambio
+    Conductor -> App : Aceptar o rechazar
+    App -> Backend : Respuesta del conductor
+  end
+end
+
+App -> Backend : Llegada o cancelación
+Backend --> App : Ruta terminada
+
+@enduml

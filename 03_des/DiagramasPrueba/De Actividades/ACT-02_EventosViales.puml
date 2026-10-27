@@ -46,19 +46,19 @@ endif
 :Enviar reporte;
 |Backend|
 :Validar reporte;
-if (¿Reporte válido?) then (sí)
-  :Registrar evento\ncomo activo;
-  |Otros conductores|
-  :Consultar eventos\ncada 5 segundos;
-  :Ver el evento\nen el mapa;
-  :Votar si es\nreal o falso;
-  |Backend|
-  :Retirar o confirmar\nel evento según los votos;
-  stop
-else (no)
+if (¿Reporte válido?) then (no)
   |App|
   :Mostrar motivo\ndel rechazo;
   stop
 endif
+|Backend|
+:Registrar evento\ncomo activo;
+|Otros conductores|
+:Consultar eventos\ncada 5 segundos;
+:Ver el evento\nen el mapa;
+:Votar si es\nreal o falso;
+|Backend|
+:Retirar o confirmar\nel evento según los votos;
+stop
 
 @enduml

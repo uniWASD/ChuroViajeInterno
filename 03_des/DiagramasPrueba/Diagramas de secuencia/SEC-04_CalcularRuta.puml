@@ -1,0 +1,60 @@
+@startuml SEC-04_CalcularRuta
+' Diagrama de secuencia general: calcular ruta con el motor core
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 8
+skinparam sequence {
+  ParticipantBackgroundColor white
+  ParticipantBorderColor #222222
+  ActorBackgroundColor white
+  ActorBorderColor #222222
+  LifeLineBorderColor #555555
+  LifeLineBackgroundColor white
+  GroupBorderColor #777777
+  GroupBackgroundColor white
+  ArrowThickness 1.2
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam database {
+  BackgroundColor white
+  BorderColor #222222
+}
+skinparam responseMessageBelowArrow true
+hide footbox
+autonumber
+
+title Diagrama de secuencia: Calcular ruta
+
+actor Conductor
+participant "App Flutter" as App
+participant "Backend Java" as Backend
+participant "MotorDeRutas\n(wrapper Java)" as Wrapper
+participant "Núcleo C++" as Core
+database PostgreSQL as BD
+
+Conductor -> App : Origen y destino
+App -> Backend : POST /rutas
+Backend -> BD : Eventos vigentes en la zona
+BD --> Backend : Eventos
+Backend -> Wrapper : calcularRuta(origen, destino, eventos)
+Wrapper -> Core : Solicitud (pipe)
+Core -> Core : A* sobre la red vial
+Core --> Wrapper : Ruta
+Wrapper --> Backend : Ruta
+Backend -> BD : Guardar ruta (Calculada)
+Backend --> App : Ruta, tiempo y distancia
+App --> Conductor : Mostrar ruta
+
+@enduml

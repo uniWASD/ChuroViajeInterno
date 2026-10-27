@@ -1,0 +1,59 @@
+@startuml SEC-08_Simulador
+' Diagrama de secuencia general: simulación con usuarios fantasma
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 8
+skinparam sequence {
+  ParticipantBackgroundColor white
+  ParticipantBorderColor #222222
+  ActorBackgroundColor white
+  ActorBorderColor #222222
+  LifeLineBorderColor #555555
+  LifeLineBackgroundColor white
+  GroupBorderColor #777777
+  GroupBackgroundColor white
+  ArrowThickness 1.2
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam database {
+  BackgroundColor white
+  BorderColor #222222
+}
+skinparam responseMessageBelowArrow true
+hide footbox
+autonumber
+
+title Diagrama de secuencia: Simulación de tráfico
+
+actor Desarrollador
+participant Simulador
+participant "Backend Java" as Backend
+database PostgreSQL as BD
+
+Desarrollador -> Simulador : Ejecutar (usuarios, rutas, eventos)
+Simulador -> Simulador : Validar parámetros
+
+loop cada usuario fantasma
+  Simulador -> Backend : Iniciar sesión (credenciales de prueba)
+  Backend --> Simulador : JWT
+  Simulador -> Backend : Enviar eventos y telemetría
+  Backend -> BD : Guardar datos simulados
+end
+
+Simulador -> Backend : Eliminar datos simulados
+Backend -> BD : Borrar registros simulados
+Simulador --> Desarrollador : Informe de la simulación
+
+@enduml

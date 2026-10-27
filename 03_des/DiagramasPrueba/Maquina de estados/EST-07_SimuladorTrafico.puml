@@ -1,5 +1,5 @@
-@startuml EST-07_Simulacion
-' Diagrama de estados general: Simulación de carga
+@startuml EST-07_SimuladorTrafico
+' Diagrama de estados general: Simulador de tráfico (CU-07)
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
 skinparam defaultFontSize 13
@@ -25,21 +25,21 @@ skinparam note {
 }
 hide empty description
 
-title Diagrama de estados: Simulación
+title Diagrama de estados: Simulador de tráfico
 
-state Configurada
+state Configurado
 state Ejecutando
-state Finalizada
-state Interrumpida
-state Rechazada
+state Realizado
+state Interrumpido
+state Rechazado
 
-[*] --> Configurada
-Configurada --> Ejecutando : parámetros válidos
-Configurada --> Rechazada : parámetros inválidos
-Ejecutando --> Finalizada : eventos enviados
-Ejecutando --> Interrumpida : falla o se interrumpe
-Finalizada --> [*] : datos simulados\neliminados
-Interrumpida --> [*] : datos simulados\neliminados
-Rechazada --> [*]
+[*] --> Configurado : desarrollador define\nusuarios, rutas y eventos
+Configurado --> Ejecutando : parámetros válidos
+Configurado --> Rechazado : parámetros inválidos
+Ejecutando --> Realizado : todos los eventos\nfueron enviados
+Ejecutando --> Interrumpido : falla o se interrumpe
+Realizado --> [*] : datos simulados\neliminados
+Interrumpido --> [*] : datos simulados\neliminados
+Rechazado --> [*]
 
 @enduml

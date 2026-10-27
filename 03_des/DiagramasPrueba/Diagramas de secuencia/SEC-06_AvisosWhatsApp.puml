@@ -1,0 +1,58 @@
+@startuml SEC-06_AvisosWhatsApp
+' Diagrama de secuencia general: avisos de combustible desde WhatsApp
+skinparam shadowing false
+skinparam defaultFontName "DejaVu Sans"
+skinparam defaultFontSize 13
+skinparam wrapWidth 160
+skinparam ArrowColor #222222
+skinparam backgroundColor white
+skinparam titleBorderThickness 1
+skinparam titleBorderColor #333333
+skinparam titleBorderRoundCorner 0
+skinparam titleFontSize 15
+skinparam titleBackgroundColor white
+skinparam roundCorner 8
+skinparam sequence {
+  ParticipantBackgroundColor white
+  ParticipantBorderColor #222222
+  ActorBackgroundColor white
+  ActorBorderColor #222222
+  LifeLineBorderColor #555555
+  LifeLineBackgroundColor white
+  GroupBorderColor #777777
+  GroupBackgroundColor white
+  ArrowThickness 1.2
+}
+skinparam note {
+  BackgroundColor white
+  BorderColor #777777
+}
+skinparam database {
+  BackgroundColor white
+  BorderColor #222222
+}
+skinparam responseMessageBelowArrow true
+hide footbox
+autonumber
+
+title Diagrama de secuencia: Avisos de combustible por WhatsApp
+
+participant "Grupos de\nWhatsApp" as WA
+participant "Servicio\nWhatsApp/LLM" as Servicio
+participant "Proveedor LLM" as LLM
+participant "Backend Java" as Backend
+database PostgreSQL as BD
+
+WA -> Servicio : Mensajes de texto
+Servicio -> Servicio : Guardar como pendientes
+
+loop cada 5 minutos
+  Servicio -> LLM : Analizar lote de mensajes
+  LLM --> Servicio : Avisos de combustible
+  Servicio -> Backend : POST /combustible/avisos
+  Backend -> BD : Actualizar estado del surtidor
+  Backend --> Servicio : OK
+  Servicio -> Servicio : Marcar mensajes procesados
+end
+
+@enduml

@@ -3,12 +3,13 @@
 Backend principal para el sistema ChuroViaje, construido con **Java 21**, **Spring Boot 3** y gestionado con **Maven**.
 
 ## Organización de Paquetes
-El proyecto sigue una arquitectura de capas:
-- `config`: Configuraciones de la aplicación y seguridad (Spring Security, CORS).
+El proyecto usa un solo MVC (D-01):
+- `config`: Configuraciones de la aplicación y seguridad (Spring Security).
 - `controladores`: Endpoints REST, DTOs y validación de entrada.
-- `servicios`: Lógica de negocio principal.
-- `dominio`: Entidades JPA y objetos de valor (ej. `Ubicacion`).
+- `servicios`: Coordinan objetos de dominio y repositorios para completar un caso de uso, pero no deciden reglas.
+- `dominio`: Entidades JPA y objetos de valor (ej. `Ubicacion`). Los objetos de dominio guardan sus datos y hacen cumplir sus propias reglas. Es el único lugar con reglas de negocio.
 - `repositorios`: Interfaces de acceso a base de datos con Spring Data JPA.
+- `motor`: Wrapper `MotorDeRutas`, la cara en Java del motor core, que habla con el núcleo C++ por pipe (D-15).
 - `errores`: Manejador global (`@RestControllerAdvice`) para centralizar el formato de rechazos.
 
 ## Requisitos

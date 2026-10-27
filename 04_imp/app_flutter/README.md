@@ -11,34 +11,35 @@ Aplicación móvil del proyecto ChuroViaje, desarrollada con Flutter y Dart. Est
 ## Estructura del proyecto
 
 ```text
-lib/
-├── config/
-│   └── app_config.dart
-├── controllers/
-│   ├── map_controller.dart
-│   └── navigation_controller.dart
-├── services/
-│   └── api/
-│       └── api_client.dart
-├── models/
-│   └── .gitkeep
-├── storage/
-│   └── .gitkeep
-├── views/
-│   ├── main/
-│   │   └── main_screen.dart
-│   ├── map/
-│   │   └── map_screen.dart
-│   ├── events/
-│   │   └── events_screen.dart
-│   └── stations/
-│       └── stations_screen.dart
-└── main.dart
-
-test/
-├── widget_test.dart
-├── api_client_test.dart
-└── map_controller_test.dart
+.
+├── lib/
+│   ├── app_providers.dart
+│   ├── main.dart
+│   ├── config/
+│   │   └── app_config.dart
+│   ├── controllers/
+│   │   ├── map_controller.dart
+│   │   └── navigation_controller.dart
+│   ├── services/
+│   │   └── api/
+│   │       └── api_client.dart
+│   ├── models/
+│   │   └── .gitkeep
+│   ├── storage/
+│   │   └── .gitkeep
+│   └── views/
+│       ├── main/
+│       │   └── main_screen.dart
+│       ├── map/
+│       │   └── map_screen.dart
+│       ├── events/
+│       │   └── events_screen.dart
+│       └── stations/
+│           └── stations_screen.dart
+└── test/
+    ├── widget_test.dart
+    ├── api_client_test.dart
+    └── map_controller_test.dart
 ```
 
 ### Responsabilidades

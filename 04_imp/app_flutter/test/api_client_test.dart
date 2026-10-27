@@ -10,7 +10,7 @@ void main() {
   group('ApiClient', () {
     test('Incluye el JWT en la petición', () async {
       final mockClient = MockClient((request) async {
-        expect(request.headers['Authorization'], 'token-prueba');
+        expect(request.headers['Authorization'], 'Bearer token-prueba');
 
         return http.Response(
           jsonEncode({'ok': true}),

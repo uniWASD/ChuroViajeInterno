@@ -44,6 +44,7 @@ class AppConfig {
   }
 
   static bool get isProduction => environment == AppEnvironment.production;
+
   static void validar() {
     final uri = Uri.tryParse(apiBaseUrl);
 

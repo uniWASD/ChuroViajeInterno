@@ -30,11 +30,11 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RespuestaRechazo> manejarValidacion(MethodArgumentNotValidException ex) {
         String mensaje = "Los datos enviados no son válidos";
-        
+
         if (!ex.getBindingResult().getFieldErrors().isEmpty()) {
             mensaje = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
         }
-        
+
         RespuestaRechazo respuesta = new RespuestaRechazo("PETICION_INVALIDA", mensaje);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
     }
@@ -71,5 +71,12 @@ public class ManejadorGlobalErrores {
         log.error("Error inesperado en el servidor", ex);
         RespuestaRechazo respuesta = new RespuestaRechazo("ERROR_INTERNO", "Ocurrió un error inesperado en el servidor");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
+    }
+
+    @org.springframework.web.bind.annotation.ExceptionHandler(com.churoviaje.backend.dominio.UbicacionFueraCoberturaException.class)
+    public org.springframework.http.ResponseEntity<RespuestaRechazo> manejarUbicacionFueraDeCobertura(
+            com.churoviaje.backend.dominio.UbicacionFueraCoberturaException ex) {
+        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new RespuestaRechazo(ex.getCodigo(), ex.getMessage()));
     }
 }

@@ -1,18 +1,11 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:churoviaje_dev;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: ''
-  h2:
-    console:
-      enabled: true
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5433}/${DB_NAME:churoviaje_dev}
+    username: ${DB_USER:churoviaje}
+    password: ${DB_PASSWORD}
+churoviaje:
+  cobertura:
+    permitir-provisional: false
 logging:
-      level:
-        com.churoviaje.backend: DEBUG
+  level:
+    com.churoviaje.backend: DEBUG

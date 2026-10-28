@@ -1,11 +1,8 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password: 
-  jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: true
+    url: ${TEST_DATABASE_URL:jdbc:postgresql://127.0.0.1:5433/churoviaje_pruebas}
+    username: ${TEST_DB_USER:churoviaje}
+    password: ${TEST_DB_PASSWORD:}
+churoviaje:
+  cobertura:
+    permitir-provisional: false

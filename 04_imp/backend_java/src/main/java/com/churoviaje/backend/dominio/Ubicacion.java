@@ -16,4 +16,24 @@ public record Ubicacion(
         @DecimalMin(value = "-180.0", message = "La longitud no es válida")
         @DecimalMax(value = "180.0", message = "La longitud no es válida")
         BigDecimal longitud
-) {}
+) {
+    /** RN-01.6 / RN-03.3: regla de dominio, sin dependencia HTTP. */
+    public boolean estaDentroDeManchaUrbana(com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana cobertura) {
+        java.util.Objects.requireNonNull(cobertura, "La cobertura es obligatoria");
+        // La validación de rangos del DTO pertenece a @Valid (T-088).
+        return cobertura.contiene(java.util.Objects.requireNonNull(latitud,"Falta la latitud").doubleValue(),
+                java.util.Objects.requireNonNull(longitud,"Falta la longitud").doubleValue());
+    }
+
+    public void validarParaReporte(com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana cobertura) {
+        if (!estaDentroDeManchaUrbana(cobertura)) {
+            throw UbicacionFueraCoberturaException.paraReporte();
+        }
+    }
+
+    public ResultadoUbicacionRuta validarParaRuta(com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana cobertura) {
+        return estaDentroDeManchaUrbana(cobertura)
+                ? ResultadoUbicacionRuta.VALIDA : ResultadoUbicacionRuta.PUNTO_INVALIDO;
+    }
+
+}

@@ -15,7 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("pruebas")
-class ManejadorGlobalErroresTest {
+class ManejadorGlobalErroresTest extends com.churoviaje.backend.config.PruebaIntegracionPostgis {
 
     @Autowired
     private MockMvc mockMvc;

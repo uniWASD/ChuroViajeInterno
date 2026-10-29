@@ -8,7 +8,7 @@
       "id": "357255636",
       "properties": {
         "grupo": "tomatitas",
-        "nombre": "357255636",
+        "nombre": "Área residencial de Tomatitas",
         "esperado_dentro": true,
         "fuente": "https://www.openstreetmap.org/way/357255636"
       },
@@ -205,7 +205,7 @@
       "id": "1029853745",
       "properties": {
         "grupo": "tomatitas",
-        "nombre": "1029853745",
+        "nombre": "Bosquecillo de Tomatitas",
         "esperado_dentro": true,
         "fuente": "https://www.openstreetmap.org/way/1029853745"
       },
@@ -302,7 +302,7 @@
       "id": "1189082534",
       "properties": {
         "grupo": "sureste_compuerta",
-        "nombre": "1189082534",
+        "nombre": "Área residencial del borde sureste de Tarija",
         "esperado_dentro": true,
         "fuente": "https://www.openstreetmap.org/way/1189082534"
       },
@@ -1740,7 +1740,7 @@
       "id": "357255636-interior",
       "properties": {
         "grupo": "tomatitas",
-        "nombre": "Punto interior del area OSM 357255636",
+        "nombre": "Punto interior: Área residencial de Tomatitas",
         "esperado_dentro": true,
         "fuente": "https://www.openstreetmap.org/way/357255636"
       },
@@ -1757,7 +1757,7 @@
       "id": "1029853745-interior",
       "properties": {
         "grupo": "tomatitas",
-        "nombre": "Punto interior del area OSM 1029853745",
+        "nombre": "Punto interior: Bosquecillo de Tomatitas",
         "esperado_dentro": true,
         "fuente": "https://www.openstreetmap.org/way/1029853745"
       },
@@ -1774,7 +1774,7 @@
       "id": "1189082534-interior",
       "properties": {
         "grupo": "sureste_compuerta",
-        "nombre": "Punto interior del area OSM 1189082534",
+        "nombre": "Punto interior: Área residencial del borde sureste de Tarija",
         "esperado_dentro": true,
         "fuente": "https://www.openstreetmap.org/way/1189082534"
       },
@@ -1785,6 +1785,115 @@
           -21.5682692
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "id": "rural-norte",
+      "properties": {
+        "grupo": "exclusiones_rurales",
+        "nombre": "Parcela agrícola al norte del corredor de El Rancho",
+        "esperado_dentro": false,
+        "borde": "norte",
+        "fuente": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=-64.766%2C-21.435%2C-64.754%2C-21.423&bboxSR=4326&imageSR=4326&size=800%2C800&format=png&f=json",
+        "fecha_consulta": "2026-10-29",
+        "margen_medido_m": 999.1,
+        "crs_medicion": "EPSG:32720",
+        "metodo": "Punto de control seleccionado sobre Esri World Imagery; distancia mínima al borde en UTM 20S. No se deriva la posición del contorno."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7588,
+          -21.4248
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "rural-este",
+      "properties": {
+        "grupo": "exclusiones_rurales",
+        "nombre": "Ladera sin edificación al este de la F1, sector El Portillo",
+        "esperado_dentro": false,
+        "borde": "este",
+        "fuente": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=-64.65899999999999%2C-21.573%2C-64.643%2C-21.557000000000002&bboxSR=4326&imageSR=4326&size=800%2C800&format=png&f=json",
+        "fecha_consulta": "2026-10-29",
+        "margen_medido_m": 1107.8,
+        "crs_medicion": "EPSG:32720",
+        "metodo": "Punto de control seleccionado sobre Esri World Imagery; distancia mínima al borde en UTM 20S. No se deriva la posición del contorno."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.653,
+          -21.561
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "rural-sur",
+      "properties": {
+        "grupo": "exclusiones_rurales",
+        "nombre": "Parcela en la margen sur del río Guadalquivir",
+        "esperado_dentro": false,
+        "borde": "sur",
+        "fuente": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=-64.718%2C-21.596%2C-64.694%2C-21.572&bboxSR=4326&imageSR=4326&size=800%2C800&format=png&f=json",
+        "fecha_consulta": "2026-10-29",
+        "margen_medido_m": 1531.3,
+        "crs_medicion": "EPSG:32720",
+        "metodo": "Punto de control seleccionado sobre Esri World Imagery; distancia mínima al borde en UTM 20S. No se deriva la posición del contorno."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.6988,
+          -21.5882
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "rural-oeste",
+      "properties": {
+        "grupo": "exclusiones_rurales",
+        "nombre": "Campo abierto al oeste de Cadillar y Obrajes",
+        "esperado_dentro": false,
+        "borde": "oeste",
+        "fuente": "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export?bbox=-64.793%2C-21.514%2C-64.775%2C-21.496&bboxSR=4326&imageSR=4326&size=800%2C800&format=png&f=json",
+        "fecha_consulta": "2026-10-29",
+        "margen_medido_m": 1859.9,
+        "crs_medicion": "EPSG:32720",
+        "metodo": "Punto de control seleccionado sobre Esri World Imagery; distancia mínima al borde en UTM 20S. No se deriva la posición del contorno."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7905,
+          -21.4978
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "5000683351",
+      "properties": {
+        "grupo": "poneloya",
+        "nombre": "Poneloya (punto OSM del hotel)",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/node/5000683351",
+        "fecha_consulta": "2026-10-29",
+        "margen_medido_m": 28.7,
+        "crs_medicion": "EPSG:32720"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7651451,
+          -21.4998762
+        ]
+      }
     }
-  ]
+  ],
+  "atribucion_imagen": "Esri, Vantor, Earthstar Geographics y GIS User Community; World Imagery. Fecha de captura no acreditada."
 }

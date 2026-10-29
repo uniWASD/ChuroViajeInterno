@@ -4,8 +4,8 @@
 -- https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer
 -- La fecha de consulta no acredita la fecha de captura de las imagenes.
 
--- Las Vegas: centro de la cubierta de expendio digitizado en Google Satellite z19,
--- x167881/y294254, pixel local (184,54); contrastado con Esri World Imagery z17.
+-- Las Vegas: punto sobre la cubierta de expendio comprobado en Esri World Imagery.
+-- Verificacion visual del predio: 2026-10-29; coordenada conservada.
 -- Referencia inicial: https://bo.near-place.com/surtidor-las-vegas-avenida-circunvalacion-tarija
 -- El punto del directorio cae en el acceso; se usa el centro de la cubierta visible.
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('Las Vegas', ST_SetSRID(ST_MakePoint(-64.724772, -21.5234844), 4326)::geography);
@@ -97,10 +97,6 @@ INSERT INTO surtidor_alias (surtidor_id, alias) SELECT id, 'san geronimo' FROM s
 -- San Martin: Chat1.txt 3122–3124 vincula Surtidor Tarija con Puente San Martin. ANH lo sitúa en barrio San Martín. El id ANH 2979 SAN MARTIN está en Yacuiba y no se usa.
 -- Fuente: https://www.anh.gob.bo/InsideFiles/Inicio/elecciones031217.pdf#page=3
 INSERT INTO surtidor_alias (surtidor_id, alias) SELECT id, 'san martin' FROM surtidor WHERE nombre = 'Surtidor Tarija';
-
--- Pimentel: Chat2.txt 170–174: Pimentel se identifica como Daniel. ANH 2015 relaciona Don Daniel con el representante de apellido Pimentel; se usa como respaldo histórico, no como prueba de titularidad actual.
--- Fuente: https://www.anh.gob.bo/InsideFiles/Documentos/Documentos_Id-208-150415-0139-0.pdf#page=19
-INSERT INTO surtidor_alias (surtidor_id, alias) SELECT id, 'pimentel' FROM surtidor WHERE nombre = 'Don Daniel';
 
 -- Villanueva: Chat1.txt 280 y 2146 relaciona Villanueva con San Geronimo. ANH 2015 relaciona Panamericano con el representante de apellido Villanueva; respaldo histórico de la denominación.
 -- Fuente: https://www.anh.gob.bo/InsideFiles/Documentos/Documentos_Id-208-150415-0139-0.pdf#page=19

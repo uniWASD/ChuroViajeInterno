@@ -66,18 +66,18 @@ public class ManejadorGlobalErrores {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
     }
 
+    @ExceptionHandler(UbicacionFueraCoberturaException.class)
+    public ResponseEntity<RespuestaRechazo> manejarUbicacionFueraDeCobertura(
+            UbicacionFueraCoberturaException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new RespuestaRechazo(ex.getCodigo(), ex.getMessage()));
+    }
+
     // Cualquier otro error inesperado (500)
     @ExceptionHandler(Exception.class)
     public ResponseEntity<RespuestaRechazo> manejarErrorInesperado(Exception ex) {
         log.error("Error inesperado en el servidor", ex);
         RespuestaRechazo respuesta = new RespuestaRechazo("ERROR_INTERNO", "Ocurrió un error inesperado en el servidor");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
-    }
-
-    @ExceptionHandler(UbicacionFueraCoberturaException.class)
-    public ResponseEntity<RespuestaRechazo> manejarUbicacionFueraDeCobertura(
-            UbicacionFueraCoberturaException ex) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(new RespuestaRechazo(ex.getCodigo(), ex.getMessage()));
     }
 }

@@ -18,9 +18,9 @@
         "sistema_entrega": "WGS 84, longitud-latitud (EPSG:4326)",
         "numero_vertices": 173,
         "advertencia": "Contorno de cobertura operativa, no limite administrativo ni catastral; borde digitizado sobre imagen aerea. Centro de San Lorenzo excluido.",
-        "revision_por": "Franz",
+        "revision_por": "Marcelo Quiroga",
         "fecha_revision": "2026-10-29",
-        "referencia_revision": "Correccion tecnica asistida solicitada por Franz tras la tercera revision de T-089 y la auditoria de cobertura. Franz autoriza resolver las correcciones delegadas por Marcelo; no se atribuye a Marcelo una revision visual ni un commit. Fuentes y controles en README y pruebas territoriales.",
+        "referencia_revision": "Revisión del contorno sobre imagen satelital y controles geométricos, solicitada por Marcelo Quiroga el 2026-10-29. Aprobado en el PR de T-089.",
         "alcance_operativo": "Mancha urbanizada de Tarija y continuidad vial urbanizada hacia Tomatitas y El Rancho, incluyendo los establecimientos del catalogo; excluye el centro de San Lorenzo. No representa un limite municipal.",
         "fuentes_contraste": [
           "https://www.openstreetmap.org/way/357255636",

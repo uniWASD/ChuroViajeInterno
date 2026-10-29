@@ -19,7 +19,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <!-- Compatibilidad con Docker Engine 29 y su API minima. -->
+        <!-- Compatibilidad con Docker Engine 29 y su API minima; quitar cuando el BOM de Spring Boot incluya 1.21.4 o superior. -->
         <testcontainers.version>1.21.4</testcontainers.version>
     </properties>
 

@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MigracionesPostgisTest extends PruebaIntegracionPostgis {
     @Autowired PostgreSQLContainer<?> postgres;
 
-    // CP-23: 21 denominaciones identificadas; una fila por establecimiento real.
+    // CP-23: 20 denominaciones aceptadas tras retirar pimentel; una fila por establecimiento real.
     private static final Map<String, String> SURTIDORES_POR_DENOMINACION = Map.ofEntries(
         Map.entry("las vegas", "Las Vegas"),
         Map.entry("don daniel", "Don Daniel"),
@@ -41,7 +41,6 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
         Map.entry("el molle", "El Molle"),
         Map.entry("surtidor tarija", "Surtidor Tarija"),
         Map.entry("san martin", "Surtidor Tarija"),
-        Map.entry("pimentel", "Don Daniel"),
         Map.entry("villanueva", "Panamericano"),
         Map.entry("ypfb parada chaco", "YPFB Parada Chaco"),
         Map.entry("domingo savio", "Surtidor Tarija"),
@@ -139,14 +138,15 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
     }
 
     private void verificarAlias(String base) throws SQLException {
-        assertEquals(37, contar(base, "SELECT count(*) FROM surtidor_alias"), "Alias del catalogo revisado");
+        assertEquals(36, contar(base, "SELECT count(*) FROM surtidor_alias"), "Alias del catalogo revisado");
         assertEquals(4, contar(base, "SELECT count(*) FROM surtidor_alias a JOIN surtidor s ON s.id=a.surtidor_id "
                 + "WHERE (a.alias='vegas' AND s.nombre='Las Vegas') "
                 + "OR (a.alias='daniel' AND s.nombre='Don Daniel') "
                 + "OR (a.alias='molle' AND s.nombre='El Molle') "
                 + "OR (a.alias='campesino' AND s.nombre='Campesino')"), "Alias cortos univocos");
         assertEquals(0, contar(base, "SELECT count(*) FROM surtidor s LEFT JOIN surtidor_alias a ON a.surtidor_id=s.id WHERE a.id IS NULL"));
-        assertEquals(0, contar(base, "SELECT count(*) FROM surtidor_alias WHERE alias='ypfb'"));
+        assertEquals(0, contar(base, "SELECT count(*) FROM surtidor_alias WHERE alias IN ('ypfb', 'pimentel')"),
+                "No asociar denominaciones ambiguas o sin respaldo suficiente");
         assertEquals(0, contar(base, "SELECT count(*) FROM (SELECT alias FROM surtidor_alias GROUP BY alias HAVING count(*)>1) duplicados"));
         try (var conexion = conectar(base); var sentencia = conexion.createStatement();
                 var resultado = sentencia.executeQuery("SELECT id, nombre FROM surtidor")) {
@@ -193,8 +193,8 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
                 }
             }
         }
-        assertAll("CP-23: 21 denominaciones con correspondencias verificadas y sin predios duplicados",
-            () -> assertEquals(21, SURTIDORES_POR_DENOMINACION.size(), "Deben comprobarse las 21 denominaciones"),
+        assertAll("CP-23: denominaciones aceptadas sin predios duplicados",
+            () -> assertEquals(20, SURTIDORES_POR_DENOMINACION.size(), "Deben comprobarse las 20 denominaciones aceptadas"),
             () -> assertEquals(new HashSet<>(SURTIDORES_POR_DENOMINACION.values()).size(),
                     contar(base, "SELECT count(*) FROM surtidor"), "Una fila por estacion identificada"),
             () -> assertTrue(errores.isEmpty(), "Correspondencias incorrectas: " + errores),
@@ -229,7 +229,34 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
             () -> assertFalse(cobertura.contiene(-21.418100, -64.749400), "San Lorenzo debe quedar fuera"),
             () -> assertTrue(fuera.isEmpty(), "Surtidores fuera de la cobertura: " + fuera)
         );
-        assertTrue(examinados > 0, "CP-22 debe comprobar surtidores reales de V2");
+        assertEquals(14, examinados, "CP-22 debe comprobar todos los surtidores reales de V2");
+        verificarMargenesSurtidores(base, doc.path("features").get(0).path("geometry").toString());
+    }
+
+    private void verificarMargenesSurtidores(String base, String geometria) throws SQLException {
+        // Umbrales de regresion conservadores, inferiores a los margenes medidos
+        // el 2026-10-29. No son radios de servicio ni precisiones del levantamiento.
+        Map<String, Double> minimos = Map.of(
+                "El Molle", 300.0, "Moto Mendez", 340.0, "El Portillo", 360.0);
+        var examinados = new HashSet<String>();
+        try (var conexion = conectar(base);
+                var consulta = conexion.prepareStatement("""
+                SELECT nombre, ST_Distance(ubicacion,
+                    ST_Boundary(ST_SetSRID(ST_GeomFromGeoJSON(?),4326))::geography) AS margen
+                FROM surtidor WHERE nombre IN ('El Molle','Moto Mendez','El Portillo')
+                """)) {
+            consulta.setString(1, geometria);
+            try (var resultado = consulta.executeQuery()) {
+                while (resultado.next()) {
+                    String nombre = resultado.getString("nombre");
+                    double margen = resultado.getDouble("margen");
+                    assertTrue(margen >= minimos.get(nombre),
+                            nombre + ": margen al borde reducido a " + margen + " m");
+                    examinados.add(nombre);
+                }
+            }
+        }
+        assertEquals(minimos.keySet(), examinados, "Deben protegerse los tres surtidores proximos al borde");
     }
 
     private void comprobarRechazo(String base, String sql, String estadoSql) throws SQLException {

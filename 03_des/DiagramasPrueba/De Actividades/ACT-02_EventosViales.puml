@@ -40,8 +40,7 @@ start
 |App|
 :Obtener ubicación;
 if (¿Hay conexión?) then (no)
-  :Guardar reporte\nen cola local;
-  :Esperar conexión;
+  :Guardar en cola local\nhasta tener conexión;
 endif
 :Enviar reporte;
 |Backend|

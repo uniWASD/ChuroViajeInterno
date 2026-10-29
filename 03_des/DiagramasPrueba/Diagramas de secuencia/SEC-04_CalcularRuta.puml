@@ -40,20 +40,20 @@ title Diagrama de secuencia: Calcular ruta
 actor Conductor
 participant "App Flutter" as App
 participant "Backend Java" as Backend
-participant "MotorDeRutas\n(wrapper Java)" as Wrapper
+participant "MotorDeRutas\n(Java)" as Wrapper
 participant "Núcleo C++" as Core
 database PostgreSQL as BD
 
 Conductor -> App : Origen y destino
 App -> Backend : POST /rutas
-Backend -> BD : Eventos vigentes en la zona
+Backend -> BD : Eventos vigentes
 BD --> Backend : Eventos
-Backend -> Wrapper : calcularRuta(origen, destino, eventos)
+Backend -> Wrapper : calcularRuta()
 Wrapper -> Core : Solicitud (pipe)
 Core -> Core : A* sobre la red vial
 Core --> Wrapper : Ruta
 Wrapper --> Backend : Ruta
-Backend -> BD : Guardar ruta (Calculada)
+Backend -> BD : Guardar ruta
 Backend --> App : Ruta, tiempo y distancia
 App --> Conductor : Mostrar ruta
 

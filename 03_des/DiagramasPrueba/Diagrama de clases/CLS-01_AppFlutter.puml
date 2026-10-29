@@ -77,6 +77,14 @@ class AlmacenLocal {
   + borrarTodo()
 }
 
+ControladorSesion -[hidden]right- ControladorMapa
+ControladorMapa -[hidden]right- ControladorReporte
+ControladorRuta -[hidden]right- ControladorCombustible
+ControladorCombustible -[hidden]right- ControladorTelemetria
+ControladorSesion -[hidden]down- ControladorRuta
+ControladorMapa -[hidden]down- ControladorCombustible
+ControladorReporte -[hidden]down- ControladorTelemetria
+
 ControladorSesion --> ClienteApi : usa
 ControladorMapa --> ClienteApi : usa
 ControladorReporte --> ClienteApi : usa

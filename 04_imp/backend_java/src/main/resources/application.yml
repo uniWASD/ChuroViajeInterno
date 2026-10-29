@@ -11,3 +11,14 @@ management:
   endpoint:
     health:
       show-details: never
+      churoviaje:
+  seguridad:
+    jwt:
+      secreto: ${JWT_SECRET:clave_super_secreta_para_desarrollo_local_churoviaje_2026}
+      expiracion-ms: 3600000 # 1 hora (RN-08.5)
+      refresh-expiracion-dias: 30 # 30 días (RN-08.12)
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:tu_client_id_de_google_aqui}
+      servicio:
+      credencial: ${CREDENCIAL_SERVICIO:clave_servicio_whatsapp_123}
+      

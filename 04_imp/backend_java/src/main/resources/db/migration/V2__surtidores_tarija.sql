@@ -1,29 +1,29 @@
--- T-089 / #41. 21 denominaciones del diccionario en 14 estaciones fisicas.
--- Se cargan 37 alias normalizados y unicos, sin duplicar predios.
--- Fuente ANH consultada 2026-10-28 (JSON crudo, departamento 6, producto 0):
+-- Fuente ANH (identidades y coordenadas):
 -- https://abastecimiento.prod.anh.gob.bo/api/estaciones/?departamento=6&producto=0
--- Identidades contrastadas con los chats del prototipo y documentos ANH.
--- Panamericano usa OSM y contraste visual; el punto ANH esta a unos 651 m.
--- Fuentes y coordenadas revisadas; la precision no se deduce del recuento de filas.
--- CP-23 comprueba las 21 correspondencias y una fila por establecimiento real.
--- Cobertura de 132 vertices; revision aprobada por Franz el 2026-10-28.
--- No duplicar predios ni cambiar coordenadas para alcanzar el recuento esperado.
+-- Imagen de contraste: Esri World Imagery z17, consultada el 2026-10-28.
+-- https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer
+-- La fecha de consulta no acredita la fecha de captura de las imagenes.
 
--- Las Vegas: bo.near-place.com/surtidor-las-vegas-avenida-circunvalacion-tarija; precisión de predio sin verificación satelital
-INSERT INTO surtidor (nombre, ubicacion) VALUES ('Las Vegas', ST_SetSRID(ST_MakePoint(-64.7248819, -21.523726), 4326)::geography);
--- Don Daniel: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
+-- Las Vegas: centro de la cubierta de expendio digitizado en Google Satellite z19,
+-- x167881/y294254, pixel local (184,54); contrastado con Esri World Imagery z17.
+-- Referencia inicial: https://bo.near-place.com/surtidor-las-vegas-avenida-circunvalacion-tarija
+-- El punto del directorio cae en el acceso; se usa el centro de la cubierta visible.
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('Las Vegas', ST_SetSRID(ST_MakePoint(-64.724772, -21.5234844), 4326)::geography);
+-- Don Daniel: API ANH, coordenada contrastada con JSON crudo e imagen Esri World Imagery z17, 2026-10-28
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('Don Daniel', ST_SetSRID(ST_MakePoint(-64.7382423, -21.5133312), 4326)::geography);
--- Tacuarandi: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
+-- Tacuarandi: API ANH, coordenada contrastada con JSON crudo e imagen Esri World Imagery z17, 2026-10-28
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('Tacuarandi', ST_SetSRID(ST_MakePoint(-64.7016073, -21.5461962), 4326)::geography);
--- Agrupa: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
+-- Agrupa: API ANH, coordenada contrastada con JSON crudo e imagen Esri World Imagery z17, 2026-10-28
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('Agrupa', ST_SetSRID(ST_MakePoint(-64.7487867, -21.5111041), 4326)::geography);
--- El Portillo: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
+-- El Portillo: API ANH, coordenada contrastada con JSON crudo e imagen Esri World Imagery z17, 2026-10-28
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('El Portillo', ST_SetSRID(ST_MakePoint(-64.6700224, -21.5666524), 4326)::geography);
--- Moto Mendez: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
-INSERT INTO surtidor (nombre, ubicacion) VALUES ('Moto Mendez', ST_SetSRID(ST_MakePoint(-64.7576881, -21.4720998), 4326)::geography);
+-- Moto Mendez: https://www.openstreetmap.org/node/3207058741
+-- Punto OSM sobre la cubierta visible en Esri World Imagery, consultado 2026-10-28.
+-- El punto ANH (-21.4720998,-64.7576881) cae en terreno sin cubierta, a unos 222 m.
+INSERT INTO surtidor (nombre, ubicacion) VALUES ('Moto Mendez', ST_SetSRID(ST_MakePoint(-64.7585048, -21.47394), 4326)::geography);
 -- Ex Terminal / La Terminal: OSM node 9325867333; ANH id2341 en Victor Paz / Arturo Soruco.
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('Ex Terminal', ST_SetSRID(ST_MakePoint(-64.72413, -21.54194), 4326)::geography);
--- Sointa: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
+-- Sointa: API ANH, coordenada contrastada con JSON crudo e imagen Esri World Imagery z17, 2026-10-28
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('Sointa', ST_SetSRID(ST_MakePoint(-64.7075786, -21.5420577), 4326)::geography);
 -- Panamericano: OSM node 1753664990, consultado 2026-10-28; punto sobre cubierta visible.
 -- https://www.openstreetmap.org/node/1753664990 (Calle Batallon Colorados).
@@ -31,11 +31,11 @@ INSERT INTO surtidor (nombre, ubicacion) VALUES ('Sointa', ST_SetSRID(ST_MakePoi
 -- ANH id2388 devuelve (-21.5441213,-64.711626), a 651 m; no se adopta ese punto.
 -- Direccion oficial: https://www.anh.gob.bo/InsideFiles/Actividad/Dj/RA-2018/RADPS-ANH-DTJ-0008-2018.pdf
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('Panamericano', ST_SetSRID(ST_MakePoint(-64.7178035, -21.5429897), 4326)::geography);
--- San Jorge: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
+-- San Jorge: API ANH, coordenada contrastada con JSON crudo e imagen Esri World Imagery z17, 2026-10-28
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('San Jorge', ST_SetSRID(ST_MakePoint(-64.6905788, -21.5538205), 4326)::geography);
--- El Molle: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
+-- El Molle: API ANH, coordenada contrastada con JSON crudo e imagen Esri World Imagery z17, 2026-10-28
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('El Molle', ST_SetSRID(ST_MakePoint(-64.7533344, -21.4530516), 4326)::geography);
--- Surtidor Tarija: API ANH, coordenada contrastada con JSON crudo el 2026-10-28
+-- Surtidor Tarija: API ANH, coordenada contrastada con JSON crudo e imagen Esri World Imagery z17, 2026-10-28
 INSERT INTO surtidor (nombre, ubicacion) VALUES ('Surtidor Tarija', ST_SetSRID(ST_MakePoint(-64.74234, -21.53627), 4326)::geography);
 
 -- Campesino: Las Americas - YPFB, OSM node 4415811348 y API ANH id2911.
@@ -82,9 +82,8 @@ INSERT INTO surtidor_alias (surtidor_id, alias) SELECT id, 'campesino' FROM surt
 INSERT INTO surtidor_alias (surtidor_id, alias) SELECT id, 'ypfb parada chaco' FROM surtidor WHERE nombre = 'YPFB Parada Chaco';
 INSERT INTO surtidor_alias (surtidor_id, alias) SELECT id, 'parada chaco' FROM surtidor WHERE nombre = 'YPFB Parada Chaco';
 
--- Alias local respaldado por el prototipo: 05_pro_PruebaClasificacion/Chats/Chat1.txt,
+-- Alias local respaldado por el prototipo: 05_pro/PruebaClasificacion/Chats/Chat1.txt,
 -- linea 3194 y mensajes 4360-4364: Surtidor Tarija junto a la Domingo Savio.
--- Es un alias de la estacion existente; no representa otro predio.
 INSERT INTO surtidor_alias (surtidor_id, alias) SELECT id, 'domingo savio' FROM surtidor WHERE nombre = 'Surtidor Tarija';
 
 -- YPFB Morros Blancos: ANH 2017 identifica Presidente Arce en Morros Blancos. API 2974 y OSM lo sitúan junto a Parada al Chaco. Es la misma estación del registro existente.

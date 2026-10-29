@@ -21,9 +21,7 @@ class CoberturaGeoJsonTest {
         for (var feature : documento.path("features")) {
             assertEquals("APROBADO", feature.path("properties").path("revision_equipo").asText());
         }
-        assertTrue(documento.path("features").get(0).path("geometry")
-                .path("coordinates").get(0).size() >= 50,
-                "El borrador de 9 vértices no puede sustituir la digitalización urbana");
+        // La integridad territorial se comprueba con controles reales en CoberturaTerritorialTest.
         CoberturaManchaUrbana c=lector.leer(documento);
         Ubicacion centro=punto("-21.5355", "-64.7296");
         Ubicacion sanLorenzo=punto("-21.418100", "-64.749400");

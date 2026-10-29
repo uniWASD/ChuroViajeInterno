@@ -1,5 +1,6 @@
 package com.churoviaje.backend.errores;
 
+import com.churoviaje.backend.dominio.UbicacionFueraCoberturaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -73,10 +74,10 @@ public class ManejadorGlobalErrores {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(respuesta);
     }
 
-    @org.springframework.web.bind.annotation.ExceptionHandler(com.churoviaje.backend.dominio.UbicacionFueraCoberturaException.class)
-    public org.springframework.http.ResponseEntity<RespuestaRechazo> manejarUbicacionFueraDeCobertura(
-            com.churoviaje.backend.dominio.UbicacionFueraCoberturaException ex) {
-        return org.springframework.http.ResponseEntity.status(org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY)
+    @ExceptionHandler(UbicacionFueraCoberturaException.class)
+    public ResponseEntity<RespuestaRechazo> manejarUbicacionFueraDeCobertura(
+            UbicacionFueraCoberturaException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
                 .body(new RespuestaRechazo(ex.getCodigo(), ex.getMessage()));
     }
 }

@@ -1,0 +1,1790 @@
+{
+  "type": "FeatureCollection",
+  "descripcion": "Controles independientes para la cobertura operativa de T-089. Geometrias OSM consultadas el 2026-10-29; sin llamadas de red durante los tests. Las vias F1 se recortan al corredor entre -21.5015 y -21.4370 de latitud, y entre -64.78 y -64.74 de longitud. No define limites administrativos.",
+  "atribucion": "© OpenStreetMap contributors, ODbL 1.0, https://www.openstreetmap.org/copyright",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "357255636",
+      "properties": {
+        "grupo": "tomatitas",
+        "nombre": "357255636",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/357255636"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -64.7631222,
+              -21.4940434
+            ],
+            [
+              -64.7636533,
+              -21.4942081
+            ],
+            [
+              -64.7638947,
+              -21.494862
+            ],
+            [
+              -64.7635407,
+              -21.4956306
+            ],
+            [
+              -64.7632024,
+              -21.4956888
+            ],
+            [
+              -64.7629667,
+              -21.4963743
+            ],
+            [
+              -64.7625909,
+              -21.4966471
+            ],
+            [
+              -64.7620759,
+              -21.496697
+            ],
+            [
+              -64.762033,
+              -21.4968817
+            ],
+            [
+              -64.7612927,
+              -21.4969067
+            ],
+            [
+              -64.7612608,
+              -21.497163
+            ],
+            [
+              -64.7613413,
+              -21.4974674
+            ],
+            [
+              -64.7609708,
+              -21.4976903
+            ],
+            [
+              -64.7607887,
+              -21.4983808
+            ],
+            [
+              -64.7605366,
+              -21.4983609
+            ],
+            [
+              -64.7603164,
+              -21.4989281
+            ],
+            [
+              -64.7599948,
+              -21.498845
+            ],
+            [
+              -64.7598875,
+              -21.4983808
+            ],
+            [
+              -64.7599194,
+              -21.4977951
+            ],
+            [
+              -64.7601235,
+              -21.4975822
+            ],
+            [
+              -64.7601608,
+              -21.4968967
+            ],
+            [
+              -64.7602952,
+              -21.4961098
+            ],
+            [
+              -64.7607619,
+              -21.4954859
+            ],
+            [
+              -64.7612769,
+              -21.4950117
+            ],
+            [
+              -64.7612983,
+              -21.494847
+            ],
+            [
+              -64.7607512,
+              -21.4946723
+            ],
+            [
+              -64.7607619,
+              -21.4947472
+            ],
+            [
+              -64.760075,
+              -21.4949251
+            ],
+            [
+              -64.7598446,
+              -21.4940584
+            ],
+            [
+              -64.759512,
+              -21.493699
+            ],
+            [
+              -64.7599143,
+              -21.4934844
+            ],
+            [
+              -64.7602737,
+              -21.4932797
+            ],
+            [
+              -64.7606814,
+              -21.4930601
+            ],
+            [
+              -64.7608692,
+              -21.493105
+            ],
+            [
+              -64.7608638,
+              -21.4932847
+            ],
+            [
+              -64.7612286,
+              -21.4932897
+            ],
+            [
+              -64.7614968,
+              -21.4933446
+            ],
+            [
+              -64.7614966,
+              -21.4939318
+            ],
+            [
+              -64.7618455,
+              -21.4939685
+            ],
+            [
+              -64.7619096,
+              -21.4943511
+            ],
+            [
+              -64.7620708,
+              -21.4943579
+            ],
+            [
+              -64.7620708,
+              -21.4946324
+            ],
+            [
+              -64.7624461,
+              -21.4944659
+            ],
+            [
+              -64.7628165,
+              -21.4941832
+            ],
+            [
+              -64.7631222,
+              -21.4940434
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1029853745",
+      "properties": {
+        "grupo": "tomatitas",
+        "nombre": "1029853745",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1029853745"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -64.7611352,
+              -21.4990764
+            ],
+            [
+              -64.7615333,
+              -21.4991215
+            ],
+            [
+              -64.7618068,
+              -21.4989057
+            ],
+            [
+              -64.7619383,
+              -21.4987189
+            ],
+            [
+              -64.7627408,
+              -21.4979131
+            ],
+            [
+              -64.7629558,
+              -21.4981305
+            ],
+            [
+              -64.7630725,
+              -21.4982485
+            ],
+            [
+              -64.7634108,
+              -21.4989368
+            ],
+            [
+              -64.763316,
+              -21.4991634
+            ],
+            [
+              -64.7632433,
+              -21.4994629
+            ],
+            [
+              -64.763181,
+              -21.4997109
+            ],
+            [
+              -64.7631325,
+              -21.499888
+            ],
+            [
+              -64.7630737,
+              -21.500004
+            ],
+            [
+              -64.7629802,
+              -21.5001232
+            ],
+            [
+              -64.762821,
+              -21.5001811
+            ],
+            [
+              -64.762641,
+              -21.500136
+            ],
+            [
+              -64.7623987,
+              -21.5000942
+            ],
+            [
+              -64.7620975,
+              -21.4999525
+            ],
+            [
+              -64.7616371,
+              -21.4995595
+            ],
+            [
+              -64.7611352,
+              -21.4990764
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1189082534",
+      "properties": {
+        "grupo": "sureste_compuerta",
+        "nombre": "1189082534",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1189082534"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -64.6681216,
+              -21.5687555
+            ],
+            [
+              -64.6680621,
+              -21.568863
+            ],
+            [
+              -64.6680479,
+              -21.5688886
+            ],
+            [
+              -64.6676395,
+              -21.5686256
+            ],
+            [
+              -64.6675264,
+              -21.5687688
+            ],
+            [
+              -64.6674385,
+              -21.5688856
+            ],
+            [
+              -64.6673505,
+              -21.5687805
+            ],
+            [
+              -64.66665,
+              -21.5679128
+            ],
+            [
+              -64.6675253,
+              -21.5676941
+            ],
+            [
+              -64.6681216,
+              -21.5687555
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "131469612",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino a San Mateo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/131469612"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7542695,
+            -21.4930241
+          ],
+          [
+            -64.7542912,
+            -21.4931023
+          ],
+          [
+            -64.7543514,
+            -21.4932647
+          ],
+          [
+            -64.7545029,
+            -21.4944334
+          ],
+          [
+            -64.7545613,
+            -21.4949435
+          ],
+          [
+            -64.7545581,
+            -21.4951645
+          ],
+          [
+            -64.7544767,
+            -21.4953547
+          ],
+          [
+            -64.7542308,
+            -21.4956472
+          ],
+          [
+            -64.7539222,
+            -21.4958498
+          ],
+          [
+            -64.7536649,
+            -21.4960407
+          ],
+          [
+            -64.7536064,
+            -21.4961101
+          ],
+          [
+            -64.7535639,
+            -21.4961746
+          ],
+          [
+            -64.753522,
+            -21.4962668
+          ],
+          [
+            -64.75348,
+            -21.4963989
+          ],
+          [
+            -64.7534505,
+            -21.4966099
+          ],
+          [
+            -64.753338,
+            -21.4974153
+          ],
+          [
+            -64.7533218,
+            -21.4975311
+          ],
+          [
+            -64.7531942,
+            -21.4984367
+          ],
+          [
+            -64.7531779,
+            -21.4988638
+          ],
+          [
+            -64.7531354,
+            -21.4989925
+          ],
+          [
+            -64.7530397,
+            -21.4991769
+          ],
+          [
+            -64.7528139,
+            -21.4995634
+          ],
+          [
+            -64.7527494,
+            -21.4996594
+          ],
+          [
+            -64.7524902,
+            -21.5000075
+          ],
+          [
+            -64.7524015,
+            -21.5001534
+          ],
+          [
+            -64.7523452,
+            -21.5002932
+          ],
+          [
+            -64.7523197,
+            -21.5003858
+          ],
+          [
+            -64.7523066,
+            -21.5004924
+          ],
+          [
+            -64.7522918,
+            -21.5013539
+          ],
+          [
+            -64.7522833485806,
+            -21.5015
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1451733689",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1451733689"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7542695,
+            -21.4930241
+          ],
+          [
+            -64.7544318,
+            -21.4928563
+          ],
+          [
+            -64.7545839,
+            -21.4927499
+          ],
+          [
+            -64.7547483,
+            -21.4927329
+          ],
+          [
+            -64.7555755,
+            -21.4927912
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1451733690",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1451733690"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7583236,
+            -21.4912287
+          ],
+          [
+            -64.7583013,
+            -21.4908766
+          ],
+          [
+            -64.758039,
+            -21.4897731
+          ],
+          [
+            -64.7579145,
+            -21.4892591
+          ],
+          [
+            -64.7578965,
+            -21.489
+          ],
+          [
+            -64.7579676,
+            -21.4887879
+          ],
+          [
+            -64.7580595,
+            -21.4886261
+          ],
+          [
+            -64.7582633,
+            -21.4884621
+          ],
+          [
+            -64.758737,
+            -21.4882366
+          ],
+          [
+            -64.7593194,
+            -21.4879835
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1451733691",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1451733691"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7567329,
+            -21.4928369
+          ],
+          [
+            -64.7570947,
+            -21.4927629
+          ],
+          [
+            -64.7574068,
+            -21.4926275
+          ],
+          [
+            -64.757662,
+            -21.4924664
+          ],
+          [
+            -64.7578621,
+            -21.4922835
+          ],
+          [
+            -64.758018,
+            -21.4921006
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1472549327",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1472549327"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7598298,
+            -21.4991757
+          ],
+          [
+            -64.7597185,
+            -21.4992477
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1472549329",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1472549329"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7604103,
+            -21.4985201
+          ],
+          [
+            -64.7603412,
+            -21.4987069
+          ],
+          [
+            -64.7602811,
+            -21.4988193
+          ],
+          [
+            -64.7602175,
+            -21.4989054
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1472549330",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1472549330"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7555755,
+            -21.4927912
+          ],
+          [
+            -64.756505,
+            -21.4928475
+          ],
+          [
+            -64.7567329,
+            -21.4928369
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1472550459",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1472550459"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.758018,
+            -21.4921006
+          ],
+          [
+            -64.7582026,
+            -21.4918012
+          ],
+          [
+            -64.7583072,
+            -21.4914945
+          ],
+          [
+            -64.7583236,
+            -21.4912287
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1472550460",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1472550460"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7593194,
+            -21.4879835
+          ],
+          [
+            -64.7593566,
+            -21.48805
+          ],
+          [
+            -64.7600197,
+            -21.4893738
+          ],
+          [
+            -64.7605167,
+            -21.4904646
+          ],
+          [
+            -64.7606574,
+            -21.4907733
+          ],
+          [
+            -64.7608168,
+            -21.4911505
+          ],
+          [
+            -64.7609707,
+            -21.4915149
+          ],
+          [
+            -64.7611329,
+            -21.4919254
+          ],
+          [
+            -64.7612389,
+            -21.4922135
+          ],
+          [
+            -64.7613571,
+            -21.4930419
+          ],
+          [
+            -64.7614053,
+            -21.4938918
+          ],
+          [
+            -64.7614348,
+            -21.4948251
+          ],
+          [
+            -64.7614361,
+            -21.495059
+          ],
+          [
+            -64.7614138,
+            -21.4951654
+          ],
+          [
+            -64.7610335,
+            -21.4964865
+          ],
+          [
+            -64.7604103,
+            -21.4985201
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "180967332",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/180967332"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7533859,
+            -21.4449395
+          ],
+          [
+            -64.7532793,
+            -21.4444919
+          ],
+          [
+            -64.7531308,
+            -21.4432982
+          ],
+          [
+            -64.7531531,
+            -21.4431557
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "180967337",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/180967337"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.753922,
+            -21.4470512
+          ],
+          [
+            -64.7537505,
+            -21.4466978
+          ],
+          [
+            -64.7535913,
+            -21.4459267
+          ],
+          [
+            -64.7534096,
+            -21.4450576
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "180967352",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/180967352"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7531531,
+            -21.4431557
+          ],
+          [
+            -64.7532308,
+            -21.4432721
+          ],
+          [
+            -64.7534094,
+            -21.4439542
+          ],
+          [
+            -64.7535597,
+            -21.4445588
+          ],
+          [
+            -64.7536146,
+            -21.4448328
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "238518035",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/238518035"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7543199,
+            -21.448557
+          ],
+          [
+            -64.754376,
+            -21.4487497
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "238518036",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/238518036"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.753822,
+            -21.456168
+          ],
+          [
+            -64.7539033,
+            -21.4567849
+          ],
+          [
+            -64.7538673,
+            -21.4571059
+          ],
+          [
+            -64.7540818,
+            -21.45903
+          ],
+          [
+            -64.7542872,
+            -21.4607697
+          ],
+          [
+            -64.7544198,
+            -21.4620346
+          ],
+          [
+            -64.7545116,
+            -21.4627467
+          ],
+          [
+            -64.7546465,
+            -21.4636391
+          ],
+          [
+            -64.7546766,
+            -21.463879
+          ],
+          [
+            -64.7547267,
+            -21.464291
+          ],
+          [
+            -64.7547891,
+            -21.4646889
+          ],
+          [
+            -64.754839,
+            -21.465035
+          ],
+          [
+            -64.7548704,
+            -21.465309
+          ],
+          [
+            -64.7549113,
+            -21.4656312
+          ],
+          [
+            -64.754993,
+            -21.4661448
+          ],
+          [
+            -64.7550338,
+            -21.4664105
+          ],
+          [
+            -64.7550689,
+            -21.4666876
+          ],
+          [
+            -64.7554152,
+            -21.4689597
+          ],
+          [
+            -64.7555593,
+            -21.4699052
+          ],
+          [
+            -64.755624,
+            -21.4702796
+          ],
+          [
+            -64.7558277,
+            -21.4706539
+          ],
+          [
+            -64.756072,
+            -21.4708721
+          ],
+          [
+            -64.7563959,
+            -21.471052
+          ],
+          [
+            -64.7568745,
+            -21.4712758
+          ],
+          [
+            -64.757498,
+            -21.4716256
+          ],
+          [
+            -64.7578101,
+            -21.4719164
+          ],
+          [
+            -64.7580467,
+            -21.4722471
+          ],
+          [
+            -64.7581549,
+            -21.4725542
+          ],
+          [
+            -64.7585427,
+            -21.473415
+          ],
+          [
+            -64.7586024,
+            -21.4735699
+          ],
+          [
+            -64.7588727,
+            -21.474271
+          ],
+          [
+            -64.7590274,
+            -21.4746721
+          ],
+          [
+            -64.7590355,
+            -21.4747092
+          ],
+          [
+            -64.7590949,
+            -21.4749817
+          ],
+          [
+            -64.7591078,
+            -21.4752068
+          ],
+          [
+            -64.7591115,
+            -21.4752718
+          ],
+          [
+            -64.7590694,
+            -21.4756868
+          ],
+          [
+            -64.759037,
+            -21.4758484
+          ],
+          [
+            -64.758948,
+            -21.4760627
+          ],
+          [
+            -64.758105,
+            -21.47837
+          ],
+          [
+            -64.758028,
+            -21.4785463
+          ],
+          [
+            -64.7579804,
+            -21.4787047
+          ],
+          [
+            -64.7579611,
+            -21.4788499
+          ],
+          [
+            -64.7579642,
+            -21.4790045
+          ],
+          [
+            -64.7579957,
+            -21.4791722
+          ],
+          [
+            -64.7583455,
+            -21.4802357
+          ],
+          [
+            -64.758398,
+            -21.480443
+          ],
+          [
+            -64.7584254,
+            -21.4806531
+          ],
+          [
+            -64.7585137,
+            -21.4825362
+          ],
+          [
+            -64.7585329,
+            -21.4828835
+          ],
+          [
+            -64.7585301,
+            -21.484365
+          ],
+          [
+            -64.7585044,
+            -21.4850451
+          ],
+          [
+            -64.7585212,
+            -21.4853296
+          ],
+          [
+            -64.7585809,
+            -21.4857833
+          ],
+          [
+            -64.7586001,
+            -21.4859294
+          ],
+          [
+            -64.7586452,
+            -21.4862001
+          ],
+          [
+            -64.7587028,
+            -21.4865465
+          ],
+          [
+            -64.7587612,
+            -21.4868007
+          ],
+          [
+            -64.7588005,
+            -21.4869039
+          ],
+          [
+            -64.7589151,
+            -21.487239
+          ],
+          [
+            -64.758983,
+            -21.487383
+          ],
+          [
+            -64.7592684,
+            -21.4878925
+          ],
+          [
+            -64.7593194,
+            -21.4879835
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "238518040",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/238518040"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.753922,
+            -21.4470512
+          ],
+          [
+            -64.7539565,
+            -21.4472152
+          ],
+          [
+            -64.7539819,
+            -21.4473509
+          ],
+          [
+            -64.754188,
+            -21.4481271
+          ],
+          [
+            -64.7542828,
+            -21.4484176
+          ],
+          [
+            -64.7543199,
+            -21.448557
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "238518041",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/238518041"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7536507,
+            -21.4450173
+          ],
+          [
+            -64.7536663,
+            -21.4452048
+          ],
+          [
+            -64.7536996,
+            -21.4455244
+          ],
+          [
+            -64.7537097,
+            -21.4456213
+          ],
+          [
+            -64.7538386,
+            -21.4466932
+          ],
+          [
+            -64.753922,
+            -21.4470512
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "316790412",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/316790412"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7531531,
+            -21.4431557
+          ],
+          [
+            -64.7531008,
+            -21.442862
+          ],
+          [
+            -64.7529603,
+            -21.4419094
+          ],
+          [
+            -64.7528349,
+            -21.4410598
+          ],
+          [
+            -64.7527947,
+            -21.440836
+          ],
+          [
+            -64.7526181,
+            -21.4398543
+          ],
+          [
+            -64.7523276,
+            -21.4382263
+          ],
+          [
+            -64.7523161,
+            -21.4381608
+          ],
+          [
+            -64.7521624,
+            -21.4372923
+          ],
+          [
+            -64.75210792213814,
+            -21.437
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "500438537",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/500438537"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7538272,
+            -21.4560691
+          ],
+          [
+            -64.753822,
+            -21.456168
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "500438538",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/500438538"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.754376,
+            -21.4487497
+          ],
+          [
+            -64.7544883,
+            -21.4492109
+          ],
+          [
+            -64.7545465,
+            -21.4495863
+          ],
+          [
+            -64.7545025,
+            -21.4499471
+          ],
+          [
+            -64.753973,
+            -21.4518803
+          ],
+          [
+            -64.7538776,
+            -21.4522099
+          ],
+          [
+            -64.7538053,
+            -21.4524595
+          ],
+          [
+            -64.753743,
+            -21.4526748
+          ],
+          [
+            -64.7537333,
+            -21.4527286
+          ],
+          [
+            -64.753641,
+            -21.453241
+          ],
+          [
+            -64.7536328,
+            -21.4535324
+          ],
+          [
+            -64.753622,
+            -21.45392
+          ],
+          [
+            -64.7536514,
+            -21.454542
+          ],
+          [
+            -64.7537596,
+            -21.4554815
+          ],
+          [
+            -64.7538272,
+            -21.4560691
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "500438543",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/500438543"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7534096,
+            -21.4450576
+          ],
+          [
+            -64.7533859,
+            -21.4449395
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "500438545",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "RN1: Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/500438545"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7536146,
+            -21.4448328
+          ],
+          [
+            -64.7536507,
+            -21.4450173
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "96787425",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/96787425"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7602175,
+            -21.4989054
+          ],
+          [
+            -64.7601604,
+            -21.4989565
+          ],
+          [
+            -64.7600014,
+            -21.4990699
+          ],
+          [
+            -64.7598298,
+            -21.4991757
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "96787430",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Camino Tarija-San Lorenzo",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/96787430"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -64.7597185,
+            -21.4992477
+          ],
+          [
+            -64.7593354,
+            -21.4994591
+          ],
+          [
+            -64.7591073,
+            -21.499542
+          ],
+          [
+            -64.7588574,
+            -21.4995797
+          ],
+          [
+            -64.7577403,
+            -21.499705
+          ],
+          [
+            -64.7569915,
+            -21.4997797
+          ],
+          [
+            -64.7568544,
+            -21.4997917
+          ],
+          [
+            -64.7562844,
+            -21.4998415
+          ],
+          [
+            -64.755751,
+            -21.4998819
+          ],
+          [
+            -64.755262,
+            -21.4999256
+          ],
+          [
+            -64.7549189,
+            -21.4999774
+          ],
+          [
+            -64.7546159,
+            -21.5000523
+          ],
+          [
+            -64.7543302,
+            -21.5001572
+          ],
+          [
+            -64.7540383,
+            -21.5003232
+          ],
+          [
+            -64.7538813,
+            -21.5004247
+          ],
+          [
+            -64.7536102,
+            -21.5006426
+          ],
+          [
+            -64.7533844,
+            -21.5008825
+          ],
+          [
+            -64.7530978,
+            -21.5012693
+          ],
+          [
+            -64.7530629,
+            -21.5013164
+          ],
+          [
+            -64.75294990262088,
+            -21.5015
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "5057654298",
+      "properties": {
+        "grupo": "tomatitas",
+        "nombre": "Tomatitas",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/node/5057654298"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7614266,
+          -21.496266
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "4588294190",
+      "properties": {
+        "grupo": "tomatitas",
+        "nombre": "Hotel Tomatitas",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/node/4588294190"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7603863,
+          -21.4977066
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "5057654309",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Rancho Sur",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/node/5057654309"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7543743,
+          -21.4627092
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "5057654521",
+      "properties": {
+        "grupo": "corredor_rancho",
+        "nombre": "Rancho Norte",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/node/5057654521"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7527417,
+          -21.4471909
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "5057726566",
+      "properties": {
+        "grupo": "sureste_compuerta",
+        "nombre": "Compuerta",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/node/5057726566"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.750867,
+          -21.4940304
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "5057654299",
+      "properties": {
+        "grupo": "exclusiones",
+        "nombre": "Cadillar",
+        "esperado_dentro": false,
+        "fuente": "https://www.openstreetmap.org/node/5057654299"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7716498,
+          -21.4991554
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "5057726565",
+      "properties": {
+        "grupo": "exclusiones",
+        "nombre": "Obrajes",
+        "esperado_dentro": false,
+        "fuente": "https://www.openstreetmap.org/node/5057726565"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7693443,
+          -21.505741
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "san_lorenzo",
+      "properties": {
+        "grupo": "exclusiones",
+        "nombre": "Centro de San Lorenzo",
+        "esperado_dentro": false,
+        "fuente": "CP-22 / contrato"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7494,
+          -21.4181
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "357255636-interior",
+      "properties": {
+        "grupo": "tomatitas",
+        "nombre": "Punto interior del area OSM 357255636",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/357255636"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.7617913420425,
+          -21.495899299999998
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1029853745-interior",
+      "properties": {
+        "grupo": "tomatitas",
+        "nombre": "Punto interior del area OSM 1029853745",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1029853745"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.76253026011412,
+          -21.4990066
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "1189082534-interior",
+      "properties": {
+        "grupo": "sureste_compuerta",
+        "nombre": "Punto interior del area OSM 1189082534",
+        "esperado_dentro": true,
+        "fuente": "https://www.openstreetmap.org/way/1189082534"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.66739305912371,
+          -21.5682692
+        ]
+      }
+    }
+  ]
+}

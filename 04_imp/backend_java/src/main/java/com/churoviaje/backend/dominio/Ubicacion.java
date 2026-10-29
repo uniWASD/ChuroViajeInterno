@@ -1,6 +1,8 @@
 package com.churoviaje.backend.dominio;
 
+import com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana;
 import java.math.BigDecimal;
+import java.util.Objects;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -18,20 +20,20 @@ public record Ubicacion(
         BigDecimal longitud
 ) {
     /** RN-01.6 / RN-03.3: regla de dominio, sin dependencia HTTP. */
-    public boolean estaDentroDeManchaUrbana(com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana cobertura) {
-        java.util.Objects.requireNonNull(cobertura, "La cobertura es obligatoria");
+    public boolean estaDentroDeManchaUrbana(CoberturaManchaUrbana cobertura) {
+        Objects.requireNonNull(cobertura, "La cobertura es obligatoria");
         // La validación de rangos del DTO pertenece a @Valid (T-088).
-        return cobertura.contiene(java.util.Objects.requireNonNull(latitud,"Falta la latitud").doubleValue(),
-                java.util.Objects.requireNonNull(longitud,"Falta la longitud").doubleValue());
+        return cobertura.contiene(Objects.requireNonNull(latitud, "Falta la latitud").doubleValue(),
+                Objects.requireNonNull(longitud, "Falta la longitud").doubleValue());
     }
 
-    public void validarParaReporte(com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana cobertura) {
+    public void validarParaReporte(CoberturaManchaUrbana cobertura) {
         if (!estaDentroDeManchaUrbana(cobertura)) {
             throw UbicacionFueraCoberturaException.paraReporte();
         }
     }
 
-    public ResultadoUbicacionRuta validarParaRuta(com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana cobertura) {
+    public ResultadoUbicacionRuta validarParaRuta(CoberturaManchaUrbana cobertura) {
         return estaDentroDeManchaUrbana(cobertura)
                 ? ResultadoUbicacionRuta.VALIDA : ResultadoUbicacionRuta.PUNTO_INVALIDO;
     }

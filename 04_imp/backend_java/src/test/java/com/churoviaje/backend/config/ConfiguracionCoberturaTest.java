@@ -1,6 +1,7 @@
 package com.churoviaje.backend.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,7 +66,7 @@ class ConfiguracionCoberturaTest {
         ObjectNode doc = documento("APROBADO", "APROBADO");
         var segunda = doc.path("features").get(0).deepCopy();
         ((ObjectNode) segunda.path("properties")).put("revision_equipo", "PENDIENTE");
-        ((com.fasterxml.jackson.databind.node.ArrayNode) doc.path("features")).add(segunda);
+        ((ArrayNode) doc.path("features")).add(segunda);
         String ruta = guardar(doc);
         assertThrows(IllegalStateException.class,
                 () -> ConfiguracionCobertura.cargarCobertura(mapper, ruta, false, true));

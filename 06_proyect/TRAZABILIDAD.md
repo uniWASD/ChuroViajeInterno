@@ -55,7 +55,7 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 |---|---|---|---|---|---|
 | T-087 Estructura base de la app | Todos | #39 · Flutter · Sprint 1 | feature/T87-flutter-estructura-base | CP-20 | Pendiente |
 | T-088 Estructura base del backend | Todos | #40 · Java · Sprint 1 | feature/T88-java-estructura-base | CP-21 | Pendiente |
-| T-089 Base de datos, catálogos y zona de cobertura | CU-01, CU-02, CU-03, CU-05, CU-06 | #41 · Java · Sprint 1 | feature/T89-java-base-de-datos | CP-22, CP-23 | Pendiente |
+| T-089 Base de datos, catálogos y zona de cobertura | CU-01, CU-02, CU-03, CU-05, CU-06 | #41 · Java · Sprint 1 | feature/T89-java-base-de-datos | CP-22, CP-23 | Validado localmente (32/32); pendiente de CI e integración |
 | T-090 Estructura del núcleo y protocolo por pipe | CU-03, CU-04 | #42 · C++ · Sprint 1 | feature/T90-cpp-estructura-nucleo | CP-24, CP-25 | Completado |
 | T-091 Estructura del servicio | CU-06 | #43 · WhatsApp/LLM · Sprint 1 | feature/T91-whatsapp-estructura-servicio | CP-26 | Completado |
 | T-092 Preparar la instancia de Oracle Cloud | Todos | #44 · Servidor · Sprint 1 | feature/T92-servidor-preparar-instancia | CP-27, CP-28 | Completado |
@@ -85,3 +85,5 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-117 Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia | CU-09 | #112 · Java · Sprint 2 | feature/T117-java-medir-api-anh | CP-157, CP-158 | Pendiente |
 | T-118 Vincular las estaciones de ANH con los surtidores del catálogo | CU-09 | #113 · Java · Sprint 3 | feature/T118-java-vincular-estaciones-anh | CP-159, CP-160 | Pendiente |
 | T-119 Comprobar la salida del servidor hacia la API de ANH | CU-09 | #111 · Servidor · Sprint 2 | feature/T119-servidor-salida-anh | CP-156 | Pendiente |
+
+Evidencia de T-089: `clean verify` ejecutado el 29/10/2026 sobre el commit [a66a1a4](https://github.com/uniWASD/ChuroViajeInterno/commit/a66a1a499ab12d8521a747fdbb1183c54739674a), con JDK 21, Testcontainers 1.21.4 y PostGIS: 32 pruebas, 0 fallos, 0 errores y 0 omitidas. Incluye CP-21, CP-22 y CP-23; las migraciones se comprueban en dos bases vacías. El resultado local no sustituye al CI del PR. El estado final se registra al integrar con squash en `develop`.

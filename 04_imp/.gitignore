@@ -1,0 +1,23 @@
+
+
+# Variables de entorno y secretos locales
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Compilacion e IDE
+**/target/
+**/build/
+**/.gradle/
+.idea/
+*.iml
+.classpath
+.project
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/

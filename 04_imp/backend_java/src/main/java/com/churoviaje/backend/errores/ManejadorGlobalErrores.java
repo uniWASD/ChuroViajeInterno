@@ -1,5 +1,6 @@
 package com.churoviaje.backend.errores;
 
+import com.churoviaje.backend.dominio.UbicacionFueraCoberturaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -30,11 +31,11 @@ public class ManejadorGlobalErrores {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<RespuestaRechazo> manejarValidacion(MethodArgumentNotValidException ex) {
         String mensaje = "Los datos enviados no son válidos";
-        
+
         if (!ex.getBindingResult().getFieldErrors().isEmpty()) {
             mensaje = ex.getBindingResult().getFieldErrors().get(0).getDefaultMessage();
         }
-        
+
         RespuestaRechazo respuesta = new RespuestaRechazo("PETICION_INVALIDA", mensaje);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
     }
@@ -63,6 +64,13 @@ public class ManejadorGlobalErrores {
     public ResponseEntity<RespuestaRechazo> manejarErroresSpring(Exception ex) {
         RespuestaRechazo respuesta = new RespuestaRechazo("PETICION_INVALIDA", "Formato o parámetros incorrectos");
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(respuesta);
+    }
+
+    @ExceptionHandler(UbicacionFueraCoberturaException.class)
+    public ResponseEntity<RespuestaRechazo> manejarUbicacionFueraDeCobertura(
+            UbicacionFueraCoberturaException ex) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new RespuestaRechazo(ex.getCodigo(), ex.getMessage()));
     }
 
     // Cualquier otro error inesperado (500)

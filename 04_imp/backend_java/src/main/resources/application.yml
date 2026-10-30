@@ -11,3 +11,7 @@ management:
   endpoint:
     health:
       show-details: never
+
+motor:
+  ruta-ejecutable: ${MOTOR_PATH:simulador_core.java}
+  ruta-red-vial: ${RED_VIAL_PATH:../../motor_cpp/datos/red_vial.json}

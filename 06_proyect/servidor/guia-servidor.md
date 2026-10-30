@@ -1,8 +1,8 @@
 # Guía del servidor de ChuroViaje
 
-Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre el issue T-092 (#44). Se actualiza a medida que se avanza.
+Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los issues T-092 (#44) y T-119 (#111). Se actualiza a medida que se avanza.
 
-Última actualización: 23 de octubre de 2026.
+Última actualización: 29 de octubre de 2026.
 
 > Esta guía no lleva contraseñas, llaves ni la IP del servidor. La IP pública se comparte por el chat del equipo. Donde aparece `<IP_PUBLICA>`, se reemplaza por esa IP.
 
@@ -23,6 +23,8 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre el is
 | Base de datos `churoviaje` y su usuario sin permisos de administrador | Hecho. Usuario `churoviaje_app`, sin atributos de administrador |
 | CP-27 (desde fuera solo responde SSH) | Hecho el 20/10/2026 |
 | CP-28 (desde fuera el puerto de PostgreSQL no responde) | Hecho el 20/10/2026, con PostgreSQL instalado y corriendo |
+| Salida hacia la API de ANH con el certificado verificado | Hecho el 29/10/2026 (T-119). Detalle en la sección «Salida hacia la API de ANH» |
+| CP-156 (desde la instancia, las estaciones de Tarija de gasolina responden con el certificado verificado) | Hecho el 29/10/2026 |
 
 ## Datos del servidor
 
@@ -194,6 +196,34 @@ sudo apt-get update && sudo apt-get upgrade
 ```
 
 Para cambiar a otra versión mayor (por ejemplo la 26) se cambia el número en `node_24.x` dentro de `/etc/apt/sources.list.d/nodesource.list` y se actualiza.
+
+## Salida hacia la API de ANH
+
+Antes de que el backend dependa de ANH, el 29 de octubre de 2026 se comprobó desde la instancia que las consultas llegan y que el certificado se verifica. Cubre el issue T-119 (#111) y el caso de prueba CP-156. El informe técnico de ANH y el cliente de prueba están en `05_pro/PruebaApiANH`.
+
+| Prueba | Resultado |
+|---|---|
+| Catálogo de departamentos, con `curl` | 200, `decCodigo` 1, certificado verificado, 0,67 s |
+| Estaciones de Tarija de gasolina, con `curl` | 200, certificado verificado, con estaciones y saldo. Entre 0,56 y 0,90 s |
+| Cliente Python, con el almacén de certificados del sistema | Certificado verificado. 31 estaciones de Tarija con su saldo |
+| Cliente Python, con `certifi` | Mismo resultado |
+| Java 21, con el almacén de certificados de la instancia | 200 en las dos consultas (catálogo 808 ms, estaciones 289 ms) |
+
+- **Certificados:** el almacén del sistema y el de Java validaron el certificado de ANH sin instalar nada. No faltó ningún certificado y la verificación no se desactivó en ningún momento.
+- **Límites de ANH:** se hicieron 10 consultas seguidas, una por segundo, y todas dieron 200 en menos de 0,75 s. ANH no rechazó ni frenó las peticiones que llegan desde la IP de Oracle. No se probó con una frecuencia mayor, así que esto no descarta un límite más estricto.
+- **Puertos:** la salida no abre ningún puerto de entrada. Después de las pruebas, hacia afuera sigue escuchando solo el 22, y PostgreSQL solo en `127.0.0.1`.
+- **Cliente Python en Linux ARM:** funciona sin cambios. Para correrlo hay que instalar `python3-venv` y crear un entorno virtual:
+
+```bash
+sudo apt install -y python3-venv
+cd ~/PruebaApiANH
+python3 -m venv .venv
+. .venv/bin/activate
+pip install -r requirements.txt
+python anh_tarija.py --productos 0 --mostrar-ubicacion
+```
+
+- **Reinicio pendiente:** al instalar `python3-venv` quedaron tres servicios con el reinicio diferido (`dbus`, `systemd-logind` y `unattended-upgrades`). No es urgente; se aplican en el próximo reinicio, que conviene hacer a una hora que no moleste.
 
 ## Cómo verificarlo
 

@@ -3,3 +3,12 @@ build-*/
 out/
 .cache/
 __pycache__/
+
+# T-111: datos derivados y salidas locales (solo en motor_cpp).
+*.osm.pbf
+red_vial_*.json
+revision_sentidos_*.csv
+.venv/
+.venv-*/
+.coverage
+.pytest_cache/

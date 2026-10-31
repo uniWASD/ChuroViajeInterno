@@ -77,7 +77,7 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-108 Pruebas de carga y reporte | CU-07 | #89 · Simulador · Sprint 7 | feature/T108-simulador-pruebas-carga | CP-151, CP-152 | Pendiente |
 | T-109 Rendimiento con la red real de Tarija | CU-03, CU-04 | #90 · C++ · Sprint 7 | feature/T109-cpp-rendimiento | CP-153 | Pendiente |
 | T-110 Despliegue final y revisión de seguridad | Todos | #91 · Servidor · Sprint 7 | feature/T110-servidor-despliegue-final | CP-154 | Pendiente |
-| T-111 Preparar la red vial de Tarija desde OpenStreetMap | CU-03, CU-04 | #93 · C++ · Sprint 2 | feature/T111-red-vial-preparacion | CP-45, CP-46 | Pendiente |
+| T-111 Preparar la red vial de Tarija desde OpenStreetMap | CU-03, CU-04 | #93 · C++ · Sprint 2 (cerrado; reasignación pendiente de Marcelo) | feature/T111-red-vial-preparacion | CP-45, CP-46 | Pendiente |
 | T-113 Contrato del servicio de WhatsApp con el backend | CU-06 | #102 · Docs · Sprint 2 | feature/T113-docs-contrato-whatsapp | — | Completado |
 | T-114 Ajustes del backlog, la guía del servidor y la trazabilidad tras el contrato | CU-06 | #104 · Docs · Sprint 2 | feature/T114-actualizar-backlog-trazabilidad | — | Completado |
 | T-115 Investigación de la API de ANH para obtener la disponibilidad de combustible | CU-09 | #105 · Investigación · Sprint 2 | feature/T115-investigacion-api-anh | — | En progreso |

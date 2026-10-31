@@ -73,16 +73,8 @@ La correspondencia exacta entre `highway` y tipo es **una decisión de T-111**; 
 
 ## Contrato JSON v1
 
-- Archivo UTF-8 con `version=1`, `fuente="OpenStreetMap"`, `fecha_extracto`, `nodos` y `tramos`.
-- Nodo: `id`, `lat`, `lon` (WGS84). Tramo: `id`, `desde`, `hasta`, `opuesto`, `nombre`, `tipo_via`, `longitud_m`, `geometria`.
-- Cada par de `geometria` se guarda en orden **`[latitud, longitud]`**; **solo el GeoJSON de cobertura** usa su orden habitual `[longitud, latitud]`.
-- Una vía bidireccional produce dos tramos, con `opuesto` apuntando recíprocamente a la otra dirección. Un tramo unidireccional lleva `"opuesto": null`.
-- La longitud se calcula sobre el recorrido completo con Haversine y se redondea hacia arriba al milímetro; los extremos de la geometría coinciden con sus nodos.
-- Los IDs de tramo solo son estables **dentro de un extracto**; un nuevo extracto puede cambiar los fragmentos.
-
-La especificación ampliada se propone para `03_des/02_Arquitectura/05_contratos.md`, sección **«Archivo de la red vial»**, mediante D-33 en `08_decisiones_parametros.md`. Hasta que se incorporen estos cambios y Marcelo apruebe el contrato, la conformidad documental se considera **pendiente**. Este paquete está limitado a `04_imp/motor_cpp` y **no modifica** los documentos de arquitectura en `03_des`: la incorporación y aprobación de D-33 deben tramitarse por separado.
-
-El archivo de ejemplo `ejemplos/red_vial_ejemplo.json` es **sintético** y se valida en las pruebas automáticas. No contiene vías reales de Tarija.
+La especificación de los campos, el orden `[latitud, longitud]` y la reciprocidad de `opuesto` está en [«Archivo de la red vial»](../../../03_des/02_Arquitectura/05_contratos.md#archivo-de-la-red-vial), conforme a la [decisión D-33](../../../03_des/02_Arquitectura/08_decisiones_parametros.md).
+El script calcula la longitud con Haversine y la redondea hacia arriba al milímetro. `ejemplos/red_vial_ejemplo.json` es un ejemplo **sintético** que se valida en las pruebas; no contiene vías reales de Tarija.
 
 ## Validaciones y límites
 

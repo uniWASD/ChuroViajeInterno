@@ -61,7 +61,7 @@ Lo subes en una nueva rama llamada "feature/T90-cpp-estructura-nucleo" (No olvid
 ### [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap
 
 **Tipo:** Tarea de desarrollo (cubre CU-03 y CU-04)
-**Tecnología:** Python, para el núcleo C++ · **Sprint:** Sprint 2 (22/10–28/10)
+**Tecnología:** Python, para el núcleo C++ · **Sprint:** Sprint 2 (22/10–28/10; cerrado, reasignación pendiente de Marcelo)
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 (por el polígono de la mancha urbana)
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:cpp`
 
@@ -72,21 +72,21 @@ Lo subes en una nueva rama llamada "feature/T90-cpp-estructura-nucleo" (No olvid
 - [ ] Cada calle de doble sentido queda como dos tramos y cada calle de un sentido como uno (RN-03.6).
 - [ ] La longitud de cada tramo es la de su recorrido real, sumando sus segmentos, nunca menor que la línea recta entre sus extremos (RN-03.7).
 - [ ] Cada tramo guarda un identificador, el nombre de su calle y su tipo de vía: vía rápida, avenida principal o zona residencial, según una tabla de correspondencia con las etiquetas `highway` de OpenStreetMap que queda escrita en el README.
-- [ ] El formato del archivo (nodos y tramos) queda documentado y acordado con Marcelo en los primeros días del sprint, para que la carga en C++ avance en paralelo.
+- [ ] El formato del archivo (nodos y tramos) queda documentado en `03_des/02_Arquitectura/05_contratos.md`, para que la carga en C++ avance en paralelo.
 - [ ] El script se puede volver a correr con un extracto nuevo y deja en el archivo la fecha del extracto.
 
 **Tareas**
 - [ ] Descargar el extracto de Bolivia y recortar Tarija (osmium o un script en Python con pyosmium).
 - [ ] Definir la tabla de etiquetas `highway` que cuentan como vehiculares y su tipo de vía, partiendo de las velocidades de `05_pro/CalculoVelocidad`.
-- [ ] Definir con Marcelo el formato del archivo y documentarlo.
-- [ ] Revisar con alguien que maneje en Tarija las calles de un solo sentido del centro.
+- [ ] Definir el formato del archivo y documentarlo en `05_contratos.md`.
+- [ ] Revisar con alguien que maneje en Tarija las calles de un solo sentido del centro (con la lista que genera el script).
 - [ ] Guardar el script en `04_imp/motor_cpp/preparacion` y el archivo resultante fuera del repositorio, si pesa mucho.
 
 **Casos de prueba**
 - [ ] CP-45 Caso de prueba: en la red preparada, una calle peatonal conocida del centro no tiene ningún tramo.
 - [ ] CP-46 Caso de prueba: una calle de un solo sentido conocida tiene un tramo y no el contrario.
 
-**Relacionado:** RF-05 · CU-03 · RN-03.5 a RN-03.7 · D-08 · [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md)
+**Relacionado:** RF-05 · CU-03 · CU-04 · RN-03.5 a RN-03.7 · D-08 · D-33 · [05_contratos.md — archivo de la red vial](../../03_des/02_Arquitectura/05_contratos.md#archivo-de-la-red-vial) · [03_modelo_dominio.md](../../03_des/02_Arquitectura/03_modelo_dominio.md)
 
 Lo subes en una nueva rama llamada "feature/T111-red-vial-preparacion" (No olvides que el source de la rama es la de develop)
 

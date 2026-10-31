@@ -45,7 +45,7 @@ El backend nunca habla directo con el programa en C++. Llama a métodos del wrap
 | Revisar ruta | `revisarRuta` | `revisar_ruta` | Posición, tramos que faltan, destino, paradas que faltan y eventos ya avisados | Sin cambios; sin alternativa; o ruta alternativa con su costo. Las dos últimas traen el evento que las provocó. Si los tramos ya no existen, «ruta desactualizada» | [RN-04.14](04_reglas/CU-04_RecalcularRuta.md) a [RN-04.16](04_reglas/CU-04_RecalcularRuta.md) |
 | Actualizar tráfico | `actualizarTrafico` | `actualizar_trafico` | Evento que nace, cambia su vencimiento, se retira o vence: identificador, tipo, nivel si es congestión, ubicación y vencimiento | Tramos afectados; los dos sentidos de la calle salvo en la congestión ([D-18](08_decisiones_parametros.md)) | [RN-03.9](04_reglas/CU-03_CalcularRutaOptima.md), [D-14](08_decisiones_parametros.md) |
 | Analizar telemetría | `analizarTelemetria` | `analizar_telemetria` | Lecturas con un identificador temporal de recorrido y la marca de simulado, sin datos del conductor | Congestiones detectadas: tramo, punto, nivel y si salen de recorridos simulados | [RN-04.5](04_reglas/CU-04_RecalcularRuta.md) a [RN-04.10](04_reglas/CU-04_RecalcularRuta.md) |
-| Consultar estado | `consultarEstado` | `consultar_estado` | Nada | Si la red vial está cargada y de qué fecha es el extracto | [D-08](08_decisiones_parametros.md) |
+| Consultar estado | `consultarEstado` | `consultar_estado` | Nada | Si la red vial está cargada, la fecha del extracto y cuántos nodos y tramos tiene | [D-08](08_decisiones_parametros.md) |
 
 ### Cómo viajan los mensajes por el pipe
 
@@ -69,6 +69,80 @@ El campo `estado` puede ser `ENCONTRADA`, `SIN_RUTA` o `PUNTO_INVALIDO`; los dos
 - **Arranque.** Cada vez que el wrapper arranca el núcleo, espera a que cargue la red vial (mensaje `consultar_estado`) y le envía todos los eventos vigentes con `actualizar_trafico`. Recién entonces atiende rutas. Así el núcleo nunca empieza con el tráfico en blanco y nunca necesita llamar al backend.
 - **Demora.** Si el núcleo no responde una petición a tiempo para cumplir los 3 segundos de [RN-03.15](04_reglas/CU-03_CalcularRutaOptima.md), contados desde que se le escribió, el wrapper lo detiene, lo vuelve a arrancar y el backend responde 503. Una petición que vence mientras espera en la fila responde 503 sin reiniciar el núcleo.
 - **Caída.** Si el núcleo termina por un error, el wrapper lo arranca de nuevo y le vuelve a enviar los eventos vigentes. Mientras tanto, las rutas responden 503.
+
+## Archivo de la red vial
+
+Un script de Python (`04_imp/motor_cpp/preparacion`, T-111) arma este archivo a partir de un extracto de OpenStreetMap, y el núcleo C++ lo carga completo al arrancar (T-096, [D-08](08_decisiones_parametros.md), [D-33](08_decisiones_parametros.md)). Es lo único que une a las dos piezas, así que cada una puede avanzar por su lado mientras respete lo que sigue. La versión actual del formato es la 1.
+
+### Forma general
+
+- Un solo archivo JSON en UTF-8 llamado `red_vial_tarija.json`.
+- No va al repositorio: se genera con el script y en el servidor vive fuera de él. El núcleo recibe la ruta con el argumento `--red <ruta>`; el wrapper `MotorDeRutas` se la pasa al arrancarlo. Sin ese argumento, el núcleo arranca sin red y `consultar_estado` responde `"red_cargada":false`.
+- Los datos son de los colaboradores de OpenStreetMap (ODbL), y el archivo lo dice en `fuente`.
+
+Un ejemplo pequeño, con valores inventados: una calle de doble sentido (dos tramos) y una avenida de un solo sentido (un tramo), unidas en el nodo `osm:1002`:
+
+```json
+{
+  "version": 1,
+  "fuente": "OpenStreetMap",
+  "fecha_extracto": "2026-10-28",
+  "nodos": [
+    {"id": "osm:1001", "lat": -21.5339, "lon": -64.7342},
+    {"id": "osm:1002", "lat": -21.5339, "lon": -64.7334},
+    {"id": "osm:1003", "lat": -21.5345, "lon": -64.7338}
+  ],
+  "tramos": [
+    {"id": "osm:5001:1:ida", "desde": "osm:1001", "hasta": "osm:1002", "opuesto": "osm:5001:1:vuelta",
+     "nombre": "Calle de ejemplo", "tipo_via": "zona_residencial", "longitud_m": 93.944,
+     "geometria": [[-21.5339, -64.7342], [-21.5341, -64.7338], [-21.5339, -64.7334]]},
+    {"id": "osm:5001:1:vuelta", "desde": "osm:1002", "hasta": "osm:1001", "opuesto": "osm:5001:1:ida",
+     "nombre": "Calle de ejemplo", "tipo_via": "zona_residencial", "longitud_m": 93.944,
+     "geometria": [[-21.5339, -64.7334], [-21.5341, -64.7338], [-21.5339, -64.7342]]},
+    {"id": "osm:5002:1:ida", "desde": "osm:1002", "hasta": "osm:1003", "opuesto": null,
+     "nombre": "Avenida de ejemplo", "tipo_via": "avenida_principal", "longitud_m": 78.505,
+     "geometria": [[-21.5339, -64.7334], [-21.5342, -64.7336], [-21.5345, -64.7338]]}
+  ]
+}
+```
+
+### Campos
+
+| Dónde | Campo | Qué es |
+| --- | --- | --- |
+| Archivo | `version` | Número entero. Hoy, 1 |
+| Archivo | `fuente` | Siempre `OpenStreetMap` |
+| Archivo | `fecha_extracto` | Fecha del extracto de OpenStreetMap, como `AAAA-MM-DD`. Es la que informa `consultar_estado`; nunca es la fecha en que se corrió el script |
+| Archivo | `nodos`, `tramos` | Las dos listas del archivo |
+| Nodo | `id` | Texto. `osm:<número>` si viene de OpenStreetMap, `corte:...` si lo creó el recorte |
+| Nodo | `lat`, `lon` | Grados decimales (WGS84) |
+| Tramo | `id` | Texto, con la forma `osm:<vía>:<fragmento>:ida` o `...:vuelta` |
+| Tramo | `desde`, `hasta` | `id` de dos nodos de la lista. El tramo solo se recorre de `desde` a `hasta` |
+| Tramo | `opuesto` | `id` del tramo que recorre la misma calle en sentido contrario, o `null` si la calle es de un solo sentido |
+| Tramo | `nombre` | Nombre de la calle. Si OpenStreetMap no trae nombre ni referencia, `Sin nombre` |
+| Tramo | `tipo_via` | `via_rapida`, `avenida_principal` o `zona_residencial`. La tabla que los relaciona con las etiquetas `highway` está en el README del script |
+| Tramo | `longitud_m` | Metros, con tres decimales |
+| Tramo | `geometria` | Los puntos del trazado de `desde` a `hasta`, cada uno como `[latitud, longitud]`, con los dos extremos iguales a los nodos |
+
+### Reglas del archivo
+
+- **Sentido.** Una calle de doble sentido son dos tramos y una de un solo sentido es uno ([RN-03.6](04_reglas/CU-03_CalcularRutaOptima.md)).
+- **Los dos sentidos de una calle.** Cada tramo de una calle de doble sentido apunta al otro con `opuesto`, y el otro apunta de vuelta. Con eso el núcleo sabe a cuáles afecta un evento ([D-18](08_decisiones_parametros.md)) y a cuál asignar una lectura ([RN-04.8](04_reglas/CU-04_RecalcularRuta.md)). `ida` y `vuelta` en el `id` solo indican el sentido respecto a cómo dibuja la calle OpenStreetMap: el núcleo no debe leer el `id` para esto.
+- **Longitud.** Es el recorrido real, sumando los segmentos de `geometria`, y nunca es menor que la línea recta entre los extremos ([RN-03.7](04_reglas/CU-03_CalcularRutaOptima.md)).
+- **Qué no trae el archivo.** Ni la velocidad esperada de cada tipo de vía (la pone el núcleo, [RN-03.14](04_reglas/CU-03_CalcularRutaOptima.md)) ni el nivel de tráfico (lo calcula el núcleo con los eventos vigentes, [RN-03.9](04_reglas/CU-03_CalcularRutaOptima.md)).
+- **Nodos.** Son intersecciones, finales de calle y puntos de corte donde una calle cruza el borde de la mancha urbana (`corte:...`). Dos calles que solo coinciden en el borde no se conectan entre sí.
+- **Orden de las coordenadas.** Todo par de coordenadas va como `[latitud, longitud]`, igual que los mensajes por pipe de este documento. Los nodos llevan `lat` y `lon` con nombre, así que no hay duda. El GeoJSON de la mancha urbana usa el orden estándar `[longitud, latitud]`, pero el núcleo no lo lee.
+- **Identificadores.** Un `id` de tramo solo vale dentro de su archivo. Con un extracto nuevo el número de fragmento puede cambiar, y un `id` viejo podría apuntar a otro fragmento. Para saber si una ruta activa quedó vieja conviene comparar también `fecha_extracto` (se decide en el issue de `revisar_ruta`).
+
+### Qué hace el núcleo al cargar
+
+- Lee `version`. Si no es 1, no carga la red, lo anota en su salida de errores y `consultar_estado` sigue respondiendo `"red_cargada":false`. Lo mismo si el archivo falta o no se puede leer.
+- Ignora los campos que no conoce. Agregar un campo nuevo no obliga a subir la versión; cambiar o quitar uno existente sí.
+- Con la red cargada, `consultar_estado` informa `fecha_extracto`, `nodos` y `tramos`. Sin red: `null`, `0` y `0`.
+
+### Cómo se genera y se comprueba
+
+`preparar_red.py` escribe el archivo y, antes de reemplazar el anterior, lo revisa con `validar_red.py`: que los nodos y tramos no se repitan, que cada tramo apunte a nodos que existen, que cada `opuesto` sea recíproco (extremos cruzados, geometría inversa, misma longitud, nombre y tipo de vía), que todo quede dentro de la mancha urbana y que las longitudes coincidan con la geometría. Si algo falla, el archivo anterior se queda como estaba. Para cambiar el formato hay que subir `version` y actualizar en el mismo cambio esta sección, el script y el validador.
 
 ## Servicio de WhatsApp/LLM con el backend
 

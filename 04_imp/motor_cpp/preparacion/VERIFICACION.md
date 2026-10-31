@@ -61,8 +61,7 @@ el **mismo PBF** en preparación y CP-45/CP-46.
 
 - La lista CSV de sentidos únicos requiere comprobación presencial o una
   validación adicional de señalización vigente: OSM no acredita esa señalización.
-- El formato JSON v1 y la decisión D-33 siguen sujetos a revisión y aprobación
-  de Marcelo. La documentación de `03_des` no forma parte de este paquete.
+- La integración del contrato JSON v1 y de D-33 en `develop` queda sujeta al PR; Marcelo confirmó D-33 el 31/10/2026.
 - La carga en menos de 10 segundos, `--red` y el despliegue en Ubuntu ARM
   corresponden a T-096/T-098 y **no se certifican con estas pruebas de Python**.
 

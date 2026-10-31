@@ -77,6 +77,8 @@ class PruebasRealesTest(unittest.TestCase):
 
     def test_casos_con_poligono_original_de_tarija(self):
         self.cobertura = Path(__file__).resolve().parents[3] / "datos" / "mancha_urbana_tarija.geojson"
+        if not self.cobertura.is_file():
+            self.skipTest("El ZIP no contiene la cobertura original; prueba disponible en el repositorio completo.")
         self.preparar()
         resultado = self.verificar()
         self.assertEqual(resultado["cp45"]["tramos_en_red"], 0)
@@ -172,6 +174,32 @@ class PruebasRealesTest(unittest.TestCase):
         self.preparar()
         with self.assertRaisesRegex(ValueError, "CP-46.*no hay"):
             self.verificar()
+
+    def test_csv_sentidos_unicos_para_revision_presencial(self):
+        import csv
+        from listar_sentidos_unicos import exportar_csv
+        self.preparar()
+        ruta_csv = self.directorio / "sentidos.csv"
+        filas = exportar_csv(self.red, self.cobertura, ruta_csv)
+        self.assertTrue(ruta_csv.exists())
+        self.assertEqual(len(filas), 1)
+        self.assertEqual(filas[0]["calle"], "Calle General Trigo")
+        self.assertEqual(filas[0]["cantidad_tramos"], 1)
+        self.assertEqual(filas[0]["verificacion_senalizacion"], "PENDIENTE")
+        with ruta_csv.open(encoding="utf-8-sig", newline="") as f:
+            datos = list(csv.DictReader(f))
+        self.assertEqual(datos[0]["calle"], "Calle General Trigo")
+        self.assertEqual(datos[0]["cantidad_tramos"], "1")
+        self.assertNotIn("Calle Otra", ruta_csv.read_text(encoding="utf-8-sig"))
+
+    def test_csv_sin_sentidos_unicos_tiene_cabecera(self):
+        from listar_sentidos_unicos import exportar_csv
+        self.vias[1] = (200, (3, 4), {"highway": "residential", "name": "Calle General Trigo", "oneway": "no"})
+        self.preparar()
+        ruta_csv = self.directorio / "sentidos.csv"
+        filas = exportar_csv(self.red, self.cobertura, ruta_csv)
+        self.assertEqual(filas, [])
+        self.assertIn("calle,tipo_via,cantidad_tramos", ruta_csv.read_text(encoding="utf-8-sig"))
 
 
 if __name__ == "__main__":

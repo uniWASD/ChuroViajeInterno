@@ -9,6 +9,7 @@ import math
 import os
 from pathlib import Path
 import tempfile
+import time
 import xml.etree.ElementTree as ET
 
 from shapely.geometry import LineString, shape
@@ -54,21 +55,27 @@ class Via:
     nodos: tuple
 
 
-def es_vehicular(etiquetas):
+def motivo_descarte(etiquetas):
     highway = etiquetas.get("highway", "").strip().lower()
-    if highway not in TIPOS_VIA or etiquetas.get("area", "").lower() == "yes":
-        return False
+    if highway not in TIPOS_VIA:
+        return "tipo_highway_no_admitido"
+    if etiquetas.get("area", "").lower() == "yes":
+        return "area_no_ruteable"
     if etiquetas.get("service", "").lower() in {"parking_aisle", "driveway", "drive-through"}:
-        return False
+        return "acceso_de_servicio_excluido"
     if sentido_circulacion(etiquetas) is None:
-        return False
+        return "sentido_desconocido"
     if any(clave in etiquetas for clave in ("oneway:conditional", "oneway:motorcar:conditional",
                                            "motorcar:conditional", "motor_vehicle:conditional", "access:conditional")):
-        return False
+        return "restriccion_condicional"
     for clave in ("motorcar", "motor_vehicle", "vehicle", "access"):
         if clave in etiquetas:
-            return etiquetas[clave].strip().lower() not in ACCESOS_RESTRINGIDOS
-    return True
+            return "acceso_restringido" if etiquetas[clave].strip().lower() in ACCESOS_RESTRINGIDOS else None
+    return None
+
+
+def es_vehicular(etiquetas):
+    return motivo_descarte(etiquetas) is None
 
 
 def sentido_circulacion(etiquetas):
@@ -139,7 +146,7 @@ def intersecta_caja(nodos, limites):
     )
 
 
-def cargar_xml(ruta, limites):
+def cargar_xml(ruta, limites, diagnostico=None):
     nodos = {}
     vias = []
     metadatos = {}
@@ -171,10 +178,16 @@ def cargar_xml(ruta, limites):
                 elemento.clear()
             elif etiqueta == "way":
                 etiquetas = {h.attrib["k"]: h.attrib["v"] for h in elemento if h.tag.rsplit("}", 1)[-1] == "tag"}
-                if es_vehicular(etiquetas):
+                motivo = motivo_descarte(etiquetas)
+                if motivo is not None:
+                    if diagnostico is not None:
+                        diagnostico[motivo] += 1
+                else:
                     referencias = [int(h.attrib["ref"]) for h in elemento if h.tag.rsplit("}", 1)[-1] == "nd"]
                     if len(referencias) > 1:
                         vias.append((int(elemento.attrib["id"]), etiquetas, referencias))
+                    elif diagnostico is not None:
+                        diagnostico["sin_segmentos"] += 1
                 elemento.clear()
             elif etiqueta == "relation":
                 elemento.clear()
@@ -188,10 +201,12 @@ def cargar_xml(ruta, limites):
             raise ValueError(f"Falta el nodo {error.args[0]} de la vía OSM {identificador}; utilice un extracto con nodos completos.") from error
         if intersecta_caja(puntos, limites):
             resultado.append(Via(identificador, etiquetas, puntos))
+        elif diagnostico is not None:
+            diagnostico["fuera_de_caja"] += 1
     return resultado, metadatos.get("osmosis_replication_timestamp") or metadatos.get("timestamp")
 
 
-def cargar_pbf(ruta, limites):
+def cargar_pbf(ruta, limites, diagnostico=None):
     try:
         import osmium
     except ImportError as error:
@@ -211,18 +226,25 @@ def cargar_pbf(ruta, limites):
 
         def way(self, way):
             etiquetas = {tag.k: tag.v for tag in way.tags}
-            if not es_vehicular(etiquetas):
+            motivo = motivo_descarte(etiquetas)
+            if motivo is not None:
+                if diagnostico is not None:
+                    diagnostico[motivo] += 1
                 return
             try:
                 puntos = tuple(Vertice(f"osm:{n.ref}", float(n.location.lon), float(n.location.lat)) for n in way.nodes)
             except Exception as error:
                 raise ValueError(f"Vía OSM {way.id} con nodos incompletos; utilice un extracto con nodos completos.") from error
             if len(puntos) < 2:
+                if diagnostico is not None:
+                    diagnostico["sin_segmentos"] += 1
                 return
             if any(not coordenadas_validas(p.lon, p.lat) for p in puntos):
                 raise ValueError(f"Coordenadas inválidas en vía OSM {way.id}.")
             if intersecta_caja(puntos, limites):
                 self.vias.append(Via(int(way.id), etiquetas, puntos))
+            elif diagnostico is not None:
+                diagnostico["fuera_de_caja"] += 1
 
     recolector = Recolector()
     recolector.apply_file(str(ruta), locations=True)
@@ -304,25 +326,30 @@ def preparar_red(vias, poligono, fecha):
                 inicio = None
                 fin = None
                 return
-            geometria = [[round(x, 10), round(y, 10)] for x, y in recorrido]
-            geometria[0] = [round(inicio.lon, 10), round(inicio.lat, 10)]
-            geometria[-1] = [round(fin.lon, 10), round(fin.lat, 10)]
-            longitud = longitud_recorrido_m(geometria)
+            # Shapely y Haversine trabajan internamente en (lon, lat),
+            # mientras que el contrato JSON del motor utiliza [lat, lon].
+            puntos_lonlat = [[round(x, 10), round(y, 10)] for x, y in recorrido]
+            puntos_lonlat[0] = [round(inicio.lon, 10), round(inicio.lat, 10)]
+            puntos_lonlat[-1] = [round(fin.lon, 10), round(fin.lat, 10)]
+            longitud = longitud_recorrido_m(puntos_lonlat)
             if longitud <= 0:
                 recorrido = []
                 inicio = None
                 fin = None
                 return
             longitud = math.ceil(longitud * 1000) / 1000
-            nodos[inicio.identificador] = {"id": inicio.identificador, "lon": geometria[0][0], "lat": geometria[0][1]}
-            nodos[fin.identificador] = {"id": fin.identificador, "lon": geometria[-1][0], "lat": geometria[-1][1]}
+            nodos[inicio.identificador] = {"id": inicio.identificador, "lon": puntos_lonlat[0][0], "lat": puntos_lonlat[0][1]}
+            nodos[fin.identificador] = {"id": fin.identificador, "lon": puntos_lonlat[-1][0], "lat": puntos_lonlat[-1][1]}
+            geometria = [[lat, lon] for lon, lat in puntos_lonlat]
             numero += 1
             base = f"osm:{via.identificador}:{numero}"
             if sentido in {"ida", "ambos"}:
                 tramos.append({"id": base + ":ida", "desde": inicio.identificador, "hasta": fin.identificador,
+                               "opuesto": base + ":vuelta" if sentido == "ambos" else None,
                                "nombre": nombre, "tipo_via": tipo, "longitud_m": longitud, "geometria": geometria})
             if sentido in {"vuelta", "ambos"}:
                 tramos.append({"id": base + ":vuelta", "desde": fin.identificador, "hasta": inicio.identificador,
+                               "opuesto": base + ":ida" if sentido == "ambos" else None,
                                "nombre": nombre, "tipo_via": tipo, "longitud_m": longitud, "geometria": geometria[::-1]})
             recorrido = []
             inicio = None
@@ -351,7 +378,7 @@ def preparar_red(vias, poligono, fecha):
             "nodos": sorted(nodos.values(), key=lambda nodo: nodo["id"]), "tramos": tramos}
 
 
-def generar(ruta_osm, ruta_cobertura, ruta_salida, fecha_extracto=None):
+def generar(ruta_osm, ruta_cobertura, ruta_salida, fecha_extracto=None, diagnostico=None):
     ruta_osm = Path(ruta_osm)
     ruta_salida = Path(ruta_salida)
     if not ruta_osm.is_file():
@@ -360,9 +387,9 @@ def generar(ruta_osm, ruta_cobertura, ruta_salida, fecha_extracto=None):
         raise ValueError("La salida debe ser distinta del extracto de entrada.")
     poligono = cargar_poligono(ruta_cobertura)
     if ruta_osm.name.lower().endswith(".osm.pbf") or ruta_osm.suffix.lower() == ".pbf":
-        vias, fecha_cabecera = cargar_pbf(ruta_osm, poligono.bounds)
+        vias, fecha_cabecera = cargar_pbf(ruta_osm, poligono.bounds, diagnostico)
     elif ruta_osm.name.lower().endswith((".osm", ".osm.xml", ".xml", ".osm.gz", ".osm.bz2", ".xml.gz", ".xml.bz2")):
-        vias, fecha_cabecera = cargar_xml(ruta_osm, poligono.bounds)
+        vias, fecha_cabecera = cargar_xml(ruta_osm, poligono.bounds, diagnostico)
     else:
         raise ValueError("Formato OSM no admitido. Use .osm.pbf, .osm, .osm.xml, .osm.gz o .osm.bz2.")
     fecha = fecha_iso(fecha_extracto or fecha_cabecera)
@@ -393,12 +420,24 @@ def main():
     parser.add_argument("--salida", required=True, type=Path, help="Archivo JSON para la carga futura en C++")
     parser.add_argument("--fecha-extracto", help="Fecha ISO AAAA-MM-DD si el extracto no trae metadatos")
     args = parser.parse_args()
+    diagnostico = Counter()
+    inicio = time.perf_counter()
     try:
-        resultado = generar(args.osm, args.cobertura, args.salida, args.fecha_extracto)
+        resultado = generar(args.osm, args.cobertura, args.salida, args.fecha_extracto, diagnostico)
     except (OSError, ValueError, RuntimeError, ET.ParseError) as error:
         parser.exit(1, f"Error: {error}\n")
+    duracion = time.perf_counter() - inicio
     print(f"Red preparada: {len(resultado['nodos'])} nodos, {len(resultado['tramos'])} tramos, "
           f"extracto {resultado['fecha_extracto']}. Archivo: {args.salida}")
+    print(f"Tamaño JSON: {args.salida.stat().st_size} bytes. Tiempo de preparación y validación: {duracion:.3f} s.")
+    print(f"Tramos sin nombre: {sum(t['nombre'] == 'Sin nombre' for t in resultado['tramos'])}.")
+    for tipo in sorted(set(TIPOS_VIA.values())):
+        tramos_tipo = [t for t in resultado["tramos"] if t["tipo_via"] == tipo]
+        distancia_km = math.fsum(t["longitud_m"] for t in tramos_tipo) / 1000
+        print(f"  {tipo}: {len(tramos_tipo)} tramos dirigidos, {distancia_km:.3f} km dirigidos.")
+    print("Vías OSM descartadas (cada vía contada una vez):")
+    for motivo, cantidad in sorted(diagnostico.items()):
+        print(f"  {motivo}: {cantidad}")
 
 
 if __name__ == "__main__":

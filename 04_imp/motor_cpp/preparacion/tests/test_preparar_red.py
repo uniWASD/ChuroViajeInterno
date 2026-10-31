@@ -75,13 +75,14 @@ class PreparacionTest(unittest.TestCase):
         red = self.ejecutar()
         self.assertEqual(len(red["tramos"]), 1)
         self.assertEqual((red["tramos"][0]["desde"], red["tramos"][0]["hasta"]), ("osm:1", "osm:2"))
+        self.assertIsNone(red["tramos"][0]["opuesto"])
 
     def test_sentido_invertido_mueve_geometria(self):
         self.crear_osm({1: (.1, .1), 2: (.5, .3), 3: (.9, .1)}, [(101, [1, 2, 3], {"highway": "residential", "oneway": "-1"})])
         tramos = self.ejecutar()["tramos"]
         self.assertEqual(len(tramos), 1)
         self.assertEqual((tramos[0]["desde"], tramos[0]["hasta"]), ("osm:3", "osm:1"))
-        self.assertEqual(tramos[0]["geometria"], [[.9, .1], [.5, .3], [.1, .1]])
+        self.assertEqual(tramos[0]["geometria"], [[.1, .9], [.3, .5], [.1, .1]])
 
     def test_doble_sentido_genera_exactamente_dos_tramos(self):
         self.crear_osm({1: (.1, .1), 2: (.5, .3), 3: (.9, .1)}, [(101, [1, 2, 3], {"highway": "residential"})])
@@ -89,6 +90,8 @@ class PreparacionTest(unittest.TestCase):
         self.assertEqual((a["desde"], a["hasta"]), (b["hasta"], b["desde"]))
         self.assertEqual(a["geometria"], b["geometria"][::-1])
         self.assertEqual(a["longitud_m"], b["longitud_m"])
+        self.assertEqual(a["opuesto"], b["id"])
+        self.assertEqual(b["opuesto"], a["id"])
 
     def test_longitud_curva_es_mayor_que_linea_recta(self):
         self.crear_osm({1: (.1, .1), 2: (.5, .8), 3: (.9, .1)}, [(101, [1, 2, 3], {"highway": "secondary"})])
@@ -116,7 +119,7 @@ class PreparacionTest(unittest.TestCase):
         self.crear_osm({1: (-.5, .5), 2: (.5, .5), 3: (1.5, .5)}, [(101, [1, 2, 3], {"highway": "primary"})])
         red = self.ejecutar()
         self.assertEqual(len(red["tramos"]), 2)
-        self.assertEqual(red["tramos"][0]["geometria"], [[0, .5], [.5, .5], [1, .5]])
+        self.assertEqual(red["tramos"][0]["geometria"], [[.5, 0], [.5, .5], [.5, 1]])
         self.assertEqual(red["tramos"][0]["tipo_via"], "avenida_principal")
         self.assertEqual(len(red["nodos"]), 2)
 
@@ -128,8 +131,8 @@ class PreparacionTest(unittest.TestCase):
         red = self.ejecutar()
         self.assertEqual(len(red["tramos"]), 4)
         coordenadas = [tramo["geometria"] for tramo in red["tramos"]]
-        self.assertIn([[.1, .5], [.4, .5]], coordenadas)
-        self.assertIn([[.6, .5], [.9, .5]], coordenadas)
+        self.assertIn([[.5, .1], [.5, .4]], coordenadas)
+        self.assertIn([[.5, .6], [.5, .9]], coordenadas)
 
     def test_recorte_poligono_con_multiples_entradas(self):
         puntos = [[0, 0], [1, 0], [1, .2], [.2, .2], [.2, .8], [1, .8], [1, 1], [0, 1], [0, 0]]
@@ -326,6 +329,132 @@ class PreparacionTest(unittest.TestCase):
         poligono = cargar_poligono(original)
         self.assertTrue(poligono.is_valid)
         self.assertTrue(poligono.bounds[0] < -64.7 < poligono.bounds[2])
+
+    def test_contrato_geometria_latitud_primero_y_opuesto(self):
+        self.crear_osm({1: (-64.735, -21.534), 2: (-64.734, -21.533)}, [
+            (101, [1, 2], {"highway": "residential"})])
+        self.crear_cobertura([[[-64.74, -21.54], [-64.73, -21.54], [-64.73, -21.53], [-64.74, -21.53], [-64.74, -21.54]]])
+        a, b = self.ejecutar()["tramos"]
+        self.assertEqual(a["geometria"], [[-21.534, -64.735], [-21.533, -64.734]])
+        self.assertEqual(a["opuesto"], b["id"])
+        self.assertEqual(b["opuesto"], a["id"])
+
+    def test_validator_rechaza_opuesto_faltante_inexistente_y_autorreferido(self):
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [(101, [1, 2], {"highway": "residential"})])
+        red = self.ejecutar()
+        for cambio in (lambda x: x.pop("opuesto"), lambda x: x.__setitem__("opuesto", "osm:999:1:ida"),
+                       lambda x: x.__setitem__("opuesto", x["id"])):
+            with self.subTest(cambio=cambio):
+                dato = json.loads(json.dumps(red))
+                cambio(dato["tramos"][0])
+                self.salida.write_text(json.dumps(dato), encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "opuesto|Opuesto"):
+                    validar_red(self.salida, self.cobertura)
+
+    def test_validator_rechaza_opuestos_no_reciprocos(self):
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [(101, [1, 2], {"highway": "residential"})])
+        red = self.ejecutar()
+        red["tramos"][1]["opuesto"] = None
+        self.salida.write_text(json.dumps(red), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "recíproco"):
+            validar_red(self.salida, self.cobertura)
+
+    def test_validator_rechaza_geometria_opuesta_no_inversa(self):
+        self.crear_osm({1: (.1, .1), 2: (.5, .3), 3: (.9, .1)},
+                       [(101, [1, 2, 3], {"highway": "residential"})])
+        red = self.ejecutar()
+        red["tramos"][1]["geometria"][1] = [.300000000001, .5]
+        self.salida.write_text(json.dumps(red), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "opuesto no está invertida"):
+            validar_red(self.salida, self.cobertura)
+
+    def test_validator_rechaza_atributos_opuestos_distintos(self):
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [(101, [1, 2], {"highway": "residential"})])
+        red = self.ejecutar()
+        red["tramos"][1]["nombre"] = "Calle cambiada"
+        self.salida.write_text(json.dumps(red), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Atributos distintos"):
+            validar_red(self.salida, self.cobertura)
+
+    def test_validator_rechaza_coordenadas_json_invertidas(self):
+        self.crear_osm({1: (-64.735, -21.534), 2: (-64.734, -21.533)},
+                       [(101, [1, 2], {"highway": "residential"})])
+        self.crear_cobertura([[[-64.74, -21.54], [-64.73, -21.54], [-64.73, -21.53], [-64.74, -21.53], [-64.74, -21.54]]])
+        red = self.ejecutar()
+        for tramo in red["tramos"]:
+            tramo["geometria"] = [[lon, lat] for lat, lon in tramo["geometria"]]
+        self.salida.write_text(json.dumps(red), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Inicio de geometría"):
+            validar_red(self.salida, self.cobertura)
+
+    def test_validator_rechaza_latitud_no_geografica(self):
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [(101, [1, 2], {"highway": "residential"})])
+        red = self.ejecutar()
+        red["tramos"][0]["geometria"][0][0] = 91
+        self.salida.write_text(json.dumps(red), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "WGS84"):
+            validar_red(self.salida, self.cobertura)
+
+    def test_validator_rechaza_version_erronea(self):
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [(101, [1, 2], {"highway": "residential"})])
+        red = self.ejecutar()
+        red["version"] = 2
+        self.salida.write_text(json.dumps(red), encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "Versión"):
+            validar_red(self.salida, self.cobertura)
+
+    def test_reemplazo_atomico_resguarda_salida_al_fallar_validacion(self):
+        from unittest.mock import patch
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [(101, [1, 2], {"highway": "residential"})])
+        self.salida.write_text("salida anterior", encoding="utf-8")
+        with patch("validar_red.validar_red", side_effect=ValueError("fallo forzado")):
+            with self.assertRaisesRegex(ValueError, "fallo forzado"):
+                generar(self.osm, self.cobertura, self.salida)
+        self.assertEqual(self.salida.read_text(), "salida anterior")
+        self.assertFalse(list(self.base.glob(".red_vial_*.tmp")))
+
+    def test_diagnostico_exclusion_indica_motivos(self):
+        from preparar_red import motivo_descarte
+        ejemplos = [({"highway": "footway"}, "tipo_highway_no_admitido"),
+                    ({"highway": "residential", "access": "destination"}, "acceso_restringido"),
+                    ({"highway": "residential", "oneway": "alternating"}, "sentido_desconocido"),
+                    ({"highway": "residential", "access:conditional": "no @ (Mo-Fr)"}, "restriccion_condicional"),
+                    ({"highway": "service", "service": "parking_aisle"}, "acceso_de_servicio_excluido")]
+        for etiquetas, esperado in ejemplos:
+            with self.subTest(esperado=esperado):
+                self.assertEqual(motivo_descarte(etiquetas), esperado)
+
+    def test_diagnostico_cuenta_vias_omitidas(self):
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [
+            (101, [1, 2], {"highway": "residential"}),
+            (102, [1, 2], {"highway": "footway"}),
+            (103, [1, 2], {"highway": "service", "access": "no"}),
+        ])
+        diagnostico = Counter()
+        generar(self.osm, self.cobertura, self.salida, diagnostico=diagnostico)
+        self.assertEqual(diagnostico["tipo_highway_no_admitido"], 1)
+        self.assertEqual(diagnostico["acceso_restringido"], 1)
+
+    def test_circuito_cerrado_no_falla_validacion(self):
+        self.crear_osm({1: (.1, .1), 2: (.9, .1), 3: (.9, .9), 4: (.1, .9)}, [
+            (101, [1, 2, 3, 4, 1], {"highway": "residential", "junction": "roundabout"}),
+        ])
+        red = self.ejecutar()
+        self.assertTrue(red["tramos"])
+        self.assertTrue(any(tramo["desde"] == tramo["hasta"] for tramo in red["tramos"]))
+
+    def test_conectividad_fuerte_y_debil_con_sentido_unico(self):
+        from validar_red import diagnostico_conectividad
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [(101, [1, 2], {"highway": "residential", "oneway": "yes"})])
+        red = self.ejecutar()
+        diagnostico = diagnostico_conectividad(red)
+        self.assertEqual(diagnostico["componentes_fuertes"], 2)
+        self.assertEqual(diagnostico["mayor_fuerte"], 1)
+        self.assertEqual(diagnostico["componentes_debiles"], 1)
+        self.assertEqual(diagnostico["mayor_debil"], 2)
+        self.crear_osm({1: (.1, .1), 2: (.9, .1)}, [(101, [1, 2], {"highway": "residential"})])
+        red = self.ejecutar()
+        self.assertEqual(diagnostico_conectividad(red)["mayor_fuerte"], 2)
 
 
 if __name__ == "__main__":

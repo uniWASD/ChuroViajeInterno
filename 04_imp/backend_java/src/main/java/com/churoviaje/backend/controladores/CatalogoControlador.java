@@ -2,11 +2,11 @@ package com.churoviaje.backend.controladores;
 
 import com.churoviaje.backend.dto.CatalogosRespuesta;
 import com.churoviaje.backend.servicios.CatalogoServicio;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/** {@code GET /catalogos}: pide el JWT de un conductor como todas las rutas de la app (RNF-08). */
 @RestController
 @RequestMapping("/catalogos")
 public class CatalogoControlador {
@@ -18,7 +18,7 @@ public class CatalogoControlador {
     }
 
     @GetMapping
-    public ResponseEntity<CatalogosRespuesta> obtenerCatalogos() {
-        return ResponseEntity.ok(catalogoServicio.obtenerCatalogos());
+    public CatalogosRespuesta obtenerCatalogos() {
+        return catalogoServicio.obtenerCatalogos();
     }
 }

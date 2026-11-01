@@ -9,7 +9,7 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | Dato | Dónde vive | Cuánto dura | Fuente |
 | --- | --- | --- | --- |
 | Conductores | PostgreSQL | Mientras exista la cuenta | CU-08 |
-| Tokens de renovación de sesión | PostgreSQL | 30 días | [P-05](08_decisiones_parametros.md) |
+| Tokens de renovación de sesión | PostgreSQL, solo su SHA-256 ([D-34](08_decisiones_parametros.md)) | 30 días | [P-05](08_decisiones_parametros.md) |
 | Catálogos: tipos de evento, tipos de combustible, surtidores y sus alias | PostgreSQL | Permanente | CU-02, CU-05, CU-06 |
 | Eventos viales y sus votos | PostgreSQL, con la ubicación en PostGIS | Mientras están vigentes, y 30 días más | [P-21](08_decisiones_parametros.md) |
 | Estado de combustible | PostgreSQL | El último dato por surtidor, tipo y origen | CU-05 |
@@ -31,7 +31,7 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | Tabla | Columnas principales | Objeto de dominio |
 | --- | --- | --- |
 | `conductor` | Identificador, identificador de Google, fecha de alta, simulado | Conductor |
-| `sesion` | Conductor, token de renovación, emisión, expiración | Sesión |
+| `sesion` | Conductor, SHA-256 del token de renovación (único), emisión, expiración | Sesión |
 | `tipo_evento` | Código, nombre, color, vigencia en minutos, reportable | TipoEvento |
 | `evento_vial` | Identificador, tipo, ubicación, momento en que ocurrió, momento de registro, reportante, origen, nivel (solo congestión), estado, votos «real», votos «falso», simulado | EventoVial, Ubicación |
 | `voto` | Evento, conductor, valor, fecha, simulado | Voto |
@@ -47,9 +47,10 @@ Las columnas `litros`, `estado_anh` y `consultado_en` solo se llenan cuando el o
 
 ## Lo que la base de datos asegura por su cuenta
 
-Las reglas las aplican los objetos de dominio. La base de datos repite seis de ellas como segunda barrera, por si dos peticiones llegan a la vez:
+Las reglas las aplican los objetos de dominio. La base de datos repite siete de ellas como segunda barrera, por si dos peticiones llegan a la vez:
 
 - Un solo conductor por cuenta de Google ([RN-08.4](04_reglas/CU-08_IniciarSesion.md)).
+- Un token de renovación pertenece a una sola sesión, y al borrar un conductor se borran sus sesiones ([RN-08.14](04_reglas/CU-08_IniciarSesion.md)).
 - Un solo voto por conductor y evento ([RN-02.11](04_reglas/CU-02_VisualizarEventosViales.md)).
 - Un solo estado por surtidor, tipo de combustible y origen ([RN-05.3](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
 - Todo evento, voto y estado apunta a un tipo, un surtidor o un conductor que existe.

@@ -1,0 +1,229 @@
+{
+  "version": 1,
+  "fuente": "OpenStreetMap",
+  "fecha_extracto": "2026-10-28",
+  "nodos": [
+    {
+      "id": "osm:9001",
+      "lat": -21.536,
+      "lon": -64.7301
+    },
+    {
+      "id": "osm:9002",
+      "lat": -21.536,
+      "lon": -64.7291
+    },
+    {
+      "id": "osm:9003",
+      "lat": -21.535,
+      "lon": -64.7291
+    },
+    {
+      "id": "osm:9004",
+      "lat": -21.535,
+      "lon": -64.7301
+    },
+    {
+      "id": "osm:9005",
+      "lat": -21.536,
+      "lon": -64.732
+    },
+    {
+      "id": "osm:9006",
+      "lat": -21.534,
+      "lon": -64.7291
+    }
+  ],
+  "tramos": [
+    {
+      "id": "osm:7001:1:ida",
+      "desde": "osm:9001",
+      "hasta": "osm:9002",
+      "opuesto": "osm:7001:1:vuelta",
+      "nombre": "Calle Sur de la plaza",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 103.433,
+      "geometria": [
+        [
+          -21.536,
+          -64.7301
+        ],
+        [
+          -21.536,
+          -64.7291
+        ]
+      ]
+    },
+    {
+      "id": "osm:7001:1:vuelta",
+      "desde": "osm:9002",
+      "hasta": "osm:9001",
+      "opuesto": "osm:7001:1:ida",
+      "nombre": "Calle Sur de la plaza",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 103.433,
+      "geometria": [
+        [
+          -21.536,
+          -64.7291
+        ],
+        [
+          -21.536,
+          -64.7301
+        ]
+      ]
+    },
+    {
+      "id": "osm:7002:1:ida",
+      "desde": "osm:9002",
+      "hasta": "osm:9003",
+      "opuesto": "osm:7002:1:vuelta",
+      "nombre": "Calle Este de la plaza",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 111.196,
+      "geometria": [
+        [
+          -21.536,
+          -64.7291
+        ],
+        [
+          -21.535,
+          -64.7291
+        ]
+      ]
+    },
+    {
+      "id": "osm:7002:1:vuelta",
+      "desde": "osm:9003",
+      "hasta": "osm:9002",
+      "opuesto": "osm:7002:1:ida",
+      "nombre": "Calle Este de la plaza",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 111.196,
+      "geometria": [
+        [
+          -21.535,
+          -64.7291
+        ],
+        [
+          -21.536,
+          -64.7291
+        ]
+      ]
+    },
+    {
+      "id": "osm:7003:1:ida",
+      "desde": "osm:9003",
+      "hasta": "osm:9004",
+      "opuesto": "osm:7003:1:vuelta",
+      "nombre": "Calle Norte de la plaza",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 103.433,
+      "geometria": [
+        [
+          -21.535,
+          -64.7291
+        ],
+        [
+          -21.535,
+          -64.7301
+        ]
+      ]
+    },
+    {
+      "id": "osm:7003:1:vuelta",
+      "desde": "osm:9004",
+      "hasta": "osm:9003",
+      "opuesto": "osm:7003:1:ida",
+      "nombre": "Calle Norte de la plaza",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 103.433,
+      "geometria": [
+        [
+          -21.535,
+          -64.7301
+        ],
+        [
+          -21.535,
+          -64.7291
+        ]
+      ]
+    },
+    {
+      "id": "osm:7004:1:ida",
+      "desde": "osm:9004",
+      "hasta": "osm:9001",
+      "opuesto": "osm:7004:1:vuelta",
+      "nombre": "Calle Oeste de la plaza",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 111.196,
+      "geometria": [
+        [
+          -21.535,
+          -64.7301
+        ],
+        [
+          -21.536,
+          -64.7301
+        ]
+      ]
+    },
+    {
+      "id": "osm:7004:1:vuelta",
+      "desde": "osm:9001",
+      "hasta": "osm:9004",
+      "opuesto": "osm:7004:1:ida",
+      "nombre": "Calle Oeste de la plaza",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 111.196,
+      "geometria": [
+        [
+          -21.536,
+          -64.7301
+        ],
+        [
+          -21.535,
+          -64.7301
+        ]
+      ]
+    },
+    {
+      "id": "osm:7005:1:ida",
+      "desde": "osm:9005",
+      "hasta": "osm:9001",
+      "opuesto": null,
+      "nombre": "Avenida de un solo sentido",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 196.522,
+      "geometria": [
+        [
+          -21.536,
+          -64.732
+        ],
+        [
+          -21.536,
+          -64.7301
+        ]
+      ]
+    },
+    {
+      "id": "osm:7006:1:ida",
+      "desde": "osm:9003",
+      "hasta": "osm:9006",
+      "opuesto": null,
+      "nombre": "Calle de un solo sentido al norte",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 111.196,
+      "geometria": [
+        [
+          -21.535,
+          -64.7291
+        ],
+        [
+          -21.534,
+          -64.7291
+        ]
+      ]
+    }
+  ]
+}

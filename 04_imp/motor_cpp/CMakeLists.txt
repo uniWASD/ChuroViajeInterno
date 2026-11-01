@@ -33,7 +33,8 @@ endif()
 # --- Biblioteca del núcleo (la reutilizan el ejecutable y las pruebas) ---
 add_library(nucleo STATIC
   src/nucleo.cpp
-  src/bucle.cpp)
+  src/bucle.cpp
+  src/red_vial.cpp)
 target_include_directories(nucleo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(nucleo PUBLIC nlohmann_json::nlohmann_json)
 
@@ -55,8 +56,12 @@ if(BUILD_TESTING)
   endif()
   include(GoogleTest)
 
-  add_executable(pruebas_nucleo tests/test_nucleo.cpp tests/test_bucle.cpp)
+  add_executable(pruebas_nucleo tests/test_nucleo.cpp tests/test_bucle.cpp tests/test_red_vial.cpp)
   target_link_libraries(pruebas_nucleo PRIVATE nucleo GTest::gtest_main)
+  # Archivos de datos de las pruebas (red pequeña hecha a mano y el ejemplo del formato)
+  target_compile_definitions(pruebas_nucleo PRIVATE
+    RED_PRUEBA_PLAZA="${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_prueba_plaza.json"
+    RED_EJEMPLO_FORMATO="${CMAKE_CURRENT_SOURCE_DIR}/preparacion/ejemplos/red_vial_ejemplo.json")
   gtest_discover_tests(pruebas_nucleo)
 
   # Prueba de extremo a extremo: el script arranca el ejecutable real por pipe, como el wrapper.
@@ -65,6 +70,11 @@ if(BUILD_TESTING)
     add_test(NAME pipe_extremo_a_extremo
       COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/enviar_mensajes.py
               --nucleo $<TARGET_FILE:motor_nucleo> --verificar)
+    # Lo mismo, pero con una red vial: consultar_estado debe decir que está cargada.
+    add_test(NAME pipe_con_red_vial
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/enviar_mensajes.py
+              --nucleo $<TARGET_FILE:motor_nucleo> --verificar
+              --red ${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_prueba_plaza.json --esperar-nodos 6)
   endif()
 
   # Un solo comando que compila y corre todo:  cmake --build build --target pruebas

@@ -2,7 +2,17 @@
 
 Programa que mantiene la red vial y calcula rutas ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). No tiene servidor web ni abre puertos: el backend lo arranca como proceso hijo a través del wrapper Java `MotorDeRutas` y le habla por pipe. El contrato completo está en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#backend-con-el-motor-core).
 
-**Estado (T-090, issue #42):** estructura y protocolo. `consultar_estado` responde de verdad; las otras cuatro operaciones responden «no implementada» hasta que lleguen sus issues. La red vial todavía no se carga (issue T-111), así que `consultar_estado` informa `"red_cargada":false`.
+**Estado (T-090 y T-096):** estructura, protocolo y carga de la red vial. `consultar_estado` responde de verdad, con la red vial que se le pasa al arrancar; las otras cuatro operaciones responden «no implementada» hasta que lleguen sus issues.
+
+## Arranque y red vial
+
+```
+motor_nucleo --red <archivo>
+```
+
+`--red` es la ruta del archivo JSON que arma el script de `preparacion/` (formato en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#archivo-de-la-red-vial)). El núcleo lo carga completo antes de atender la primera petición, así que la primera respuesta puede demorar unos segundos. Si el archivo falta, no es JSON, tiene otra versión o rompe una regla del formato, el núcleo lo anota en la salida de errores y arranca igual **sin red**: `consultar_estado` responde `"red_cargada":false` y el wrapper no lo da por listo. Sin `--red` pasa lo mismo, sin mensaje. Un argumento desconocido termina el programa con código 2.
+
+`RedVial::ajustar(lat, lon)` devuelve la intersección más cercana a un punto, o nada si no hay ninguna a menos de 100 m (RN-03.4, P-23); usa una grilla con celdas de 100 m.
 
 ## Protocolo
 
@@ -16,8 +26,10 @@ Operaciones del contrato: `consultar_estado`, `calcular_ruta`, `revisar_ruta`, `
 
 ```json
 {"id":1,"operacion":"consultar_estado"}
-{"id":1,"ok":true,"red_cargada":false,"fecha_extracto":null}
+{"id":1,"ok":true,"red_cargada":false,"fecha_extracto":null,"nodos":0,"tramos":0}
 ```
+
+Con la red cargada: `{"id":1,"ok":true,"red_cargada":true,"fecha_extracto":"2026-10-28","nodos":6,"tramos":10}`.
 
 ### Respuestas con `"ok":false`
 
@@ -83,6 +95,7 @@ Para una conversación completa, el script arranca el núcleo por pipe como lo h
 ```
 python scripts/enviar_mensajes.py --nucleo build/motor_nucleo
 python scripts/enviar_mensajes.py --nucleo build/motor_nucleo -m '{"id":1,"operacion":"consultar_estado"}'
+python scripts/enviar_mensajes.py --nucleo build/motor_nucleo --red tests/datos/red_prueba_plaza.json --verificar --esperar-nodos 6
 ```
 
 Para escribir mensajes a mano uno por uno, ejecuta `./build/motor_nucleo` y escribe en la terminal; `Ctrl+D` (Linux) o `Ctrl+Z` y Enter (Windows) cierra la entrada y el núcleo termina.
@@ -93,8 +106,10 @@ Para escribir mensajes a mano uno por uno, ejecuta `./build/motor_nucleo` y escr
 | --- | --- |
 | `src/nucleo.hpp/.cpp` | `Nucleo::atender`: una línea de JSON entra, una respuesta sale; validación y despacho por `operacion` |
 | `src/bucle.hpp/.cpp` | Bucle de lectura y escritura; separa respuestas (salida estándar) de registros (salida de errores) |
-| `src/main.cpp` | Punto de entrada que arranca el wrapper |
-| `tests/` | Pruebas de GoogleTest |
+| `src/red_vial.hpp/.cpp` | `RedVial`: carga y validación del archivo, tramos, índice espacial y `ajustar` |
+| `src/main.cpp` | Punto de entrada que arranca el wrapper (`--red <archivo>`) |
+| `tests/` | Pruebas de GoogleTest (`test_red_vial.cpp`: CP-47, rechazos del formato y tiempo de carga) |
+| `tests/datos/red_prueba_plaza.json` | Red pequeña hecha a mano alrededor de la plaza Luis de Fuentes (6 nodos, 10 tramos); pasa `preparacion/validar_red.py` |
 | `scripts/enviar_mensajes.py` | Mensajes de prueba por pipe |
 
 Las operaciones nuevas se agregan en `Nucleo::atender` (`src/nucleo.cpp`): quitar el nombre de `kOperacionesPendientes` y añadir su rama junto a `consultar_estado`.

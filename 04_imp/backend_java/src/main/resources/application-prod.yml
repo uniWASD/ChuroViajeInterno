@@ -7,9 +7,12 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
-
 springdoc:
   api-docs:
     enabled: false
   swagger-ui:
     enabled: false
+churoviaje:
+  cobertura:
+    ruta: ${CHUROVIAJE_GEOJSON_PATH}
+    permitir-provisional: false

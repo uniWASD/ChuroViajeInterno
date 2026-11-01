@@ -9,7 +9,7 @@ PowerShell facilitada por el ejecutor**; no se incluyen en Git ni el PBF
 original, ni el JSON generado, ni los archivos CSV de trabajo.
 
 **Entorno informado:** Windows, Python 3.13.6, Shapely 2.2.0,
-pyosmium 4.3.2 y pytest 9.2.0. **Fecha del extracto:** 2026-10-29.
+pyosmium 4.3.2 y pytest 9.2.0. **Fecha del extracto informada:** 2026-10-29 (pendiente de contrastar con el PBF utilizado y con `fecha_extracto` del JSON real; ninguno de esos archivos acompaña esta entrega).
 
 | Comprobación | Resultado observado |
 | --- | --- |
@@ -36,6 +36,28 @@ De los 8.908 nodos, 8.813 pertenecen a la mayor componente fuertemente
 conexa (98,93 %). La validación informó **23 componentes fuertemente conexas**
 y **20 componentes débilmente conexas**; esos valores son informativos y no
 constituyen automáticamente errores. Los tramos con nombre ausente son 10.814.
+
+### Tramos sin nombre por tipo de vía
+
+El resultado general comunicado es de **10.814 tramos dirigidos sin nombre**.
+Los totales por clase proceden de la misma salida informada. El desglose de
+`nombre == "Sin nombre"` por `tipo_via` **no figura en esa salida** y no es
+posible calcularlo sin el JSON real de la ejecución; «—» significa **dato
+pendiente de verificar**, no cero.
+
+| `tipo_via` | Tramos sin nombre | Total de tramos dirigidos |
+| --- | ---: | ---: |
+| `via_rapida` | — | 499 |
+| `avenida_principal` | — | 3.855 |
+| `zona_residencial` | — | 18.839 |
+| **Total** | **10.814 (informado)** | **23.193** |
+
+Para completar las tres celdas pendientes se debe contar, en el **mismo**
+`red_vial_tarija.json` utilizado en esta verificación, los tramos cuyo
+`nombre` sea exactamente `"Sin nombre"`, agrupados por `tipo_via`.
+La suma debe ser 10.814 y los totales por tipo 499, 3.855 y 18.839.
+Hasta obtener el desglose, no se puede determinar cuántas avenidas carecen
+de nombre ni evaluar si requieren una revisión especial.
 
 ## Pruebas funcionales
 

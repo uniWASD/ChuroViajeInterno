@@ -1,18 +1,18 @@
 package com.churoviaje.backend.config;
 
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.churoviaje.backend.errores.RespuestaRechazo;
+import com.churoviaje.backend.seguridad.JwtFiltro;
+import com.churoviaje.backend.seguridad.JwtServicio;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
@@ -24,20 +24,14 @@ public class SecurityConfig {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * RN-08.11 y D-13: todas las rutas piden el JWT de un conductor, salvo {@code /sesion/*}, que no
+     * necesitan nada, y {@code /monitoreo/*}, que piden la credencial de servicio. El JwtFiltro no es un
+     * bean a proposito: asi vive solo dentro de esta cadena y no se registra dos veces.
+     */
     @Bean
-    @Profile("dev")
-    @Order(1)
-    public SecurityFilterChain h2SecurityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .securityMatcher(PathRequest.toH2Console())
-            .csrf(csrf -> csrf.disable())
-            .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
-            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-        return http.build();
-    }
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtServicio jwtServicio,
+            PropiedadesSeguridad propiedades) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -45,11 +39,14 @@ public class SecurityConfig {
                 .authenticationEntryPoint(manejador401())
                 .accessDeniedHandler(manejador403())
             )
+            .addFilterBefore(new JwtFiltro(jwtServicio, propiedades), UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
-                // TODO HU-10 (#46): exigir JWT
-                .anyRequest().permitAll()
+                // /sesion/prueba (CU-07) se habilita con su propio issue.
+                .requestMatchers("/sesion/google", "/sesion/renovar", "/sesion/cerrar").permitAll()
+                .requestMatchers("/monitoreo/**").hasRole("SERVICIO")
+                .anyRequest().hasRole("CONDUCTOR")
             );
         return http.build();
     }

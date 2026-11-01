@@ -1,24 +1,29 @@
 package com.churoviaje.backend;
 
+import com.churoviaje.backend.config.PruebaIntegracionPostgis;
+import com.churoviaje.backend.seguridad.JwtServicio;
+import java.time.Instant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-@ActiveProfiles("pruebas")
-class ManejadorGlobalErroresTest {
+class ManejadorGlobalErroresTest extends PruebaIntegracionPostgis {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private JwtServicio jwtServicio;
+
+    /** Desde HU-10 todas las rutas de conductor piden JWT (RN-08.11). */
+    private String autorizacion() {
+        return "Bearer " + jwtServicio.emitir(1L, Instant.now());
+    }
 
     @Test
     @DisplayName("CP-21: Una petición con un cuerpo mal formado responde 400 con {codigo, mensaje} en español")
@@ -26,6 +31,7 @@ class ManejadorGlobalErroresTest {
         String jsonMalFormado = "{ \"tipo\": \"ACCIDENTE\", \"ubicacion\": ";
 
         mockMvc.perform(post("/eventos")
+                .header("Authorization", autorizacion())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonMalFormado))
                 .andExpect(status().isBadRequest())
@@ -49,6 +55,7 @@ class ManejadorGlobalErroresTest {
             """;
 
         mockMvc.perform(post("/eventos")
+                .header("Authorization", autorizacion())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonValido))
                 .andExpect(status().isCreated());

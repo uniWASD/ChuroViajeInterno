@@ -420,7 +420,7 @@ public class MotorDeRutas {
                         if (salida) {
                             lineas.add(linea);
                         } else {
-                            LOG_NUCLEO.warn("[nucleo] {}", linea);
+                            LOG_NUCLEO.warn("{}", linea);
                         }
                     }
                 } catch (IOException ignorada) {

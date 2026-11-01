@@ -90,7 +90,7 @@ La congestión no es un objeto aparte. Cuando el motor core la detecta por telem
 | Distancia máxima para vincular una estación de ANH con un surtidor | La fija [P-31](08_decisiones_parametros.md) con la tarea T-118 | CU-09, decisión [D-30](08_decisiones_parametros.md) |
 | Espera y reintentos de la consulta a ANH | 12 segundos por petición, 1 reintento y 1 segundo entre peticiones | [P-32](08_decisiones_parametros.md) |
 | Consulta de eventos desde la app | Cada 5 segundos | CU-02, sección 8 |
-| Red vial | Extracto de OpenStreetMap de la mancha urbana de Tarija, solo con vías vehiculares | Decisión [D-08](08_decisiones_parametros.md) |
+| Red vial | Extracto de OpenStreetMap de la mancha urbana de Tarija, solo con vías vehiculares | Decisión [D-08](08_decisiones_parametros.md) y [formato del archivo](05_contratos.md#archivo-de-la-red-vial) |
 | Niveles de tráfico de un tramo | Fluido, moderado, congestionado y muy congestionado, con costo multiplicado por 1,0, 1,5, 2,5 y 4,0 | Prototipo de `05_pro/PruebaCalculoRuta`, a ajustar con pruebas |
 | Velocidad esperada por tipo de vía | Vías rápidas, 50 a 60 km/h. Avenidas principales, 35 a 45 km/h. Zonas residenciales, 15 a 25 km/h | `05_pro/CalculoVelocidad` |
 

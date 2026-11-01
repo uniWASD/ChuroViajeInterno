@@ -40,6 +40,7 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | D-30 | Cada estación de ANH se vincula a un surtidor del catálogo por su identificador. Las estaciones que no están en el catálogo o que caen fuera de la mancha urbana se ignoran | ANH devuelve todo el departamento: en la prueba llegaron 31 estaciones, también de Bermejo y Yacuiba | Propuesta |
 | D-31 | Un saldo de 0 litros es agotado, uno mayor que 0 es disponible y sin saldo es sin dato. Se guardan los litros y el estado de ANH (alto, medio o bajo) tal como llegan, y el estado no se convierte en agotado | El estado «bajo» no tiene un umbral definido: en la prueba, 37 litros y 0 litros salieron los dos como «bajo». Convertirlo en agotado perdería información | Propuesta |
 | D-32 | Si ANH falla, el surtidor conserva el último dato de ANH con su fecha; un fallo nunca se convierte en cero litros, y el dato vence por vigencia | Que ANH no responda no significa que no haya combustible | Propuesta |
+| D-33 | La red vial llega al núcleo como un archivo JSON (versión 1) que arma un script de Python a partir del extracto de OpenStreetMap y que se guarda fuera del repositorio. El formato está en [05_contratos.md](05_contratos.md#archivo-de-la-red-vial) | El núcleo ya lee JSON, el archivo se puede abrir y revisar a mano, y el script lo valida antes de reemplazar el anterior. Un formato binario propio solo se justificaría si la carga no cumple los 10 segundos de T-096 | Confirmada el 31/10/2026 |
 
 ## Parámetros
 

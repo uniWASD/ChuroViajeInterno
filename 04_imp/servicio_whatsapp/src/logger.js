@@ -1,8 +1,10 @@
 /** Lista blanca estricta: jamás registrar cuerpos, remitentes, grupo ni credenciales. */
 const EVENTS = new Set(['SERVICIO_INICIADO','SERVICIO_DETENIDO','MANTENIMIENTO',
-  'ERROR_CONFIGURACION','ERROR_SQLITE','ERROR_MANTENIMIENTO','ERROR_INESPERADO']);
+  'ERROR_CONFIGURACION','ERROR_SQLITE','ERROR_MANTENIMIENTO','ERROR_INESPERADO',
+  'WHATSAPP_CONECTADO','WHATSAPP_DESCONECTADO','WHATSAPP_REINTENTO',
+  'WHATSAPP_SESION_CERRADA','WHATSAPP_CUENTA_INVALIDA','ERROR_LECTURA_WHATSAPP']);
 const METRICS = new Set(['caducados','pendientes','depurados']);
-const CODES = new Set(['CONFIG_INVALIDA','ESQUEMA_NO_PERMITIDO','SERVICIO_CERRADO','ERR_SQLITE_ERROR','ERR_SQLITE_CANTOPEN']);
+const CODES = new Set(['CONFIG_INVALIDA','AUTORIZACION_INVALIDA','SESION_INVALIDA','ESQUEMA_NO_PERMITIDO','SERVICIO_CERRADO','ERR_SQLITE_ERROR','ERR_SQLITE_CANTOPEN']);
 const SYSTEM_CODE = /^E[A-Z0-9]+$/;
 // Los únicos detalles registrables son frases fijas del código; nada externo.
 const DETAILS = new Set([
@@ -18,7 +20,15 @@ const DETAILS = new Set([
   'El servicio está cerrado.',
   'POLL_INTERVAL_MS fue reemplazado por MAINTENANCE_INTERVAL_MS.',
   'Falta BACKEND_URL.', 'Falta SERVICE_TOKEN.', 'Falta ALLOWED_GROUP_IDS.',
-  'Falta SERVICE_AUTH_HEADER.', 'Falta SQLITE_PATH.'
+  'Falta SERVICE_AUTH_HEADER.', 'Falta SQLITE_PATH.',
+  'WHATSAPP_ENABLED debe ser true o false.', 'WHATSAPP_PHONE_NUMBER inválido.',
+  'Falta WHATSAPP_SESSION_PATH.', 'WHATSAPP_AUTHORIZATIONS_FILE debe ser una ruta absoluta.',
+  'WHATSAPP_RECONNECT_MS inválido.', 'WHATSAPP_SESSION_PATH no puede ser temporal.',
+  'Falta configurar la cuenta, sesión o autorizaciones de WhatsApp.',
+  'La sesión y los mensajes requieren archivos independientes.',
+  'El registro externo de autorizaciones es inválido o incompleto.',
+  'La sesión debe persistirse en un archivo privado.',
+  'El directorio de sesión debe ser privado.'
 ]);
 export function createLogger(write = line => process.stdout.write(`${line}\n`)) {
   return Object.freeze({

@@ -18,7 +18,12 @@ try {
   if (config.whatsappEnabled) {
     phase = 'whatsapp';
     const adapters = await createBaileysAdapters();
-    reader = new WhatsappReader(config, service, {...adapters, logger});
+    // Si la lectura termina sola (sesión revocada o cuenta equivocada), el proceso sale con error:
+    // un servicio vivo que no lee nada pasaría desapercibido.
+    reader = new WhatsappReader(config, service, {...adapters, logger, onTerminal: () => {
+      process.exitCode = 1;
+      service.stop();
+    }});
     await reader.start();
   }
 } catch (error) {

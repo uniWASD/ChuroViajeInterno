@@ -4,7 +4,8 @@ import {ErrorServicio} from './errors.js';
 
 export class WhatsappReader {
   constructor(config, service, {makeSocket, makeAuth, showQR = () => {}, clock = Date.now,
-    schedule = setTimeout, unschedule = clearTimeout, logger = service.logger, loggedOutCode = 401} = {}) {
+    schedule = setTimeout, unschedule = clearTimeout, logger = service.logger, loggedOutCode = 401,
+    onTerminal = () => {}} = {}) {
     if (typeof makeSocket !== 'function' || typeof makeAuth !== 'function') throw new TypeError('Faltan adaptadores de WhatsApp.');
     this.config = config;
     this.service = service;
@@ -16,6 +17,9 @@ export class WhatsappReader {
     this.unschedule = unschedule;
     this.logger = logger;
     this.loggedOutCode = loggedOutCode;
+    // Se avisa cuando la lectura se detiene sin que nadie lo pida (sesión cerrada o cuenta equivocada),
+    // para que el proceso no quede vivo sin leer nada.
+    this.onTerminal = onTerminal;
     this.socket = null;
     this.auth = null;
     this.timer = null;
@@ -71,6 +75,7 @@ export class WhatsappReader {
           if (!numbers.length || numbers.some(number => number !== this.config.whatsappPhoneNumber)) {
             this.logger.event('WHATSAPP_CUENTA_INVALIDA');
             this.stop();
+            this.onTerminal();
             return;
           }
           this.connected = true;
@@ -94,7 +99,7 @@ export class WhatsappReader {
     this.socket?.ws?.close?.();
     this.socket = null;
     this.logger.event(terminal ? 'WHATSAPP_SESION_CERRADA' : 'WHATSAPP_DESCONECTADO');
-    if (terminal) { this.stop(); return; }
+    if (terminal) { this.stop(); this.onTerminal(); return; }
     this.timer = this.schedule(() => {
       this.timer = null;
       this.logger.event('WHATSAPP_REINTENTO');

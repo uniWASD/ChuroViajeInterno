@@ -58,6 +58,7 @@ function fakeHarness(options = {}) {
   const sockets = [];
   const timers = new Map();
   let counter = 0;
+  const state = {terminals: 0};
   const makeSocket = async () => {
     const ev = new EventEmitter();
     const socket = {ev, user: {id: `${PHONE}:7@s.whatsapp.net`}, ws: {close() { socket.closed = true; }}};
@@ -69,10 +70,12 @@ function fakeHarness(options = {}) {
   const reader = new WhatsappReader(config, {store, ingestText: x => store.savePending(x)}, {
     makeAuth: async () => auth, makeSocket,
     logger: {event: e => events.push(e)}, clock: () => NOW,
+    onTerminal: () => { state.terminals++; },
     schedule: (fn, delay) => { const id = ++counter; timers.set(id, {fn, delay}); return id; },
     unschedule: id => timers.delete(id), showQR: () => events.push('QR')
   });
   return {reader, config, store, sockets, timers, events, env, auth,
+    get terminals() {return state.terminals;},
     stop() {reader.stop();store.close();env.clean();}};
 }
 
@@ -141,6 +144,7 @@ test('cierre de sesión 401 no provoca reconexiones infinitas', async () => {
     assert.equal(h.timers.size, 0);
     assert.equal(h.events.includes('WHATSAPP_SESION_CERRADA'), true);
     assert.equal(h.auth.closed, true);
+    assert.equal(h.terminals, 1, 'avisa que la lectura terminó para que el proceso salga con error');
   } finally {h.stop();}
 });
 
@@ -153,6 +157,7 @@ test('cuenta distinta del número dedicado bloquea lectura y cancela el cliente'
     h.sockets[0].ev.emit('messages.upsert', {type: 'notify', messages: [sample('text')]});
     assert.equal(h.store.countPending(), 0);
     assert.equal(h.events.includes('WHATSAPP_CUENTA_INVALIDA'), true);
+    assert.equal(h.terminals, 1);
   } finally {h.stop();}
 });
 

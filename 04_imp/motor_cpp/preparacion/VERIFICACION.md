@@ -9,7 +9,7 @@ PowerShell facilitada por el ejecutor**; no se incluyen en Git ni el PBF
 original, ni el JSON generado, ni los archivos CSV de trabajo.
 
 **Entorno informado:** Windows, Python 3.13.6, Shapely 2.2.0,
-pyosmium 4.3.2 y pytest 9.2.0. **Fecha del extracto informada:** 2026-10-29 (pendiente de contrastar con el PBF utilizado y con `fecha_extracto` del JSON real; ninguno de esos archivos acompaña esta entrega).
+pyosmium 4.3.2 y pytest 9.2.0. **Fecha del extracto confirmada:** 2026-10-29 (se contrastaron la fecha de cabecera del PBF aportado y `fecha_extracto` del JSON aportado).
 
 | Comprobación | Resultado observado |
 | --- | --- |
@@ -39,25 +39,16 @@ constituyen automáticamente errores. Los tramos con nombre ausente son 10.814.
 
 ### Tramos sin nombre por tipo de vía
 
-El resultado general comunicado es de **10.814 tramos dirigidos sin nombre**.
-Los totales por clase proceden de la misma salida informada. El desglose de
-`nombre == "Sin nombre"` por `tipo_via` **no figura en esa salida** y no es
-posible calcularlo sin el JSON real de la ejecución; «—» significa **dato
-pendiente de verificar**, no cero.
+Recuento del JSON aportado: tramos dirigidos cuyo campo `nombre` es exactamente `"Sin nombre"`, agrupados por `tipo_via`.
 
 | `tipo_via` | Tramos sin nombre | Total de tramos dirigidos |
 | --- | ---: | ---: |
-| `via_rapida` | — | 499 |
-| `avenida_principal` | — | 3.855 |
-| `zona_residencial` | — | 18.839 |
-| **Total** | **10.814 (informado)** | **23.193** |
+| `via_rapida` | 40 | 499 |
+| `avenida_principal` | 613 | 3.855 |
+| `zona_residencial` | 10.161 | 18.839 |
+| **Total** | **10.814** | **23.193** |
 
-Para completar las tres celdas pendientes se debe contar, en el **mismo**
-`red_vial_tarija.json` utilizado en esta verificación, los tramos cuyo
-`nombre` sea exactamente `"Sin nombre"`, agrupados por `tipo_via`.
-La suma debe ser 10.814 y los totales por tipo 499, 3.855 y 18.839.
-Hasta obtener el desglose, no se puede determinar cuántas avenidas carecen
-de nombre ni evaluar si requieren una revisión especial.
+Las avenidas principales sin nombre suman **613** tramos dirigidos de 3.855. Esto permite priorizar su revisión en OSM, sin acreditar la señalización real.
 
 ## Pruebas funcionales
 

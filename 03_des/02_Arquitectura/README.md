@@ -9,13 +9,13 @@ Esta carpeta es la versión oficial del documento de arquitectura (revisión del
 | Archivo | Qué contiene | Lo consulta sobre todo |
 | --- | --- | --- |
 | [01_vision_general.md](01_vision_general.md) | Metas, restricciones, componentes, despliegue y comunicación | Todo el equipo |
-| [02_mvc.md](02_mvc.md) | Qué es vista, controlador y modelo, reglas de reparto y vistas de la app | Todo el equipo, Flutter |
+| [02_mvc.md](02_mvc.md) | Qué es vista, controlador y modelo, capas del backend, reglas de reparto y vistas de la app | Todo el equipo, Flutter |
 | [03_modelo_dominio.md](03_modelo_dominio.md) | Los 20 objetos de dominio, sus estados, catálogos y valores | Java, C++ |
 | [04_reglas/](04_reglas/README.md) | Las 154 reglas de negocio y el recorrido de cada caso de uso, un archivo por CU | Cada uno, según su CU |
 | [05_contratos.md](05_contratos.md) | API de la app, wrapper del motor core y sus mensajes por pipe, servicio de WhatsApp/LLM, consulta del backend a la API de ANH y códigos de rechazo | Flutter, Java, C++, LLM |
-| [06_base_de_datos.md](06_base_de_datos.md) | Qué se guarda y cuánto tiempo, tablas e integridad | Java, simulador |
+| [06_base_de_datos.md](06_base_de_datos.md) | Qué se guarda y cuánto tiempo, tablas, integridad y cómo accede el backend | Java, simulador |
 | [07_seguridad_privacidad.md](07_seguridad_privacidad.md) | Accesos, defensa contra el abuso, privacidad y servidor | Java, LLM |
-| [08_decisiones_parametros.md](08_decisiones_parametros.md) | Decisiones D-01 a D-32 y parámetros P-01 a P-32 | Todo el equipo |
+| [08_decisiones_parametros.md](08_decisiones_parametros.md) | Decisiones D-01 a D-43 y parámetros P-01 a P-35 | Todo el equipo |
 | [diagramas/](diagramas/) | Fuentes PlantUML (.puml) de los tres diagramas y su imagen | Todo el equipo |
 
 La relación entre requisitos, casos de uso, historias de usuario y reglas está en la matriz [TRAZABILIDAD.md](../../06_proyect/TRAZABILIDAD.md), columna Reglas.
@@ -53,6 +53,9 @@ Cuando un archivo del repositorio contradice a los documentos corregidos el 23/1
 | Modelo | Los objetos de dominio, sus reglas y los datos que guardan |
 | Objeto de dominio | Un concepto del negocio (un evento vial, un surtidor) con sus datos y con las reglas que le pertenecen |
 | Regla de negocio | Una condición que el sistema debe cumplir siempre, sin importar desde qué pantalla o cliente llegue la petición |
+| Servicio | La pieza del modelo que completa un caso de uso: recibe la intención del controlador y coordina los objetos de dominio y los repositorios |
+| Repositorio | La pieza que guarda y recupera objetos de dominio. Su interfaz es parte del modelo y su implementación para PostgreSQL vive en infraestructura |
+| DTO | Registro de solo lectura con los datos que una consulta entrega al controlador. No tiene reglas |
 | Vigencia | Tiempo durante el cual un dato se toma en cuenta; pasado ese tiempo deja de mostrarse |
 | Consulta periódica | La app pregunta al backend cada cierto tiempo si hay novedades, en lugar de mantener una conexión abierta |
 | JWT | Token de acceso con expiración que el backend emite tras verificar la cuenta de Google |

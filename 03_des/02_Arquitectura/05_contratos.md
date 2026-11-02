@@ -6,13 +6,14 @@ Hay cuatro contratos: el de la app con el backend, el del backend con el motor c
 
 ## Convenciones comunes
 
-- Todo viaja en JSON.
+- Todo viaja en JSON, con el tipo `application/json`. Cada respuesta sale de un DTO de solo lectura, nunca de un objeto de dominio ([D-43](08_decisiones_parametros.md)).
 - Las fechas van en formato ISO 8601 con zona horaria, por ejemplo `2026-10-06T15:02:00-04:00`.
 - Una ubicación son dos números: latitud y longitud en grados decimales.
 - La app y el simulador envían el JWT en la cabecera `Authorization` de cada petición, salvo al iniciar sesión.
 - Un rechazo lleva un código y un mensaje en español listo para mostrar al conductor, con la forma `{"codigo":"SESION_VENCIDA","mensaje":"Tu sesión venció. Inicia sesión de nuevo."}`. El código es estable y sirve a la app para decidir qué hacer; el mensaje es el que se muestra.
 - En la API REST los nombres de los campos van en `camelCase` (`tokenGoogle`, `expiraEn`). En los mensajes por pipe con el núcleo van en `snake_case` (`red_cargada`, `fecha_extracto`), porque es lo que ya habla el núcleo.
 - Ninguna respuesta incluye identificadores de otros conductores.
+- Una consulta responde 200 con el DTO o la lista de DTO. Una petición que crea un recurso, como un reporte de evento, responde 201 con el DTO de lo creado. Un rechazo usa el código de la tabla «Respuestas de rechazo», con el cuerpo de arriba ([D-43](08_decisiones_parametros.md)).
 
 ## App y simulador con el backend
 

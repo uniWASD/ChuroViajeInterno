@@ -57,6 +57,14 @@ Las reglas las aplican los objetos de dominio. La base de datos repite siete de 
 - Un identificador de ANH pertenece a un solo surtidor ([RN-09.10](04_reglas/CU-09_ConsultarEstadoANH.md)).
 - Los litros de ANH no pueden ser negativos ([RN-09.7](04_reglas/CU-09_ConsultarEstadoANH.md)).
 
+## Cómo accede el backend a los datos
+
+- El acceso es JDBC con sentencias preparadas: los valores van como parámetros y nunca se concatenan en el SQL ([D-37](08_decisiones_parametros.md)). Solo las implementaciones de repositorio, en `infraestructura/pg`, hablan con PostgreSQL ([D-41](08_decisiones_parametros.md)).
+- Cada operación pide una conexión al pool, la usa y la cierra, y al cerrarla vuelve al pool. El pool es HikariCP ([D-39](08_decisiones_parametros.md)) y su tamaño lo fija [P-35](08_decisiones_parametros.md). PgBouncer queda como opción para más adelante.
+- La dirección, el usuario y la contraseña de la base salen de las variables de entorno `DB_URL`, `DB_USER` y `DB_PASSWORD` ([D-40](08_decisiones_parametros.md)).
+- Las altas que pueden repetirse, como el estado de un surtidor, que se reemplaza con cada dato nuevo, se escriben con `INSERT ... ON CONFLICT`.
+- Flyway crea y actualiza el esquema; las tablas no las crea la aplicación.
+
 ## Datos simulados
 
 La marca de simulado está en el conductor, en sus eventos y en sus votos. Borrar los datos de una prueba es borrar las filas con esa marca, sin tocar ninguna otra ([RN-07.8](04_reglas/CU-07_EjecutarSimuladorTrafico.md)).

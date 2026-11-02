@@ -7,10 +7,10 @@ Backend de ChuroViaje con Java 21, Spring Boot y Maven Wrapper.
 El proyecto usa un solo MVC (D-01):
 
 - `config`: configuración de la aplicación y seguridad.
-- `controladores`: endpoints REST, DTO y validación de entrada.
-- `servicios`: coordinación del dominio y los repositorios para completar cada caso de uso.
-- `dominio`: objetos y valores que contienen las reglas de negocio; las entidades persistentes se incorporan con sus historias.
-- `repositorios`: acceso a datos mediante Spring Data JPA, cuando se incorporen las entidades.
+- `controladores`: endpoints REST, DTO y validación de entrada. Para una consulta responden el DTO directamente; al crear algo o al rechazar, un `ResponseEntity` con el código HTTP del contrato. Nunca devuelven un objeto de dominio ([D-43](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+- `servicios`: un servicio por caso de uso, que recibe sus repositorios por el constructor y coordina el dominio y los repositorios.
+- `dominio`: objetos y valores que contienen las reglas de negocio. Con cada historia se incorporan sus objetos, los DTO de consulta (`record` de solo lectura) y la interfaz de su repositorio ([D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-42](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Nada aquí accede a la base de datos.
+- `infraestructura/pg`: implementaciones de los repositorios para PostgreSQL, con JDBC y sentencias preparadas ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Se crea junto con el primer repositorio.
 - `motor`: comunicación con el núcleo C++ mediante `MotorDeRutas` y pipe (D-15).
 - `errores`: traducción de errores al formato de rechazo del contrato.
 
@@ -52,6 +52,15 @@ Un arranque manual con este perfil requiere `TEST_DATABASE_URL`, `TEST_DB_USER` 
 ### Producción
 
 Define `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD` y `CHUROVIAJE_GEOJSON_PATH`. Este perfil deshabilita Swagger y rechaza coberturas provisionales. `JWT_SECRET` y `SERVICE_CREDENTIAL` se incorporarán con las historias de seguridad correspondientes.
+
+## Acceso a datos
+
+El backend accede a PostgreSQL con JDBC y `PreparedStatement`, sin JPA ni `JdbcTemplate` ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Cada operación pide la conexión, la usa y la cierra con `try-with-resources`; la conexión sale de un pool HikariCP, que viene con Spring Boot ([D-39](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). El driver es la dependencia `org.postgresql:postgresql` de Maven, sin `.jar` en una carpeta `lib` ([D-38](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). La dirección, el usuario y la contraseña salen de `DB_URL`, `DB_USER` y `DB_PASSWORD` ([D-40](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+
+Qué falta para llegar ahí:
+
+- El `pom.xml` todavía declara `spring-boot-starter-data-jpa` y `application.yml` y `application-prod.yml` tienen la sección `spring.jpa`; ninguna clase de producción los usa. Para tener HikariCP sin JPA se usa `spring-boot-starter-jdbc`.
+- Los archivos `application*.yml` versionados solo traen marcadores `${...}` y valores de ejemplo, sin credenciales. [D-40](../../03_des/02_Arquitectura/08_decisiones_parametros.md) pide dejar en el repositorio únicamente `application-example.yml` y poner el archivo real en `.gitignore`; las pruebas y el CI leen hoy los perfiles versionados, así que ese cambio queda pendiente.
 
 ## Endpoints de utilidad
 

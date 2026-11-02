@@ -22,6 +22,7 @@ Ningún secreto va al repositorio ([D-13](../03_des/02_Arquitectura/08_decisione
 
 | Variable | Pieza | Qué es |
 | --- | --- | --- |
+| `DB_URL`, `DB_USER`, `DB_PASSWORD` | Backend | Conexión a PostgreSQL ([D-40](../03_des/02_Arquitectura/08_decisiones_parametros.md)). En desarrollo se pueden usar `DB_HOST`, `DB_PORT` y `DB_NAME` en lugar de `DB_URL` |
 | `JWT_SECRET` | Backend | Clave que firma los JWT. Obligatoria, de 32 bytes o más |
 | `GOOGLE_CLIENT_ID` | Backend | Identificador de cliente de la app en Google. Obligatoria |
 | `SERVICE_CREDENTIAL` | Backend | Credencial del servicio de WhatsApp/LLM. Obligatoria, de 32 caracteres o más. Es el mismo valor que `SERVICE_TOKEN` |

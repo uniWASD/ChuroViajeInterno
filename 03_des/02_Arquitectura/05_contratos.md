@@ -139,10 +139,22 @@ Una petición de ruta y su respuesta se ven así. En el pipe, cada una ocupa una
 
 ```json
 {"id":17,"operacion":"calcular_ruta","origen":[-21.5355,-64.7296],"destino":[-21.5300,-64.7260],"paradas":[]}
-{"id":17,"ok":true,"estado":"ENCONTRADA","distancia_m":755,"tiempo_s":150,"trazado":[[-21.5355,-64.7296],[-21.5348,-64.7280],[-21.5300,-64.7260]]}
+{"id":17,"ok":true,"estado":"ENCONTRADA","distancia_m":755,"tiempo_s":136,"trazado":[[-21.5355,-64.7296],[-21.5348,-64.7280],[-21.5300,-64.7260]],"tramos":[{"id":"osm:5001:1:ida","calle":"Calle Comercio"},{"id":"osm:5002:1:ida","calle":"Av. Las Américas"}]}
 ```
 
-El campo `estado` puede ser `ENCONTRADA`, `SIN_RUTA` o `PUNTO_INVALIDO`; los dos últimos son respuestas correctas, no fallos. `"ok":false` queda para un mensaje mal formado o un fallo interno del núcleo, y entonces la respuesta trae un campo `error` con un código y una descripción.
+El campo `estado` puede ser `ENCONTRADA`, `SIN_RUTA` o `PUNTO_INVALIDO`; los dos últimos son respuestas correctas, no fallos, y no traen más campos. Una ruta encontrada trae la distancia en metros, el tiempo estimado en segundos, el trazado como una lista de puntos `[latitud, longitud]` y, en orden, cada tramo con su `id` y el nombre de su `calle`; esos `id` son los que la app devuelve al revisar la ruta ([D-12](08_decisiones_parametros.md)). `paradas` puede faltar o venir vacía. `"ok":false` queda para un mensaje mal formado (`PETICION_INVALIDA`), para un núcleo que todavía no tiene la red vial (`RED_NO_CARGADA`) o para un fallo interno del núcleo, y entonces la respuesta trae un campo `error` con un código y una descripción.
+
+Un aviso de tráfico y su respuesta:
+
+```json
+{"id":18,"operacion":"actualizar_trafico","evento":"153","accion":"nace","tipo":"ACCIDENTE","ubicacion":[-21.5352,-64.7288],"vence":"2026-10-06T16:02:00-04:00"}
+{"id":18,"ok":true,"tramos":["osm:5001:1:ida","osm:5001:1:vuelta"]}
+```
+
+- `accion` es `nace`, `cambia_vencimiento`, `retira` o `vence`. Las dos primeras guardan el evento; un aviso nuevo del mismo `evento` reemplaza al anterior, así que reenviar los eventos vigentes al arrancar no los duplica. Las dos últimas lo quitan y solo necesitan `evento`.
+- `tipo` es el código del catálogo: `ACCIDENTE`, `CONTROL_POLICIAL`, `BLOQUEO`, `OTRO` o `CONGESTION`. Una congestión lleva además `nivel` (`CONGESTIONADO` o `MUY_CONGESTIONADO`) y `tramo`, el id que informó `analizar_telemetria`, para que afecte solo ese sentido ([D-18](08_decisiones_parametros.md)); sin `tramo`, se toma el tramo más cercano a la ubicación, en un solo sentido.
+- `vence` va en ISO 8601 con zona horaria. Un evento cuyo vencimiento ya pasó deja de contar aunque el aviso `vence` no haya llegado.
+- La respuesta trae los tramos que el evento afecta, o los que afectaba si se quitó. Un evento a más de 100 m de una calle, o que ya venció, no afecta ninguno ([RN-03.9](04_reglas/CU-03_CalcularRutaOptima.md)).
 
 ### Arranque, demoras y caídas
 

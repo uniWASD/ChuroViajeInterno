@@ -117,7 +117,7 @@ cmake --build build --target pruebas
 
 También sirve `ctest --test-dir build --output-on-failure` (en Visual Studio agrega `-C Release`).
 
-Las pruebas cubren, entre otras, **CP-24** (`consultar_estado` responde en una sola línea con el mismo `id`), **CP-25** (una línea que no es JSON responde `"ok":false` y la siguiente petición válida se atiende normal), **CP-71** (la red irregular del prototipo da las mismas rutas que en Python), **CP-72** (una parada intermedia), **CP-95 a CP-98** (accidente, bloqueo, retiro del bloqueo y sentidos afectados) y **CP-73** (100 consultas en una red de 10 000 esquinas, cada una en menos de 1 segundo). Con `RED_VIAL_REAL=<ruta de red_vial_tarija.json>` también se mide CP-73 con la red real; sin esa variable, esa prueba se salta.
+Las pruebas cubren, entre otras, **CP-24** (`consultar_estado` responde en una sola línea con el mismo `id`), **CP-25** (una línea que no es JSON responde `"ok":false` y la siguiente petición válida se atiende normal), **CP-71** (la red irregular del prototipo da las mismas rutas que en Python), **CP-72** (una parada intermedia), **CP-95 a CP-98** (accidente, bloqueo, retiro del bloqueo y sentidos afectados) y **CP-73** (100 consultas en una red de 10 000 esquinas, cada una en menos de 1 segundo). Con `RED_VIAL_REAL=<ruta de red_vial_tarija.json>` también se mide CP-73 con la red real y se calculan los viajes de referencia de Tarija (**CP-167** y **CP-168**, T-120; ver [04_imp/datos](../datos/README.md#viajes-de-referencia)); sin esa variable, esas pruebas se saltan.
 
 ## Mandar un mensaje a mano
 

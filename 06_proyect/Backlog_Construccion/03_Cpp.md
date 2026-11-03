@@ -61,7 +61,7 @@ Lo subes en una nueva rama llamada "feature/T90-cpp-estructura-nucleo" (No olvid
 ### [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap
 
 **Tipo:** Tarea de desarrollo (cubre CU-03 y CU-04)
-**Tecnología:** Python, para el núcleo C++ · **Sprint:** Sprint 2 (22/10–28/10; cerrado, reasignación pendiente de Marcelo)
+**Tecnología:** Python, para el núcleo C++ · **Sprint:** Sprint 2 (22/10–28/10)
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 (por el polígono de la mancha urbana)
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:cpp`
 
@@ -99,7 +99,7 @@ Lo subes en una nueva rama llamada "feature/T111-red-vial-preparacion" (No olvid
 **Depende de:** [T-090][C++] Estructura del núcleo y protocolo por pipe #42 · [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap #93
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:cpp`
 
-**Descripción:** Cargar en memoria, al arrancar, la red de calles que prepara «[T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap» ([D-08](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Es la base de `RedVial` y `Tramo`. Mientras el archivo real no esté listo, se avanza con uno pequeño hecho a mano en el formato acordado.
+**Descripción:** Cargar en memoria, al arrancar, la red de calles que prepara «[T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap» ([D-08](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Es la base de `RedVial` y `Tramo`. Mientras el archivo real no esté listo, se avanza con el ejemplo [red_vial_ejemplo.json](../../04_imp/motor_cpp/preparacion/ejemplos/red_vial_ejemplo.json), hecho a mano en el formato acordado.
 
 **Criterios de aceptación**
 - [ ] El núcleo carga el archivo preparado al arrancar y `consultar_estado` informa cuántas intersecciones y tramos tiene y la fecha del extracto.

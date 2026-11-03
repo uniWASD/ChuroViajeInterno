@@ -74,12 +74,27 @@ export function loadConfig(env = process.env, {filePath} = {}) {
   if (typeof llm !== 'string') invalid('LLM_API_KEY debe ser una cadena.');
   const serviceToken = required(read('SERVICE_TOKEN'), 'SERVICE_TOKEN');
   if (/[\r\n]/.test(serviceToken)) invalid('SERVICE_TOKEN inválido.');
+  const enabledRaw = read('WHATSAPP_ENABLED', 'false');
+  if (enabledRaw !== 'true' && enabledRaw !== 'false') invalid('WHATSAPP_ENABLED debe ser true o false.');
+  const whatsappEnabled = enabledRaw === 'true';
+  const phone = read('WHATSAPP_PHONE_NUMBER');
+  if (phone !== undefined && (typeof phone !== 'string' || !/^[1-9][0-9]{7,14}$/.test(phone))) invalid('WHATSAPP_PHONE_NUMBER inválido.');
+  const session = required(read('WHATSAPP_SESSION_PATH', './data/session.sqlite'), 'WHATSAPP_SESSION_PATH');
+  if (session === ':memory:') invalid('WHATSAPP_SESSION_PATH no puede ser temporal.');
+  const authorizations = read('WHATSAPP_AUTHORIZATIONS_FILE');
+  if (authorizations !== undefined && (typeof authorizations !== 'string' || !isAbsolute(authorizations))) invalid('WHATSAPP_AUTHORIZATIONS_FILE debe ser una ruta absoluta.');
+  const reconnect = Number(read('WHATSAPP_RECONNECT_MS', 15000));
+  if (!Number.isSafeInteger(reconnect) || reconnect < 1000 || reconnect > 300000) invalid('WHATSAPP_RECONNECT_MS inválido.');
   return Object.freeze({
     backendUrl: backend,
     serviceToken, serviceAuthHeader: header, serviceTokenPrefix: prefix,
     allowedGroupIds: groups(read('ALLOWED_GROUP_IDS')),
     llmApiKey: llm, // reservado para la integración LLM: T-091 no llama al proveedor
     sqlitePath: sqlite === ':memory:' ? sqlite : resolve(SERVICE_ROOT, sqlite),
-    maintenanceIntervalMs: interval
+    maintenanceIntervalMs: interval,
+    whatsappEnabled, whatsappPhoneNumber: phone,
+    whatsappSessionPath: resolve(SERVICE_ROOT, session),
+    whatsappAuthorizationsFile: authorizations,
+    whatsappReconnectMs: reconnect
   });
 }

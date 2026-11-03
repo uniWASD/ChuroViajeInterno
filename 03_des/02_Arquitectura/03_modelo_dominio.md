@@ -4,6 +4,8 @@
 
 El modelo tiene 20 objetos de dominio repartidos en seis áreas. Cada objeto guarda sus datos y hace cumplir las reglas que le pertenecen; las reglas completas, con su código, están en [04_reglas](04_reglas/README.md).
 
+Los objetos de dominio no conocen la base de datos: un repositorio los guarda y los recupera ([D-41](08_decisiones_parametros.md)), y una consulta para mostrar entrega un DTO de solo lectura en lugar del objeto ([D-42](08_decisiones_parametros.md)). Cada objeto se crea con sus datos obligatorios y se valida a sí mismo.
+
 ![Modelo de dominio · 6 áreas, 20 objetos y los vínculos entre áreas](diagramas/ARQ-03_ModeloDominio.png)
 
 *Figura: Modelo de dominio · 6 áreas, 20 objetos y los vínculos entre áreas. Fuente editable: [ARQ-03_ModeloDominio.puml](diagramas/ARQ-03_ModeloDominio.puml).*

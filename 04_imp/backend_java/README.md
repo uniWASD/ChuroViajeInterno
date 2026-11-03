@@ -35,7 +35,15 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-Puedes cambiar `DB_HOST`, `DB_PORT`, `DB_NAME` y `DB_USER`; `DB_PASSWORD` es obligatoria. La cobertura usa `../datos/mancha_urbana_tarija.geojson`, salvo que definas `CHUROVIAJE_GEOJSON_PATH`.
+Puedes cambiar `DB_HOST`, `DB_PORT`, `DB_NAME` y `DB_USER`; `DB_PASSWORD` es obligatoria.
+
+La seguridad (CU-08, D-13) pide tres variables más, sin valor por defecto: si falta alguna, el backend no arranca y dice cuál.
+
+| Variable | Qué es |
+| --- | --- |
+| `JWT_SECRET` | Clave que firma el JWT: al menos 32 caracteres, larga y aleatoria. Por ejemplo, `openssl rand -base64 48` |
+| `GOOGLE_CLIENT_ID` | Client ID de la app en Google, contra el que se valida el token de identidad |
+| `SERVICE_CREDENTIAL` | Credencial del servicio de WhatsApp/LLM: al menos 32 caracteres. Es el mismo valor que usa el servicio (`SERVICE_TOKEN`) | La cobertura usa `../datos/mancha_urbana_tarija.geojson`, salvo que definas `CHUROVIAJE_GEOJSON_PATH`.
 
 ### Pruebas
 
@@ -51,7 +59,7 @@ Un arranque manual con este perfil requiere `TEST_DATABASE_URL`, `TEST_DB_USER` 
 
 ### Producción
 
-Define `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD` y `CHUROVIAJE_GEOJSON_PATH`. Este perfil deshabilita Swagger y rechaza coberturas provisionales. `JWT_SECRET` y `SERVICE_CREDENTIAL` se incorporarán con las historias de seguridad correspondientes.
+Define `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD` y `CHUROVIAJE_GEOJSON_PATH`. Este perfil deshabilita Swagger y rechaza coberturas provisionales. Define también `JWT_SECRET`, `GOOGLE_CLIENT_ID` y `SERVICE_CREDENTIAL`, que viven solo en el servidor con acceso restringido.
 
 ## Endpoints de utilidad
 

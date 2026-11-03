@@ -24,3 +24,14 @@ churoviaje:
   cobertura:
     ruta: ${CHUROVIAJE_GEOJSON_PATH:../datos/mancha_urbana_tarija.geojson}
     permitir-provisional: false
+  seguridad:
+    # Secretos solo por variables de entorno; sin valor por defecto en el repositorio (D-13).
+    # Si falta alguno, el backend no arranca (PropiedadesSeguridad).
+    jwt:
+      secreto: ${JWT_SECRET:}
+      duracion: 1h # RN-08.5, RN-08.12
+    renovacion:
+      duracion: 30d # RN-08.12
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
+    credencial-servicio: ${SERVICE_CREDENTIAL:}

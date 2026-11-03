@@ -16,6 +16,10 @@ La seguridad se apoya en tres ideas: nadie entra sin identificarse, el backend d
 
 El sistema no guarda contraseñas ni credenciales de Google. El JWT dura 1 hora y la sesión se renueva hasta 30 días.
 
+- El backend valida el token de identidad con el verificador oficial de Google, contra el identificador de cliente de la aplicación (`GOOGLE_CLIENT_ID`). De la cuenta solo conserva el identificador de Google.
+- El JWT se firma con HS256 y la clave de `JWT_SECRET`. El token de renovación es un valor aleatorio de 256 bits que se entrega una sola vez; en la base de datos solo queda su SHA-256, así que una copia de la base no sirve para entrar ([D-34](08_decisiones_parametros.md)).
+- Las rutas `/sesion/google`, `/sesion/renovar` y `/sesion/cerrar` no piden JWT. `/monitoreo/*` solo acepta la credencial de servicio: un JWT de conductor responde 403 y la falta de credencial, 401. Todas las demás rutas piden el JWT de un conductor.
+
 ## Comunicación
 
 - Todo el tráfico entre la app y el backend viaja cifrado por HTTPS.
@@ -36,6 +40,7 @@ El sistema no guarda contraseñas ni credenciales de Google. El JWT dura 1 hora 
 | Datos inventados por el LLM | Cada aviso se valida contra el catálogo antes de tocar un estado | [RN-06.15](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
 | Alguien que se hace pasar por el servicio de monitoreo | Solo se aceptan resultados con la credencial de servicio | [RN-06.14](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) |
 | Usar credenciales de prueba en producción | Solo funcionan si el ambiente las habilita | [RN-07.5](04_reglas/CU-07_EjecutarSimuladorTrafico.md) |
+| Inyección de SQL | Todo valor llega a la base como parámetro de una sentencia preparada y nunca se concatena en el SQL | [D-37](08_decisiones_parametros.md) |
 | Datos inválidos o alterados que lleguen de ANH | Conexión con certificado verificado, validación de la respuesta completa y de cada saldo, y solo las estaciones vinculadas al catálogo y dentro de la mancha urbana. Un fallo nunca se convierte en cero litros | [RN-09.3](04_reglas/CU-09_ConsultarEstadoANH.md) a [RN-09.9](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.11](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.15](04_reglas/CU-09_ConsultarEstadoANH.md) |
 | Consultar a ANH de más | ANH no publica cuotas ni condiciones de uso, así que consulta una sola tarea del backend, nunca la app; hay una pausa entre peticiones, se respeta `Retry-After` y la frecuencia se fija con pruebas | [RN-09.1](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.4](04_reglas/CU-09_ConsultarEstadoANH.md), [P-29](08_decisiones_parametros.md) |
 
@@ -59,4 +64,4 @@ La política de privacidad de la app debe decir qué datos se recogen, que el te
 - Se entra al VPS por SSH solo con llave, sin contraseña.
 - El firewall deja abiertos únicamente el puerto HTTPS del backend y el SSH, más el puerto 80, que solo redirige a HTTPS y atiende la validación del certificado de Let's Encrypt. En Oracle Cloud esto se configura en las reglas de red de la VCN y en el firewall de Ubuntu ([D-16](08_decisiones_parametros.md)).
 - El sistema operativo y las dependencias se mantienen actualizados.
-- Los secretos no van al repositorio: la clave que firma los JWT, la credencial del LLM, la credencial de servicio y la sesión del número de WhatsApp se guardan en el servidor con acceso restringido. La salida HTTPS del servidor hacia ANH se comprueba antes de depender de ella (tarea T-119).
+- Los secretos no van al repositorio: la clave que firma los JWT (`JWT_SECRET`), el identificador de cliente de Google (`GOOGLE_CLIENT_ID`), la credencial del LLM, la credencial de servicio (`SERVICE_CREDENTIAL` en el backend, `SERVICE_TOKEN` en el servicio), la contraseña de la base de datos (`DB_PASSWORD`) y la sesión del número de WhatsApp se guardan en el servidor con acceso restringido. El backend no arranca si falta `JWT_SECRET`, `GOOGLE_CLIENT_ID` o `SERVICE_CREDENTIAL`. En el repositorio solo hay valores vacíos o ficticios: la configuración de la base lee `DB_URL`, `DB_USER` y `DB_PASSWORD` del entorno, y se versiona un `application-example.yml` sin credenciales, mientras que el archivo con valores reales está en `.gitignore` ([D-40](08_decisiones_parametros.md)). El archivo de autorizaciones de los grupos de WhatsApp también vive fuera del repositorio, y el servicio se niega a leerlo si está dentro de un repositorio Git o, en Linux, si otros usuarios pueden leerlo ([D-36](08_decisiones_parametros.md)). La salida HTTPS del servidor hacia ANH se comprueba antes de depender de ella (tarea T-119).

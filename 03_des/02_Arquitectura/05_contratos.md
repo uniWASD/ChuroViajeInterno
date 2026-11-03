@@ -89,6 +89,30 @@ La app no lleva listas propias: todo lo que muestra en los selectores sale de es
 - `valoresFila` son los mismos de [P-15](08_decisiones_parametros.md). La app los trata como una lista cerrada.
 - La ruta pide JWT, como el resto de la API de la app.
 
+### Rutas (`POST /rutas`)
+
+```json
+{"origen":{"latitud":-21.5355,"longitud":-64.7296},"destino":{"latitud":-21.5300,"longitud":-64.7260},"paradas":[]}
+```
+
+Si hay ruta, responde 200 con:
+
+```json
+{
+  "estado": "ENCONTRADA",
+  "distanciaM": 755,
+  "tiempoS": 136,
+  "trazado": [{"latitud": -21.5355, "longitud": -64.7296}, {"latitud": -21.5348, "longitud": -64.728}, {"latitud": -21.53, "longitud": -64.726}],
+  "tramos": [{"id": "osm:5001:1:ida", "calle": "Calle Comercio"}, {"id": "osm:5002:1:ida", "calle": "Av. Las Américas"}]
+}
+```
+
+- `paradas` es opcional y va en el orden que eligió el conductor, con 10 como máximo ([RN-03.2](04_reglas/CU-03_CalcularRutaOptima.md)).
+- `tramos` va en el orden de la ruta. La app guarda sus `id` y los devuelve al revisar la ruta ([D-12](08_decisiones_parametros.md)); `calle` es lo que muestra la navegación.
+- Sin camino, responde 200 con `{"estado":"SIN_RUTA","mensaje":"No se encontró una ruta válida"}` ([RN-03.12](04_reglas/CU-03_CalcularRutaOptima.md)). Con un punto fuera de la mancha urbana o lejos de cualquier calle, 200 con `{"estado":"PUNTO_INVALIDO","mensaje":"Origen o destino inválido"}` ([RN-03.3](04_reglas/CU-03_CalcularRutaOptima.md), [RN-03.4](04_reglas/CU-03_CalcularRutaOptima.md)). Ninguna de las dos trae trazado.
+- Sin origen o sin destino, o con más de 10 paradas, responde 400 con `PETICION_INVALIDA`. Si el motor no responde a tiempo, se está reiniciando o está apagado, responde 503 con `MOTOR_NO_DISPONIBLE` y la app puede reintentar ([RN-03.15](04_reglas/CU-03_CalcularRutaOptima.md)).
+- La ruta pide JWT y el servidor no la guarda ([RN-03.1](04_reglas/CU-03_CalcularRutaOptima.md), [D-05](08_decisiones_parametros.md)).
+
 ## Backend con el motor core
 
 El backend nunca habla directo con el programa en C++. Llama a métodos del wrapper `MotorDeRutas`, que es Java y vive dentro del backend, y el wrapper traduce cada llamada a un mensaje para el núcleo C++ ([D-15](08_decisiones_parametros.md)). Los nombres de métodos y mensajes son una propuesta, igual que las rutas de la API.

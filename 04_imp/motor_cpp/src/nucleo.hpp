@@ -3,12 +3,15 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
 
 #include "red_vial.hpp"
+#include "eventos.hpp"
 #include "ruta.hpp"
 #include "trafico.hpp"
 
@@ -49,14 +52,24 @@ class Nucleo {
   const RedVial* red() const { return red_.get(); }
 
   // Atiende una petición. Devuelve std::nullopt si la línea está en blanco (no se responde nada).
-  // Nunca lanza: cualquier fallo se convierte en una respuesta "ok":false.
-  std::optional<Respuesta> atender(std::string_view linea) const noexcept;
+  // Nunca lanza: cualquier fallo se convierte en una respuesta "ok":false. No es const porque actualizar_trafico
+  // cambia los eventos vigentes.
+  std::optional<Respuesta> atender(std::string_view linea) noexcept;
+
+  // Reloj con el que se decide si un evento ya venció (segundos desde 1970). Por omisión, el del sistema;
+  // las pruebas lo reemplazan.
+  void usar_reloj(std::function<std::int64_t()> reloj) { reloj_ = std::move(reloj); }
+  std::size_t eventos_vigentes() {
+    eventos_.trafico(reloj_());
+    return eventos_.cantidad();
+  }
 
  private:
   EstadoRed estado_;
   std::shared_ptr<const RedVial> red_;
   Algoritmo algoritmo_ = Algoritmo::a_estrella;
-  Trafico trafico_;  // todos los tramos fluidos hasta el issue de tráfico
+  TablaEventos eventos_;  // eventos vigentes y el tráfico que producen en cada tramo
+  std::function<std::int64_t()> reloj_;
 };
 
 }  // namespace churoviaje

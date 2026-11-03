@@ -309,7 +309,7 @@ TEST(RedVialAjuste, ElIndiceDaLoMismoQueRecorrerTodosLosNodos) {
 
 TEST(NucleoConRed, ConsultarEstadoInformaFechaNodosYTramos) {
   auto red = std::make_shared<const RedVial>(RedVial::cargar_archivo(RED_PRUEBA_PLAZA));
-  const Nucleo nucleo(red);
+  Nucleo nucleo(red);
   const auto r = nucleo.atender(R"({"id":1,"operacion":"consultar_estado"})");
   ASSERT_TRUE(r.has_value());
   const json j = json::parse(r->linea);
@@ -322,7 +322,7 @@ TEST(NucleoConRed, ConsultarEstadoInformaFechaNodosYTramos) {
 }
 
 TEST(NucleoConRed, SinRedInformaFalsoNuloYCeros) {
-  const Nucleo nucleo{std::shared_ptr<const RedVial>{}};
+  Nucleo nucleo{std::shared_ptr<const RedVial>{}};
   const json j = json::parse(nucleo.atender(R"({"id":1,"operacion":"consultar_estado"})")->linea);
   EXPECT_EQ(j.at("red_cargada"), false);
   EXPECT_TRUE(j.at("fecha_extracto").is_null());
@@ -336,7 +336,7 @@ TEST(NucleoConRed, SiLaRedNoSeCargaElNucleoSigueSinRedYLoAnotaEnElRegistro) {
   EXPECT_EQ(red, nullptr);
   EXPECT_NE(registro.str().find("No se cargó la red vial"), std::string::npos);
 
-  const Nucleo nucleo(red);
+  Nucleo nucleo(red);
   const json j = json::parse(nucleo.atender(R"({"id":1,"operacion":"consultar_estado"})")->linea);
   EXPECT_EQ(j.at("red_cargada"), false);
 }

@@ -229,6 +229,26 @@ void RedVial::construir_indice() {
     const auto cy = static_cast<std::int64_t>(std::floor(y / kRadioAjusteMetros));
     grilla_[clave_celda(cx, cy)].push_back(i);
   }
+
+  // Cada tramo se anota en todas las celdas que cubre el rectángulo de cada uno de sus segmentos: así, un punto
+  // a 100 m o menos de un tramo siempre encuentra ese tramo en su celda o en una vecina.
+  for (std::size_t t = 0; t < tramos_.size(); ++t) {
+    const auto& g = tramos_[t].geometria;
+    for (std::size_t k = 0; k + 1 < g.size(); ++k) {
+      const auto [x1, y1] = proyectar(g[k].lat, g[k].lon);
+      const auto [x2, y2] = proyectar(g[k + 1].lat, g[k + 1].lon);
+      const auto cx1 = static_cast<std::int64_t>(std::floor(std::min(x1, x2) / kRadioAjusteMetros));
+      const auto cx2 = static_cast<std::int64_t>(std::floor(std::max(x1, x2) / kRadioAjusteMetros));
+      const auto cy1 = static_cast<std::int64_t>(std::floor(std::min(y1, y2) / kRadioAjusteMetros));
+      const auto cy2 = static_cast<std::int64_t>(std::floor(std::max(y1, y2) / kRadioAjusteMetros));
+      for (std::int64_t cx = cx1; cx <= cx2; ++cx) {
+        for (std::int64_t cy = cy1; cy <= cy2; ++cy) {
+          auto& celda = grilla_tramos_[clave_celda(cx, cy)];
+          if (celda.empty() || celda.back() != t) celda.push_back(t);
+        }
+      }
+    }
+  }
 }
 
 std::pair<double, double> RedVial::proyectar(double lat, double lon) const {
@@ -265,6 +285,43 @@ std::optional<Ajuste> RedVial::ajustar(double lat, double lon) const {
         const double d = std::hypot(nodos_[i].x - x, nodos_[i].y - y);
         if (d > kRadioAjusteMetros) continue;
         if (!mejor || d < mejor->distancia_m || (d == mejor->distancia_m && i < mejor->nodo)) mejor = Ajuste{i, d};
+      }
+    }
+  }
+  return mejor;
+}
+
+std::optional<TramoCercano> RedVial::tramo_mas_cercano(double lat, double lon) const {
+  if (tramos_.empty() || !std::isfinite(lat) || !std::isfinite(lon) || lat < -90 || lat > 90 || lon < -180 ||
+      lon > 180) {
+    return std::nullopt;
+  }
+  const auto [px, py] = proyectar(lat, lon);
+  if (std::fabs(px) > 1e9 || std::fabs(py) > 1e9) return std::nullopt;
+  const auto cx = static_cast<std::int64_t>(std::floor(px / kRadioAjusteMetros));
+  const auto cy = static_cast<std::int64_t>(std::floor(py / kRadioAjusteMetros));
+
+  std::optional<TramoCercano> mejor;
+  for (std::int64_t dx = -1; dx <= 1; ++dx) {
+    for (std::int64_t dy = -1; dy <= 1; ++dy) {
+      const auto it = grilla_tramos_.find(clave_celda(cx + dx, cy + dy));
+      if (it == grilla_tramos_.end()) continue;
+      for (const std::size_t t : it->second) {
+        if (mejor && mejor->tramo == t) continue;
+        const auto& g = tramos_[t].geometria;
+        double d = std::numeric_limits<double>::infinity();
+        for (std::size_t k = 0; k + 1 < g.size(); ++k) {
+          // Distancia del punto al segmento, en la proyección local (metros).
+          const auto [x1, y1] = proyectar(g[k].lat, g[k].lon);
+          const auto [x2, y2] = proyectar(g[k + 1].lat, g[k + 1].lon);
+          const double vx = x2 - x1, vy = y2 - y1;
+          const double largo2 = vx * vx + vy * vy;
+          double u = largo2 > 0 ? ((px - x1) * vx + (py - y1) * vy) / largo2 : 0;
+          u = std::clamp(u, 0.0, 1.0);
+          d = std::min(d, std::hypot(px - (x1 + u * vx), py - (y1 + u * vy)));
+        }
+        if (d > kRadioAjusteMetros) continue;
+        if (!mejor || d < mejor->distancia_m || (d == mejor->distancia_m && t < mejor->tramo)) mejor = TramoCercano{t, d};
       }
     }
   }

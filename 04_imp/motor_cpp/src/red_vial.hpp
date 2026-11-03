@@ -59,6 +59,12 @@ struct Ajuste {
   double distancia_m = 0;  // distancia entre el punto y el nodo
 };
 
+// El tramo más cercano a un punto y a qué distancia de su trazado está.
+struct TramoCercano {
+  std::size_t tramo = 0;  // posición en RedVial::tramos()
+  double distancia_m = 0;
+};
+
 class RedVial {
  public:
   // RN-03.4 y P-23: un punto se ajusta a la intersección más cercana si hay una a menos de 100 m.
@@ -85,6 +91,10 @@ class RedVial {
   // kRadioAjusteMetros o las coordenadas no son válidas. Ante un empate gana el nodo que aparece primero.
   std::optional<Ajuste> ajustar(double lat, double lon) const;
 
+  // El tramo cuyo trazado pasa más cerca de (lat, lon), si está a menos de kRadioAjusteMetros (RN-03.9, P-23).
+  // Entre los dos sentidos de una calle, que comparten trazado, devuelve el que aparece primero.
+  std::optional<TramoCercano> tramo_mas_cercano(double lat, double lon) const;
+
  private:
   RedVial() = default;
   void construir_indice();
@@ -101,6 +111,7 @@ class RedVial {
   double lon0_ = 0;
   double metros_por_grado_lon_ = 0;
   std::unordered_map<std::int64_t, std::vector<std::size_t>> grilla_;  // celdas de kRadioAjusteMetros de lado
+  std::unordered_map<std::int64_t, std::vector<std::size_t>> grilla_tramos_;  // tramos que cruzan cada celda
 };
 
 // Carga la red de `ruta` para el arranque del núcleo. Si falla, lo escribe en `registro` y devuelve nullptr:

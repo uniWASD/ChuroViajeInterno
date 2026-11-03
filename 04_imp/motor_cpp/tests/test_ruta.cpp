@@ -277,7 +277,7 @@ TEST(CalcularRuta, LaVelocidadDependeDelTipoDeVia) {
 
 namespace {
 
-json responder(const Nucleo& nucleo, const std::string& linea) {
+json responder(Nucleo& nucleo, const std::string& linea) {
   const auto r = nucleo.atender(linea);
   EXPECT_TRUE(r.has_value());
   if (!r) return json();
@@ -290,7 +290,7 @@ std::shared_ptr<const RedVial> plaza() { return std::make_shared<const RedVial>(
 }  // namespace
 
 TEST(NucleoCalcularRuta, EncontradaTraeDistanciaTiempoTrazadoYTramosConSuCalle) {
-  const Nucleo nucleo(plaza());
+  Nucleo nucleo(plaza());
   // De la esquina suroeste (osm:9001) a la noreste (osm:9003) de la plaza.
   const json j = responder(nucleo, R"({"id":17,"operacion":"calcular_ruta","origen":[-21.536,-64.7301],"destino":[-21.535,-64.7291],"paradas":[]})");
   EXPECT_EQ(j.at("id"), 17);
@@ -307,14 +307,14 @@ TEST(NucleoCalcularRuta, EncontradaTraeDistanciaTiempoTrazadoYTramosConSuCalle) 
 }
 
 TEST(NucleoCalcularRuta, SinParadasTambienSePuedeOmitirElCampo) {
-  const Nucleo nucleo(plaza());
+  Nucleo nucleo(plaza());
   const json j = responder(nucleo, R"({"id":1,"operacion":"calcular_ruta","origen":[-21.536,-64.7301],"destino":[-21.536,-64.7291]})");
   EXPECT_EQ(j.at("estado"), "ENCONTRADA");
   EXPECT_EQ(j.at("tramos").size(), 1u);
 }
 
 TEST(NucleoCalcularRuta, ContraElSentidoDeUnaCalleDeUnSoloSentidoNoHayRuta) {
-  const Nucleo nucleo(plaza());
+  Nucleo nucleo(plaza());
   // osm:9006 solo tiene una calle que llega: desde ahí no se puede salir.
   const json j = responder(nucleo, R"({"id":2,"operacion":"calcular_ruta","origen":[-21.534,-64.7291],"destino":[-21.536,-64.7301]})");
   EXPECT_EQ(j.at("ok"), true);
@@ -323,14 +323,14 @@ TEST(NucleoCalcularRuta, ContraElSentidoDeUnaCalleDeUnSoloSentidoNoHayRuta) {
 }
 
 TEST(NucleoCalcularRuta, UnPuntoFueraDeLaRedEsPuntoInvalidoConOkTrue) {
-  const Nucleo nucleo(plaza());
+  Nucleo nucleo(plaza());
   const json j = responder(nucleo, R"({"id":3,"operacion":"calcular_ruta","origen":[-21.536,-64.7301],"destino":[-21.53,-64.726]})");
   EXPECT_EQ(j.at("ok"), true);
   EXPECT_EQ(j.at("estado"), "PUNTO_INVALIDO");
 }
 
 TEST(NucleoCalcularRuta, PeticionMalFormadaEsPeticionInvalida) {
-  const Nucleo nucleo(plaza());
+  Nucleo nucleo(plaza());
   for (const char* linea : {
            R"({"id":4,"operacion":"calcular_ruta","destino":[-21.536,-64.7301]})",
            R"({"id":4,"operacion":"calcular_ruta","origen":[-21.536],"destino":[-21.536,-64.7301]})",
@@ -345,15 +345,15 @@ TEST(NucleoCalcularRuta, PeticionMalFormadaEsPeticionInvalida) {
 }
 
 TEST(NucleoCalcularRuta, SinRedVialRespondeRedNoCargada) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   const json j = responder(nucleo, R"({"id":5,"operacion":"calcular_ruta","origen":[-21.536,-64.7301],"destino":[-21.535,-64.7291]})");
   EXPECT_EQ(j.at("ok"), false);
   EXPECT_EQ(j.at("error").at("codigo"), codigo::red_no_cargada);
 }
 
 TEST(NucleoCalcularRuta, ConDijkstraLaRespuestaEsLaMisma) {
-  const Nucleo a_estrella(plaza());
-  const Nucleo dijkstra(plaza(), Algoritmo::dijkstra);
+  Nucleo a_estrella(plaza());
+  Nucleo dijkstra(plaza(), Algoritmo::dijkstra);
   const std::string linea = R"({"id":6,"operacion":"calcular_ruta","origen":[-21.536,-64.732],"destino":[-21.534,-64.7291]})";
   const json a = responder(a_estrella, linea);
   const json d = responder(dijkstra, linea);

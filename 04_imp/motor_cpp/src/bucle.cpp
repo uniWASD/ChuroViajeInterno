@@ -7,7 +7,7 @@
 
 namespace churoviaje {
 
-int ejecutar(std::istream& entrada, std::ostream& salida, std::ostream& registro, const Nucleo& nucleo) {
+int ejecutar(std::istream& entrada, std::ostream& salida, std::ostream& registro, Nucleo& nucleo) {
   registro << "[nucleo] listo: esperando una petición JSON por línea en la entrada estándar\n" << std::flush;
 
   std::size_t lineas = 0;

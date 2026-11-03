@@ -20,7 +20,7 @@ struct Resultado {
   std::string registro;             // lo que salió por la salida de errores
 };
 
-Resultado correr(const std::string& entrada, const Nucleo& nucleo = Nucleo()) {
+Resultado correr(const std::string& entrada, Nucleo nucleo = Nucleo()) {
   std::istringstream in(entrada);
   std::ostringstream out, log;
   Resultado r;

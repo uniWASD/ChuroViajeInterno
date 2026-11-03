@@ -9,7 +9,7 @@ PowerShell facilitada por el ejecutor**; no se incluyen en Git ni el PBF
 original, ni el JSON generado, ni los archivos CSV de trabajo.
 
 **Entorno informado:** Windows, Python 3.13.6, Shapely 2.2.0,
-pyosmium 4.3.2 y pytest 9.2.0. **Fecha del extracto:** 2026-10-29.
+pyosmium 4.3.2 y pytest 9.2.0. **Fecha del extracto confirmada:** 2026-10-29 (se contrastaron la fecha de cabecera del PBF aportado y `fecha_extracto` del JSON aportado).
 
 | Comprobación | Resultado observado |
 | --- | --- |
@@ -36,6 +36,19 @@ De los 8.908 nodos, 8.813 pertenecen a la mayor componente fuertemente
 conexa (98,93 %). La validación informó **23 componentes fuertemente conexas**
 y **20 componentes débilmente conexas**; esos valores son informativos y no
 constituyen automáticamente errores. Los tramos con nombre ausente son 10.814.
+
+### Tramos sin nombre por tipo de vía
+
+Recuento del JSON aportado: tramos dirigidos cuyo campo `nombre` es exactamente `"Sin nombre"`, agrupados por `tipo_via`.
+
+| `tipo_via` | Tramos sin nombre | Total de tramos dirigidos |
+| --- | ---: | ---: |
+| `via_rapida` | 40 | 499 |
+| `avenida_principal` | 613 | 3.855 |
+| `zona_residencial` | 10.161 | 18.839 |
+| **Total** | **10.814** | **23.193** |
+
+Las avenidas principales sin nombre suman **613** tramos dirigidos de 3.855. Esto permite priorizar su revisión en OSM, sin acreditar la señalización real.
 
 ## Pruebas funcionales
 

@@ -6,12 +6,14 @@ Hay cuatro contratos: el de la app con el backend, el del backend con el motor c
 
 ## Convenciones comunes
 
-- Todo viaja en JSON.
+- Todo viaja en JSON, con el tipo `application/json`. Cada respuesta sale de un DTO de solo lectura, nunca de un objeto de dominio ([D-43](08_decisiones_parametros.md)).
 - Las fechas van en formato ISO 8601 con zona horaria, por ejemplo `2026-10-06T15:02:00-04:00`.
 - Una ubicación son dos números: latitud y longitud en grados decimales.
 - La app y el simulador envían el JWT en la cabecera `Authorization` de cada petición, salvo al iniciar sesión.
-- Un rechazo lleva un código y un mensaje en español listo para mostrar al conductor.
+- Un rechazo lleva un código y un mensaje en español listo para mostrar al conductor, con la forma `{"codigo":"SESION_VENCIDA","mensaje":"Tu sesión venció. Inicia sesión de nuevo."}`. El código es estable y sirve a la app para decidir qué hacer; el mensaje es el que se muestra.
+- En la API REST los nombres de los campos van en `camelCase` (`tokenGoogle`, `expiraEn`). En los mensajes por pipe con el núcleo van en `snake_case` (`red_cargada`, `fecha_extracto`), porque es lo que ya habla el núcleo.
 - Ninguna respuesta incluye identificadores de otros conductores.
+- Una consulta responde 200 con el DTO o la lista de DTO. Una petición que crea un recurso, como un reporte de evento, responde 201 con el DTO de lo creado. Un rechazo usa el código de la tabla «Respuestas de rechazo», con el cuerpo de arriba ([D-43](08_decisiones_parametros.md)).
 
 ## App y simulador con el backend
 
@@ -32,6 +34,60 @@ Hay cuatro contratos: el de la app con el backend, el del backend con el motor c
 | Confirmar recarga | `POST /surtidores/{id}/confirmaciones` | Tipo de combustible y ubicación actual | Confirmación aceptada, o motivo del rechazo | CU-05 |
 
 La app nunca envía el momento en que ocurrió un evento ya calculado: manda la hora de confirmación y los minutos elegidos, y el `EventoVial` hace la resta ([RN-01.4](04_reglas/CU-01_ReportarEventoVial.md)).
+
+### Sesión (`/sesion/*`)
+
+Son las únicas rutas de la app que no piden JWT. Todas reciben y devuelven JSON; el sistema nunca ve la contraseña de Google ([D-34](08_decisiones_parametros.md)).
+
+| Ruta | Cuerpo de la petición | Respuesta |
+| --- | --- | --- |
+| `POST /sesion/google` | `{"tokenGoogle":"<token de identidad de Google>"}` | 200 con `{"jwt":"…","expiraEn":"2026-10-06T16:02:00Z","tokenRenovacion":"…"}` |
+| `POST /sesion/renovar` | `{"tokenRenovacion":"…"}` | 200 con `{"jwt":"…","expiraEn":"…"}`. No devuelve un token de renovación nuevo: el que tiene la app sigue valiendo hasta que vence |
+| `POST /sesion/cerrar` | `{"tokenRenovacion":"…"}` | 204 sin cuerpo. Es idempotente: cerrar una sesión que ya no existe también responde 204 |
+
+- `expiraEn` es la expiración del JWT, en ISO 8601 y en UTC. El JWT dura 1 hora y el token de renovación, 30 días desde que se inició la sesión ([P-05](08_decisiones_parametros.md)).
+- El primer ingreso con una cuenta de Google crea al conductor; los siguientes usan el mismo ([RN-08.4](04_reglas/CU-08_IniciarSesion.md)).
+- Códigos de rechazo:
+
+| Código | Estado | Cuándo |
+| --- | --- | --- |
+| `TOKEN_GOOGLE_INVALIDO` | 401 | Google no reconoce el token, venció o no es para esta aplicación |
+| `GOOGLE_NO_DISPONIBLE` | 503 | El backend no pudo comunicarse con Google. Es un fallo transitorio: la app puede reintentar |
+| `SESION_VENCIDA` | 401 | El token de renovación no existe, venció o ya se cerró. La app debe volver a pedir el inicio de sesión con Google |
+| `NO_AUTENTICADO` | 401 | Una ruta que pide JWT llegó sin él, con uno vencido o con uno mal firmado |
+| `ACCESO_DENEGADO` | 403 | El JWT es válido pero no alcanza para esa ruta; por ejemplo, un conductor en `/monitoreo/*` |
+| `PETICION_INVALIDA` | 400 | Falta el campo del cuerpo o no cumple el formato |
+
+### Catálogos (`GET /catalogos`)
+
+La app no lleva listas propias: todo lo que muestra en los selectores sale de esta respuesta ([D-06](08_decisiones_parametros.md)). Los tipos de evento y de combustible salen de la base de datos; los tiempos del reporte y los valores de la fila son fijos del backend. El orden de cada lista es estable y es el que debe mostrar la app. Los valores del ejemplo son los del catálogo inicial (migraciones de la base de datos), recortado a dos elementos por lista.
+
+```json
+{
+  "tiposEvento": [
+    {"codigo": "ACCIDENTE", "nombre": "Accidente", "color": "#E53935", "vigenciaMinutos": 60, "reportable": true},
+    {"codigo": "CONGESTION", "nombre": "Congestión", "color": "#FDD835", "vigenciaMinutos": 30, "reportable": false}
+  ],
+  "tiposCombustible": [
+    {"codigo": "GASOLINA", "nombre": "Gasolina", "seleccionable": true},
+    {"codigo": "DESCONOCIDO", "nombre": "Desconocido", "seleccionable": false}
+  ],
+  "tiemposReporte": [
+    {"minutos": 0, "nombre": "Ahora mismo", "porDefecto": false},
+    {"minutos": 5, "nombre": "Hace 5 minutos", "porDefecto": true}
+  ],
+  "valoresFila": [
+    {"codigo": "SIN_FILA", "nombre": "Sin fila"},
+    {"codigo": "CORTA", "nombre": "Corta"}
+  ]
+}
+```
+
+- `reportable` es falso para la congestión: la crea el sistema con la telemetría y el conductor no puede reportarla ([RN-01.3](04_reglas/CU-01_ReportarEventoVial.md)).
+- `seleccionable` es falso para «Desconocido»: lo usa el sistema cuando un mensaje no dice el combustible y el conductor no puede elegirlo ([RN-05.9](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
+- `tiemposReporte` ofrece 0, 5, 10 y 30 minutos; el marcado con `porDefecto` es el que se usa si el conductor no elige ([D-09](08_decisiones_parametros.md)).
+- `valoresFila` son los mismos de [P-15](08_decisiones_parametros.md). La app los trata como una lista cerrada.
+- La ruta pide JWT, como el resto de la API de la app.
 
 ## Backend con el motor core
 
@@ -67,8 +123,11 @@ El campo `estado` puede ser `ENCONTRADA`, `SIN_RUTA` o `PUNTO_INVALIDO`; los dos
 ### Arranque, demoras y caídas
 
 - **Arranque.** Cada vez que el wrapper arranca el núcleo, espera a que cargue la red vial (mensaje `consultar_estado`) y le envía todos los eventos vigentes con `actualizar_trafico`. Recién entonces atiende rutas. Así el núcleo nunca empieza con el tráfico en blanco y nunca necesita llamar al backend.
+- **Configuración.** El backend arranca el núcleo solo si `MOTOR_HABILITADO=true`; apagado, las operaciones responden 503. El ejecutable y el archivo de la red vial vienen de `MOTOR_PATH` y `RED_VIAL_PATH`, y el wrapper le pasa la ruta de la red al núcleo con `--red <ruta>` ([D-35](08_decisiones_parametros.md)).
+- **Primera respuesta.** El núcleo carga la red antes de leer su entrada, así que la respuesta a la primera consulta de estado puede tardar mucho más que 3 segundos. Hasta que la red está cargada, el wrapper espera con su propio plazo ([P-33](08_decisiones_parametros.md)) y no con el de una petición. Si ese plazo vence, detiene el núcleo y lo arranca de nuevo.
+- **Respuestas del núcleo.** El wrapper devuelve la respuesta tal como llega, con su `ok`: un `"ok":false` es una respuesta válida del núcleo y quien llama la interpreta. Solo se convierte en error del backend lo que no depende del núcleo: demora, caída o arranque en curso. Eso responde 503 con el código `MOTOR_NO_DISPONIBLE`.
 - **Demora.** Si el núcleo no responde una petición a tiempo para cumplir los 3 segundos de [RN-03.15](04_reglas/CU-03_CalcularRutaOptima.md), contados desde que se le escribió, el wrapper lo detiene, lo vuelve a arrancar y el backend responde 503. Una petición que vence mientras espera en la fila responde 503 sin reiniciar el núcleo.
-- **Caída.** Si el núcleo termina por un error, el wrapper lo arranca de nuevo y le vuelve a enviar los eventos vigentes. Mientras tanto, las rutas responden 503.
+- **Caída.** Si el núcleo termina por un error, el wrapper lo arranca de nuevo y le vuelve a enviar los eventos vigentes. Mientras tanto, las rutas responden 503 de inmediato, sin esperar en la fila.
 
 ## Archivo de la red vial
 
@@ -149,6 +208,7 @@ Un ejemplo pequeño, con valores inventados: una calle de doble sentido (dos tra
 ### Credencial de servicio
 
 - El servicio envía en cada petición `Authorization: Bearer <credencial>`, la misma cabecera que usa la app.
+- En el backend la variable se llama `SERVICE_CREDENTIAL`; en el servicio, `SERVICE_TOKEN`. Los dos nombres guardan el mismo valor.
 - La credencial es un valor fijo y aleatorio. Vive como variable de entorno en el backend y en el servicio, con el mismo valor, y nunca en el repositorio ([D-13](08_decisiones_parametros.md)).
 - El backend la distingue así: si coincide con la configurada, es el servicio; si no coincide pero es un JWT de conductor válido, responde 403; si no es ninguna de las dos, responde 401. Como la credencial es fija, no vence: se cambia a mano en los dos lados.
 - El servicio llama al backend en `http://127.0.0.1:8080`, dentro de la máquina (el puerto por defecto de Spring Boot). Ese puerto no se abre a internet: Nginx es lo único que sale ([D-03](08_decisiones_parametros.md)).

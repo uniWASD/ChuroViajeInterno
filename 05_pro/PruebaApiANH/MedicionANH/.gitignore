@@ -1,0 +1,14 @@
+# T-117: artefactos y evidencias fuera del repositorio
+build/
+*.class
+*.jar
+datos-*/
+datos-medicion/
+analisis/
+*.log
+estado.properties
+medicion-*.csv
+estaciones-*.csv
+disclaimer-evidencia-NO-COMMIT.txt
+__pycache__/
+*.pyc

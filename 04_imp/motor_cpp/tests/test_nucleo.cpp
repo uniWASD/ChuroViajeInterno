@@ -65,7 +65,7 @@ TEST(Nucleo, IgnoraCamposDeMas) {
   EXPECT_EQ(j.at("ok"), true);
 }
 
-// Las otras cuatro operaciones del contrato responden «no implementada» hasta que lleguen sus issues.
+// Las operaciones del contrato que todavía no llegan responden «no implementada» hasta que lleguen sus issues.
 class OperacionPendiente : public ::testing::TestWithParam<std::string> {};
 
 TEST_P(OperacionPendiente, RespondeNoImplementada) {
@@ -78,8 +78,7 @@ TEST_P(OperacionPendiente, RespondeNoImplementada) {
 }
 
 INSTANTIATE_TEST_SUITE_P(Contrato, OperacionPendiente,
-                         ::testing::Values("calcular_ruta", "revisar_ruta", "actualizar_trafico",
-                                           "analizar_telemetria"));
+                         ::testing::Values("revisar_ruta", "actualizar_trafico", "analizar_telemetria"));
 
 TEST(Nucleo, OperacionDesconocida) {
   const Nucleo nucleo;

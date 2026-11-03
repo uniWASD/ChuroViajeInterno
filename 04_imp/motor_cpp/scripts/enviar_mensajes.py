@@ -22,8 +22,9 @@ EJEMPLOS = [
     ('esto no es json', (False, "JSON_INVALIDO")),
     ('{"id":2,"operacion":"consultar_estado"}', (True, None)),  # sigue funcionando tras el error (CP-25)
     ('{"id":3,"operacion":"hacer_cafe"}', (False, "OPERACION_DESCONOCIDA")),
+    # Sin red vial no hay ruta posible; con la red de prueba de la plaza el destino queda fuera (más de 100 m).
     ('{"id":4,"operacion":"calcular_ruta","origen":[-21.5355,-64.7296],"destino":[-21.5300,-64.7260],"paradas":[]}',
-     (False, "NO_IMPLEMENTADA")),
+     (False, "RED_NO_CARGADA")),
     ('{"operacion":"consultar_estado"}', (False, "PETICION_INVALIDA")),
 ]
 
@@ -60,6 +61,10 @@ def main():
                 fallos.append(f"respuesta que no es JSON: {linea!r}")
                 continue
             ok, codigo = esperado
+            if args.red and '"calcular_ruta"' in mensaje:
+                ok, codigo = True, None
+                if r.get("estado") not in ("ENCONTRADA", "SIN_RUTA", "PUNTO_INVALIDO"):
+                    fallos.append(f"calcular_ruta sin un estado del contrato: {linea.strip()}")
             if args.red and mensaje == EJEMPLOS[0][0]:
                 # con red vial, el primer consultar_estado debe informarla cargada
                 if r.get("red_cargada") is not True or r.get("fecha_extracto") is None or (

@@ -9,6 +9,8 @@
 #include <string_view>
 
 #include "red_vial.hpp"
+#include "ruta.hpp"
+#include "trafico.hpp"
 
 namespace churoviaje {
 
@@ -18,6 +20,7 @@ inline constexpr const char* json_invalido = "JSON_INVALIDO";            // la l
 inline constexpr const char* peticion_invalida = "PETICION_INVALIDA";    // JSON válido, pero sin id u operacion correctos
 inline constexpr const char* operacion_desconocida = "OPERACION_DESCONOCIDA";
 inline constexpr const char* no_implementada = "NO_IMPLEMENTADA";        // operación del contrato que aún no llega
+inline constexpr const char* red_no_cargada = "RED_NO_CARGADA";          // la operación necesita la red vial y no hay
 inline constexpr const char* error_interno = "ERROR_INTERNO";            // fallo inesperado; el núcleo sigue vivo
 }  // namespace codigo_error
 
@@ -39,8 +42,9 @@ class Nucleo {
  public:
   // Sin red vial (o solo con el estado declarado, para pruebas).
   explicit Nucleo(EstadoRed estado = {});
-  // Con la red vial cargada (T-096); nullptr equivale a arrancar sin red.
-  explicit Nucleo(std::shared_ptr<const RedVial> red);
+  // Con la red vial cargada (T-096); nullptr equivale a arrancar sin red. `algoritmo` elige A* o Dijkstra
+  // para calcular rutas (RN-03.11).
+  explicit Nucleo(std::shared_ptr<const RedVial> red, Algoritmo algoritmo = Algoritmo::a_estrella);
 
   const RedVial* red() const { return red_.get(); }
 
@@ -51,6 +55,8 @@ class Nucleo {
  private:
   EstadoRed estado_;
   std::shared_ptr<const RedVial> red_;
+  Algoritmo algoritmo_ = Algoritmo::a_estrella;
+  Trafico trafico_;  // todos los tramos fluidos hasta el issue de tráfico
 };
 
 }  // namespace churoviaje

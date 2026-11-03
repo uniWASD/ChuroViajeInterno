@@ -20,6 +20,8 @@ using json = nlohmann::json;
 constexpr int kVersionSoportada = 1;
 constexpr double kMetrosPorGradoLat = 111320.0;  // aproximación de esfera: sobra para ajustar a 100 m
 constexpr double kPi = 3.14159265358979323846;
+constexpr double kRadioTerrestreM = 6371008.8;  // el mismo de preparacion/preparar_red.py
+constexpr double kMargenEstimacion = 0.999;      // la longitud del archivo viene redondeada a milímetros
 
 [[noreturn]] void fallar(const std::string& donde, const std::string& que) {
   throw ErrorRedVial(donde.empty() ? que : donde + ": " + que);
@@ -67,6 +69,15 @@ bool fecha_iso(const std::string& f) {
 }
 
 }  // namespace
+
+double distancia_m(const Punto& a, const Punto& b) {
+  const double rad = kPi / 180.0;
+  const double dlat = (b.lat - a.lat) * rad;
+  const double dlon = (b.lon - a.lon) * rad;
+  const double h = std::sin(dlat / 2) * std::sin(dlat / 2) +
+                   std::cos(a.lat * rad) * std::cos(b.lat * rad) * std::sin(dlon / 2) * std::sin(dlon / 2);
+  return 2 * kRadioTerrestreM * std::asin(std::min(1.0, std::sqrt(h)));
+}
 
 RedVial RedVial::desde_json(const json& documento) {
   if (!documento.is_object()) fallar("", "el archivo debe ser un objeto JSON");
@@ -168,6 +179,15 @@ RedVial RedVial::desde_json(const json& documento) {
 
   red.salientes_.assign(red.nodos_.size(), {});
   for (std::size_t i = 0; i < red.tramos_.size(); ++i) red.salientes_[red.tramos_[i].desde].push_back(i);
+  red.posicion_nodo_ = std::move(posicion_nodo);
+
+  // La estimación del A* es la línea recta por este factor: así nunca supera el costo de ningún tramo.
+  double factor = 1.0;
+  for (const Tramo& t : red.tramos_) {
+    const double recta = distancia_m(red.nodos_[t.desde].posicion, red.nodos_[t.hasta].posicion);
+    if (recta > 0) factor = std::min(factor, t.longitud_m / recta);
+  }
+  red.factor_estimacion_ = factor * kMargenEstimacion;
 
   red.construir_indice();
   return red;
@@ -217,6 +237,12 @@ std::pair<double, double> RedVial::proyectar(double lat, double lon) const {
 
 std::int64_t RedVial::clave_celda(std::int64_t cx, std::int64_t cy) {
   return cx * 4000003 + cy;  // cabe de sobra: las celdas de una ciudad no llegan a miles
+}
+
+std::optional<std::size_t> RedVial::buscar_nodo(const std::string& id) const {
+  const auto it = posicion_nodo_.find(id);
+  if (it == posicion_nodo_.end()) return std::nullopt;
+  return it->second;
 }
 
 std::optional<Ajuste> RedVial::ajustar(double lat, double lon) const {

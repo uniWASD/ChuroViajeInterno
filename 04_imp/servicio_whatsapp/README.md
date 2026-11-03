@@ -1,12 +1,12 @@
 # Servicio WhatsApp/LLM de ChuroViaje
 
-Infraestructura Node.js del servicio de monitoreo de surtidores (CU-06, HU-08 y T-091, issue #43). Su ubicación en el repositorio es `04_imp/servicio_whatsapp/`.
+Servicio Node.js del monitoreo de surtidores (CU-06, HU-08; base de T-091, issue #43 y lectura de grupos del issue #51). Su ubicación en el repositorio es `04_imp/servicio_whatsapp/`.
 
-El servicio contiene su **propio SQLite** para mensajes de texto pendientes, configura un cliente HTTP hacia las dos rutas de monitoreo y ejecuta mantenimiento al iniciar y durante su ejecución. **Todavía no se conecta a WhatsApp/Baileys, no invoca un LLM ni consulta o modifica automáticamente los surtidores**: esas integraciones corresponden a las tareas de lectura y análisis posteriores. El cliente HTTP se usa solo si otro componente lo llama de forma explícita.
+El servicio contiene su **propio SQLite** para mensajes de texto pendientes, configura un cliente HTTP hacia las dos rutas de monitoreo y ejecuta mantenimiento al iniciar y durante su ejecución. **Incorpora conexión de solo lectura con Baileys al activar `WHATSAPP_ENABLED=true`. No invoca un LLM ni consulta o modifica automáticamente los surtidores**: el análisis corresponde a otro issue. El cliente HTTP se usa solo si otro componente lo llama de forma explícita.
 
 ## Requisitos de ejecución
 
-- Node.js **22.13.0 o posterior**, sin paquetes externos; se utiliza `node:sqlite` integrado en Node.js. Como decisión técnica, no se incorpora un controlador SQLite nativo adicional que obligue a compilar dependencias al desplegar en ARM.
+- Node.js **22.13.0 o posterior**, con Baileys y qrcode-terminal para activar la conexión real; las pruebas automatizadas no necesitan dependencias descargadas. Se utiliza `node:sqlite` integrado en Node.js. Como decisión técnica, no se incorpora un controlador SQLite nativo adicional que obligue a compilar dependencias al desplegar en ARM.
 - Se recomienda usar una versión LTS de Node.js mantenida y fijar la misma versión en el servidor y en la CI. Node 22 puede emitir `ExperimentalWarning` al cargar `node:sqlite`; no equivale a un fallo.
 - Plataformas verificadas: **Linux x86_64 con Node.js 22.16.0** (pruebas y arranque) y **Windows con Node.js 22.18.0** (10 rondas aprobadas, demostración HTTP, cobertura y arranque). En Windows se omite la prueba de permisos POSIX, pero las demás deben aprobarse. **Ubuntu Linux ARM queda pendiente de verificación física**.
 - La ejecución necesita permisos de escritura sobre el SQLite privado. El servicio fuerza `0600` para el archivo SQLite en POSIX y crea `data/` con permisos restringidos; en Windows se debe aplicar la ACL correspondiente.
@@ -27,7 +27,7 @@ npm.cmd test
 npm.cmd run demo
 ```
 
-`npm test` ejecuta las pruebas automáticas, incluido el arranque de un subproceso, pruebas de migración y la demostración con un doble HTTP local, usando solamente datos ficticios. `npm run demo` ejecuta **esa misma demostración por separado** cuando se desea ver su resultado; no es necesario ejecutarla dos veces para validar. No se requiere `npm install`. El doble HTTP escucha temporalmente en `127.0.0.1` y no es un backend Java real.
+`npm test` ejecuta las pruebas automáticas, incluido el arranque de un subproceso, pruebas de migración y la demostración con un doble HTTP local, usando solamente datos ficticios. `npm run demo` ejecuta **esa misma demostración por separado** cuando se desea ver su resultado; no es necesario ejecutarla dos veces para validar. No se requiere `npm install` para las pruebas simuladas; para la conexión real sí, ejecutar `npm install`. El doble HTTP escucha temporalmente en `127.0.0.1` y no es un backend Java real.
 
 ### Verificación de compatibilidad en Windows
 
@@ -122,4 +122,75 @@ El esquema tiene `PRAGMA user_version=1`, admite columnas técnicas y tablas aux
 - `test/`, `test-support/`: pruebas automatizadas con datos sintéticos y carpetas temporales.
 - `demo/run-demo.js`: demostración local y doble HTTP; **no es** el simulador de tráfico de CU-07.
 
-Los métodos `ingestText`, `listPending`, `markProcessed` y el temporizador preciso dejan preparada parte de la infraestructura de las tareas de lectura de grupos y análisis por lotes. `ingestText` devuelve `IGNORADO` para grupos no autorizados, sin escribir en SQLite. **No implementan todavía** conexión Baileys ni procesamiento LLM, ni la cola de resultados que exige RN-06.19 para reintentos de envío al backend.
+Los métodos `ingestText`, `listPending`, `markProcessed` y el temporizador preciso dejan preparada parte de la infraestructura de las tareas de lectura de grupos y análisis por lotes. `ingestText` devuelve `IGNORADO` para grupos no autorizados, sin escribir en SQLite. **La lectura Baileys se implementa en `whatsapp-reader.js`** con filtrado y deduplicación. No hay procesamiento LLM ni cola de resultados para el backend en el alcance del issue #51.
+
+## HU-08 / issue #51: lectura de grupos autorizados
+
+La conexión real está desactivada por defecto para conservar el arranque y la demostración sin una cuenta real. `WHATSAPP_ENABLED=true` exige un número de uso exclusivo del proyecto, los IDs reales de grupos aprobados, el registro de autorizaciones y el acceso a una sesión SQLite privada. Esta funcionalidad no envía mensajes: el código no llama a `sendMessage` ni a métodos de envío hacia grupos. La biblioteca Baileys efectúa el intercambio técnico indispensable para mantener la sesión.
+
+### Configuración de la cuenta y autorizaciones
+
+1. Obtener un número dedicado controlado por el equipo. Su propietario debe vincularlo a WhatsApp y escanear el QR al iniciar la conexión. La conexión se rechaza si el número autenticado no coincide con `WHATSAPP_PHONE_NUMBER` (código de país seguido de dígitos, sin `+`, espacios ni guiones).
+2. Solicitar la autorización expresa al administrador de **cada** grupo y mantener registro del grupo, la fecha y el medio de solicitud. No incorporar un grupo sin autorización confirmada.
+3. Guardar el registro en un JSON externo **fuera del repositorio**. Se espera el siguiente formato, sustituyendo los datos por registros verídicos y autorizados:
+
+```json
+{
+  "autorizaciones": [
+    {
+      "grupo": "1234567890-1234567890@g.us",
+      "fecha": "2026-10-29T17:00:00-04:00",
+      "solicitud": "Medio de solicitud y constancia de aceptación del administrador",
+      "autorizadoPorAdmin": true
+    }
+  ]
+}
+```
+
+Los valores son ilustrativos y **no constituyen autorización**. Cada grupo incluido en `ALLOWED_GROUP_IDS` debe tener un registro con `autorizadoPorAdmin=true`; de lo contrario se impide iniciar la lectura. El lector rechaza el registro dentro del servicio, dentro de cualquier árbol Git y, en POSIX, archivos legibles por otros usuarios. En Windows, restringir las ACL a la cuenta que ejecuta el proceso; en POSIX usar directorio `0700` y archivo `0600`. Evitar almacenar nombres, números o datos personales del administrador en la constancia.
+
+| Variable | Uso |
+| --- | --- |
+| `WHATSAPP_ENABLED` | `true` para abrir la conexión, `false` para solo mantenimiento local (valor predeterminado). |
+| `WHATSAPP_PHONE_NUMBER` | Número dedicado en formato internacional solo dígitos, sin `+`. Obligatorio al activar. |
+| `WHATSAPP_AUTHORIZATIONS_FILE` | Ruta absoluta del JSON externo de autorizaciones. Obligatoria al activar. |
+| `WHATSAPP_SESSION_PATH` | SQLite de credenciales y claves Signal; archivo diferente al de mensajes. Predeterminado `./data/session.sqlite`. |
+| `WHATSAPP_RECONNECT_MS` | Intervalo fijo para reintento tras una desconexión transitoria, `15000` ms predeterminado (entre 1000 y 300000). |
+
+Las variables anteriores también se pueden configurar en el JSON externo señalado por `WHATSAPP_SERVICE_CONFIG_FILE`. Los grupos se indican mediante `ALLOWED_GROUP_IDS` como antes. Los IDs de grupos deben ser los IDs reales de WhatsApp terminados en `@g.us`. La tabla de mensajes utiliza un ID SHA-256 derivado del grupo y del identificador del mensaje: evita colisiones entre grupos, no contiene el identificador del remitente y conserva deduplicación tras reiniciar el proceso.
+
+### Arranque y comprobación en Windows (PowerShell)
+
+Desde la carpeta `servicio_whatsapp`:
+
+```powershell
+node --version
+npm.cmd install
+npm.cmd test
+npm.cmd run demo
+node --test --experimental-test-coverage
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\verificar_HU08_windows.ps1 -Rondas 10
+```
+
+La suite cubre CP-48, CP-49 y CP-50 con **dobles simulados** de Baileys; las pruebas de red no se ejecutan contra WhatsApp ni pueden demostrar el acceso a grupos reales sin la cuenta dedicada. Para el ensayo real controlado, configurar variables de entorno y el JSON externo con permisos adecuados, poner `WHATSAPP_ENABLED=true` y arrancar:
+
+```powershell
+$env:WHATSAPP_ENABLED = 'true'
+$env:WHATSAPP_PHONE_NUMBER = 'NUMERO_DEDICADO_SOLO_DIGITOS'
+$env:WHATSAPP_AUTHORIZATIONS_FILE = 'C:\ChuroViajePrivado\autorizaciones.json'
+$env:WHATSAPP_SESSION_PATH = 'C:\ChuroViajePrivado\session.sqlite'
+$env:ALLOWED_GROUP_IDS = 'ID_REAL_DEL_GRUPO@g.us'
+npm.cmd start
+```
+
+Antes de conectar en Windows, crear la carpeta privada con `New-Item -ItemType Directory -Force C:\ChuroViajePrivado` y restringir su ACL (ajustar la identidad a la cuenta de servicio real):
+
+```powershell
+icacls 'C:\ChuroViajePrivado' /inheritance:r /grant:r "$($env:USERDOMAIN)\$($env:USERNAME):(OI)(CI)F" /T
+```
+
+Aplicar ACL privada también al JSON de autorizaciones y a la sesión creada. Mantener `BACKEND_URL` y `SERVICE_TOKEN` como los exige la configuración T-091; no se usa el backend durante la lectura. El QR se muestra únicamente en la terminal local para vincular la cuenta; no copiarlo a registros ni capturas. Tras vincular, verificar CP-48 (texto, imagen, audio: solo texto pendiente), CP-49 (un grupo excluido no se guarda), y CP-50 (desconectar red durante 2 minutos; el servicio registra desconexión y reintentos, y recibe mensajes nuevos al recuperar la red). Revisar solo el recuento de pendientes, **no exportar el texto**. Detener con `Ctrl+C`. Para volver a conectarse, la sesión debe permanecer intacta; un código 401 implica una sesión revocada y exige intervención para vincular de nuevo.
+
+### Responsabilidad y alcance
+
+La verificación de autorizaciones es documental: el software exige un registro externo afirmativo, pero solo el equipo puede comprobar que la autorización fue concedida verdaderamente por cada administrador. La integración con WhatsApp es mediante una librería no oficial, con riesgo de bloqueo o cambios externos. Los ensayos simulados verifican la lógica implementada pero no sustituyen la prueba de conectividad real. Ningún análisis LLM, actualización de combustible ni envío a grupos está incluido en este issue.

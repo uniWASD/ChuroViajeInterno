@@ -1,27 +1,16 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 
 import 'package:app_flutter/controllers/map_controller.dart';
 import 'package:app_flutter/models/coordenada.dart';
-import 'package:app_flutter/services/api/api_client.dart';
 import 'package:app_flutter/services/ubicacion/servicio_ubicacion.dart';
 
 import 'dobles/dobles_mapa.dart';
 
 void main() {
-  late ApiClient api;
-
-  setUp(() {
-    api = ApiClient(client: MockClient((_) async => http.Response('{}', 200)));
-  });
-
-  tearDown(() => api.dispose());
-
   group('Ubicación en MapController', () {
     test('Con permiso sigue la posición del conductor', () async {
       final ubicacion = UbicacionFalsa();
-      final controller = MapController(api, ubicacion);
+      final controller = MapController(ubicacion);
 
       await controller.activarUbicacion();
       ubicacion.emitir(const Coordenada(-21.53, -64.73));
@@ -38,7 +27,7 @@ void main() {
       'Sin permiso no pide posiciones y el resto sigue igual (RN-04.3)',
       () async {
         final ubicacion = UbicacionFalsa(permiso: PermisoUbicacion.denegado);
-        final controller = MapController(api, ubicacion);
+        final controller = MapController(ubicacion);
 
         await controller.activarUbicacion();
         controller.seleccionarPunto(const Coordenada(-21.54, -64.72));
@@ -53,7 +42,7 @@ void main() {
 
     test('CP-30: en segundo plano deja de pedir la ubicación y la retoma al volver (RNF-13)', () async {
       final ubicacion = UbicacionFalsa();
-      final controller = MapController(api, ubicacion);
+      final controller = MapController(ubicacion);
       await controller.activarUbicacion();
       expect(ubicacion.escuchando, 1);
 
@@ -69,7 +58,7 @@ void main() {
 
     test('Si el permiso llega con la app en segundo plano, no empieza a seguir hasta volver', () async {
       final ubicacion = UbicacionFalsa();
-      final controller = MapController(api, ubicacion);
+      final controller = MapController(ubicacion);
       controller.alSalirDePantalla();
 
       await controller.activarUbicacion();
@@ -83,7 +72,7 @@ void main() {
 
   group('Mapa base en MapController', () {
     test('CP-29: si el mapa no carga, muestra el error de servicio externo y deja reintentar', () {
-      final controller = MapController(api, UbicacionFalsa());
+      final controller = MapController(UbicacionFalsa());
       final intento = controller.intentoMapa;
 
       controller.informarErrorMapa('Failed to load style');
@@ -96,7 +85,7 @@ void main() {
     });
 
     test('Guarda y quita el punto tocado', () {
-      final controller = MapController(api, UbicacionFalsa());
+      final controller = MapController(UbicacionFalsa());
       controller.seleccionarPunto(const Coordenada(-21.5, -64.7));
       expect(controller.puntoSeleccionado, const Coordenada(-21.5, -64.7));
       controller.limpiarPunto();

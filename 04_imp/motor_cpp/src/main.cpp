@@ -69,6 +69,6 @@ int main(int argc, char** argv) {
   // consultar_estado responde "red_cargada":false, así el wrapper no lo da por listo.
   std::shared_ptr<const churoviaje::RedVial> red;
   if (!ruta_red.empty()) red = churoviaje::cargar_red_para_arranque(ruta_red, std::cerr);
-  const churoviaje::Nucleo nucleo(std::move(red), algoritmo);
+  churoviaje::Nucleo nucleo(std::move(red), algoritmo);
   return churoviaje::ejecutar(std::cin, std::cout, std::cerr, nucleo);
 }

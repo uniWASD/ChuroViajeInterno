@@ -14,7 +14,7 @@ namespace codigo = churoviaje::codigo_error;
 namespace {
 
 // Atiende la línea, comprueba que la respuesta cabe en una sola línea y la devuelve ya leída.
-json responder(const Nucleo& nucleo, const std::string& linea) {
+json responder(Nucleo& nucleo, const std::string& linea) {
   const auto r = nucleo.atender(linea);
   EXPECT_TRUE(r.has_value()) << "no hubo respuesta para: " << linea;
   if (!r) return json();
@@ -29,7 +29,7 @@ json responder(const Nucleo& nucleo, const std::string& linea) {
 
 // CP-24
 TEST(Nucleo, ConsultarEstadoResponde) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   const auto r = nucleo.atender(R"({"id":1,"operacion":"consultar_estado"})");
   ASSERT_TRUE(r.has_value());
   EXPECT_TRUE(r->ok);
@@ -44,7 +44,7 @@ TEST(Nucleo, ConsultarEstadoResponde) {
 }
 
 TEST(Nucleo, ConsultarEstadoConRedCargada) {
-  const Nucleo nucleo(EstadoRed{true, std::string("2026-10-05")});
+  Nucleo nucleo(EstadoRed{true, std::string("2026-10-05")});
   const json j = responder(nucleo, R"({"id":7,"operacion":"consultar_estado"})");
   EXPECT_EQ(j.at("id"), 7);
   EXPECT_EQ(j.at("ok"), true);
@@ -53,14 +53,14 @@ TEST(Nucleo, ConsultarEstadoConRedCargada) {
 }
 
 TEST(Nucleo, EcoDelIdTextoYEnteroGrande) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   EXPECT_EQ(responder(nucleo, R"({"id":"abc-1","operacion":"consultar_estado"})").at("id"), "abc-1");
   EXPECT_EQ(responder(nucleo, R"({"id":9007199254740993,"operacion":"consultar_estado"})").at("id"),
             9007199254740993LL);
 }
 
 TEST(Nucleo, IgnoraCamposDeMas) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   const json j = responder(nucleo, R"({"id":2,"operacion":"consultar_estado","extra":[1,2,3]})");
   EXPECT_EQ(j.at("ok"), true);
 }
@@ -69,7 +69,7 @@ TEST(Nucleo, IgnoraCamposDeMas) {
 class OperacionPendiente : public ::testing::TestWithParam<std::string> {};
 
 TEST_P(OperacionPendiente, RespondeNoImplementada) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   const json j = responder(nucleo, R"({"id":5,"operacion":")" + GetParam() + R"("})");
   EXPECT_EQ(j.at("id"), 5);
   EXPECT_EQ(j.at("ok"), false);
@@ -78,10 +78,10 @@ TEST_P(OperacionPendiente, RespondeNoImplementada) {
 }
 
 INSTANTIATE_TEST_SUITE_P(Contrato, OperacionPendiente,
-                         ::testing::Values("revisar_ruta", "actualizar_trafico", "analizar_telemetria"));
+                         ::testing::Values("revisar_ruta", "analizar_telemetria"));
 
 TEST(Nucleo, OperacionDesconocida) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   const json j = responder(nucleo, R"({"id":9,"operacion":"hacer_cafe"})");
   EXPECT_EQ(j.at("id"), 9);
   EXPECT_EQ(j.at("ok"), false);
@@ -90,14 +90,14 @@ TEST(Nucleo, OperacionDesconocida) {
 }
 
 TEST(Nucleo, NombreDeOperacionConComillasYSaltosNoRompeLaLinea) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   const json j = responder(nucleo, R"({"id":3,"operacion":"a\"b\nc\\d ñ"})");
   EXPECT_EQ(j.at("ok"), false);
   EXPECT_EQ(j.at("error").at("codigo"), codigo::operacion_desconocida);
 }
 
 TEST(Nucleo, LineaQueNoEsJson) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   for (const std::string linea : {"esto no es json", "{", R"({"id":1,)", "{'id':1}", "\xff\xfe\x01"}) {
     const json j = responder(nucleo, linea);
     EXPECT_TRUE(j.at("id").is_null()) << linea;
@@ -107,7 +107,7 @@ TEST(Nucleo, LineaQueNoEsJson) {
 }
 
 TEST(Nucleo, JsonQueNoEsObjeto) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   for (const std::string linea : {"[]", "123", "\"texto\"", "null", "true"}) {
     const json j = responder(nucleo, linea);
     EXPECT_EQ(j.at("ok"), false) << linea;
@@ -116,7 +116,7 @@ TEST(Nucleo, JsonQueNoEsObjeto) {
 }
 
 TEST(Nucleo, FaltaOperacionOMalTipada) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   for (const std::string linea : {R"({"id":4})", R"({"id":4,"operacion":null})", R"({"id":4,"operacion":12})"}) {
     const json j = responder(nucleo, linea);
     EXPECT_EQ(j.at("id"), 4) << linea;  // el id se repite aunque lo demás falle
@@ -126,7 +126,7 @@ TEST(Nucleo, FaltaOperacionOMalTipada) {
 }
 
 TEST(Nucleo, FaltaIdOMalTipado) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   for (const std::string linea : {R"({"operacion":"consultar_estado"})", R"({"id":null,"operacion":"consultar_estado"})",
                                   R"({"id":1.5,"operacion":"consultar_estado"})", R"({"id":[1],"operacion":"consultar_estado"})"}) {
     const json j = responder(nucleo, linea);
@@ -137,20 +137,20 @@ TEST(Nucleo, FaltaIdOMalTipado) {
 }
 
 TEST(Nucleo, LineaEnBlancoNoGeneraRespuesta) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   EXPECT_FALSE(nucleo.atender("").has_value());
   EXPECT_FALSE(nucleo.atender("   \t ").has_value());
   EXPECT_FALSE(nucleo.atender("\r").has_value());
 }
 
 TEST(Nucleo, AceptaFinDeLineaWindows) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   const json j = responder(nucleo, "{\"id\":1,\"operacion\":\"consultar_estado\"}\r");
   EXPECT_EQ(j.at("ok"), true);
 }
 
 TEST(Nucleo, ErroresMarcanOkFalseYCodigo) {
-  const Nucleo nucleo;
+  Nucleo nucleo;
   const auto r = nucleo.atender("basura");
   ASSERT_TRUE(r.has_value());
   EXPECT_FALSE(r->ok);

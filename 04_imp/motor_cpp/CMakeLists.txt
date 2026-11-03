@@ -35,7 +35,9 @@ add_library(nucleo STATIC
   src/nucleo.cpp
   src/bucle.cpp
   src/red_vial.cpp
-  src/ruta.cpp)
+  src/ruta.cpp
+  src/eventos.cpp
+  src/tiempo.cpp)
 target_include_directories(nucleo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(nucleo PUBLIC nlohmann_json::nlohmann_json)
 
@@ -61,7 +63,8 @@ if(BUILD_TESTING)
   endif()
   include(GoogleTest)
 
-  add_executable(pruebas_nucleo tests/test_nucleo.cpp tests/test_bucle.cpp tests/test_red_vial.cpp tests/test_ruta.cpp)
+  add_executable(pruebas_nucleo tests/test_nucleo.cpp tests/test_bucle.cpp tests/test_red_vial.cpp tests/test_ruta.cpp
+    tests/test_trafico.cpp)
   target_link_libraries(pruebas_nucleo PRIVATE nucleo GTest::gtest_main)
   # Archivos de datos de las pruebas (red pequeña hecha a mano y el ejemplo del formato)
   target_compile_definitions(pruebas_nucleo PRIVATE

@@ -7,6 +7,8 @@
 #include <exception>
 #include <utility>
 
+#include "tiempo.hpp"
+
 #include <nlohmann/json.hpp>
 
 namespace churoviaje {
@@ -15,10 +17,10 @@ namespace {
 // Se usa ordered_json para que las respuestas salgan con "id" y "ok" primero, como en el contrato.
 using json = nlohmann::ordered_json;
 
-constexpr std::array<std::string_view, 3> kOperacionesPendientes = {"revisar_ruta", "actualizar_trafico",
-                                                                   "analizar_telemetria"};
+constexpr std::array<std::string_view, 2> kOperacionesPendientes = {"revisar_ruta", "analizar_telemetria"};
 constexpr std::string_view kConsultarEstado = "consultar_estado";
 constexpr std::string_view kCalcularRuta = "calcular_ruta";
+constexpr std::string_view kActualizarTrafico = "actualizar_trafico";
 
 bool es_pendiente(std::string_view operacion) {
   for (auto pendiente : kOperacionesPendientes) {
@@ -68,8 +70,8 @@ const char* texto_estado(EstadoRuta estado) {
 
 // calcular_ruta: origen y destino obligatorios, paradas opcionales (RN-03.2). «Sin ruta» y «punto inválido»
 // son respuestas correctas, con "ok":true (RN-03.12).
-Respuesta responder_ruta(const json& id, const json& peticion, const RedVial* red, const Trafico& trafico,
-                         Algoritmo algoritmo) {
+Respuesta responder_ruta(const json& id, const json& peticion, const RedVial* red, TablaEventos& eventos,
+                         std::int64_t ahora, Algoritmo algoritmo) {
   const auto it_origen = peticion.find("origen");
   const auto it_destino = peticion.find("destino");
   std::optional<Punto> origen, destino;
@@ -98,7 +100,7 @@ Respuesta responder_ruta(const json& id, const json& peticion, const RedVial* re
     return respuesta_error(id, codigo_error::red_no_cargada, "El núcleo no tiene la red vial cargada.");
   }
 
-  const Ruta ruta = calcular_ruta(*red, *origen, *destino, paradas, &trafico, algoritmo);
+  const Ruta ruta = calcular_ruta(*red, *origen, *destino, paradas, &eventos.trafico(ahora), algoritmo);
   json r = {{"id", id}, {"ok", true}, {"estado", texto_estado(ruta.estado)}};
   if (ruta.estado == EstadoRuta::encontrada) {
     json trazado = json::array();
@@ -115,12 +117,94 @@ Respuesta responder_ruta(const json& id, const json& peticion, const RedVial* re
   return respuesta_ok(std::move(r));
 }
 
+json ids_de_tramos(const RedVial& red, const std::vector<std::size_t>& tramos) {
+  json ids = json::array();
+  for (const std::size_t t : tramos) ids.push_back(red.tramos()[t].id);
+  return ids;
+}
+
+// actualizar_trafico: un evento nace, cambia su vencimiento, se retira o vence (D-14). Responde los tramos
+// que afecta, o que afectaba si se quitó.
+Respuesta responder_trafico(const json& id, const json& peticion, const RedVial* red, TablaEventos& eventos,
+                            std::int64_t ahora) {
+  const auto it_evento = peticion.find("evento");
+  const auto it_accion = peticion.find("accion");
+  if (it_evento == peticion.end() || !(it_evento->is_string() || it_evento->is_number_integer()) ||
+      it_accion == peticion.end() || !it_accion->is_string()) {
+    return respuesta_error(id, codigo_error::peticion_invalida,
+                           "Faltan \"evento\" (texto o entero) o \"accion\" (texto).");
+  }
+  const std::string evento = it_evento->is_string() ? it_evento->get<std::string>() : it_evento->dump();
+  const std::string accion = it_accion->get<std::string>();
+
+  if (accion == "retira" || accion == "vence") {
+    if (!red) return respuesta_error(id, codigo_error::red_no_cargada, "El núcleo no tiene la red vial cargada.");
+    return respuesta_ok({{"id", id}, {"ok", true}, {"tramos", ids_de_tramos(*red, eventos.quitar(evento))}});
+  }
+  if (accion != "nace" && accion != "cambia_vencimiento") {
+    return respuesta_error(id, codigo_error::peticion_invalida,
+                           "\"accion\" debe ser nace, cambia_vencimiento, retira o vence.");
+  }
+
+  AvisoEvento aviso;
+  aviso.id = evento;
+  const auto it_tipo = peticion.find("tipo");
+  const auto tipo = (it_tipo != peticion.end() && it_tipo->is_string())
+                        ? tipo_evento_desde_texto(it_tipo->get<std::string>())
+                        : std::nullopt;
+  if (!tipo) {
+    return respuesta_error(id, codigo_error::peticion_invalida,
+                           "\"tipo\" debe ser ACCIDENTE, CONTROL_POLICIAL, BLOQUEO, OTRO o CONGESTION.");
+  }
+  aviso.tipo = *tipo;
+  const auto it_ubicacion = peticion.find("ubicacion");
+  const auto ubicacion = it_ubicacion != peticion.end() ? leer_punto(*it_ubicacion) : std::nullopt;
+  if (!ubicacion) {
+    return respuesta_error(id, codigo_error::peticion_invalida, "\"ubicacion\" va como [latitud, longitud].");
+  }
+  aviso.ubicacion = *ubicacion;
+  const auto it_vence = peticion.find("vence");
+  const auto vence = (it_vence != peticion.end() && it_vence->is_string())
+                         ? segundos_desde_iso(it_vence->get<std::string>())
+                         : std::nullopt;
+  if (!vence) {
+    return respuesta_error(id, codigo_error::peticion_invalida,
+                           "\"vence\" va como fecha ISO 8601 con zona horaria, por ejemplo 2026-10-06T16:02:00-04:00.");
+  }
+  aviso.vence = *vence;
+  if (aviso.tipo == TipoEvento::congestion) {
+    const auto it_nivel = peticion.find("nivel");
+    const std::string nivel = (it_nivel != peticion.end() && it_nivel->is_string()) ? it_nivel->get<std::string>() : "";
+    if (nivel == "CONGESTIONADO") {
+      aviso.nivel_congestion = NivelTrafico::congestionado;
+    } else if (nivel == "MUY_CONGESTIONADO") {
+      aviso.nivel_congestion = NivelTrafico::muy_congestionado;
+    } else {
+      return respuesta_error(id, codigo_error::peticion_invalida,
+                             "Una congestión lleva \"nivel\": CONGESTIONADO o MUY_CONGESTIONADO.");
+    }
+  }
+  if (!red) return respuesta_error(id, codigo_error::red_no_cargada, "El núcleo no tiene la red vial cargada.");
+  if (aviso.tipo == TipoEvento::congestion) {
+    const auto it_tramo = peticion.find("tramo");
+    if (it_tramo != peticion.end() && it_tramo->is_string()) {
+      for (std::size_t t = 0; t < red->tramos().size(); ++t) {
+        if (red->tramos()[t].id == it_tramo->get_ref<const std::string&>()) {
+          aviso.tramo_medido = t;
+          break;
+        }
+      }
+    }
+  }
+  return respuesta_ok({{"id", id}, {"ok", true}, {"tramos", ids_de_tramos(*red, eventos.registrar(aviso, ahora))}});
+}
+
 }  // namespace
 
-Nucleo::Nucleo(EstadoRed estado) : estado_(std::move(estado)) {}
+Nucleo::Nucleo(EstadoRed estado) : estado_(std::move(estado)), reloj_(ahora_en_segundos) {}
 
 Nucleo::Nucleo(std::shared_ptr<const RedVial> red, Algoritmo algoritmo)
-    : red_(std::move(red)), algoritmo_(algoritmo), trafico_(red_ ? red_->tramos().size() : 0) {
+    : red_(std::move(red)), algoritmo_(algoritmo), eventos_(red_.get()), reloj_(ahora_en_segundos) {
   if (red_) {
     estado_.cargada = true;
     estado_.fecha_extracto = red_->fecha_extracto();
@@ -129,7 +213,7 @@ Nucleo::Nucleo(std::shared_ptr<const RedVial> red, Algoritmo algoritmo)
   }
 }
 
-std::optional<Respuesta> Nucleo::atender(std::string_view linea) const noexcept {
+std::optional<Respuesta> Nucleo::atender(std::string_view linea) noexcept {
   json id = nullptr;  // mientras no se sepa cuál es, las respuestas de error llevan "id":null
   try {
     linea = recortar(linea);
@@ -170,7 +254,10 @@ std::optional<Respuesta> Nucleo::atender(std::string_view linea) const noexcept 
                            {"tramos", estado_.tramos}});
     }
     if (operacion == kCalcularRuta) {
-      return responder_ruta(id, peticion, red_.get(), trafico_, algoritmo_);
+      return responder_ruta(id, peticion, red_.get(), eventos_, reloj_(), algoritmo_);
+    }
+    if (operacion == kActualizarTrafico) {
+      return responder_trafico(id, peticion, red_.get(), eventos_, reloj_());
     }
     if (es_pendiente(operacion)) {
       return respuesta_error(id, codigo_error::no_implementada,

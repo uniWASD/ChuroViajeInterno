@@ -85,4 +85,4 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-117 Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia | CU-09 | #112 · Java · Sprint 4 | feature/T117-java-medir-api-anh | CP-157, CP-158 | Pendiente |
 | T-118 Vincular las estaciones de ANH con los surtidores del catálogo | CU-09 | #113 · Java · Sprint 6 | feature/T118-java-vincular-estaciones-anh | CP-159, CP-160 | Pendiente |
 | T-119 Comprobar la salida del servidor hacia la API de ANH | CU-09 | #111 · Servidor · Sprint 2 | feature/T119-servidor-salida-anh | CP-156 | Pendiente |
-| T-120 Rutas de referencia de Tarija para probar el cálculo de ruta | CU-03 | #?(orden 60) · C++ · Sprint 3 | feature/T120-cpp-rutas-referencia | CP-167, CP-168 | Pendiente |
+| T-120 Rutas de referencia de Tarija para probar el cálculo de ruta | CU-03 | #129 · C++ · Sprint 3 | feature/T120-cpp-rutas-referencia | CP-167, CP-168 | Pendiente |

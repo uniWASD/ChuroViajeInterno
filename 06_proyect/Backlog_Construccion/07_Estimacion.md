@@ -54,7 +54,7 @@ Cuando el responsable tiene usuario, el issue se le asigna y la línea «Respons
 | 27 | #65 | [HU-05][CU-03][Java] Calcular la ruta | 3 | Jorge | S | Capa delgada sobre el wrapper y traducción de respuestas |
 | 28 | #66 | [HU-05][CU-03][C++] Tráfico de los eventos en los tramos | 3 | Marcelo | M | Asignar evento a calle en los dos sentidos, niveles, cierre y vencimiento |
 | 32 | #70 | [HU-05][CU-03][Flutter] Cómo llegar | 3 | Alex | L | Vista con paradas, destino por mapa y dibujo de la ruta |
-| 60 | #?(orden 60) | [T-120][C++] Rutas de referencia de Tarija para probar el cálculo de ruta | 3 | Franz y Antonio | M | Elegir los viajes y revisarlos con alguien que maneje en Tarija, más dos pruebas que los usan: una del núcleo y otra del backend con el núcleo real |
+| 60 | #129 | [T-120][C++] Rutas de referencia de Tarija para probar el cálculo de ruta | 3 | Franz y Antonio | M | Elegir los viajes y revisarlos con alguien que maneje en Tarija, más dos pruebas que los usan: una del núcleo y otra del backend con el núcleo real |
 | 10 | #48 | [HU-10][CU-08][Flutter] Iniciar sesión con Google | 4 | Alex | L | Configurar Google en Android e iOS, entrada sin conexión, renovación automática, 401 y cierre |
 | 14 | #52 | [T-097][Servidor] Dominio, Nginx y HTTPS | 4 | Marcelo | S | Dominio, Nginx y certbot |
 | 15 | #53 | [HU-01][CU-01][Java] Registrar reportes de eventos viales | 4 | Jorge | L | EventoVial con muchas reglas, PostGIS, duplicados, límite y transacción |
@@ -105,9 +105,9 @@ En total: 60 issues, 2 XS, 15 S, 31 M y 12 L. No queda ningún XL.
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | Alex | 3 | 0 | 8 | 8 | 8 | 5 | 0 | 32 |
 | Jorge | 3 | 5 | 2 | 8 | 5 | 8 | 2,5 | 33,5 |
-| Antonio | 3 | 7 | 1,5 | 8 | 8 | 8,5 | 5,5 | 41,5 |
+| Antonio | 0 | 7 | 1,5 | 8 | 8 | 8,5 | 5,5 | 38,5 |
 | Marcelo | 5 | 4 | 6 | 5 | 8 | 7 | 5 | 40 |
-| Franz | 2 | 6 | 1,5 | 8 | 8 | 7,5 | 5 | 38 |
+| Franz | 5 | 6 | 1,5 | 8 | 8 | 7,5 | 5 | 41 |
 | **Sprint** | 16 | 22 | 19 | 37 | 37 | 36 | 18 | 185 |
 
 «Pruebas de punta a punta» se reparte por mitades entre Jorge y Antonio; «Consultar el estado de combustible desde ANH» y «Rutas de referencia de Tarija», entre Franz y Antonio. La carga cuenta solo al responsable; no cuenta las revisiones de Pull Requests, que recaen sobre todo en Marcelo. Como referencia, un punto equivale a unas 2 o 3 horas.

@@ -11,7 +11,7 @@ Es la cadena de dependencias que más puntos suma: 13 issues y 47 puntos, del sp
 | Paso | Issue | Título | Sprint | Responsable | Talla | Puntos acumulados |
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | #40 | [T-088][Java] Estructura base del backend | 1 | Jorge | M | 3 |
-| 2 | #41 | [T-089][Java] Base de datos, catálogos y zona de cobertura | 1 | Antonio | M | 6 |
+| 2 | #41 | [T-089][Java] Base de datos, catálogos y zona de cobertura | 1 | Franz | M | 6 |
 | 3 | #46 | [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT | 2 | Antonio | L | 11 |
 | 4 | #47 | [T-094][Java] Catálogos para la app | 2 | Antonio | S | 13 |
 | 5 | #53 | [HU-01][CU-01][Java] Registrar reportes de eventos viales | 4 | Jorge | L | 18 |
@@ -29,7 +29,7 @@ flowchart TB
     subgraph S1["Sprint 1"]
     direction LR
         i2["#40 · Java<br/>Estructura base del backend<br/>Jorge · M"]
-        i3["#41 · Java<br/>Base de datos, catálogos y zona de cobertura<br/>Antonio · M"]
+        i3["#41 · Java<br/>Base de datos, catálogos y zona de cobertura<br/>Franz · M"]
     end
     subgraph S2["Sprint 2"]
     direction LR
@@ -64,8 +64,9 @@ flowchart TB
     classDef marcelo fill:#e2d9f3,stroke:#666,color:#000
     classDef franz fill:#f8d7da,stroke:#666,color:#000
     class i2,i15,i29,i36,i46 jorge
-    class i3,i8,i9,i17,i25,i49,i51 antonio
+    class i8,i9,i17,i25,i49,i51 antonio
     class i52 marcelo
+    class i3 franz
 ```
 
 ## Cadenas dentro de un mismo sprint
@@ -74,7 +75,7 @@ Cuando un issue depende de otro del mismo sprint, avanza con datos falsos que si
 
 | Sprint | Cadena más larga | Puntos | |
 | --- | --- | --- | --- |
-| 1 | #40 (Jorge, M) → #41 (Antonio, M) | 6 |  |
+| 1 | #40 (Jorge, M) → #41 (Franz, M) | 6 |  |
 | 2 | #46 (Antonio, L) → #47 (Antonio, S) | 7 |  |
 | 3 | #58 (Marcelo, M) → #65 (Jorge, S) → #70 (Alex, L) | 10 | Revisar |
 | 4 | #53 (Jorge, L) → #55 (Antonio, L) → #63 (Antonio, M) → #67 (Jorge, M) | 16 | Revisar |
@@ -92,7 +93,7 @@ flowchart TB
     direction LR
         i1["#39 · Flutter<br/>Estructura base de la app<br/>Alex · M"]
         i2["#40 · Java<br/>Estructura base del backend<br/>Jorge · M"]
-        i3["#41 · Java<br/>Base de datos, catálogos y zona de cobertura<br/>Antonio · M"]
+        i3["#41 · Java<br/>Base de datos, catálogos y zona de cobertura<br/>Franz · M"]
         i4["#42 · C++<br/>Estructura del núcleo y protocolo por pipe<br/>Marcelo · M"]
         i5["#43 · WhatsApp/LLM<br/>Estructura del servicio<br/>Franz · S"]
         i6["#44 · Servidor<br/>Preparar la instancia de Oracle Cloud<br/>Marcelo · S"]
@@ -114,7 +115,7 @@ flowchart TB
         i27["#65 · Java<br/>Calcular la ruta<br/>Jorge · S"]
         i28["#66 · C++<br/>Tráfico de los eventos en los tramos<br/>Marcelo · M"]
         i32["#70 · Flutter<br/>Cómo llegar<br/>Alex · L"]
-        i60["orden 60 · C++<br/>Rutas de referencia de Tarija para probar el cálculo de ruta<br/>Franz y Antonio · M"]
+        i60["#129 · C++<br/>Rutas de referencia de Tarija para probar el cálculo de ruta<br/>Franz y Antonio · M"]
     end
     subgraph S4["Sprint 4"]
     direction LR
@@ -257,9 +258,9 @@ flowchart TB
     classDef franz fill:#f8d7da,stroke:#666,color:#000
     class i1,i7,i10,i18,i24,i26,i32,i42,i45,i55 alex
     class i2,i11,i15,i27,i29,i34,i36,i44,i46,i50 jorge
-    class i3,i8,i9,i17,i19,i25,i31,i40,i47,i49,i51 antonio
+    class i8,i9,i17,i19,i25,i31,i40,i47,i49,i51 antonio
     class i4,i6,i12,i14,i20,i22,i28,i30,i35,i38,i41,i48,i52,i53,i56 marcelo
-    class i5,i13,i16,i21,i23,i33,i37,i39,i43,i54,i57,i58,i59,i60 franz
+    class i3,i5,i13,i16,i21,i23,i33,i37,i39,i43,i54,i57,i58,i59,i60 franz
     style i2 stroke:#d73a49,stroke-width:3px
     style i3 stroke:#d73a49,stroke-width:3px
     style i8 stroke:#d73a49,stroke-width:3px

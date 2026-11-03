@@ -97,4 +97,4 @@ La columna «Depende de» usa el número de orden de esta tabla.
 | 57 | [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia | [02_Java.md](02_Java.md) | Sprint 4 | tipo:prueba, fase:construccion, tec:java | — | 2 | #112 |
 | 58 | [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo | [02_Java.md](02_Java.md) | Sprint 6 | tipo:tarea, fase:construccion, tec:java | 3, 19 | 2 | #113 |
 | 59 | [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH | [02_Java.md](02_Java.md) | Sprint 6 | caso-uso:CU-09, tipo:historia-usuario, fase:construccion, tec:java | 19, 57, 58 | 5 | #114 |
-| 60 | [T-120][C++] Rutas de referencia de Tarija para probar el cálculo de ruta | [03_Cpp.md](03_Cpp.md) | Sprint 3 | tipo:prueba, fase:construccion, tec:cpp, tec:java | 54 | 2 |  |
+| 60 | [T-120][C++] Rutas de referencia de Tarija para probar el cálculo de ruta | [03_Cpp.md](03_Cpp.md) | Sprint 3 | tipo:prueba, fase:construccion, tec:cpp, tec:java | 54 | 2 | #129 |

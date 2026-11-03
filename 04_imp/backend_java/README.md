@@ -102,3 +102,5 @@ La raíz y cada entidad deben tener metadata de aprobación. Producción rechaza
 | `RED_VIAL_PATH` | Ruta del archivo de la red vial; se le pasa al núcleo con `--red <ruta>`. |
 
 Los tiempos (`motor.tiempo-maximo` 3 s, `motor.espera-arranque`, `motor.espera-reinicio`) están en `application.yml`. Las pruebas usan un núcleo falso en `src/test/resources/nucleo_falso/NucleoFalso.java` y no necesitan Docker ni el ejecutable de C++.
+
+`POST /rutas` (HU-05) es la primera operación que usa el motor: comprueba que origen, destino y paradas estén en la mancha urbana sin llamar al núcleo y, si lo están, le pide la ruta. El formato está en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#rutas-post-rutas). Sus pruebas reemplazan `MotorDeRutas` por un doble; con `MOTOR_PATH` y `RED_VIAL_PATH` definidos, `MotorDeRutasNucleoRealTest` y `RutaConNucleoRealTest` usan el núcleo real (por ejemplo, con `04_imp/motor_cpp/tests/datos/red_irregular.json`).

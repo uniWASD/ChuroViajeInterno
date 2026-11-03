@@ -41,11 +41,12 @@ class MotorDeRutasNucleoRealTest {
             assertThat(estado.path("nodos").asInt()).isPositive();
             assertThat(estado.path("tramos").asInt()).isPositive();
 
-            // Las operaciones que aún no existen en el núcleo responden «ok:false», no 503.
+            // Un «ok:false» del núcleo llega tal cual a quien llama, no como 503: una petición de ruta sin
+            // origen ni destino es una petición inválida (o «no implementada», con un núcleo anterior a #58).
             ObjectNode ruta = JSON.createObjectNode();
             JsonNode respuesta = motor.calcularRuta(ruta);
             assertThat(respuesta.path("ok").asBoolean()).isFalse();
-            assertThat(respuesta.path("error").path("codigo").asText()).isEqualTo("NO_IMPLEMENTADA");
+            assertThat(respuesta.path("error").path("codigo").asText()).isIn("PETICION_INVALIDA", "NO_IMPLEMENTADA");
             assertThat(motor.vecesArrancado()).isEqualTo(1);
         } finally {
             motor.detener();

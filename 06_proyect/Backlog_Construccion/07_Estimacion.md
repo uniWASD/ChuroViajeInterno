@@ -38,7 +38,7 @@ Cuando el responsable tiene usuario, el issue se le asigna y la línea «Respons
 | --- | --- | --- | --- | --- | --- | --- |
 | 1 | #39 | [T-087][Flutter] Estructura base de la app | 1 | Alex | M | Proyecto, gestión de estado, cliente HTTP con errores, ambientes y navegación |
 | 2 | #40 | [T-088][Java] Estructura base del backend | 1 | Jorge | M | Spring Security base, manejador de errores, perfiles, OpenAPI, CI y Dependabot |
-| 3 | #41 | [T-089][Java] Base de datos, catálogos y zona de cobertura | 1 | Antonio | M | Flyway con PostGIS, lista de surtidores con alias y polígono dibujado a mano |
+| 3 | #41 | [T-089][Java] Base de datos, catálogos y zona de cobertura | 1 | Franz | M | Flyway con PostGIS, lista de surtidores con alias y polígono dibujado a mano |
 | 4 | #42 | [T-090][C++] Estructura del núcleo y protocolo por pipe | 1 | Marcelo | M | Bucle simple, pero CMake para Linux ARM y Windows y el marco de pruebas llevan tiempo |
 | 5 | #43 | [T-091][WhatsApp/LLM] Estructura del servicio | 1 | Franz | S | Proyecto Node, SQLite, configuración y cliente del backend |
 | 6 | #44 | [T-092][Servidor] Preparar la instancia de Oracle Cloud | 1 | Marcelo | S | La instancia ya existe; falta endurecerla e instalar las herramientas |

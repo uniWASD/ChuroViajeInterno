@@ -12,7 +12,7 @@ Esta carpeta es la versión oficial del documento de arquitectura (revisión del
 | [02_mvc.md](02_mvc.md) | Qué es vista, controlador y modelo, capas del backend, reglas de reparto y vistas de la app | Todo el equipo, Flutter |
 | [03_modelo_dominio.md](03_modelo_dominio.md) | Los 20 objetos de dominio, sus estados, catálogos y valores | Java, C++ |
 | [04_reglas/](04_reglas/README.md) | Las 154 reglas de negocio y el recorrido de cada caso de uso, un archivo por CU | Cada uno, según su CU |
-| [05_contratos.md](05_contratos.md) | API de la app, wrapper del motor core y sus mensajes por pipe, servicio de WhatsApp/LLM, consulta del backend a la API de ANH y códigos de rechazo | Flutter, Java, C++, LLM |
+| [05_contratos.md](05_contratos.md) | API de la app, wrapper del motor core y sus mensajes por pipe, archivo de la red vial, servicio de WhatsApp/LLM, consulta del backend a la API de ANH y códigos de rechazo | Flutter, Java, C++, LLM |
 | [06_base_de_datos.md](06_base_de_datos.md) | Qué se guarda y cuánto tiempo, tablas, integridad y cómo accede el backend | Java, simulador |
 | [07_seguridad_privacidad.md](07_seguridad_privacidad.md) | Accesos, defensa contra el abuso, privacidad y servidor | Java, LLM |
 | [08_decisiones_parametros.md](08_decisiones_parametros.md) | Decisiones D-01 a D-43 y parámetros P-01 a P-35 | Todo el equipo |

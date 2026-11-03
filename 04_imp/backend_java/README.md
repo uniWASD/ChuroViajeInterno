@@ -81,3 +81,15 @@ Las coordenadas usan `GEOGRAPHY(Point,4326)`. SQL y GeoJSON reciben longitud-lat
 `../datos/mancha_urbana_tarija.geojson` delimita la cobertura operativa de Tarija, Tomatitas y el corredor de El Rancho; no es un límite administrativo ni catastral. El backend carga el archivo al iniciar: reinícialo si sustituyes la geometría.
 
 La raíz y cada entidad deben tener metadata de aprobación. Producción rechaza archivos sin aprobar y cualquier intento de habilitar borradores. Las fuentes y la revisión están registradas en el propio GeoJSON.
+
+## Motor de rutas (núcleo C++)
+
+`MotorDeRutas` es la única clase que habla con el núcleo (pipe, una línea de JSON por mensaje). El backend solo arranca el núcleo si se configura:
+
+| Variable | Qué es |
+|---|---|
+| `MOTOR_HABILITADO` | `true` para que el backend arranque el núcleo. Por defecto `false`: las operaciones del motor responden 503. |
+| `MOTOR_PATH` | Ruta del ejecutable del núcleo. |
+| `RED_VIAL_PATH` | Ruta del archivo de la red vial; se le pasa al núcleo con `--red <ruta>`. |
+
+Los tiempos (`motor.tiempo-maximo` 3 s, `motor.espera-arranque`, `motor.espera-reinicio`) están en `application.yml`. Las pruebas usan un núcleo falso en `src/test/resources/nucleo_falso/NucleoFalso.java` y no necesitan Docker ni el ejecutable de C++.

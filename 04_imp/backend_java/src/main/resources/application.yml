@@ -20,6 +20,16 @@ management:
   endpoint:
     health:
       show-details: never
+
+motor:
+  # El backend solo arranca el nucleo C++ si MOTOR_HABILITADO=true; apagado, las operaciones del motor responden 503.
+  habilitado: ${MOTOR_HABILITADO:false}
+  ejecutable: ${MOTOR_PATH:}
+  red-vial: ${RED_VIAL_PATH:}
+  tiempo-maximo: 3s
+  espera-arranque: 60s
+  espera-reinicio: 2s
+
 churoviaje:
   cobertura:
     ruta: ${CHUROVIAJE_GEOJSON_PATH:../datos/mancha_urbana_tarija.geojson}

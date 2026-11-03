@@ -8,8 +8,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.churoviaje.backend.errores.RespuestaRechazo;
+import com.churoviaje.backend.seguridad.JwtFiltro;
+import com.churoviaje.backend.seguridad.JwtServicio;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Configuration
@@ -21,8 +24,14 @@ public class SecurityConfig {
         this.objectMapper = objectMapper;
     }
 
+    /**
+     * RN-08.11 y D-13: todas las rutas piden el JWT de un conductor, salvo {@code /sesion/*}, que no
+     * necesitan nada, y {@code /monitoreo/*}, que piden la credencial de servicio. El JwtFiltro no es un
+     * bean a proposito: asi vive solo dentro de esta cadena y no se registra dos veces.
+     */
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtServicio jwtServicio,
+            PropiedadesSeguridad propiedades) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -30,11 +39,14 @@ public class SecurityConfig {
                 .authenticationEntryPoint(manejador401())
                 .accessDeniedHandler(manejador403())
             )
+            .addFilterBefore(new JwtFiltro(jwtServicio, propiedades), UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
-                // TODO HU-10 (#46): exigir JWT
-                .anyRequest().permitAll()
+                // /sesion/prueba (CU-07) se habilita con su propio issue.
+                .requestMatchers("/sesion/google", "/sesion/renovar", "/sesion/cerrar").permitAll()
+                .requestMatchers("/monitoreo/**").hasRole("SERVICIO")
+                .anyRequest().hasRole("CONDUCTOR")
             );
         return http.build();
     }

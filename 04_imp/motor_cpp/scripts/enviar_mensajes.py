@@ -5,6 +5,7 @@ Uso:
   python scripts/enviar_mensajes.py --nucleo build/motor_nucleo            mensajes de ejemplo
   python scripts/enviar_mensajes.py --nucleo build/motor_nucleo --verificar    además comprueba las respuestas (CTest)
   python scripts/enviar_mensajes.py --nucleo build/motor_nucleo -m '{"id":1,"operacion":"consultar_estado"}'
+  python scripts/enviar_mensajes.py --nucleo build/motor_nucleo --red tests/datos/red_prueba_plaza.json --verificar --esperar-nodos 6
 
 Sin -m se envían los mensajes de ejemplo. Cada línea se escribe en la entrada estándar del
 núcleo, se espera su respuesta y se imprime. Al final se cierra la entrada y se comprueba que
@@ -31,6 +32,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--nucleo", required=True, help="ruta del ejecutable motor_nucleo")
     ap.add_argument("-m", "--mensaje", action="append", help="mensaje a enviar (se puede repetir)")
+    ap.add_argument("--red", help="archivo de la red vial; se le pasa al núcleo con --red")
+    ap.add_argument("--esperar-nodos", type=int, help="con --verificar y --red: cuántos nodos debe informar consultar_estado")
     ap.add_argument("--verificar", action="store_true", help="comprobar las respuestas de los ejemplos; falla si algo no coincide")
     args = ap.parse_args()
 
@@ -40,7 +43,8 @@ def main():
 
     # El núcleo escribe sus registros en stderr; aquí se dejan pasar a la terminal.
     # Pipes binarios: así Windows no convierte "\n" en "\r\n" ni cambia la codificación (UTF-8).
-    proc = subprocess.Popen([args.nucleo], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    comando = [args.nucleo] + (["--red", args.red] if args.red else [])
+    proc = subprocess.Popen(comando, stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     for mensaje, esperado in casos:
         proc.stdin.write((mensaje + "\n").encode("utf-8"))
         proc.stdin.flush()
@@ -56,6 +60,11 @@ def main():
                 fallos.append(f"respuesta que no es JSON: {linea!r}")
                 continue
             ok, codigo = esperado
+            if args.red and mensaje == EJEMPLOS[0][0]:
+                # con red vial, el primer consultar_estado debe informarla cargada
+                if r.get("red_cargada") is not True or r.get("fecha_extracto") is None or (
+                        args.esperar_nodos is not None and r.get("nodos") != args.esperar_nodos):
+                    fallos.append(f"la red no quedó cargada como se esperaba: {linea.strip()}")
             if r.get("ok") != ok or (codigo and r.get("error", {}).get("codigo") != codigo):
                 fallos.append(f"respuesta inesperada para {mensaje!r}: {linea.strip()}")
 

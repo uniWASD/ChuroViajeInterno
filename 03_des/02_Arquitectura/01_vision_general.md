@@ -78,6 +78,7 @@ Las flechas van de quien llama a quien responde.
 | App móvil | Backend | HTTPS, REST con JSON, JWT en cada petición | Reportes, votos, confirmaciones de recarga, telemetría y consultas de eventos, rutas y surtidores |
 | Backend | Motor core, wrapper | Llamadas a métodos Java de `MotorDeRutas`, dentro del mismo proceso | Solicitudes de ruta y de recálculo, lecturas de telemetría, eventos y congestión vigentes |
 | Motor core, wrapper | Motor core, núcleo C++ | Pipe: entrada y salida estándar del núcleo, un mensaje JSON por línea | Los mismos datos, traducidos a mensajes ([D-15](08_decisiones_parametros.md)) |
+| Backend | Base de datos | JDBC con sentencias preparadas y un pool de conexiones (HikariCP), dentro del mismo servidor ([D-37](08_decisiones_parametros.md), [D-39](08_decisiones_parametros.md)) | Lectura y escritura de los datos del sistema; solo las implementaciones de repositorio lo hacen |
 | Servicio de WhatsApp/LLM | Backend | HTTP local con JSON | Resultado estructurado del análisis de cada lote |
 | Simulador | Backend | La misma API REST que usa la app, con credenciales de prueba | Eventos y telemetría simulados |
 | Backend | Google | HTTPS | Validación del token de identidad |

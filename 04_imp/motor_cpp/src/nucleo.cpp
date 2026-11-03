@@ -48,6 +48,15 @@ bool id_valido(const json& id) { return id.is_number_integer() || id.is_string()
 
 Nucleo::Nucleo(EstadoRed estado) : estado_(std::move(estado)) {}
 
+Nucleo::Nucleo(std::shared_ptr<const RedVial> red) : red_(std::move(red)) {
+  if (red_) {
+    estado_.cargada = true;
+    estado_.fecha_extracto = red_->fecha_extracto();
+    estado_.nodos = red_->nodos().size();
+    estado_.tramos = red_->tramos().size();
+  }
+}
+
 std::optional<Respuesta> Nucleo::atender(std::string_view linea) const noexcept {
   json id = nullptr;  // mientras no se sepa cuál es, las respuestas de error llevan "id":null
   try {
@@ -84,7 +93,9 @@ std::optional<Respuesta> Nucleo::atender(std::string_view linea) const noexcept 
       return respuesta_ok({{"id", id},
                            {"ok", true},
                            {"red_cargada", estado_.cargada},
-                           {"fecha_extracto", estado_.fecha_extracto ? json(*estado_.fecha_extracto) : json(nullptr)}});
+                           {"fecha_extracto", estado_.fecha_extracto ? json(*estado_.fecha_extracto) : json(nullptr)},
+                           {"nodos", estado_.nodos},
+                           {"tramos", estado_.tramos}});
     }
     if (es_pendiente(operacion)) {
       return respuesta_error(id, codigo_error::no_implementada,

@@ -6,6 +6,8 @@ Responsables: Jorge y Antonio; Franz mide la API de ANH, vincula sus estaciones 
 
 El backend es la única puerta de entrada del sistema y el lugar donde viven los objetos de dominio y sus reglas. También contiene el wrapper `MotorDeRutas`, la cara en Java del motor core ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Antes de tomar un issue, lee [02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md), [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md) y el archivo de reglas del caso de uso.
 
+Las tareas que tocan la base de datos o los controladores siguen [D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md) a [D-43](../../03_des/02_Arquitectura/08_decisiones_parametros.md): JDBC con sentencias preparadas, repositorios con la interfaz en el modelo y la implementación en `infraestructura/pg`, consultas que devuelven DTO y controladores que nunca devuelven un objeto de dominio. Donde una tarea dice «repositorio», se refiere a eso.
+
 | Sprint | Issues |
 | --- | --- |
 | S1 (15/10–21/10) | Estructura base del backend · Base de datos, catálogos y zona de cobertura |
@@ -42,7 +44,7 @@ El backend es la única puerta de entrada del sistema y el lugar donde viven los
 
 **Tareas**
 - [x] Elegir Maven o Gradle y anotarlo en el README.
-- [x] Crear el proyecto con Spring Web, Spring Security, Spring Data JPA, Validation y Actuator.
+- [x] Crear el proyecto con Spring Web, Spring Security, Spring Data JPA, Validation y Actuator. (La decisión [D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md), posterior, reemplaza Spring Data JPA por JDBC; el `pom.xml` todavía lo declara.)
 - [x] Crear los paquetes del MVC y una clase de ejemplo en cada uno.
 - [x] Implementar el manejador global de errores con los códigos 400, 401, 403, 404, 409, 422, 429 y 503.
 - [x] Configurar los perfiles y la lectura de variables de entorno.

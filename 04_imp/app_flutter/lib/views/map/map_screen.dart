@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../config/app_config.dart';
 import '../../controllers/map_controller.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
+import '../ruta/como_llegar_screen.dart';
 import 'mapa_base.dart';
 
 /// Vista Mapa principal: el mapa base de Tarija, la posición del conductor y el punto que toca.
@@ -73,14 +73,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
               ),
             ),
             if (controller.errorMapa != null)
-              Positioned.fill(child: _ErrorMapa(controller: controller)),
-            if (!AppConfig.isProduction)
-              Positioned(
-                top: 8,
-                left: 8,
-                right: 8,
-                child: _PruebaConexion(controller: controller),
-              ),
+              Positioned.fill(child: AvisoErrorMapa(controller: controller)),
             Positioned(
               left: 8,
               right: 8,
@@ -89,6 +82,21 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FloatingActionButton.extended(
+                      heroTag: 'como-llegar',
+                      onPressed: () => Navigator.of(context).push(
+                        ComoLlegarScreen.ruta(
+                          context,
+                          destinoInicial: controller.puntoSeleccionado,
+                        ),
+                      ),
+                      icon: const Icon(Icons.directions),
+                      label: const Text('Cómo llegar'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   if (controller.puntoSeleccionado != null)
                     _PuntoElegido(controller: controller),
                   if (controller.permiso != null && !controller.tienePermiso)
@@ -103,10 +111,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   }
 }
 
-class _ErrorMapa extends StatelessWidget {
+/// El mapa base no cargó: mensaje de servicio externo y botón para reintentar (RN-03.18).
+class AvisoErrorMapa extends StatelessWidget {
   final MapController controller;
 
-  const _ErrorMapa({required this.controller});
+  const AvisoErrorMapa({super.key, required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -191,74 +200,6 @@ class _SinUbicacion extends StatelessWidget {
         leading: const Icon(Icons.location_off_outlined),
         title: Text(texto),
         trailing: TextButton(onPressed: alTocar, child: Text(accion)),
-      ),
-    );
-  }
-}
-
-/// Solo fuera de producción: comprueba que la app llega al backend.
-class _PruebaConexion extends StatelessWidget {
-  final MapController controller;
-
-  const _PruebaConexion({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final esquema = Theme.of(context).colorScheme;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            FilledButton.tonalIcon(
-              onPressed: controller.isLoading
-                  ? null
-                  : controller.checkConnection,
-              icon: controller.isLoading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.cloud_outlined),
-              label: Text(
-                controller.isLoading ? 'Conectando...' : 'Probar conexión',
-              ),
-            ),
-            if (controller.errorMessage != null) ...[
-              const SizedBox(height: 8),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: esquema.errorContainer,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.error_outline, color: esquema.onErrorContainer),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        controller.errorMessage!,
-                        style: TextStyle(color: esquema.onErrorContainer),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ] else if (controller.isConnected) ...[
-              const SizedBox(height: 8),
-              const Text(
-                'Respuesta recibida del servidor.',
-                style: TextStyle(color: Colors.green),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

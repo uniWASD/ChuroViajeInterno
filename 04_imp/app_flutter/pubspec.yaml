@@ -63,6 +63,10 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    # Respuesta de ejemplo de POST /rutas: copia de 04_imp/datos/ruta_ejemplo_post_rutas.json (T-120).
+    - assets/datos/ruta_ejemplo_post_rutas.json
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - images/a_dot_burr.jpeg

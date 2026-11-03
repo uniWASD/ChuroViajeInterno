@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 import '../models/coordenada.dart';
-import '../services/api/api_client.dart';
 import '../services/ubicacion/servicio_ubicacion.dart';
 
 /// Estado de la vista Mapa principal: la ubicación del conductor, el punto que tocó y si el mapa base cargó.
@@ -11,12 +10,7 @@ class MapController extends ChangeNotifier {
   static const String mensajeErrorMapa =
       'No se pudo cargar el mapa. Revisa tu conexión e inténtalo de nuevo.';
 
-  final ApiClient _apiClient;
   final ServicioUbicacion _ubicacion;
-
-  bool _isLoading = false;
-  String? _errorMessage;
-  bool _isConnected = false;
 
   PermisoUbicacion? _permiso;
   Coordenada? _posicion;
@@ -29,11 +23,7 @@ class MapController extends ChangeNotifier {
   int _intentoMapa = 0;
   bool _disposed = false;
 
-  MapController(this._apiClient, this._ubicacion);
-
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-  bool get isConnected => _isConnected;
+  MapController(this._ubicacion);
 
   PermisoUbicacion? get permiso => _permiso;
   bool get tienePermiso => _permiso == PermisoUbicacion.concedido;
@@ -51,30 +41,6 @@ class MapController extends ChangeNotifier {
 
   /// Cambia en cada reintento, para que la vista vuelva a crear el mapa.
   int get intentoMapa => _intentoMapa;
-
-  Future<void> checkConnection() async {
-    _isLoading = true;
-    _errorMessage = null;
-    notifyListeners();
-
-    try {
-      await _apiClient.get('/catalogos');
-      _isConnected = true;
-    } on ApiException catch (error) {
-      // Una respuesta HTTP confirma que el servidor es accesible,
-      // incluso si la petición requiere autenticación.
-      if (error.statusCode != null) {
-        _isConnected = true;
-        _errorMessage = error.mensaje;
-      } else {
-        _isConnected = false;
-        _errorMessage = error.mensaje;
-      }
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
 
   /// Pide el permiso de ubicación y, si se concede, empieza a seguir la posición. Sin permiso, el mapa sigue
   /// funcionando igual, solo que sin la posición del conductor (RN-04.3).

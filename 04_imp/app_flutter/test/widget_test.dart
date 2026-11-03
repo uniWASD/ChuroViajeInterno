@@ -9,6 +9,8 @@ import 'package:app_flutter/app_providers.dart';
 import 'package:app_flutter/services/api/api_client.dart';
 import 'package:app_flutter/views/main/main_screen.dart';
 
+import 'dobles/dobles_mapa.dart';
+
 void main() {
   Widget createTestApp({ApiClient? apiClient}) {
     final client =
@@ -16,7 +18,11 @@ void main() {
         ApiClient(client: MockClient((_) async => http.Response('{}', 200)));
 
     return MultiProvider(
-      providers: createAppProviders(apiClient: client),
+      providers: createAppProviders(
+        apiClient: client,
+        ubicacion: UbicacionFalsa(),
+        constructorMapa: MapaFalso().construir,
+      ),
       child: const MaterialApp(
         locale: Locale('es'),
         supportedLocales: [Locale('es')],

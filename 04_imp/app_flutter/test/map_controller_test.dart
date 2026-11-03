@@ -7,6 +7,8 @@ import 'package:http/testing.dart';
 import 'package:app_flutter/controllers/map_controller.dart';
 import 'package:app_flutter/services/api/api_client.dart';
 
+import 'dobles/dobles_mapa.dart';
+
 void main() {
   group('MapController', () {
     test('Captura el error cuando el servidor no está disponible', () async {
@@ -15,7 +17,7 @@ void main() {
       });
 
       final apiClient = ApiClient(client: mockClient);
-      final controller = MapController(apiClient);
+      final controller = MapController(apiClient, UbicacionFalsa());
 
       await controller.checkConnection();
 
@@ -38,7 +40,7 @@ void main() {
         });
 
         final apiClient = ApiClient(client: mockClient);
-        final controller = MapController(apiClient);
+        final controller = MapController(apiClient, UbicacionFalsa());
 
         await controller.checkConnection();
 
@@ -65,7 +67,7 @@ void main() {
       });
 
       final apiClient = ApiClient(client: mockClient);
-      final controller = MapController(apiClient);
+      final controller = MapController(apiClient, UbicacionFalsa());
 
       await controller.checkConnection();
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:provider/provider.dart';
 
 import 'app_providers.dart';
@@ -7,7 +8,11 @@ import 'config/app_config.dart';
 import 'views/main/main_screen.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   AppConfig.validar();
+  if (AppConfig.tieneTokenMapbox) {
+    MapboxOptions.setAccessToken(AppConfig.mapboxToken);
+  }
 
   runApp(
     MultiProvider(

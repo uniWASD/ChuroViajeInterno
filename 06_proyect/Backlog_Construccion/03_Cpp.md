@@ -2,7 +2,7 @@
 
 [Índice del backlog](README.md)
 
-Responsable: Marcelo, con Franz en la preparación de la red vial. Código en `04_imp/motor_cpp`.
+Responsable: Marcelo, con Franz en la preparación de la red vial y, junto con Antonio, en las rutas de referencia. Código en `04_imp/motor_cpp`.
 
 El núcleo guarda la red vial de Tarija en memoria, calcula rutas con A*, aplica el tráfico de los eventos y analiza la telemetría. No abre puertos ni llama a nadie: lo arranca el backend como proceso hijo y solo responde los mensajes que el wrapper `MotorDeRutas` le escribe por su entrada estándar, una línea de JSON por mensaje ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). El prototipo de `05_pro/PruebaCalculoRuta` ya validó el algoritmo; aquí se lleva a C++ con datos reales. Antes de tomar un issue, lee la sección «Backend con el motor core» de [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md).
 
@@ -12,8 +12,7 @@ El servidor es ARM (Oracle Cloud, [D-16](../../03_des/02_Arquitectura/08_decisio
 | --- | --- |
 | S1 (15/10–21/10) | Estructura del núcleo y protocolo por pipe |
 | S2 (22/10–28/10) | Preparar la red vial desde OpenStreetMap · Cargar la red vial en el núcleo |
-| S3 (29/10–04/11) | HU-05 Calcular la ruta óptima con A* |
-| S4 (05/11–11/11) | HU-05 Tráfico de los eventos en los tramos |
+| S3 (29/10–04/11) | HU-05 Calcular la ruta óptima con A* · HU-05 Tráfico de los eventos en los tramos · Rutas de referencia de Tarija |
 | S5 (12/11–18/11) | HU-13 Detectar congestión con la telemetría · HU-06 Revisar la ruta activa |
 | S7 (26/11–30/11) | Rendimiento con la red real de Tarija |
 
@@ -133,6 +132,7 @@ Lo subes en una nueva rama llamada "feature/T96-cpp-cargar-red-vial" (No olvides
 **Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
 
 **Criterios de aceptación**
+- [ ] Como primer paso, se puede pedir por consola la ruta entre dos nodos de la red y se obtiene la lista ordenada de los nodos que la forman. Es una herramienta de prueba: el mensaje del contrato sigue siendo `calcular_ruta`.
 - [ ] `calcular_ruta` recibe origen, destino y paradas, y devuelve la ruta de menor costo que pasa por las paradas en el orden recibido (RN-03.10).
 - [ ] El cálculo usa A* con la distancia en línea recta como estimación; Dijkstra queda disponible por configuración (RN-03.11).
 - [ ] El costo de cada tramo es su longitud por el factor de su nivel de tráfico (RN-03.8); mientras no haya eventos, todos los tramos están fluidos (RN-03.9).
@@ -146,8 +146,9 @@ Lo subes en una nueva rama llamada "feature/T96-cpp-cargar-red-vial" (No olvides
 - [ ] Implementar A* sobre `RedVial`, con los niveles de tráfico y sus factores (1,0; 1,5; 2,5; 4,0) ya preparados para el issue de tráfico.
 - [ ] Implementar el encadenado de tramos para las paradas.
 - [ ] Implementar el cálculo del tiempo estimado.
-- [ ] Llevar a C++ los casos CP-09 a CP-17 del prototipo, con la red irregular de prueba, para comprobar que el resultado es el mismo. CP-18 y CP-19 necesitan el tráfico y van en el sprint 4.
+- [ ] Llevar a C++ los casos CP-09 a CP-17 del prototipo, con la red irregular de prueba, para comprobar que el resultado es el mismo. CP-18 y CP-19 necesitan el tráfico y van en «[HU-05][CU-03][C++] Tráfico de los eventos en los tramos», del mismo sprint.
 - [ ] Medir el tiempo con consultas al azar sobre la red real.
+- [ ] Comprobar el resultado con los viajes de «[T-120][C++] Rutas de referencia de Tarija para probar el cálculo de ruta».
 
 **Casos de prueba**
 - [ ] CP-71 Caso de prueba: la red irregular del prototipo da en C++ las mismas rutas que daba en Python en CP-14 a CP-17.
@@ -160,18 +161,16 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-calcular-ruta" (No olv
 
 ---
 
-## Sprint 4
-
 ### [HU-05][CU-03][C++] Tráfico de los eventos en los tramos
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** C++ · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** C++ · **Sprint:** Sprint 3 (29/10–04/11)
 **Depende de:** [HU-05][CU-03][C++] Calcular la ruta óptima con A* #58
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
 **Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
 
-Este issue cubre la parte de «datos viales vigentes»: cómo los eventos cambian el costo de cada tramo.
+Este issue cubre la parte de «datos viales vigentes»: cómo los eventos cambian el costo de cada tramo. Mientras el backend todavía no envíe los eventos («[T-099][Java] Mantener al día el tráfico del motor», del sprint 4), se prueba con mensajes escritos a mano o desde las pruebas.
 
 **Criterios de aceptación**
 - [ ] `actualizar_trafico` recibe un evento que nace, cambia su vencimiento, se retira o vence (identificador, tipo, nivel si es congestión, ubicación y vencimiento) y responde los tramos afectados.
@@ -197,6 +196,40 @@ Este issue cubre la parte de «datos viales vigentes»: cómo los eventos cambia
 **Relacionado:** RF-05 · RF-06 · CU-03 · CU-04 · RN-02.15, RN-03.9 · P-12, P-23 · D-14, D-18
 
 Lo subes en una nueva rama llamada "feature/HU05-CU03-cpp-trafico-tramos" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [T-120][C++] Rutas de referencia de Tarija para probar el cálculo de ruta
+
+**Tipo:** Tarea de pruebas (cubre CU-03)
+**Tecnología:** C++ y Java · **Sprint:** Sprint 3 (29/10–04/11)
+**Depende de:** [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap #93
+**Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:cpp` · `tec:java`
+
+**Descripción:** Elegir unos pocos viajes reales dentro de Tarija y dejar escrito, para cada uno, por dónde iría alguien que conoce la ciudad. Esos viajes son la referencia con la que se prueba el cálculo de ruta en todas sus capas, aunque todavía no estén conectadas: el núcleo C++, el backend con el núcleo real y la app con una respuesta falsa. Así, cuando las piezas se unan, todas habrán probado contra los mismos casos.
+
+**Criterios de aceptación**
+- [ ] Hay al menos cinco viajes de referencia, cada uno con su origen, su destino, las calles principales por las que pasa la ruta esperada y una distancia aproximada. Entre ellos hay uno que usa una calle de un solo sentido del centro, uno con una parada intermedia y uno que cruza el río Guadalquivir.
+- [ ] Alguien que maneja en Tarija revisó cada ruta esperada y los sentidos de las calles que usa (RN-03.6).
+- [ ] Los viajes quedan en un archivo del repositorio, junto con el nodo de inicio y de fin de cada uno en la red preparada, y lo pueden leer las pruebas de C++ y de Java.
+- [ ] Una prueba del núcleo calcula cada viaje y comprueba que la ruta pasa por las calles esperadas y que su distancia se parece a la anotada.
+- [ ] Una prueba del backend con el núcleo real hace lo mismo a través de `MotorDeRutas`.
+- [ ] Como la red real no está en el repositorio (D-33), las dos pruebas se saltan si no encuentran el archivo, igual que la prueba del wrapper con el núcleo real.
+- [ ] Uno de los viajes queda también como respuesta de ejemplo de `POST /rutas`, para que la app la use como respuesta falsa.
+
+**Tareas**
+- [ ] Elegir los viajes con el equipo y revisarlos con alguien que maneje en Tarija.
+- [ ] Buscar el nodo de inicio y de fin de cada viaje en la red preparada.
+- [ ] Escribir el archivo de viajes y la prueba del núcleo (Franz).
+- [ ] Escribir la prueba del backend con el núcleo real y la respuesta de ejemplo de `POST /rutas` (Antonio).
+
+**Casos de prueba**
+- [ ] CP-167 Caso de prueba: los viajes de referencia dan en el núcleo rutas que pasan por las calles esperadas.
+- [ ] CP-168 Caso de prueba: el viaje que usa una calle de un solo sentido nunca la recorre a contramano.
+
+**Relacionado:** RF-05 · CU-03 · RN-03.6, RN-03.7, RN-03.10, RN-03.13 · D-08, D-33 · [05_contratos.md — archivo de la red vial](../../03_des/02_Arquitectura/05_contratos.md#archivo-de-la-red-vial)
+
+Lo subes en una nueva rama llamada "feature/T120-cpp-rutas-referencia" (No olvides que el source de la rama es la de develop)
 
 ---
 

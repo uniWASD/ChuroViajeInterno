@@ -13,10 +13,9 @@ Dos cosas que hay que tener presentes durante toda la Construcción:
 | Sprint | Issues |
 | --- | --- |
 | S1 (15/10–21/10) | Preparar la instancia de Oracle Cloud |
-| S2 (22/10–28/10) | Dominio, Nginx y HTTPS · Comprobar la salida del servidor hacia la API de ANH |
-| S3 (29/10–04/11) | Desplegar el backend con el núcleo C++ |
-| S4 (05/11–11/11) | Desplegar el servicio de WhatsApp/LLM |
-| S6 (19/11–25/11) | Ambiente de pruebas para el simulador · Respaldos de la base de datos y registros |
+| S2 (22/10–28/10) | Comprobar la salida del servidor hacia la API de ANH |
+| S4 (05/11–11/11) | Dominio, Nginx y HTTPS · Desplegar el backend con el núcleo C++ |
+| S6 (19/11–25/11) | Desplegar el servicio de WhatsApp/LLM · Ambiente de pruebas para el simulador · Respaldos de la base de datos y registros |
 | S7 (26/11–30/11) | Despliegue final y revisión de seguridad |
 
 ---
@@ -62,38 +61,6 @@ Lo subes en una nueva rama llamada "feature/T92-servidor-preparar-instancia" (No
 
 ## Sprint 2
 
-### [T-097][Servidor] Dominio, Nginx y HTTPS
-
-**Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 2 (22/10–28/10)
-**Depende de:** [T-092][Servidor] Preparar la instancia de Oracle Cloud #44
-**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
-
-**Descripción:** Darle al backend una dirección propia con HTTPS. Nginx recibe las peticiones de internet y las pasa al backend, que solo escucha dentro de la máquina.
-
-**Criterios de aceptación**
-- [ ] Hay un dominio propio que apunta a la IP reservada (D-26).
-- [ ] Nginx atiende HTTPS con un certificado de Let's Encrypt que se renueva solo, y redirige HTTP a HTTPS.
-- [ ] Los puertos 80 y 443 están abiertos en las reglas de la VCN y en el firewall de Ubuntu; el 80 solo redirige a HTTPS y atiende la validación de Let's Encrypt. Ningún otro puerto nuevo ([07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md), Servidor).
-- [ ] Nginx pasa las peticiones al puerto local del backend, que no es accesible desde fuera.
-- [ ] La configuración de HTTPS obtiene nota A o mejor en SSL Labs.
-
-**Tareas**
-- [ ] Comprar el dominio y crear el registro DNS.
-- [ ] Instalar y configurar Nginx como proxy inverso.
-- [ ] Obtener el certificado con certbot y comprobar la renovación automática.
-- [ ] Abrir los puertos 80 y 443 en los dos lugares.
-- [ ] Actualizar la guía.
-
-**Casos de prueba**
-- [ ] CP-51 Caso de prueba: `http://dominio` redirige a `https://dominio`, y el certificado es válido en un teléfono.
-
-**Relacionado:** RNF-08 · RNF-14 · Visión 4.4 y 6.3 · D-03, D-16, D-26
-
-Lo subes en una nueva rama llamada "feature/T97-servidor-dominio-https" (No olvides que el source de la rama es la de develop)
-
----
-
 ### [T-119][Servidor] Comprobar la salida del servidor hacia la API de ANH
 
 **Tipo:** Tarea de infraestructura (cubre CU-09)
@@ -125,16 +92,48 @@ Lo subes en una nueva rama llamada "feature/T119-servidor-salida-anh" (No olvide
 
 ---
 
-## Sprint 3
+## Sprint 4
+
+### [T-097][Servidor] Dominio, Nginx y HTTPS
+
+**Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
+**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–11/11)
+**Depende de:** [T-092][Servidor] Preparar la instancia de Oracle Cloud #44
+**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
+
+**Descripción:** Darle al backend una dirección propia con HTTPS. Nginx recibe las peticiones de internet y las pasa al backend, que solo escucha dentro de la máquina.
+
+**Criterios de aceptación**
+- [ ] Hay un dominio propio que apunta a la IP reservada (D-26).
+- [ ] Nginx atiende HTTPS con un certificado de Let's Encrypt que se renueva solo, y redirige HTTP a HTTPS.
+- [ ] Los puertos 80 y 443 están abiertos en las reglas de la VCN y en el firewall de Ubuntu; el 80 solo redirige a HTTPS y atiende la validación de Let's Encrypt. Ningún otro puerto nuevo ([07_seguridad_privacidad.md](../../03_des/02_Arquitectura/07_seguridad_privacidad.md), Servidor).
+- [ ] Nginx pasa las peticiones al puerto local del backend, que no es accesible desde fuera.
+- [ ] La configuración de HTTPS obtiene nota A o mejor en SSL Labs.
+
+**Tareas**
+- [ ] Comprar el dominio y crear el registro DNS.
+- [ ] Instalar y configurar Nginx como proxy inverso.
+- [ ] Obtener el certificado con certbot y comprobar la renovación automática.
+- [ ] Abrir los puertos 80 y 443 en los dos lugares.
+- [ ] Actualizar la guía.
+
+**Casos de prueba**
+- [ ] CP-51 Caso de prueba: `http://dominio` redirige a `https://dominio`, y el certificado es válido en un teléfono.
+
+**Relacionado:** RNF-08 · RNF-14 · Visión 4.4 y 6.3 · D-03, D-16, D-26
+
+Lo subes en una nueva rama llamada "feature/T97-servidor-dominio-https" (No olvides que el source de la rama es la de develop)
+
+---
 
 ### [T-098][Servidor] Desplegar el backend con el núcleo C++
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 3 (29/10–04/11) · **Apoyo:** Jorge
+**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–11/11) · **Apoyo:** Jorge
 **Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-095][Java] Wrapper MotorDeRutas #49 · [T-096][C++] Cargar la red vial en el núcleo #50 · [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap #93
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
-**Descripción:** Poner el backend en el servidor, con el núcleo C++ compilado para ARM y la red vial de Tarija, para que la app pruebe contra el sistema real desde el sprint 3. Desde aquí, cada sprint termina con lo fusionado en `develop` desplegado.
+**Descripción:** Poner el backend en el servidor, con el núcleo C++ compilado para ARM y la red vial de Tarija, para que la app pruebe contra el sistema real desde el sprint 4. Desde aquí, cada sprint termina con lo fusionado en `develop` desplegado.
 
 **Criterios de aceptación**
 - [ ] El backend corre como un servicio del sistema que arranca solo con la máquina y se reinicia si se cae.
@@ -162,12 +161,12 @@ Lo subes en una nueva rama llamada "feature/T98-servidor-desplegar-backend" (No 
 
 ---
 
-## Sprint 4
+## Sprint 6
 
 ### [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM
 
 **Tipo:** Tarea de infraestructura (cubre CU-06)
-**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–11/11) · **Apoyo:** Franz
+**Tecnología:** Servidor · **Sprint:** Sprint 6 (19/11–25/11) · **Apoyo:** Franz
 **Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60 · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -187,15 +186,13 @@ Lo subes en una nueva rama llamada "feature/T98-servidor-desplegar-backend" (No 
 - [ ] Actualizar la guía.
 
 **Casos de prueba**
-- [ ] CP-101 Caso de prueba: un mensaje en el grupo de prueba queda en la tabla `estado_combustible` en menos de 6 minutos (RNF-04). La comprobación en la app se hace en el sprint 5.
+- [ ] CP-101 Caso de prueba: un mensaje en el grupo de prueba queda en la tabla `estado_combustible` en menos de 6 minutos (RNF-04). La comprobación en la app se hace con «[HU-07][CU-05][Flutter] Consultar surtidores cercanos», del mismo sprint.
 
 **Relacionado:** RNF-04 · RNF-11 · CU-06 · D-13, D-16
 
 Lo subes en una nueva rama llamada "feature/T100-servidor-desplegar-whatsapp" (No olvides que el source de la rama es la de develop)
 
 ---
-
-## Sprint 6
 
 ### [T-106][Servidor] Ambiente de pruebas para el simulador
 

@@ -24,12 +24,12 @@
 | RF-08 · RF-09 · RNF-04 · RNF-11 · RNF-16 | CU-06 | HU-08 | [RN-06.1 a RN-06.19](../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) | #5 | feature/HU03-CU06-clasificar-mensajes-whatsapp | CP-06, CP-07, CP-08 | Completado |
 | RF-08 · RF-09 · RNF-04 · RNF-11 · RNF-16 | CU-06 | HU-08 | [RN-06.1 a RN-06.19](../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) | #6 | feature/HU08-CU06-ComWhatsApp | — | Completado |
 | RF-08 · RF-09 · RNF-04 · RNF-11 · RNF-16 | CU-06 | HU-08 | [RN-06.1 a RN-06.19](../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) | #10 | feature/HU08-CU06-AnalisisLLM | — | En progreso |
-| RF-08 · RF-09 · RNF-04 · RNF-11 · RNF-16 | CU-06 | HU-08 | [RN-06.1 a RN-06.19](../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) | #51 · WhatsApp/LLM · Sprint 2 | feature/HU08-CU06-whatsapp-leer-grupos | CP-48 a CP-50 | Pendiente |
+| RF-08 · RF-09 · RNF-04 · RNF-11 · RNF-16 | CU-06 | HU-08 | [RN-06.1 a RN-06.19](../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) | #51 · WhatsApp/LLM · Sprint 2 | feature/HU08-CU06-whatsapp-leer-grupos | CP-48 a CP-50 | En progreso |
 | RF-08 · RF-09 · RNF-04 · RNF-11 · RNF-16 | CU-06 | HU-08 | [RN-06.1 a RN-06.19](../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) | #57 · Java · Sprint 3 | feature/HU08-CU06-java-recibir-analisis | CP-68 a CP-70 | Pendiente |
 | RF-08 · RF-09 · RNF-04 · RNF-11 · RNF-16 | CU-06 | HU-08 | [RN-06.1 a RN-06.19](../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) | #59 · WhatsApp/LLM · Sprint 3 | feature/HU08-CU06-llm-analisis-lotes | CP-74 a CP-78 | Pendiente |
 | RF-10 · RNF-12 | CU-07 | HU-09 | [RN-07.1 a RN-07.13](../03_des/02_Arquitectura/04_reglas/CU-07_EjecutarSimuladorTrafico.md) | #84 · Java · Sprint 6 | feature/HU09-CU07-java-soporte-simulador | CP-141 a CP-143 | Pendiente |
 | RF-10 · RNF-12 | CU-07 | HU-09 | [RN-07.1 a RN-07.13](../03_des/02_Arquitectura/04_reglas/CU-07_EjecutarSimuladorTrafico.md) | #87 · Simulador · Sprint 6 | feature/HU09-CU07-simulador-usuarios-fantasma | CP-146 a CP-148 | Pendiente |
-| RF-11 · RNF-05 · RNF-08 · RNF-14 · RNF-16 | CU-08 | HU-10 | [RN-08.1 a RN-08.14](../03_des/02_Arquitectura/04_reglas/CU-08_IniciarSesion.md) | #46 · Java · Sprint 2 | feature/HU10-CU08-java-inicio-sesion | CP-31 a CP-35 | Pendiente |
+| RF-11 · RNF-05 · RNF-08 · RNF-14 · RNF-16 | CU-08 | HU-10 | [RN-08.1 a RN-08.14](../03_des/02_Arquitectura/04_reglas/CU-08_IniciarSesion.md) | #46 · Java · Sprint 2 | feature/HU10-CU08-java-inicio-sesion | CP-31 a CP-35 | En progreso |
 | RF-11 · RNF-05 · RNF-08 · RNF-14 · RNF-16 | CU-08 | HU-10 | [RN-08.1 a RN-08.14](../03_des/02_Arquitectura/04_reglas/CU-08_IniciarSesion.md) | #48 · Flutter · Sprint 2 | feature/HU10-CU08-flutter-inicio-sesion | CP-37 a CP-40 | Pendiente |
 | RF-12 · RNF-09 | CU-02 | HU-11 | [RN-02.10 a RN-02.16](../03_des/02_Arquitectura/04_reglas/CU-02_VisualizarEventosViales.md) | #63 · Java · Sprint 4 | feature/HU11-CU02-java-votos | CP-86 a CP-89 | Pendiente |
 | RF-12 · RNF-09 | CU-02 | HU-11 | [RN-02.10 a RN-02.16](../03_des/02_Arquitectura/04_reglas/CU-02_VisualizarEventosViales.md) | #64 · Flutter · Sprint 4 | feature/HU11-CU02-flutter-votos | CP-90, CP-91 | Pendiente |
@@ -53,16 +53,16 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 
 | Tarea | CU | Issue | Rama | Casos de prueba | Estado |
 |---|---|---|---|---|---|
-| T-087 Estructura base de la app | Todos | #39 · Flutter · Sprint 1 | feature/T87-flutter-estructura-base | CP-20 | Pendiente |
-| T-088 Estructura base del backend | Todos | #40 · Java · Sprint 1 | feature/T88-java-estructura-base | CP-21 | Pendiente |
-| T-089 Base de datos, catálogos y zona de cobertura | CU-01, CU-02, CU-03, CU-05, CU-06 | #41 · Java · Sprint 1 | feature/T89-java-base-de-datos | CP-22, CP-23 | Pendiente |
+| T-087 Estructura base de la app | Todos | #39 · Flutter · Sprint 1 | feature/T87-flutter-estructura-base | CP-20 | Completado |
+| T-088 Estructura base del backend | Todos | #40 · Java · Sprint 1 | feature/T88-java-estructura-base | CP-21 | Completado |
+| T-089 Base de datos, catálogos y zona de cobertura | CU-01, CU-02, CU-03, CU-05, CU-06 | #41 · Java · Sprint 1 | feature/T89-java-base-de-datos | CP-22, CP-23 | Completado |
 | T-090 Estructura del núcleo y protocolo por pipe | CU-03, CU-04 | #42 · C++ · Sprint 1 | feature/T90-cpp-estructura-nucleo | CP-24, CP-25 | Completado |
 | T-091 Estructura del servicio | CU-06 | #43 · WhatsApp/LLM · Sprint 1 | feature/T91-whatsapp-estructura-servicio | CP-26 | Completado |
 | T-092 Preparar la instancia de Oracle Cloud | Todos | #44 · Servidor · Sprint 1 | feature/T92-servidor-preparar-instancia | CP-27, CP-28 | Completado |
 | T-093 Mapa base con Mapbox y ubicación | CU-01 a CU-05 | #45 · Flutter · Sprint 2 | feature/T93-flutter-mapa-base | CP-29, CP-30 | Pendiente |
-| T-094 Catálogos para la app | CU-01, CU-02, CU-05 | #47 · Java · Sprint 2 | feature/T94-java-catalogos | CP-36 | Pendiente |
-| T-095 Wrapper MotorDeRutas | CU-03, CU-04 | #49 · Java · Sprint 2 | feature/T95-java-wrapper-motor | CP-41 a CP-44 | Pendiente |
-| T-096 Cargar la red vial en el núcleo | CU-03, CU-04 | #50 · C++ · Sprint 2 | feature/T96-cpp-cargar-red-vial | CP-47 | Pendiente |
+| T-094 Catálogos para la app | CU-01, CU-02, CU-05 | #47 · Java · Sprint 2 | feature/T94-java-catalogos | CP-36 | En progreso |
+| T-095 Wrapper MotorDeRutas | CU-03, CU-04 | #49 · Java · Sprint 2 | feature/T95-java-wrapper-motor | CP-41 a CP-44 | En progreso |
+| T-096 Cargar la red vial en el núcleo | CU-03, CU-04 | #50 · C++ · Sprint 2 | feature/T96-cpp-cargar-red-vial | CP-47 | En progreso |
 | T-097 Dominio, Nginx y HTTPS | Todos | #52 · Servidor · Sprint 2 | feature/T97-servidor-dominio-https | CP-51 | Pendiente |
 | T-098 Desplegar el backend con el núcleo C++ | Todos | #60 · Servidor · Sprint 3 | feature/T98-servidor-desplegar-backend | CP-79, CP-80 | Pendiente |
 | T-099 Mantener al día el tráfico del motor | CU-02, CU-03, CU-04 | #67 · Java · Sprint 4 | feature/T99-java-trafico-motor | CP-99, CP-100 | Pendiente |
@@ -77,7 +77,7 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-108 Pruebas de carga y reporte | CU-07 | #89 · Simulador · Sprint 7 | feature/T108-simulador-pruebas-carga | CP-151, CP-152 | Pendiente |
 | T-109 Rendimiento con la red real de Tarija | CU-03, CU-04 | #90 · C++ · Sprint 7 | feature/T109-cpp-rendimiento | CP-153 | Pendiente |
 | T-110 Despliegue final y revisión de seguridad | Todos | #91 · Servidor · Sprint 7 | feature/T110-servidor-despliegue-final | CP-154 | Pendiente |
-| T-111 Preparar la red vial de Tarija desde OpenStreetMap | CU-03, CU-04 | #93 · C++ · Sprint 2 | feature/T111-red-vial-preparacion | CP-45, CP-46 | Pendiente |
+| T-111 Preparar la red vial de Tarija desde OpenStreetMap | CU-03, CU-04 | #93 · C++ · Sprint 2 | feature/T111-red-vial-preparacion | CP-45, CP-46 | En progreso |
 | T-113 Contrato del servicio de WhatsApp con el backend | CU-06 | #102 · Docs · Sprint 2 | feature/T113-docs-contrato-whatsapp | — | Completado |
 | T-114 Ajustes del backlog, la guía del servidor y la trazabilidad tras el contrato | CU-06 | #104 · Docs · Sprint 2 | feature/T114-actualizar-backlog-trazabilidad | — | Completado |
 | T-115 Investigación de la API de ANH para obtener la disponibilidad de combustible | CU-09 | #105 · Investigación · Sprint 2 | feature/T115-investigacion-api-anh | — | En progreso |

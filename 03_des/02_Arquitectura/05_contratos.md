@@ -6,12 +6,14 @@ Hay cuatro contratos: el de la app con el backend, el del backend con el motor c
 
 ## Convenciones comunes
 
-- Todo viaja en JSON.
+- Todo viaja en JSON, con el tipo `application/json`. Cada respuesta sale de un DTO de solo lectura, nunca de un objeto de dominio ([D-43](08_decisiones_parametros.md)).
 - Las fechas van en formato ISO 8601 con zona horaria, por ejemplo `2026-10-06T15:02:00-04:00`.
 - Una ubicación son dos números: latitud y longitud en grados decimales.
 - La app y el simulador envían el JWT en la cabecera `Authorization` de cada petición, salvo al iniciar sesión.
-- Un rechazo lleva un código y un mensaje en español listo para mostrar al conductor.
+- Un rechazo lleva un código y un mensaje en español listo para mostrar al conductor, con la forma `{"codigo":"SESION_VENCIDA","mensaje":"Tu sesión venció. Inicia sesión de nuevo."}`. El código es estable y sirve a la app para decidir qué hacer; el mensaje es el que se muestra.
+- En la API REST los nombres de los campos van en `camelCase` (`tokenGoogle`, `expiraEn`). En los mensajes por pipe con el núcleo van en `snake_case` (`red_cargada`, `fecha_extracto`), porque es lo que ya habla el núcleo.
 - Ninguna respuesta incluye identificadores de otros conductores.
+- Una consulta responde 200 con el DTO o la lista de DTO. Una petición que crea un recurso, como un reporte de evento, responde 201 con el DTO de lo creado. Un rechazo usa el código de la tabla «Respuestas de rechazo», con el cuerpo de arriba ([D-43](08_decisiones_parametros.md)).
 
 ## App y simulador con el backend
 
@@ -33,6 +35,60 @@ Hay cuatro contratos: el de la app con el backend, el del backend con el motor c
 
 La app nunca envía el momento en que ocurrió un evento ya calculado: manda la hora de confirmación y los minutos elegidos, y el `EventoVial` hace la resta ([RN-01.4](04_reglas/CU-01_ReportarEventoVial.md)).
 
+### Sesión (`/sesion/*`)
+
+Son las únicas rutas de la app que no piden JWT. Todas reciben y devuelven JSON; el sistema nunca ve la contraseña de Google ([D-34](08_decisiones_parametros.md)).
+
+| Ruta | Cuerpo de la petición | Respuesta |
+| --- | --- | --- |
+| `POST /sesion/google` | `{"tokenGoogle":"<token de identidad de Google>"}` | 200 con `{"jwt":"…","expiraEn":"2026-10-06T16:02:00Z","tokenRenovacion":"…"}` |
+| `POST /sesion/renovar` | `{"tokenRenovacion":"…"}` | 200 con `{"jwt":"…","expiraEn":"…"}`. No devuelve un token de renovación nuevo: el que tiene la app sigue valiendo hasta que vence |
+| `POST /sesion/cerrar` | `{"tokenRenovacion":"…"}` | 204 sin cuerpo. Es idempotente: cerrar una sesión que ya no existe también responde 204 |
+
+- `expiraEn` es la expiración del JWT, en ISO 8601 y en UTC. El JWT dura 1 hora y el token de renovación, 30 días desde que se inició la sesión ([P-05](08_decisiones_parametros.md)).
+- El primer ingreso con una cuenta de Google crea al conductor; los siguientes usan el mismo ([RN-08.4](04_reglas/CU-08_IniciarSesion.md)).
+- Códigos de rechazo:
+
+| Código | Estado | Cuándo |
+| --- | --- | --- |
+| `TOKEN_GOOGLE_INVALIDO` | 401 | Google no reconoce el token, venció o no es para esta aplicación |
+| `GOOGLE_NO_DISPONIBLE` | 503 | El backend no pudo comunicarse con Google. Es un fallo transitorio: la app puede reintentar |
+| `SESION_VENCIDA` | 401 | El token de renovación no existe, venció o ya se cerró. La app debe volver a pedir el inicio de sesión con Google |
+| `NO_AUTENTICADO` | 401 | Una ruta que pide JWT llegó sin él, con uno vencido o con uno mal firmado |
+| `ACCESO_DENEGADO` | 403 | El JWT es válido pero no alcanza para esa ruta; por ejemplo, un conductor en `/monitoreo/*` |
+| `PETICION_INVALIDA` | 400 | Falta el campo del cuerpo o no cumple el formato |
+
+### Catálogos (`GET /catalogos`)
+
+La app no lleva listas propias: todo lo que muestra en los selectores sale de esta respuesta ([D-06](08_decisiones_parametros.md)). Los tipos de evento y de combustible salen de la base de datos; los tiempos del reporte y los valores de la fila son fijos del backend. El orden de cada lista es estable y es el que debe mostrar la app. Los valores del ejemplo son los del catálogo inicial (migraciones de la base de datos), recortado a dos elementos por lista.
+
+```json
+{
+  "tiposEvento": [
+    {"codigo": "ACCIDENTE", "nombre": "Accidente", "color": "#E53935", "vigenciaMinutos": 60, "reportable": true},
+    {"codigo": "CONGESTION", "nombre": "Congestión", "color": "#FDD835", "vigenciaMinutos": 30, "reportable": false}
+  ],
+  "tiposCombustible": [
+    {"codigo": "GASOLINA", "nombre": "Gasolina", "seleccionable": true},
+    {"codigo": "DESCONOCIDO", "nombre": "Desconocido", "seleccionable": false}
+  ],
+  "tiemposReporte": [
+    {"minutos": 0, "nombre": "Ahora mismo", "porDefecto": false},
+    {"minutos": 5, "nombre": "Hace 5 minutos", "porDefecto": true}
+  ],
+  "valoresFila": [
+    {"codigo": "SIN_FILA", "nombre": "Sin fila"},
+    {"codigo": "CORTA", "nombre": "Corta"}
+  ]
+}
+```
+
+- `reportable` es falso para la congestión: la crea el sistema con la telemetría y el conductor no puede reportarla ([RN-01.3](04_reglas/CU-01_ReportarEventoVial.md)).
+- `seleccionable` es falso para «Desconocido»: lo usa el sistema cuando un mensaje no dice el combustible y el conductor no puede elegirlo ([RN-05.9](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
+- `tiemposReporte` ofrece 0, 5, 10 y 30 minutos; el marcado con `porDefecto` es el que se usa si el conductor no elige ([D-09](08_decisiones_parametros.md)).
+- `valoresFila` son los mismos de [P-15](08_decisiones_parametros.md). La app los trata como una lista cerrada.
+- La ruta pide JWT, como el resto de la API de la app.
+
 ## Backend con el motor core
 
 El backend nunca habla directo con el programa en C++. Llama a métodos del wrapper `MotorDeRutas`, que es Java y vive dentro del backend, y el wrapper traduce cada llamada a un mensaje para el núcleo C++ ([D-15](08_decisiones_parametros.md)). Los nombres de métodos y mensajes son una propuesta, igual que las rutas de la API.
@@ -45,7 +101,7 @@ El backend nunca habla directo con el programa en C++. Llama a métodos del wrap
 | Revisar ruta | `revisarRuta` | `revisar_ruta` | Posición, tramos que faltan, destino, paradas que faltan y eventos ya avisados | Sin cambios; sin alternativa; o ruta alternativa con su costo. Las dos últimas traen el evento que las provocó. Si los tramos ya no existen, «ruta desactualizada» | [RN-04.14](04_reglas/CU-04_RecalcularRuta.md) a [RN-04.16](04_reglas/CU-04_RecalcularRuta.md) |
 | Actualizar tráfico | `actualizarTrafico` | `actualizar_trafico` | Evento que nace, cambia su vencimiento, se retira o vence: identificador, tipo, nivel si es congestión, ubicación y vencimiento | Tramos afectados; los dos sentidos de la calle salvo en la congestión ([D-18](08_decisiones_parametros.md)) | [RN-03.9](04_reglas/CU-03_CalcularRutaOptima.md), [D-14](08_decisiones_parametros.md) |
 | Analizar telemetría | `analizarTelemetria` | `analizar_telemetria` | Lecturas con un identificador temporal de recorrido y la marca de simulado, sin datos del conductor | Congestiones detectadas: tramo, punto, nivel y si salen de recorridos simulados | [RN-04.5](04_reglas/CU-04_RecalcularRuta.md) a [RN-04.10](04_reglas/CU-04_RecalcularRuta.md) |
-| Consultar estado | `consultarEstado` | `consultar_estado` | Nada | Si la red vial está cargada y de qué fecha es el extracto | [D-08](08_decisiones_parametros.md) |
+| Consultar estado | `consultarEstado` | `consultar_estado` | Nada | Si la red vial está cargada, la fecha del extracto y cuántos nodos y tramos tiene | [D-08](08_decisiones_parametros.md) |
 
 ### Cómo viajan los mensajes por el pipe
 
@@ -67,14 +123,92 @@ El campo `estado` puede ser `ENCONTRADA`, `SIN_RUTA` o `PUNTO_INVALIDO`; los dos
 ### Arranque, demoras y caídas
 
 - **Arranque.** Cada vez que el wrapper arranca el núcleo, espera a que cargue la red vial (mensaje `consultar_estado`) y le envía todos los eventos vigentes con `actualizar_trafico`. Recién entonces atiende rutas. Así el núcleo nunca empieza con el tráfico en blanco y nunca necesita llamar al backend.
+- **Configuración.** El backend arranca el núcleo solo si `MOTOR_HABILITADO=true`; apagado, las operaciones responden 503. El ejecutable y el archivo de la red vial vienen de `MOTOR_PATH` y `RED_VIAL_PATH`, y el wrapper le pasa la ruta de la red al núcleo con `--red <ruta>` ([D-35](08_decisiones_parametros.md)).
+- **Primera respuesta.** El núcleo carga la red antes de leer su entrada, así que la respuesta a la primera consulta de estado puede tardar mucho más que 3 segundos. Hasta que la red está cargada, el wrapper espera con su propio plazo ([P-33](08_decisiones_parametros.md)) y no con el de una petición. Si ese plazo vence, detiene el núcleo y lo arranca de nuevo.
+- **Respuestas del núcleo.** El wrapper devuelve la respuesta tal como llega, con su `ok`: un `"ok":false` es una respuesta válida del núcleo y quien llama la interpreta. Solo se convierte en error del backend lo que no depende del núcleo: demora, caída o arranque en curso. Eso responde 503 con el código `MOTOR_NO_DISPONIBLE`.
 - **Demora.** Si el núcleo no responde una petición a tiempo para cumplir los 3 segundos de [RN-03.15](04_reglas/CU-03_CalcularRutaOptima.md), contados desde que se le escribió, el wrapper lo detiene, lo vuelve a arrancar y el backend responde 503. Una petición que vence mientras espera en la fila responde 503 sin reiniciar el núcleo.
-- **Caída.** Si el núcleo termina por un error, el wrapper lo arranca de nuevo y le vuelve a enviar los eventos vigentes. Mientras tanto, las rutas responden 503.
+- **Caída.** Si el núcleo termina por un error, el wrapper lo arranca de nuevo y le vuelve a enviar los eventos vigentes. Mientras tanto, las rutas responden 503 de inmediato, sin esperar en la fila.
+
+## Archivo de la red vial
+
+Un script de Python (`04_imp/motor_cpp/preparacion`, T-111) arma este archivo a partir de un extracto de OpenStreetMap, y el núcleo C++ lo carga completo al arrancar (T-096, [D-08](08_decisiones_parametros.md), [D-33](08_decisiones_parametros.md)). Es lo único que une a las dos piezas, así que cada una puede avanzar por su lado mientras respete lo que sigue. La versión actual del formato es la 1.
+
+### Forma general
+
+- Un solo archivo JSON en UTF-8 llamado `red_vial_tarija.json`.
+- No va al repositorio: se genera con el script y en el servidor vive fuera de él. El núcleo recibe la ruta con el argumento `--red <ruta>`; el wrapper `MotorDeRutas` se la pasa al arrancarlo. Sin ese argumento, el núcleo arranca sin red y `consultar_estado` responde `"red_cargada":false`.
+- Los datos son de los colaboradores de OpenStreetMap (ODbL), y el archivo lo dice en `fuente`.
+
+Un ejemplo pequeño, con valores inventados: una calle de doble sentido (dos tramos) y una avenida de un solo sentido (un tramo), unidas en el nodo `osm:1002`:
+
+```json
+{
+  "version": 1,
+  "fuente": "OpenStreetMap",
+  "fecha_extracto": "2026-10-28",
+  "nodos": [
+    {"id": "osm:1001", "lat": -21.5339, "lon": -64.7342},
+    {"id": "osm:1002", "lat": -21.5339, "lon": -64.7334},
+    {"id": "osm:1003", "lat": -21.5345, "lon": -64.7338}
+  ],
+  "tramos": [
+    {"id": "osm:5001:1:ida", "desde": "osm:1001", "hasta": "osm:1002", "opuesto": "osm:5001:1:vuelta",
+     "nombre": "Calle de ejemplo", "tipo_via": "zona_residencial", "longitud_m": 93.944,
+     "geometria": [[-21.5339, -64.7342], [-21.5341, -64.7338], [-21.5339, -64.7334]]},
+    {"id": "osm:5001:1:vuelta", "desde": "osm:1002", "hasta": "osm:1001", "opuesto": "osm:5001:1:ida",
+     "nombre": "Calle de ejemplo", "tipo_via": "zona_residencial", "longitud_m": 93.944,
+     "geometria": [[-21.5339, -64.7334], [-21.5341, -64.7338], [-21.5339, -64.7342]]},
+    {"id": "osm:5002:1:ida", "desde": "osm:1002", "hasta": "osm:1003", "opuesto": null,
+     "nombre": "Avenida de ejemplo", "tipo_via": "avenida_principal", "longitud_m": 78.505,
+     "geometria": [[-21.5339, -64.7334], [-21.5342, -64.7336], [-21.5345, -64.7338]]}
+  ]
+}
+```
+
+### Campos
+
+| Dónde | Campo | Qué es |
+| --- | --- | --- |
+| Archivo | `version` | Número entero. Hoy, 1 |
+| Archivo | `fuente` | Siempre `OpenStreetMap` |
+| Archivo | `fecha_extracto` | Fecha del extracto de OpenStreetMap, como `AAAA-MM-DD`. Es la que informa `consultar_estado`; nunca es la fecha en que se corrió el script |
+| Archivo | `nodos`, `tramos` | Las dos listas del archivo |
+| Nodo | `id` | Texto. `osm:<número>` si viene de OpenStreetMap, `corte:...` si lo creó el recorte |
+| Nodo | `lat`, `lon` | Grados decimales (WGS84) |
+| Tramo | `id` | Texto, con la forma `osm:<vía>:<fragmento>:ida` o `...:vuelta` |
+| Tramo | `desde`, `hasta` | `id` de dos nodos de la lista. El tramo solo se recorre de `desde` a `hasta` |
+| Tramo | `opuesto` | `id` del tramo que recorre la misma calle en sentido contrario, o `null` si la calle es de un solo sentido |
+| Tramo | `nombre` | Nombre de la calle. Si OpenStreetMap no trae nombre ni referencia, `Sin nombre` |
+| Tramo | `tipo_via` | `via_rapida`, `avenida_principal` o `zona_residencial`. La tabla que los relaciona con las etiquetas `highway` está en el README del script |
+| Tramo | `longitud_m` | Metros, con tres decimales |
+| Tramo | `geometria` | Los puntos del trazado de `desde` a `hasta`, cada uno como `[latitud, longitud]`, con los dos extremos iguales a los nodos |
+
+### Reglas del archivo
+
+- **Sentido.** Una calle de doble sentido son dos tramos y una de un solo sentido es uno ([RN-03.6](04_reglas/CU-03_CalcularRutaOptima.md)).
+- **Los dos sentidos de una calle.** Cada tramo de una calle de doble sentido apunta al otro con `opuesto`, y el otro apunta de vuelta. Con eso el núcleo sabe a cuáles afecta un evento ([D-18](08_decisiones_parametros.md)) y a cuál asignar una lectura ([RN-04.8](04_reglas/CU-04_RecalcularRuta.md)). `ida` y `vuelta` en el `id` solo indican el sentido respecto a cómo dibuja la calle OpenStreetMap: el núcleo no debe leer el `id` para esto.
+- **Longitud.** Es el recorrido real, sumando los segmentos de `geometria`, y nunca es menor que la línea recta entre los extremos ([RN-03.7](04_reglas/CU-03_CalcularRutaOptima.md)).
+- **Qué no trae el archivo.** Ni la velocidad esperada de cada tipo de vía (la pone el núcleo, [RN-03.14](04_reglas/CU-03_CalcularRutaOptima.md)) ni el nivel de tráfico (lo calcula el núcleo con los eventos vigentes, [RN-03.9](04_reglas/CU-03_CalcularRutaOptima.md)).
+- **Nodos.** Son intersecciones, finales de calle y puntos de corte donde una calle cruza el borde de la mancha urbana (`corte:...`). Dos calles que solo coinciden en el borde no se conectan entre sí.
+- **Orden de las coordenadas.** Todo par de coordenadas va como `[latitud, longitud]`, igual que los mensajes por pipe de este documento. Los nodos llevan `lat` y `lon` con nombre, así que no hay duda. El GeoJSON de la mancha urbana usa el orden estándar `[longitud, latitud]`, pero el núcleo no lo lee.
+- **Identificadores.** Un `id` de tramo solo vale dentro de su archivo. Con un extracto nuevo el número de fragmento puede cambiar, y un `id` viejo podría apuntar a otro fragmento. Para saber si una ruta activa quedó vieja conviene comparar también `fecha_extracto` (se decide en el issue de `revisar_ruta`).
+
+### Qué hace el núcleo al cargar
+
+- Lee `version`. Si no es 1, no carga la red, lo anota en su salida de errores y `consultar_estado` sigue respondiendo `"red_cargada":false`. Lo mismo si el archivo falta o no se puede leer.
+- Ignora los campos que no conoce. Agregar un campo nuevo no obliga a subir la versión; cambiar o quitar uno existente sí.
+- Con la red cargada, `consultar_estado` informa `fecha_extracto`, `nodos` y `tramos`. Sin red: `null`, `0` y `0`.
+
+### Cómo se genera y se comprueba
+
+`preparar_red.py` escribe el archivo y, antes de reemplazar el anterior, lo revisa con `validar_red.py`: que los nodos y tramos no se repitan, que cada tramo apunte a nodos que existen, que cada `opuesto` sea recíproco (extremos cruzados, geometría inversa, misma longitud, nombre y tipo de vía), que todo quede dentro de la mancha urbana y que las longitudes coincidan con la geometría. Si algo falla, el archivo anterior se queda como estaba. Para cambiar el formato hay que subir `version` y actualizar en el mismo cambio esta sección, el script y el validador.
 
 ## Servicio de WhatsApp/LLM con el backend
 
 ### Credencial de servicio
 
 - El servicio envía en cada petición `Authorization: Bearer <credencial>`, la misma cabecera que usa la app.
+- En el backend la variable se llama `SERVICE_CREDENTIAL`; en el servicio, `SERVICE_TOKEN`. Los dos nombres guardan el mismo valor.
 - La credencial es un valor fijo y aleatorio. Vive como variable de entorno en el backend y en el servicio, con el mismo valor, y nunca en el repositorio ([D-13](08_decisiones_parametros.md)).
 - El backend la distingue así: si coincide con la configurada, es el servicio; si no coincide pero es un JWT de conductor válido, responde 403; si no es ninguna de las dos, responde 401. Como la credencial es fija, no vence: se cambia a mano en los dos lados.
 - El servicio llama al backend en `http://127.0.0.1:8080`, dentro de la máquina (el puerto por defecto de Spring Boot). Ese puerto no se abre a internet: Nginx es lo único que sale ([D-03](08_decisiones_parametros.md)).

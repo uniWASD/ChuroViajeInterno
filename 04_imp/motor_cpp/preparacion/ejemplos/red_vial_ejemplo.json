@@ -1,0 +1,93 @@
+{
+  "version": 1,
+  "fuente": "OpenStreetMap",
+  "fecha_extracto": "2026-10-28",
+  "nodos": [
+    {
+      "id": "osm:1001",
+      "lat": -21.5339,
+      "lon": -64.7342
+    },
+    {
+      "id": "osm:1002",
+      "lat": -21.5339,
+      "lon": -64.7334
+    },
+    {
+      "id": "osm:1003",
+      "lat": -21.5345,
+      "lon": -64.7338
+    }
+  ],
+  "tramos": [
+    {
+      "id": "osm:5001:1:ida",
+      "desde": "osm:1001",
+      "hasta": "osm:1002",
+      "opuesto": "osm:5001:1:vuelta",
+      "nombre": "Calle de ejemplo",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 93.944,
+      "geometria": [
+        [
+          -21.5339,
+          -64.7342
+        ],
+        [
+          -21.5341,
+          -64.7338
+        ],
+        [
+          -21.5339,
+          -64.7334
+        ]
+      ]
+    },
+    {
+      "id": "osm:5001:1:vuelta",
+      "desde": "osm:1002",
+      "hasta": "osm:1001",
+      "opuesto": "osm:5001:1:ida",
+      "nombre": "Calle de ejemplo",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 93.944,
+      "geometria": [
+        [
+          -21.5339,
+          -64.7334
+        ],
+        [
+          -21.5341,
+          -64.7338
+        ],
+        [
+          -21.5339,
+          -64.7342
+        ]
+      ]
+    },
+    {
+      "id": "osm:5002:1:ida",
+      "desde": "osm:1002",
+      "hasta": "osm:1003",
+      "opuesto": null,
+      "nombre": "Avenida de ejemplo",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 78.505,
+      "geometria": [
+        [
+          -21.5339,
+          -64.7334
+        ],
+        [
+          -21.5342,
+          -64.7336
+        ],
+        [
+          -21.5345,
+          -64.7338
+        ]
+      ]
+    }
+  ]
+}

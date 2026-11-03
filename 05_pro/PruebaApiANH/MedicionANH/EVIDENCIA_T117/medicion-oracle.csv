@@ -1,0 +1,4 @@
+consulta_id,hora_utc,fin_utc,tipo,producto,intento,estado_http,tiempo_ms,n_estaciones,retry_after,error_codigo,updated_at_con_zona,updated_at_sin_zona,updated_at_ausente,updated_at_invalido
+"023518ca-d362-41b5-833b-4b00f431cf62","2026-11-03T01:39:57.946889904Z","2026-11-03T01:39:59.462659234Z","catalogo","0","1","200","1514","","","","0","0","0","0"
+"725f94ad-6e77-4757-942c-7ed44407166a","2026-11-03T01:40:00.562119956Z","2026-11-03T01:40:00.867946306Z","estaciones","0","1","200","304","31","","","0","31","0","0"
+"64e70d7b-6354-4e1e-ab0c-a627953ccc76","2026-11-03T01:40:01.967571149Z","2026-11-03T01:40:02.131055147Z","estaciones","1","1","200","162","26","","","0","26","0","0"

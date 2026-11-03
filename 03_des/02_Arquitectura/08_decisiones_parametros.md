@@ -70,9 +70,9 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | P-26 | Tiempo que el aviso de ruta alternativa espera una respuesta | [RN-04.21](04_reglas/CU-04_RecalcularRuta.md) | 15 segundos | Confirmado |
 | P-27 | Cada cuánto se actualizan la lista y los marcadores de surtidores con su vista abierta | [RN-05.17](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md) | 60 segundos | Confirmado |
 | P-28 | Cuánto se conservan, sin texto, las filas terminadas del servicio de WhatsApp/LLM | [RN-06.12](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [06_base_de_datos.md](06_base_de_datos.md) | 24 horas, para no repetir mensajes recibidos al reconectarse; después se borran en el siguiente mantenimiento | Confirmado el 23/10/2026 |
-| P-29 | Cada cuánto el backend consulta a ANH | [RN-09.1](04_reglas/CU-09_ConsultarEstadoANH.md) | Se fija con la tarea T-117 | Pendiente |
-| P-30 | Vigencia del dato de ANH | [RN-05.5](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md) | Hoy los datos valen 6 horas (RN-05.5); se fija con la tarea T-117 | Pendiente |
+| P-29 | Cada cuánto el backend consulta a ANH | [RN-09.1](04_reglas/CU-09_ConsultarEstadoANH.md) | 10 minutos entre inicios de ciclo; decisión operativa del solicitante con pruebas abreviadas, NO una cadencia de actualización de ANH observada longitudinalmente | Confirmada |
+| P-30 | Vigencia del dato de ANH | [RN-05.5](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md) | 6 horas desde la última lectura válida del backend; se mantienen RN-05.5 y RN-09.17; no garantiza existencia física de combustible | Confirmada |
 | P-31 | Distancia máxima para vincular una estación de ANH con un surtidor del catálogo | [RN-09.10](04_reglas/CU-09_ConsultarEstadoANH.md) | Se fija con la tarea T-118 | Pendiente |
-| P-32 | Tiempo de espera y reintentos de la consulta a ANH | [RN-09.4](04_reglas/CU-09_ConsultarEstadoANH.md) | Partir de los del cliente de prueba: 12 segundos por petición, 1 reintento y 1 segundo entre peticiones | Propuesta |
+| P-32 | Tiempo de espera y reintentos de la consulta a ANH | [RN-09.4](04_reglas/CU-09_ConsultarEstadoANH.md) | 12 segundos por petición, 1 reintento solo ante fallo elegible y pausa >= 1 segundo; se respeta Retry-After (pruebas simuladas y rondas puntuales reales) | Confirmada |
 
 P-07, P-08 y P-10 se cerraron con las decisiones D-09, D-08 y D-12. P-16 quedó sin uso.

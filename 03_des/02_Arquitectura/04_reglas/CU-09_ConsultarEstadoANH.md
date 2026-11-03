@@ -28,6 +28,14 @@ Cubre HU-14 y los requisitos RF-15, RNF-04 y RNF-07. Este proceso es automático
 | RN-09.18 | No se guardan la fecha de última venta ni el indicador de venta que traiga ANH, la dirección ni la zona de la estación, las respuestas completas ni nada de las estaciones ignoradas. ANH no informa cuándo llegó combustible a una estación, y el sistema nunca inventa esa fecha. | ReporteANH | CU-09 sección 7, informe técnico de ANH |
 | RN-09.19 | Cada ciclo deja en el registro del backend la hora, las rutas consultadas, el estado HTTP de cada una, cuántas estaciones llegaron, cuántas se aceptaron y cuántas se ignoraron, y el motivo de cada falla. No guarda el cuerpo de la respuesta ni datos de personas. | Tarea periódica del backend | CU-09 sección 7 |
 
+### T-117: validación abreviada y lectura del aviso de ANH
+
+Por instrucción del solicitante se fijan como **valores operativos confirmados por decisión** P-29 = 10 minutos entre inicios de ciclo, P-30 = 6 horas desde la última lectura válida del backend y P-32 = 12 segundos por petición, 1 reintento cuando procede y pausa de al menos 1 segundo entre peticiones. Se respeta `Retry-After`. Esos valores superaron las pruebas automatizadas contra un servidor HTTP simulado, pero no fueron deducidos de una serie real de 72 horas.
+
+Para RN-09.13, `updated_at` sin zona se interpreta en `America/La_Paz`; con zona se conserva el desplazamiento original, y una fecha inválida o ausente descarta el estado. La ronda real puntual del 03/11/2026 observó 57/57 marcas `updated_at` sin zona. El aviso real de ANH confirma el carácter **referencial** del dato y no garantiza disponibilidad en surtidor. La prueba de 72 horas de CP-157 se omitió por instrucción del solicitante: no se declara acreditada ni se afirma que el equipo haya aprobado formalmente su sustitución.
+
+**Comprobación real de laptop y Oracle (T-117, 03/11/2026 UTC):** se registraron tres peticiones por entorno (catálogo, gasolina y diésel), todas HTTP 200, y 57 registros estación–combustible por origen (31 gasolina y 26 diésel). El analizador informa una latencia media de **166 ms** en Windows (máximo **361 ms**) y **660 ms** en Oracle (máximo **1.514 ms**), sin errores HTTP, con pausas mínimas de **1,103 s** y **1,099 s**, respectivamente. En ambas rondas, **57/57** valores `updated_at` carecen de zona explícita. El intervalo entre la última solicitud local y la primera de Oracle superó 10 minutos. **Una sola ronda por origen no determina la cadencia de actualización ni acredita CP-157.** Se inspeccionaron los CSV originales de Oracle; para Windows se dispone del resumen calculado por el analizador, pero no de los CSV originales.
+
 ## Recorrido por Vista, Controlador y Modelo
 
 Este proceso no tiene vista ni controlador REST. Lo inicia el reloj del backend.

@@ -1,0 +1,122 @@
+{
+  "tarea": "T-117 (issue #112)",
+  "fecha_utc_rondas": "2026-11-03",
+  "origen_de_evidencia": "windows-20261102-212856.rar",
+  "sha256_rar": "a48f4aaceb8b1336d6fc4e02ed30b52a147677eb630713d4edf24b2005a4bd4e",
+  "sha256_oracle_medicion_csv": "9975a79d58cf9a031cbdedb98067000c7b2c3e0c1205a04f667d4e9ec911fc14",
+  "sha256_oracle_estaciones_csv": "d4ddd865f100792a8d63981ee9712366f7f85b180c0695251e430481fbb216d9",
+  "sha256_comparacion_json": "ee1b60377b627c7957c344bfd052cc5e6f5fe4d5d739d5f8bbba13fbbd52a6d3",
+  "resultado_pruebas_en_windows_declarado": {
+    "aprobadas": 35,
+    "total": 35
+  },
+  "resultado_pruebas_en_oracle_declarado": {
+    "aprobadas": 35,
+    "total": 35
+  },
+  "local": {
+    "origen_declarado": "local",
+    "tipo_registro": "real_declarado",
+    "archivo_validado": true,
+    "primera_peticion_utc": "2026-11-03T01:28:52.621277+00:00",
+    "ultima_peticion_utc": "2026-11-03T01:28:55.274960+00:00",
+    "horas_observadas": 0.0008,
+    "ciclos_observados": 1,
+    "peticiones_registradas": 3,
+    "estaciones_registradas": 57,
+    "pares_estacion_producto": 57,
+    "respuestas_http": {
+      "200": 3
+    },
+    "cantidad_errores": 0,
+    "latencia_media_ms": 166.0,
+    "latencia_p95_ms": 333.8,
+    "latencia_max_ms": 361.0,
+    "pausa_minima_segundos": 1.103,
+    "cambios_saldo_observados": 0,
+    "cambios_updated_at_observados": 0,
+    "zonas_updated_at": {
+      "NO": 57
+    },
+    "retry_after": [],
+    "controles": {
+      "ids_validos": true,
+      "referencias_estaciones_validas": true,
+      "datos_utc_validos": true,
+      "pausas_entre_peticiones_de_1s": true,
+      "ciclos_separados_10min": true,
+      "tiene_catalogo": true,
+      "peticion_estaciones_gasolina": true,
+      "peticion_estaciones_diesel": true,
+      "registros_estaciones_presentes": true
+    },
+    "prueba_corta_completa": true,
+    "CP-157_apto": false
+  },
+  "oracle": {
+    "origen_declarado": "oracle",
+    "tipo_registro": "real_declarado",
+    "archivo_validado": true,
+    "primera_peticion_utc": "2026-11-03T01:39:57.946889+00:00",
+    "ultima_peticion_utc": "2026-11-03T01:40:01.967571+00:00",
+    "horas_observadas": 0.0012,
+    "ciclos_observados": 1,
+    "peticiones_registradas": 3,
+    "estaciones_registradas": 57,
+    "pares_estacion_producto": 57,
+    "respuestas_http": {
+      "200": 3
+    },
+    "cantidad_errores": 0,
+    "latencia_media_ms": 660.0,
+    "latencia_p95_ms": 1393.0,
+    "latencia_max_ms": 1514.0,
+    "pausa_minima_segundos": 1.099,
+    "cambios_saldo_observados": 0,
+    "cambios_updated_at_observados": 0,
+    "zonas_updated_at": {
+      "NO": 57
+    },
+    "retry_after": [],
+    "controles": {
+      "ids_validos": true,
+      "referencias_estaciones_validas": true,
+      "datos_utc_validos": true,
+      "pausas_entre_peticiones_de_1s": true,
+      "ciclos_separados_10min": true,
+      "tiene_catalogo": true,
+      "peticion_estaciones_gasolina": true,
+      "peticion_estaciones_diesel": true,
+      "registros_estaciones_presentes": true
+    },
+    "prueba_corta_completa": true,
+    "CP-157_apto": false
+  },
+  "verificado_independientemente": {
+    "oracle_peticiones_200": 3,
+    "oracle_registros_estacion_producto": 57,
+    "oracle_gasolina": 31,
+    "oracle_diesel": 26,
+    "oracle_ids_estacion_unicos": 31,
+    "oracle_updated_at_sin_zona": 57,
+    "oracle_latencias_ms": [
+      1514,
+      304,
+      162
+    ],
+    "oracle_media_ms": 660,
+    "oracle_max_ms": 1514,
+    "separacion_ultima_peticion_local_a_primera_oracle_segundos": 662.672
+  },
+  "faltante_para_auditoria_independiente": "Los CSV reales de laptop no se incluyeron en el RAR; el análisis local procede del resumen generado por el programa.",
+  "alcance": {
+    "pruebas_funcionales_aprobadas": true,
+    "rondas_reales_cortas_completadas": true,
+    "datos_72h_reales": false,
+    "CP157": false,
+    "CP158": false,
+    "documentacion_generada": true,
+    "documentacion_confirmada_por_equipo": false,
+    "rama_creada": false
+  }
+}

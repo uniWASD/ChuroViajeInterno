@@ -81,14 +81,14 @@ La congestión no es un objeto aparte. Cuando el motor core la detecta por telem
 | Colores de evento | Rojo para accidentes y azul para controles policiales. Los de bloqueo, otro y congestión los fija el diseño | Visión 1.2.1, HU-03 |
 | Tiempos que ofrece el reporte | Ahora mismo, hace 5 minutos (marcado), hace 10 minutos y hace 30 minutos | HU-01 c.2 y decisión [D-09](08_decisiones_parametros.md) |
 | Tipos de combustible | Gasolina, Diesel, Gasolina Premium, Diesel ULS; Desconocido cuando el mensaje no lo indica | CU-05, sección 8 |
-| Vigencia del estado de un surtidor | 6 horas sin dato nuevo. Para ANH se cuentan desde que el backend lo leyó, y el valor lo fija [P-30](08_decisiones_parametros.md) | CU-05, sección 8, CU-09 |
+| Vigencia del estado de un surtidor | Para ANH, 6 horas desde la última lectura válida del backend (P-30); se mantienen RN-05.5 y RN-09.17. Para otras fuentes aplica CU-05. | CU-05, sección 8, CU-09 |
 | Vigencia de un mensaje pendiente | 30 minutos sin analizar | CU-06, sección 8 |
 | Ciclo de análisis de mensajes | Cada 5 minutos, solo si hay pendientes | CU-06 |
-| Ciclo de consulta a ANH | Lo fija [P-29](08_decisiones_parametros.md) con la tarea T-117 | CU-09, decisión [D-29](08_decisiones_parametros.md) |
+| Ciclo de consulta a ANH | 10 minutos entre inicios de ciclo (P-29); cada ronda consulta catálogo, gasolina y diésel con pausa >= 1 segundo entre peticiones. | CU-09, decisión [D-29](08_decisiones_parametros.md) |
 | Combustibles que se piden a ANH | Gasolina y Diesel | CU-09, prototipo de `05_pro/PruebaApiANH` |
 | Traducción de los litros de ANH | 0 litros, agotado. Más de 0, disponible. Sin saldo, sin dato | CU-09, decisión [D-31](08_decisiones_parametros.md) |
 | Distancia máxima para vincular una estación de ANH con un surtidor | La fija [P-31](08_decisiones_parametros.md) con la tarea T-118 | CU-09, decisión [D-30](08_decisiones_parametros.md) |
-| Espera y reintentos de la consulta a ANH | 12 segundos por petición, 1 reintento y 1 segundo entre peticiones | [P-32](08_decisiones_parametros.md) |
+| Espera y reintentos de la consulta a ANH | 12 segundos por petición, 1 reintento solo para fallos elegibles, pausa >= 1 segundo; Retry-After prevalece (P-32). | [P-32](08_decisiones_parametros.md) |
 | Consulta de eventos desde la app | Cada 5 segundos | CU-02, sección 8 |
 | Red vial | Extracto de OpenStreetMap de la mancha urbana de Tarija, solo con vías vehiculares | Decisión [D-08](08_decisiones_parametros.md) y [formato del archivo](05_contratos.md#archivo-de-la-red-vial) |
 | Niveles de tráfico de un tramo | Fluido, moderado, congestionado y muy congestionado, con costo multiplicado por 1,0, 1,5, 2,5 y 4,0 | Prototipo de `05_pro/PruebaCalculoRuta`, a ajustar con pruebas |

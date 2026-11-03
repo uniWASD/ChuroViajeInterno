@@ -9,6 +9,8 @@ analisis/
 estado.properties
 medicion-*.csv
 estaciones-*.csv
+!EVIDENCIA_T117/medicion-oracle.csv
+!EVIDENCIA_T117/estaciones-oracle.csv
 disclaimer-evidencia-NO-COMMIT.txt
 __pycache__/
 *.pyc

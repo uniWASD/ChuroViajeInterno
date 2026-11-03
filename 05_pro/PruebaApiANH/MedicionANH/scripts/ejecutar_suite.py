@@ -81,9 +81,14 @@ def main():
     if sys.version_info < (3,10):
         parser.error('Python 3.10 o superior requerido')
     if not shutil.which('java'):
-        parser.error('No se encontró Java (JRE 17+). No es necesario Maven.')
-    if not (ROOT/'medicion-anh.jar').exists():
-        parser.error('Falta medicion-anh.jar: extraer el ZIP COMPLETO.')
+        parser.error('No se encontró Java 17+ en PATH. No es necesario Maven.')
+    if not shutil.which('javac') or not shutil.which('jar'):
+        parser.error('No se encontró JDK 17+ completo (javac y jar) en PATH.')
+    compiler=ORIGIN/'compilar_medidor.py'
+    code, build_log = run_checked([sys.executable,str(compiler)], ROOT,
+                                  Path(tempfile.gettempdir())/'ChuroViaje_T117_compilacion.log', timeout=60)
+    if code or not (ROOT/'medicion-anh.jar').exists():
+        parser.error('No se pudo generar medicion-anh.jar desde java/MedicionANH.java: '+build_log[-500:])
     now = dt.datetime.now().strftime('%Y%m%d-%H%M%S-%f')
     dest = (args.salida or (Path(tempfile.gettempdir())/'ChuroViaje_T117'/'resultados'/('ejecucion-'+now))).resolve()
     dest.mkdir(parents=True,exist_ok=True)
@@ -93,7 +98,7 @@ def main():
     try:
         print('T-117: ejecutando pruebas automáticas Java/Python contra HTTP simulado...', flush=True)
         code, log = run_checked([sys.executable,'-m','unittest','discover','-s','tests','-v'],
-                                ROOT,dest/'PRUEBAS_DETALLADAS.txt', timeout=180)
+                                ROOT,dest/'PRUEBAS_DETALLADAS.txt', timeout=420)
         match = re.search(r'Ran\s+(\d+)\s+tests?',log)
         result['pruebas_ejecutadas'] = int(match.group(1)) if match else None
         result['pruebas_aprobadas'] = code == 0 and re.search(r'(?m)^OK\s*$',log) is not None

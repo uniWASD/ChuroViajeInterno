@@ -1,6 +1,6 @@
 # T-117: validación abreviada y reproducible
 
-Este directorio contiene el código Java de medición, su JAR, pruebas de integración con un servidor HTTP local, herramientas de análisis de registros y ejecutores de Windows/Linux. Los tests funcionales **no generan tráfico hacia ANH**.
+Este directorio contiene el código Java de medición, herramientas para generar localmente su JAR, pruebas de integración con un servidor HTTP local, herramientas de análisis de registros y ejecutores de Windows/Linux. El JAR no se versiona. Los tests funcionales **no generan tráfico hacia ANH**.
 
 ## Windows
 

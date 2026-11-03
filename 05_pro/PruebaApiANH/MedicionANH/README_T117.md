@@ -2,20 +2,20 @@
 
 # T-117 · Medir ANH (Java 17+, sin Maven)
 
-**Issue:** #112 · **Casos:** CP-157 y CP-158 · **Rama de destino:** `feature/T117-java-medir-api-anh`, creada desde `develop`.
+**Issue:** #112 · **Casos:** CP-157 y CP-158 · **Rama:** `feature/T117-java-medir-api-anh` · **PR revisado:** #123 contra `develop`.
 
 El contenido de este directorio es una **adición**. No reemplaza `anh_tarija.py` de T-115 ni sobrescribe los documentos de arquitectura. La arquitectura que se adjuntó como ZIP T-84 es más antigua que `develop`: contiene tres contratos en vez de los cuatro de la versión actual y no tiene CU-09 ni los parámetros P-29/P-30/P-32. **No descomprima ese ZIP antiguo sobre la rama vigente.**
 
 ## 1. Estado de la entrega
 
-- Implementación Java independiente compilada en `medicion-anh.jar`, que funciona en Windows y ARM con Java 17 o superior (JAR generado con `javac --release 17`). No requiere Maven, Gradle ni certificado TLS deshabilitado.
+- Implementación Java independiente en `java/MedicionANH.java`. El JAR se genera localmente con `javac --release 17` y **no se versiona**. Funciona en Windows y ARM con Java 17 o superior; no requiere Maven, Gradle ni desactivar la verificación TLS.
 - Funciona con el flujo del cliente T-115: descubre Tarija por nombre en el catálogo; consulta gasolina (`0`) y diésel (`1`) por separado; valida `decCodigo`, `oResultado`, identificadores, paginación y duplicados. No hace solicitudes a detalles de estaciones; no modifica datos del backend.
 - Un ciclo inicia como máximo cada 10 minutos. Internamente hace tres GET normales (catálogo, gasolina, diésel), con pausa **después** de la petición anterior (1,1 segundos mínimos), y un reintento por error transitorio o 429 según `Retry-After`. Un error de un combustible no anula el otro.
 - No almacena respuestas completas; guarda solo identificación de consulta, identificador de estación y producto, saldo, `updated_at`, horas UTC, latencias, códigos HTTP y categorías de error. Nunca guarda nombres, direcciones, coordenadas ni fechas de venta.
 - La hora de consulta se escribe en UTC. `updated_at` se conserva tal como llega y se clasifica como `SI` (zona explícita), `NO` (sin zona), `AUSENTE` o `INVALIDO`, sin suponer UTC. CU-09 RN-09.13 ya establece que, sin zona, corresponde la de Tarija (`America/La_Paz`, UTC-04:00).
 - El programa guarda `estado.properties` con la fecha de inicio, próximos ciclos, último contacto y suspensión por `Retry-After`. No borra archivos al reanudarse. Abra una carpeta diferente para cada ejecución real. Para un solo ciclo exploratorio, `--una-vez` no ignora la siguiente fecha permitida.
 
-**Importante:** no se ejecutaron 48+24 horas reales ni una conexión SSH a Oracle; no hay evidencia para marcar los parámetros como «Confirmada». Los registros de pruebas de servidor simulado **no** son evidencia CP-157.
+**Importante:** no se ejecutó la campaña real de 48+24 horas. Las rondas puntuales existentes y las simulaciones no acreditan CP-157 ni permiten marcar P-29, P-30 o P-32 como «Confirmada». En esta corrección, la campaña de 72 horas queda expresamente fuera de alcance; el issue debe reflejar ese estado sin presentar la omisión como una medición cumplida.
 
 ## 2. Compilar en Windows (PowerShell, en este directorio)
 
@@ -29,7 +29,7 @@ javac --release 17 -encoding UTF-8 -d build .\java\MedicionANH.java
 jar --create --file medicion-anh.jar --main-class MedicionANH -C build .
 ```
 
-También puede usar el JAR ya preparado. No comprometerlo en Git salvo decisión expresa del equipo; conservar el fuente Java.
+No se distribuye ni se compromete un JAR precompilado. Genérelo desde el fuente cuando sea necesario; `.gitignore` excluye `*.jar`.
 
 ## 3. Inicio local real (48 horas)
 
@@ -89,7 +89,7 @@ El analizador calcula, por origen, tiempos promedio, p95 y máximos, errores HTT
 
 **P-29:** usar los cambios observados para decidir, sin aumentar las consultas por encima de la política prudente. **P-30:** establecer y justificar la vigencia desde la última lectura válida del backend; mantener o cambiar las 6 horas según evidencia, no por suposición. **P-32:** comparar las latencias y los rechazos local/Oracle. La observación cada 10 minutos es discreta: no demuestra el segundo exacto en que ANH cambió los datos.
 
-## 6. Actualización restringida de arquitectura (solo cuando CP-157 exista)
+## 6. Actualización restringida de arquitectura
 
 En `scripts/decisiones-T117-EJEMPLO.json` hay un **esquema sin parámetros rellenados**; crear una copia propia con valores aprobados, la conclusión documentada del Disclaimer y el responsable. `actualizar_arquitectura.py` se niega a editar con CP-157 incompleto. Trabaja **sobre un checkout reciente de `develop`** y exactamente con:
 
@@ -130,7 +130,7 @@ python -m unittest discover -s tests -v
 
 Todas las pruebas llaman a `http://127.0.0.1` dentro de un servidor simulado temporal. **No consultan a ANH**. Incluyen duplicados, datos con/sin zona, 429, Retry-After, reanudación, redirección, no-truncado, rangos, rechazo de datos simulados y validación de cambios delimitados de Markdown.
 
-Agregar únicamente los archivos que correspondan al issue y los registros reales previamente revisados, nunca `git add .`. No subir `estado.properties`, la evidencia completa del Disclaimer sin revisión previa, ni llaves/IP del servidor. No abrir PR hasta que los 72 horas y CP-158 estén completos. En el PR vincular `#112`, `CP-157` y `CP-158`.
+Agregar únicamente los archivos que correspondan al issue y los registros reales previamente revisados, nunca `git add .`. No subir `estado.properties`, la evidencia completa del Disclaimer sin revisión previa, ni llaves/IP del servidor. El PR #123 ya existe: mantener abierto el issue #112 y dejar sin marcar CP-157/CP-158 mientras no estén acreditados o mientras el equipo no modifique formalmente esos criterios. En el PR mantener vinculados `#112`, `CP-157` y `CP-158`.
 
 ## 8. Alcances que esta entrega no acredita
 

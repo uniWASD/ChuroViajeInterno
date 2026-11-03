@@ -2,7 +2,7 @@
 
 Este medidor implementa las reglas de consulta ANH de CU-09 y registra una fila por petición y por estación–combustible. Consta evidencia real de una ronda por entorno, sin intervalos longitudinales.
 
-La decisión del solicitante confirma **P-29 = 10 minutos entre inicios**, **P-30 = 6 h desde la última lectura válida** y **P-32 = timeout de 12 s, un reintento ante fallo elegible, pausa >=1 s y respeto de Retry-After**. No representan estimaciones realizadas sobre 72 horas ni permiten conocer exactamente cuándo actualiza ANH una estación.
+Se mantienen como **Propuesta** los valores iniciales **P-29 = 10 minutos entre inicios**, **P-30 = 6 h desde la última lectura válida** y **P-32 = timeout de 12 s, un reintento ante fallo elegible, pausa >=1 s y respeto de Retry-After**. Las rondas puntuales y las simulaciones no los confirman ni permiten conocer exactamente cuándo actualiza ANH una estación.
 
 En el análisis puntual, Windows registró 166 ms de media y Oracle 660 ms; 3 GET HTTP 200 y 57 pares estación–combustible por origen. El RAR de evidencia conservado fuera del repositorio incluye los CSV originales de Oracle, pero para Windows solo un resumen del analizador. Las simulaciones de 432 ciclos y la suite de pruebas no son tráfico real de ANH. CP-157 original no se considera acreditado.
 

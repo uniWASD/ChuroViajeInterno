@@ -50,6 +50,9 @@ struct Tramo {
   std::vector<Punto> geometria;  // de `desde` a `hasta`
 };
 
+// Distancia en línea recta entre dos puntos, en metros (haversine, con el mismo radio que usa preparacion/).
+double distancia_m(const Punto& a, const Punto& b);
+
 // Resultado de ajustar un punto a la red.
 struct Ajuste {
   std::size_t nodo = 0;   // posición en RedVial::nodos()
@@ -69,8 +72,14 @@ class RedVial {
   const std::string& fecha_extracto() const { return fecha_extracto_; }
   const std::vector<Nodo>& nodos() const { return nodos_; }
   const std::vector<Tramo>& tramos() const { return tramos_; }
-  // Tramos que salen de cada nodo (posiciones en tramos()); base para el A* del issue de rutas.
+  // Tramos que salen de cada nodo (posiciones en tramos()).
   const std::vector<std::size_t>& tramos_que_salen(std::size_t nodo) const { return salientes_[nodo]; }
+  // Posición del nodo con ese id, o std::nullopt si no existe.
+  std::optional<std::size_t> buscar_nodo(const std::string& id) const;
+  // Por cuánto se multiplica la distancia en línea recta para que la estimación del A* nunca supere el costo
+  // real (RN-03.11). Es 1 si toda longitud es al menos la línea recta entre sus extremos (RN-03.7), con un
+  // pequeño margen por redondeo; si algún tramo del archivo fuera más corto, baja lo necesario.
+  double factor_estimacion() const { return factor_estimacion_; }
 
   // La intersección más cercana a (lat, lon), o std::nullopt si no hay ninguna a menos de
   // kRadioAjusteMetros o las coordenadas no son válidas. Ante un empate gana el nodo que aparece primero.
@@ -86,6 +95,8 @@ class RedVial {
   std::vector<Nodo> nodos_;
   std::vector<Tramo> tramos_;
   std::vector<std::vector<std::size_t>> salientes_;
+  std::unordered_map<std::string, std::size_t> posicion_nodo_;
+  double factor_estimacion_ = 1.0;
   double lat0_ = 0;
   double lon0_ = 0;
   double metros_por_grado_lon_ = 0;

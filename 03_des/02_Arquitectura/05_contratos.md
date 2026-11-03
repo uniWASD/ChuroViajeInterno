@@ -115,10 +115,10 @@ Una petición de ruta y su respuesta se ven así. En el pipe, cada una ocupa una
 
 ```json
 {"id":17,"operacion":"calcular_ruta","origen":[-21.5355,-64.7296],"destino":[-21.5300,-64.7260],"paradas":[]}
-{"id":17,"ok":true,"estado":"ENCONTRADA","distancia_m":755,"tiempo_s":150,"trazado":[[-21.5355,-64.7296],[-21.5348,-64.7280],[-21.5300,-64.7260]]}
+{"id":17,"ok":true,"estado":"ENCONTRADA","distancia_m":755,"tiempo_s":136,"trazado":[[-21.5355,-64.7296],[-21.5348,-64.7280],[-21.5300,-64.7260]],"tramos":[{"id":"osm:5001:1:ida","calle":"Calle Comercio"},{"id":"osm:5002:1:ida","calle":"Av. Las Américas"}]}
 ```
 
-El campo `estado` puede ser `ENCONTRADA`, `SIN_RUTA` o `PUNTO_INVALIDO`; los dos últimos son respuestas correctas, no fallos. `"ok":false` queda para un mensaje mal formado o un fallo interno del núcleo, y entonces la respuesta trae un campo `error` con un código y una descripción.
+El campo `estado` puede ser `ENCONTRADA`, `SIN_RUTA` o `PUNTO_INVALIDO`; los dos últimos son respuestas correctas, no fallos, y no traen más campos. Una ruta encontrada trae la distancia en metros, el tiempo estimado en segundos, el trazado como una lista de puntos `[latitud, longitud]` y, en orden, cada tramo con su `id` y el nombre de su `calle`; esos `id` son los que la app devuelve al revisar la ruta ([D-12](08_decisiones_parametros.md)). `paradas` puede faltar o venir vacía. `"ok":false` queda para un mensaje mal formado (`PETICION_INVALIDA`), para un núcleo que todavía no tiene la red vial (`RED_NO_CARGADA`) o para un fallo interno del núcleo, y entonces la respuesta trae un campo `error` con un código y una descripción.
 
 ### Arranque, demoras y caídas
 

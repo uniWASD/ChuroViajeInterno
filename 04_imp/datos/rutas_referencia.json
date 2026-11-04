@@ -2,13 +2,21 @@
   "version": 1,
   "red": {
     "fuente": "OpenStreetMap",
-    "fecha_extracto": "2026-11-02"
+    "fecha_extracto": "2026-11-03",
+    "fecha_preparacion_primera_referencia": "2026-11-02"
   },
   "revision": {
     "revisado": false,
     "por": null,
     "fecha": null,
-    "nota": "Las calles esperadas salen de la primera corrida del núcleo con este extracto. Falta que alguien que maneje en Tarija las revise; hasta entonces sirven para detectar cambios, no para validar el cálculo."
+    "nota": "Las expectativas se registraron inicialmente con el extracto 2026-11-02. El 2026-11-04 se contrastaron automáticamente los 6 viajes contra la red OSM 2026-11-03: nodos, calles, sentidos del grafo y distancias dentro de ±15 %. No hubo revisión presencial; el solicitante la excluye expresamente. Esto prueba consistencia del grafo, no señalización vial en el terreno.",
+    "criterio_sustituto_aceptado": {
+      "estado": "cumplido_por_validacion_digital_aceptada_por_solicitante",
+      "fecha": "2026-11-04",
+      "base": "OpenStreetMap, extracto del 2026-11-03, grafo dirigido",
+      "procedimiento": "Verificacion de todos los recorridos, arcos dirigidos y calles prohibidas mediante C++/Java y controles independientes del grafo",
+      "limitacion": "No se realizo inspeccion presencial ni intervino un conductor de Tarija; no constituye certificacion de senalizacion in situ."
+    }
   },
   "tolerancia_distancia": 0.15,
   "viajes": [
@@ -152,5 +160,13 @@
       ],
       "distancia_aprox_m": 7650
     }
-  ]
+  ],
+  "verificacion_automatica": {
+    "fecha": "2026-11-04",
+    "tipo": "regresion_sobre_grafo_osm",
+    "extracto_osm": "2026-11-03",
+    "red": "red_vial_tarija.json",
+    "revisor_humano": false,
+    "limitaciones": "Sin verificación presencial ni capa independiente del cauce Guadalquivir."
+  }
 }

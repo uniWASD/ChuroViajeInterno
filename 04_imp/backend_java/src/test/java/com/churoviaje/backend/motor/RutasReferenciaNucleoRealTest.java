@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.nio.file.Path;
+import java.nio.file.Files;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +17,7 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 /**
@@ -35,6 +37,12 @@ class RutasReferenciaNucleoRealTest {
 
     @BeforeAll
     static void arrancar() throws Exception {
+        Assumptions.assumeTrue(Files.isRegularFile(Path.of("../datos/rutas_referencia.json")),
+                "No existe el archivo de viajes de referencia");
+        Assumptions.assumeTrue(Files.isRegularFile(Path.of(System.getenv("RED_VIAL_REAL"))),
+                "No existe el archivo de red vial real");
+        Assumptions.assumeTrue(Files.isRegularFile(Path.of(System.getenv("MOTOR_PATH"))),
+                "No existe el ejecutable del motor C++");
         referencia = JSON.readTree(Path.of("../datos/rutas_referencia.json").toFile());
         for (JsonNode n : JSON.readTree(Path.of(System.getenv("RED_VIAL_REAL")).toFile()).path("nodos")) {
             NODOS.put(n.path("id").asText(), new double[] {n.path("lat").asDouble(), n.path("lon").asDouble()});

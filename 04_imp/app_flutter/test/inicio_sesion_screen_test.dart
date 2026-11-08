@@ -26,7 +26,7 @@ void main() {
   Widget app() {
     rutas = [];
     final api = ApiClient(
-      client: MockClient((pedido) async {
+      client: MockClient(sinEventos((pedido) async {
         rutas.add(pedido.url.path);
         return switch (pedido.url.path) {
           '/sesion/google' => http.Response(
@@ -41,7 +41,7 @@ void main() {
           '/sesion/cerrar' => http.Response('', 204),
           _ => http.Response('{}', 200),
         };
-      }),
+      })),
     );
     return MultiProvider(
       providers: createAppProviders(
@@ -86,7 +86,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(MainScreen), findsOneWidget);
-    expect(rutas, ['/sesion/google', '/catalogos']);
+    expect(rutas.sublist(0, 2), ['/sesion/google', '/catalogos']);
   });
 
   testWidgets('CP-38: al cancelar el selector, sigue en Inicio de sesión sin mostrar un error', (tester) async {

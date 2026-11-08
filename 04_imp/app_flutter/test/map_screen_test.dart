@@ -24,7 +24,7 @@ void main() {
     return MultiProvider(
       providers: createAppProviders(
         apiClient: ApiClient(
-          client: MockClient((_) async => http.Response('{}', 200)),
+          client: MockClient(sinEventos((_) async => http.Response('{}', 200))),
         ),
         ubicacion: ubicacion,
         constructorMapa: mapa.construir,

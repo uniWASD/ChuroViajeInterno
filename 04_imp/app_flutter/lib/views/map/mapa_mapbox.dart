@@ -23,7 +23,9 @@ class MapaMapbox extends StatefulWidget {
 class _MapaMapboxState extends State<MapaMapbox> {
   MapboxMap? _mapa;
   CircleAnnotationManager? _marcas;
+  CircleAnnotationManager? _eventos;
   PolylineAnnotationManager? _lineas;
+  Cancelable? _toquesEventos;
 
   @override
   void initState() {
@@ -50,6 +52,15 @@ class _MapaMapboxState extends State<MapaMapbox> {
     if (!listEquals(anterior.datos.trazado, widget.datos.trazado)) {
       _dibujarTrazado();
     }
+    if (!listEquals(anterior.datos.eventos, widget.datos.eventos)) {
+      _dibujarEventos();
+    }
+  }
+
+  @override
+  void dispose() {
+    _toquesEventos?.cancel();
+    super.dispose();
   }
 
   Future<void> _alCrear(MapboxMap mapa) async {
@@ -67,10 +78,36 @@ class _MapaMapboxState extends State<MapaMapbox> {
     );
     // Primero la línea, para que las marcas queden encima.
     _lineas = await mapa.annotations.createPolylineAnnotationManager();
+    _eventos = await mapa.annotations.createCircleAnnotationManager();
     _marcas = await mapa.annotations.createCircleAnnotationManager();
+    _toquesEventos = _eventos!.tapEvents(onTap: (anotacion) {
+      final id = anotacion.customData?['evento'];
+      if (id is num) widget.datos.alTocarEvento?.call(id.toInt());
+    });
     await _actualizarUbicacion();
     await _dibujarTrazado();
+    await _dibujarEventos();
     await _marcarPunto();
+  }
+
+  /// RN-02.7 y RN-02.14: cada evento con el color de su tipo; los confirmados, con un borde grueso oscuro.
+  Future<void> _dibujarEventos() async {
+    final capa = _eventos;
+    if (capa == null) return;
+    await capa.deleteAll();
+    final eventos = widget.datos.eventos;
+    if (eventos.isEmpty) return;
+    await capa.createMulti([
+      for (final e in eventos)
+        CircleAnnotationOptions(
+          geometry: _punto(e.coordenada),
+          circleRadius: 9,
+          circleColor: e.color.toARGB32(),
+          circleStrokeWidth: e.confirmado ? 4 : 2,
+          circleStrokeColor: (e.confirmado ? const Color(0xFF1B1B1B) : Colors.white).toARGB32(),
+          customData: {'evento': e.id},
+        ),
+    ]);
   }
 
   Future<void> _actualizarUbicacion() async {

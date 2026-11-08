@@ -2,6 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 import 'config/app_config.dart';
+import 'controllers/eventos_controller.dart';
 import 'controllers/map_controller.dart';
 import 'controllers/navigation_controller.dart';
 import 'controllers/reporte_controller.dart';
@@ -71,6 +72,13 @@ List<SingleChildWidget> createAppProviders({
       context.read<ServicioEventos>(),
       context.read<SesionController>(),
       context.read<MapController>(),
+      reloj: reloj,
+    ),
+  ),
+  ChangeNotifierProvider<EventosController>(
+    create: (context) => EventosController(
+      context.read<ServicioEventos>(),
+      context.read<SesionController>(),
       reloj: reloj,
     ),
   ),

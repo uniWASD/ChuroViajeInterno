@@ -6,6 +6,7 @@ import '../models/evento_vial.dart';
 import '../models/reporte_evento.dart';
 import '../services/api/api_client.dart';
 import '../services/eventos/servicio_eventos.dart';
+import 'cola_controller.dart';
 import 'map_controller.dart';
 import 'sesion_controller.dart';
 
@@ -21,8 +22,11 @@ enum EstadoReporte {
   /// El backend no lo aceptó: duplicado, límite, fuera de Tarija o vencido. Se muestra su mensaje.
   rechazado,
 
-  /// No hay red: se conserva lo elegido (guardarlo en la cola es HU-02).
+  /// No hay red y no hay cola: se conserva lo elegido.
   sinRed,
+
+  /// No hay red: el reporte quedó en la cola y se enviará solo (HU-02, RN-01.13).
+  guardadoEnCola,
 
   /// La sesión venció y no se pudo renovar: al volver a iniciar sesión, el reporte se envía solo (RN-01.16).
   esperandoSesion,
@@ -39,6 +43,7 @@ class ReporteController extends ChangeNotifier {
   final ServicioEventos _servicio;
   final SesionController _sesion;
   final MapController _mapa;
+  final ColaController? _cola;
   final DateTime Function() _ahora;
 
   EstadoReporte _estado = EstadoReporte.eligiendo;
@@ -54,6 +59,7 @@ class ReporteController extends ChangeNotifier {
     this._servicio,
     this._sesion,
     this._mapa, {
+    this._cola,
     DateTime Function()? reloj,
   }) : _ahora = reloj ?? DateTime.now {
     _sesion.addListener(_alCambiarSesion);
@@ -141,10 +147,18 @@ class ReporteController extends ChangeNotifier {
 
   /// Decide qué hacer cuando el envío falla.
   Future<void> _alFallarEnvio(ReporteEvento reporte, ApiException error) async {
-    if (error.codigo == 'SESION_VENCIDA') {
+    if (error.codigo == 'SESION_VENCIDA' && _cola != null) {
+      await _cola.guardar(reporte); // RN-01.16: queda en la cola y se envía al volver a iniciar sesión
+      _estado = EstadoReporte.esperandoSesion;
+      _mensaje = mensajeEsperandoSesion;
+    } else if (error.codigo == 'SESION_VENCIDA') {
       _pendienteTrasSesion = reporte; // RN-01.16: se conserva y se envía al volver a iniciar sesión
       _estado = EstadoReporte.esperandoSesion;
       _mensaje = mensajeEsperandoSesion;
+    } else if (esErrorDeRed(error) && _cola != null) {
+      await _cola.guardar(reporte); // RN-01.13: se envía solo cuando vuelva la red
+      _estado = EstadoReporte.guardadoEnCola;
+      _mensaje = ColaController.mensajeGuardado;
     } else if (esErrorDeRed(error)) {
       _estado = EstadoReporte.sinRed;
       _mensaje = error.mensaje;

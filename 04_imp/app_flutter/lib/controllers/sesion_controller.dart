@@ -40,16 +40,12 @@ class SesionController extends ChangeNotifier implements GestorToken {
   bool _disposed = false;
 
   SesionController({
-    required ServicioSesion servicio,
-    required ProveedorGoogle google,
-    required AlmacenLocal almacen,
-    required ServicioCatalogos catalogos,
+    required this._servicio,
+    required this._google,
+    required this._almacen,
+    required this._catalogos,
     DateTime Function()? reloj,
-  }) : _servicio = servicio, // ignore: prefer_initializing_formals
-       _google = google, // ignore: prefer_initializing_formals
-       _almacen = almacen, // ignore: prefer_initializing_formals
-       _catalogos = catalogos, // ignore: prefer_initializing_formals
-       _ahora = reloj ?? DateTime.now;
+  }) : _ahora = reloj ?? DateTime.now;
 
   EstadoSesion get estado => _estado;
   bool get conSesion => _estado == EstadoSesion.conSesion;

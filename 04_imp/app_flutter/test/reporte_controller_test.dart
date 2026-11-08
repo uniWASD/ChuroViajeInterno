@@ -219,6 +219,8 @@ void main() {
         constructorMapa: MapaFalso().construir,
         almacen: almacenWidget,
         google: GoogleFalso(),
+        cola: ColaFalsa(),
+        conectividad: ConectividadFalsa(),
       ),
       child: const MaterialApp(
         locale: Locale('es'),

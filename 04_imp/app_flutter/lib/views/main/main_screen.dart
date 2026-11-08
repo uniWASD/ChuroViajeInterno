@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../controllers/cola_controller.dart';
 import '../../controllers/navigation_controller.dart';
 import '../../controllers/sesion_controller.dart';
 import '../map/map_screen.dart';
@@ -26,9 +27,11 @@ class MainScreen extends StatelessWidget {
             centerTitle: true,
             actions: const [_MenuCuenta()],
           ),
-          body: IndexedStack(
-            index: controller.selectedIndex,
-            children: _screens,
+          body: _AvisosCola(
+            child: IndexedStack(
+              index: controller.selectedIndex,
+              children: _screens,
+            ),
           ),
           bottomNavigationBar: NavigationBar(
             selectedIndex: controller.selectedIndex,
@@ -82,4 +85,46 @@ class _MenuCuenta extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Muestra los avisos de la cola sin conexión: enviado, perdió vigencia o rechazado (RN-01.13 a RN-01.15).
+class _AvisosCola extends StatefulWidget {
+  final Widget child;
+
+  const _AvisosCola({required this.child});
+
+  @override
+  State<_AvisosCola> createState() => _AvisosColaState();
+}
+
+class _AvisosColaState extends State<_AvisosCola> {
+  ColaController? _cola;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final cola = context.read<ColaController>();
+    if (!identical(cola, _cola)) {
+      _cola?.removeListener(_mostrar);
+      _cola = cola..addListener(_mostrar);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _mostrar());
+    }
+  }
+
+  @override
+  void dispose() {
+    _cola?.removeListener(_mostrar);
+    super.dispose();
+  }
+
+  void _mostrar() {
+    if (!mounted) return;
+    final mensajero = ScaffoldMessenger.of(context);
+    for (var aviso = _cola!.tomarAviso(); aviso != null; aviso = _cola!.tomarAviso()) {
+      mensajero.showSnackBar(SnackBar(content: Text(aviso)));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
 }

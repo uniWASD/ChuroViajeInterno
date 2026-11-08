@@ -33,9 +33,10 @@ class _ReportarEventoScreenState extends State<ReportarEventoScreen> {
   }
 
   void _alCambiar() {
-    if (_controller.estado == EstadoReporte.enviado && mounted) {
+    final estado = _controller.estado;
+    if ((estado == EstadoReporte.enviado || estado == EstadoReporte.guardadoEnCola) && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(ReporteController.mensajeEnviado)),
+        SnackBar(content: Text(_controller.mensaje ?? ReporteController.mensajeEnviado)),
       );
       Navigator.of(context).pop();
     }

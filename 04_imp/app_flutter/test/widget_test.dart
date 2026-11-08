@@ -31,6 +31,8 @@ void main() {
         constructorMapa: mapa.construir,
         almacen: AlmacenFalso.conSesionVigente(),
         google: GoogleFalso(),
+        cola: ColaFalsa(),
+        conectividad: ConectividadFalsa(),
       ),
       child: const MaterialApp(
         locale: Locale('es'),

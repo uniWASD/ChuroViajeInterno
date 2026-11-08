@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../controllers/cola_controller.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/reporte_controller.dart';
@@ -128,6 +129,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     ),
                   ),
                   const SizedBox(height: 8),
+                  const _ReportesPendientes(),
                   if (eventos.seleccionado != null)
                     FichaEvento(evento: eventos.seleccionado!, controller: eventos),
                   if (controller.puntoSeleccionado != null)
@@ -140,6 +142,32 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           ],
         );
       },
+    );
+  }
+}
+
+/// RN-01.15: los reportes guardados sin conexión se ven; los que fallaron varias veces, como pendientes.
+class _ReportesPendientes extends StatelessWidget {
+  const _ReportesPendientes();
+
+  @override
+  Widget build(BuildContext context) {
+    final cola = context.watch<ColaController>();
+    final cantidad = cola.pendientes.length;
+    if (cantidad == 0) return const SizedBox.shrink();
+    final atascados = cola.atascados.length;
+    return Card(
+      key: const Key('reportes-pendientes'),
+      child: ListTile(
+        leading: const Icon(Icons.cloud_upload_outlined),
+        title: Text(cantidad == 1
+            ? '1 reporte pendiente de envío'
+            : '$cantidad reportes pendientes de envío'),
+        subtitle: Text(atascados > 0
+            ? 'No se pudo enviar después de varios intentos. Se seguirá intentando.'
+            : 'Se enviará solo cuando vuelva la red.'),
+        trailing: TextButton(onPressed: cola.reenviar, child: const Text('Reintentar')),
+      ),
     );
   }
 }

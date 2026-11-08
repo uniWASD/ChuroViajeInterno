@@ -12,6 +12,12 @@ class Inicio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final estado = context.select<SesionController, EstadoSesion>((s) => s.estado);
+    if (estado == EstadoSesion.sinSesion) {
+      // Si la sesión se perdió con otra vista abierta encima (por ejemplo, Reportar evento), se cierra.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) Navigator.of(context).popUntil((ruta) => ruta.isFirst);
+      });
+    }
     return switch (estado) {
       EstadoSesion.cargando => const CargandoSesion(),
       EstadoSesion.sinSesion => const InicioSesionScreen(),

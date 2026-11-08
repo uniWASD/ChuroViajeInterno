@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/map_controller.dart';
+import '../../controllers/reporte_controller.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
+import '../reporte/reportar_evento_screen.dart';
 import '../ruta/como_llegar_screen.dart';
 import 'mapa_base.dart';
 
@@ -82,6 +84,19 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FloatingActionButton.extended(
+                      heroTag: 'reportar-evento',
+                      onPressed: () {
+                        context.read<ReporteController>().empezar();
+                        Navigator.of(context).push(ReportarEventoScreen.ruta());
+                      },
+                      icon: const Icon(Icons.add_alert_outlined),
+                      label: const Text('Reportar evento'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
                   Align(
                     alignment: Alignment.centerRight,
                     child: FloatingActionButton.extended(

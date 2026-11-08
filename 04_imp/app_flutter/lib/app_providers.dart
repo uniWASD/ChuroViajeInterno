@@ -4,9 +4,11 @@ import 'package:provider/single_child_widget.dart';
 import 'config/app_config.dart';
 import 'controllers/map_controller.dart';
 import 'controllers/navigation_controller.dart';
+import 'controllers/reporte_controller.dart';
 import 'controllers/sesion_controller.dart';
 import 'services/api/api_client.dart';
 import 'services/catalogos/servicio_catalogos.dart';
+import 'services/eventos/servicio_eventos.dart';
 import 'services/rutas/servicio_rutas.dart';
 import 'services/sesion/almacen_local.dart';
 import 'services/sesion/proveedor_google.dart';
@@ -23,6 +25,7 @@ List<SingleChildWidget> createAppProviders({
   AlmacenLocal? almacen,
   ProveedorGoogle? google,
   DateTime Function()? reloj,
+  ServicioEventos? servicioEventos,
 }) => [
   ChangeNotifierProvider(create: (_) => NavigationController()),
   Provider<ApiClient>(
@@ -59,5 +62,16 @@ List<SingleChildWidget> createAppProviders({
   ),
   ChangeNotifierProvider<MapController>(
     create: (_) => MapController(ubicacion ?? ServicioUbicacionGeolocator()),
+  ),
+  Provider<ServicioEventos>(
+    create: (context) => servicioEventos ?? ServicioEventos(context.read<ApiClient>()),
+  ),
+  ChangeNotifierProvider<ReporteController>(
+    create: (context) => ReporteController(
+      context.read<ServicioEventos>(),
+      context.read<SesionController>(),
+      context.read<MapController>(),
+      reloj: reloj,
+    ),
   ),
 ];

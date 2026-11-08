@@ -13,10 +13,10 @@ Las tareas que tocan la base de datos o los controladores siguen [D-37](../../03
 | S1 (15/10–21/10) | Estructura base del backend · Base de datos, catálogos y zona de cobertura |
 | S2 (22/10–28/10) | HU-10 Iniciar sesión con Google y emitir el JWT · Catálogos para la app · Wrapper `MotorDeRutas` |
 | S3 (29/10–04/11) | HU-05 Calcular la ruta |
-| S4 (05/11–11/11) | Medir la API de ANH y revisar sus condiciones de uso · HU-01 Registrar reportes de eventos viales · HU-03 Consultar eventos vigentes y vencerlos · HU-11 Votar eventos · Mantener al día el tráfico del motor |
-| S5 (12/11–18/11) | HU-08 Recibir el análisis de WhatsApp · HU-07 Consultar surtidores cercanos · HU-13 Recibir telemetría y registrar congestión · HU-06 Revisar la ruta activa |
-| S6 (19/11–25/11) | Vincular las estaciones de ANH con los surtidores · HU-14 Consultar el estado de combustible desde ANH · HU-12 Registrar confirmaciones de recarga · HU-09 Soporte para el simulador · Limpieza de datos vencidos |
-| S7 (26/11–30/11) | Pruebas de punta a punta |
+| S4 (05/11–10/11) | Medir la API de ANH y revisar sus condiciones de uso · HU-01 Registrar reportes de eventos viales · HU-03 Consultar eventos vigentes y vencerlos · HU-11 Votar eventos · Mantener al día el tráfico del motor |
+| S5 (11/11–15/11) | HU-08 Recibir el análisis de WhatsApp · HU-07 Consultar surtidores cercanos · HU-13 Recibir telemetría y registrar congestión · HU-06 Revisar la ruta activa |
+| S6 (16/11–20/11) | Vincular las estaciones de ANH con los surtidores · HU-14 Consultar el estado de combustible desde ANH · HU-12 Registrar confirmaciones de recarga · HU-09 Soporte para el simulador · Limpieza de datos vencidos |
+| S7 (21/11–25/11) | Pruebas de punta a punta |
 
 ---
 
@@ -254,7 +254,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-java-calcular-ruta" (No ol
 ### [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia
 
 **Tipo:** Tarea de pruebas (cubre CU-09)
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11) · **Apoyo:** Marcelo
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11) · **Apoyo:** Marcelo
 **Depende de:** nada
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
 
@@ -290,7 +290,7 @@ Lo subes en una nueva rama llamada "feature/T117-java-medir-api-anh" (No olvides
 ### [HU-01][CU-01][Java] Registrar reportes de eventos viales
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-094][Java] Catálogos para la app #47
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -331,7 +331,7 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-java-registrar-reporte" (N
 ### [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11) · **Apoyo:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11) · **Apoyo:** Jorge
 **Depende de:** [HU-01][CU-01][Java] Registrar reportes de eventos viales #53
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -368,7 +368,7 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-java-consultar-eventos" (N
 ### [HU-11][CU-02][Java] Votar eventos
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos #55
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -404,7 +404,7 @@ Lo subes en una nueva rama llamada "feature/HU11-CU02-java-votos" (No olvides qu
 ### [T-099][Java] Mantener al día el tráfico del motor
 
 **Tipo:** Tarea de desarrollo (cubre CU-02, CU-03 y CU-04; no es una HU específica)
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-11][CU-02][Java] Votar eventos #63 · [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -438,7 +438,7 @@ Lo subes en una nueva rama llamada "feature/T99-java-trafico-motor" (No olvides 
 ### [HU-08][CU-06][Java] Recibir el análisis de WhatsApp
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Java · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -477,7 +477,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 ### [HU-07][CU-05][Java] Consultar surtidores cercanos
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Java · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -512,7 +512,7 @@ Lo subes en una nueva rama llamada "feature/HU07-CU05-java-consultar-surtidores"
 ### [HU-13][CU-04][Java] Recibir telemetría y registrar congestión
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Java · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [T-099][Java] Mantener al día el tráfico del motor #67 · [HU-13][CU-04][C++] Detectar congestión con la telemetría #73
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -550,7 +550,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvid
 ### [HU-06][CU-04][Java] Revisar la ruta activa
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Java · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-05][CU-03][Java] Calcular la ruta #65 · [HU-06][CU-04][C++] Revisar la ruta activa #76
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -588,7 +588,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-java-revisar-ruta" (No olv
 ### [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo
 
 **Tipo:** Tarea de desarrollo (cubre CU-09)
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11) · **Apoyo:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11) · **Apoyo:** Antonio
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -622,7 +622,7 @@ Lo subes en una nueva rama llamada "feature/T118-java-vincular-estaciones-anh" (
 ### [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH
 
 **Caso de uso:** CU-09 — Consultar Estado de Combustible desde ANH
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11)
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11)
 **Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57 · [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia #112 · [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo #113
 **Etiquetas:** `caso-uso:CU-09` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -669,7 +669,7 @@ Lo subes en una nueva rama llamada "feature/HU14-CU09-java-consultar-anh" (No ol
 ### [HU-12][CU-05][Java] Registrar confirmaciones de recarga
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11) · **Apoyo:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11) · **Apoyo:** Antonio
 **Depende de:** [HU-07][CU-05][Java] Consultar surtidores cercanos #69
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -703,7 +703,7 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-java-confirmar-recarga" (N
 ### [HU-09][CU-07][Java] Soporte para el simulador
 
 **Caso de uso:** CU-07 — Ejecutar Simulador de Tráfico
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11), al inicio, porque el simulador lo usa en el mismo sprint
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11), al inicio, porque el simulador lo usa en el mismo sprint
 **Depende de:** [HU-13][CU-04][Java] Recibir telemetría y registrar congestión #74
 **Etiquetas:** `caso-uso:CU-07` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -743,7 +743,7 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-java-soporte-simulador" (N
 ### [T-105][Java] Limpieza de datos vencidos
 
 **Tipo:** Tarea de desarrollo (privacidad y mantenimiento; cubre CU-02 y CU-05)
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11)
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11)
 **Depende de:** [HU-12][CU-05][Java] Registrar confirmaciones de recarga #72
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -772,7 +772,7 @@ Lo subes en una nueva rama llamada "feature/T105-java-limpieza-datos" (No olvide
 ### [T-107][Java] Pruebas de punta a punta
 
 **Tipo:** Tarea de pruebas (cubre los nueve casos de uso)
-**Tecnología:** Java · **Sprint:** Sprint 7 (26/11–30/11)
+**Tecnología:** Java · **Sprint:** Sprint 7 (21/11–25/11)
 **Depende de:** todos los issues de Java
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
 

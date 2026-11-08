@@ -10,8 +10,8 @@ El servicio lee los grupos de WhatsApp autorizados con Baileys, guarda los mensa
 | --- | --- |
 | S1 (15/10–21/10) | Estructura del servicio |
 | S2 (22/10–28/10) | HU-08 Leer los grupos autorizados |
-| S5 (12/11–18/11) | HU-08 Analizar los mensajes por lotes y enviar el resultado |
-| S7 (26/11–30/11) | Prueba con mensajes reales |
+| S5 (11/11–15/11) | HU-08 Analizar los mensajes por lotes y enviar el resultado |
+| S7 (21/11–25/11) | Prueba con mensajes reales |
 
 Franz también trabaja en otros archivos. En [03_Cpp.md](03_Cpp.md), preparó la red vial en el sprint 2 y en el 3 arma, con Antonio, las rutas de referencia. En [01_Flutter.md](01_Flutter.md), hace el reporte de eventos y su cola sin conexión (HU-01 y HU-02) en el sprint 4, la telemetría en el 5, la consulta de surtidores en el 6 y la política de privacidad en el 7. En [02_Java.md](02_Java.md), mide la API de ANH en el sprint 4 y, en el 6, vincula sus estaciones con los surtidores y hace con Antonio la consulta periódica (HU-14).
 
@@ -99,7 +99,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-whatsapp-leer-grupos" (No 
 ### [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
-**Tecnología:** Node.js · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Node.js · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-08][CU-06][WhatsApp/LLM] Leer los grupos autorizados #51 · [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Issue anterior:** #10 (investigación del LLM)
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:whatsapp-llm`
@@ -146,7 +146,7 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-llm-analisis-lotes" (No ol
 ### [T-101][WhatsApp/LLM] Prueba con mensajes reales
 
 **Tipo:** Tarea de pruebas (cubre CU-06)
-**Tecnología:** Node.js · **Sprint:** Sprint 7 (26/11–30/11)
+**Tecnología:** Node.js · **Sprint:** Sprint 7 (21/11–25/11)
 **Depende de:** [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59 · [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM #68 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69 · [HU-07][CU-05][Flutter] Consultar surtidores cercanos #71
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:whatsapp-llm`
 

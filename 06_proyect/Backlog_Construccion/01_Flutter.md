@@ -12,10 +12,10 @@ Cuando el endpoint del backend todavía no está listo, la app avanza con respue
 | --- | --- |
 | S1 (15/10–21/10) | Estructura base de la app |
 | S3 (29/10–04/11) | Mapa base con Mapbox y ubicación · HU-05 Cómo llegar |
-| S4 (05/11–11/11) | HU-10 Iniciar sesión con Google · HU-03 Ver los eventos en el mapa · HU-01 Reportar un evento vial · HU-02 Guardar y reintentar reportes sin conexión |
-| S5 (12/11–18/11) | HU-11 Lista de eventos y votos · HU-05 Navegación activa · HU-13 Enviar telemetría con la app abierta · HU-06 Aviso de ruta alternativa |
-| S6 (19/11–25/11) | HU-04 Ver eventos guardados sin conexión · HU-07 Consultar surtidores cercanos · HU-12 Preguntar por la recarga |
-| S7 (26/11–30/11) | Política de privacidad |
+| S4 (05/11–10/11) | HU-10 Iniciar sesión con Google · HU-03 Ver los eventos en el mapa · HU-01 Reportar un evento vial · HU-02 Guardar y reintentar reportes sin conexión |
+| S5 (11/11–15/11) | HU-11 Lista de eventos y votos · HU-05 Navegación activa · HU-13 Enviar telemetría con la app abierta · HU-06 Aviso de ruta alternativa |
+| S6 (16/11–20/11) | HU-04 Ver eventos guardados sin conexión · HU-07 Consultar surtidores cercanos · HU-12 Preguntar por la recarga |
+| S7 (21/11–25/11) | Política de privacidad |
 
 ---
 
@@ -134,7 +134,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-flutter-como-llegar" (No o
 ### [HU-10][CU-08][Flutter] Iniciar sesión con Google
 
 **Caso de uso:** CU-08 — Iniciar Sesión
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [T-087][Flutter] Estructura base de la app #39 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-094][Java] Catálogos para la app #47
 **Etiquetas:** `caso-uso:CU-08` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -177,7 +177,7 @@ Lo subes en una nueva rama llamada "feature/HU10-CU08-flutter-inicio-sesion" (No
 ### [HU-03][CU-02][Flutter] Ver los eventos en el mapa
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-10][CU-08][Flutter] Iniciar sesión con Google #48 · [T-094][Java] Catálogos para la app #47 · [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos #55
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -211,7 +211,7 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-flutter-ver-eventos" (No o
 ### [HU-01][CU-01][Flutter] Reportar un evento vial
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-10][CU-08][Flutter] Iniciar sesión con Google #48 · [HU-01][CU-01][Java] Registrar reportes de eventos viales #53
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -249,7 +249,7 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-flutter-reportar-evento" (
 ### [HU-02][CU-01][Flutter] Guardar y reintentar reportes sin conexión
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [HU-01][CU-01][Flutter] Reportar un evento vial #54
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -285,7 +285,7 @@ Lo subes en una nueva rama llamada "feature/HU02-CU01-flutter-cola-sin-conexion"
 ### [HU-11][CU-02][Flutter] Lista de eventos y votos
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-03][CU-02][Flutter] Ver los eventos en el mapa #56 · [HU-11][CU-02][Java] Votar eventos #63
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -316,7 +316,7 @@ Lo subes en una nueva rama llamada "feature/HU11-CU02-flutter-votos" (No olvides
 ### [HU-05][CU-03][Flutter] Navegación activa
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-05][CU-03][Flutter] Cómo llegar #70
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -348,7 +348,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-flutter-navegacion-activa"
 ### [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-13][CU-04][Java] Recibir telemetría y registrar congestión #74
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -380,7 +380,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-flutter-telemetria" (No ol
 ### [HU-06][CU-04][Flutter] Aviso de ruta alternativa
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-05][CU-03][Flutter] Navegación activa #94 · [HU-06][CU-04][Java] Revisar la ruta activa #82
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -419,7 +419,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 ### [HU-04][CU-02][Flutter] Ver eventos guardados sin conexión
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (16/11–20/11)
 **Depende de:** [HU-03][CU-02][Flutter] Ver los eventos en el mapa #56
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -449,7 +449,7 @@ Lo subes en una nueva rama llamada "feature/HU04-CU02-flutter-eventos-sin-conexi
 ### [HU-07][CU-05][Flutter] Consultar surtidores cercanos
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (16/11–20/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69 · [HU-05][CU-03][Flutter] Cómo llegar #70 (para pedir la ruta hacia un surtidor)
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -486,7 +486,7 @@ Lo subes en una nueva rama llamada "feature/HU07-CU05-flutter-surtidores" (No ol
 ### [HU-12][CU-05][Flutter] Preguntar por la recarga
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (16/11–20/11)
 **Depende de:** [HU-07][CU-05][Flutter] Consultar surtidores cercanos #71 · [HU-12][CU-05][Java] Registrar confirmaciones de recarga #72
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -522,7 +522,7 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-flutter-pregunta-recarga" 
 ### [T-104][Flutter] Política de privacidad
 
 **Tipo:** Tarea de documentación (cubre CU-04, CU-06, CU-08 y CU-09)
-**Tecnología:** Flutter · **Sprint:** Sprint 7 (26/11–30/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 7 (21/11–25/11)
 **Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59 · [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta #75
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
 

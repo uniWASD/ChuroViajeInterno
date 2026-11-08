@@ -14,9 +14,9 @@ Dos cosas que hay que tener presentes durante toda la Construcción:
 | --- | --- |
 | S1 (15/10–21/10) | Preparar la instancia de Oracle Cloud |
 | S2 (22/10–28/10) | Comprobar la salida del servidor hacia la API de ANH |
-| S4 (05/11–11/11) | Dominio, Nginx y HTTPS · Desplegar el backend con el núcleo C++ |
-| S6 (19/11–25/11) | Desplegar el servicio de WhatsApp/LLM · Ambiente de pruebas para el simulador · Respaldos de la base de datos y registros |
-| S7 (26/11–30/11) | Despliegue final y revisión de seguridad |
+| S4 (05/11–10/11) | Dominio, Nginx y HTTPS · Desplegar el backend con el núcleo C++ |
+| S6 (16/11–20/11) | Desplegar el servicio de WhatsApp/LLM · Ambiente de pruebas para el simulador · Respaldos de la base de datos y registros |
+| S7 (21/11–25/11) | Despliegue final y revisión de seguridad |
 
 ---
 
@@ -97,7 +97,7 @@ Lo subes en una nueva rama llamada "feature/T119-servidor-salida-anh" (No olvide
 ### [T-097][Servidor] Dominio, Nginx y HTTPS
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [T-092][Servidor] Preparar la instancia de Oracle Cloud #44
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -129,7 +129,7 @@ Lo subes en una nueva rama llamada "feature/T97-servidor-dominio-https" (No olvi
 ### [T-098][Servidor] Desplegar el backend con el núcleo C++
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–11/11) · **Apoyo:** Jorge
+**Tecnología:** Servidor · **Sprint:** Sprint 4 (05/11–10/11) · **Apoyo:** Jorge
 **Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-095][Java] Wrapper MotorDeRutas #49 · [T-096][C++] Cargar la red vial en el núcleo #50 · [T-111][C++] Preparar la red vial de Tarija desde OpenStreetMap #93
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -166,7 +166,7 @@ Lo subes en una nueva rama llamada "feature/T98-servidor-desplegar-backend" (No 
 ### [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM
 
 **Tipo:** Tarea de infraestructura (cubre CU-06)
-**Tecnología:** Servidor · **Sprint:** Sprint 6 (19/11–25/11) · **Apoyo:** Franz
+**Tecnología:** Servidor · **Sprint:** Sprint 6 (16/11–20/11) · **Apoyo:** Franz
 **Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60 · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -197,7 +197,7 @@ Lo subes en una nueva rama llamada "feature/T100-servidor-desplegar-whatsapp" (N
 ### [T-106][Servidor] Ambiente de pruebas para el simulador
 
 **Tipo:** Tarea de infraestructura (cubre CU-07)
-**Tecnología:** Servidor · **Sprint:** Sprint 6 (19/11–25/11), al inicio · **Apoyo:** Antonio
+**Tecnología:** Servidor · **Sprint:** Sprint 6 (16/11–20/11), al inicio · **Apoyo:** Antonio
 **Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -227,7 +227,7 @@ Lo subes en una nueva rama llamada "feature/T106-servidor-ambiente-pruebas" (No 
 ### [T-103][Servidor] Respaldos de la base de datos y registros
 
 **Tipo:** Tarea de infraestructura (cubre todos los casos de uso)
-**Tecnología:** Servidor · **Sprint:** Sprint 6 (19/11–25/11) · **Apoyo:** Antonio
+**Tecnología:** Servidor · **Sprint:** Sprint 6 (16/11–20/11) · **Apoyo:** Antonio
 **Depende de:** [T-098][Servidor] Desplegar el backend con el núcleo C++ #60
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 
@@ -260,7 +260,7 @@ Lo subes en una nueva rama llamada "feature/T103-servidor-respaldos" (No olvides
 ### [T-110][Servidor] Despliegue final y revisión de seguridad
 
 **Tipo:** Tarea de infraestructura (cierre de la Construcción)
-**Tecnología:** Servidor · **Sprint:** Sprint 7 (26/11–30/11)
+**Tecnología:** Servidor · **Sprint:** Sprint 7 (21/11–25/11)
 **Depende de:** todos los issues de los sprints anteriores
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:servidor`
 

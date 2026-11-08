@@ -20,17 +20,17 @@ Son 31 issues de historia de usuario y 29 tareas técnicas. El orden en que se c
 
 ## Sprints
 
-La Construcción va del 2 de octubre al 30 de noviembre de 2026. Del 2 al 14 de octubre se hicieron el documento de arquitectura y este backlog; el desarrollo va en siete sprints de una semana, de jueves a miércoles, y el último es corto.
+La Construcción va del 2 de octubre al 25 de noviembre de 2026. Del 2 al 14 de octubre se hicieron el documento de arquitectura y este backlog; el desarrollo va en siete sprints: los tres primeros de una semana, de jueves a miércoles, y del sprint 4 al 7 más cortos, porque el último termina el 25 de noviembre.
 
 | Sprint | Fechas | Objetivo |
 | --- | --- | --- |
 | Sprint 1 | 15/10 – 21/10 | Bases: proyectos, base de datos, servidor y protocolo del núcleo |
 | Sprint 2 | 22/10 – 28/10 | Inicio de sesión en el backend, red vial de Tarija, wrapper del motor, lectura de WhatsApp y salida del servidor hacia ANH |
 | Sprint 3 | 29/10 – 04/11 | Calcular ruta de punta a punta: A* y tráfico en el núcleo, `POST /rutas` en el backend, mapa base y Cómo llegar en la app, y las rutas de referencia de Tarija |
-| Sprint 4 | 05/11 – 11/11 | Eventos viales que cambian la ruta: reportar, ver, votar y vencer eventos, con su tráfico en el motor; inicio de sesión en la app, HTTPS y primer despliegue |
-| Sprint 5 | 12/11 – 18/11 | Navegar y recalcular la ruta: navegación activa, telemetría, congestión, revisión de la ruta y aviso de ruta alternativa. En paralelo, la base del combustible en el backend y el análisis con LLM |
-| Sprint 6 | 19/11 – 25/11 | Combustible: surtidores en la app, confirmaciones de recarga, consulta a ANH y despliegue del servicio de WhatsApp; simulador, ambiente de pruebas y respaldos |
-| Sprint 7 | 26/11 – 30/11 | Pruebas de carga, pruebas de punta a punta, prueba con mensajes reales, política de privacidad, despliegue final y correcciones |
+| Sprint 4 | 05/11 – 10/11 | Eventos viales que cambian la ruta: reportar, ver, votar y vencer eventos, con su tráfico en el motor; inicio de sesión en la app, HTTPS y primer despliegue |
+| Sprint 5 | 11/11 – 15/11 | Navegar y recalcular la ruta: navegación activa, telemetría, congestión, revisión de la ruta y aviso de ruta alternativa. En paralelo, la base del combustible en el backend y el análisis con LLM |
+| Sprint 6 | 16/11 – 20/11 | Combustible: surtidores en la app, confirmaciones de recarga, consulta a ANH y despliegue del servicio de WhatsApp; simulador, ambiente de pruebas y respaldos |
+| Sprint 7 | 21/11 – 25/11 | Pruebas de carga, pruebas de punta a punta, prueba con mensajes reales, política de privacidad, despliegue final y correcciones |
 
 Desde el 03/11/2026, por recomendación del docente, cada sprint se centra en una funcionalidad de punta a punta en lugar de avanzar un poco en todas: lo que se termina en un sprint ya se puede probar completo, aunque algunas piezas todavía usen datos falsos. Los issues del sprint 2 que no se terminaron pasaron a los sprints 3 y 4. El detalle está en la sección «Cambios del 03/11/2026» de [07_Estimacion.md](07_Estimacion.md).
 

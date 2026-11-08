@@ -13,8 +13,8 @@ El servidor es ARM (Oracle Cloud, [D-16](../../03_des/02_Arquitectura/08_decisio
 | S1 (15/10–21/10) | Estructura del núcleo y protocolo por pipe |
 | S2 (22/10–28/10) | Preparar la red vial desde OpenStreetMap · Cargar la red vial en el núcleo |
 | S3 (29/10–04/11) | HU-05 Calcular la ruta óptima con A* · HU-05 Tráfico de los eventos en los tramos · Rutas de referencia de Tarija |
-| S5 (12/11–18/11) | HU-13 Detectar congestión con la telemetría · HU-06 Revisar la ruta activa |
-| S7 (26/11–30/11) | Rendimiento con la red real de Tarija |
+| S5 (11/11–15/11) | HU-13 Detectar congestión con la telemetría · HU-06 Revisar la ruta activa |
+| S7 (21/11–25/11) | Rendimiento con la red real de Tarija |
 
 ---
 
@@ -238,7 +238,7 @@ Lo subes en una nueva rama llamada "feature/T120-cpp-rutas-referencia" (No olvid
 ### [HU-13][CU-04][C++] Detectar congestión con la telemetría
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** C++ · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** C++ · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Issue anterior:** #3 (prototipo de cálculo de velocidad)
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
@@ -280,7 +280,7 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-cpp-detectar-congestion" (
 ### [HU-06][CU-04][C++] Revisar la ruta activa
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** C++ · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** C++ · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:cpp`
 
@@ -315,7 +315,7 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-cpp-revisar-ruta" (No olvi
 ### [T-109][C++] Rendimiento con la red real de Tarija
 
 **Tipo:** Tarea de pruebas (cubre CU-03 y CU-04)
-**Tecnología:** C++ · **Sprint:** Sprint 7 (26/11–30/11)
+**Tecnología:** C++ · **Sprint:** Sprint 7 (21/11–25/11)
 **Depende de:** [HU-06][CU-04][C++] Revisar la ruta activa #76 · [T-108][Simulador] Pruebas de carga y reporte #89
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:cpp`
 

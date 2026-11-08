@@ -6,3 +6,6 @@ spring:
 churoviaje:
   cobertura:
     permitir-provisional: false
+  # Las tareas periodicas no corren solas en las pruebas: cada prueba las llama cuando las necesita.
+  tareas:
+    habilitadas: false

@@ -1,0 +1,32 @@
+name: CI Motor C++
+
+on:
+  pull_request:
+    branches: [ "develop", "main" ]
+    paths:
+      - '04_imp/motor_cpp/**'
+      - '04_imp/datos/**'
+      - '.github/workflows/ci-motor-cpp.yml'
+  workflow_dispatch:
+
+jobs:
+  nucleo-cpp:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 04_imp/motor_cpp
+
+    steps:
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      # nlohmann/json y GoogleTest se descargan con FetchContent (CMakeLists.txt).
+      # La red real de Tarija no está en el repositorio (D-33): sus pruebas se saltan.
+      - name: Configurar con CMake
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Compilar el núcleo, la herramienta de consola y las pruebas
+        run: cmake --build build --parallel
+
+      - name: Ejecutar las pruebas (GoogleTest y extremo a extremo por pipe)
+        run: ctest --test-dir build --output-on-failure

@@ -34,10 +34,6 @@ import org.springframework.test.web.servlet.ResultActions;
 class SesionIntegracionTest extends PruebaIntegracionPostgis {
 
     private static final String CREDENCIAL_SERVICIO = "credencial-de-servicio-solo-para-pruebas-0123456789";
-    private static final String EVENTO = """
-            {"tipo":"ACCIDENTE","ubicacion":{"latitud":-21.53,"longitud":-64.73},
-             "horaConfirmacion":"2026-10-06T15:02:00-04:00","minutosElegidos":0}
-            """;
 
     @Autowired MockMvc mvc;
     @Autowired ObjectMapper json;
@@ -47,6 +43,7 @@ class SesionIntegracionTest extends PruebaIntegracionPostgis {
 
     @BeforeEach
     void limpiar() {
+        jdbc.update("delete from evento_vial");
         jdbc.update("delete from sesion");
         jdbc.update("delete from conductor");
         reloj.fijar(java.time.Instant.parse("2026-11-01T12:00:00Z"));
@@ -62,9 +59,16 @@ class SesionIntegracionTest extends PruebaIntegracionPostgis {
         return json.readTree(resultado.andReturn().getResponse().getContentAsString());
     }
 
+    /** Un reporte de evento valido a la hora del reloj de prueba: sirve para probar el acceso a una ruta de conductor. */
+    private String evento() {
+        return "{\"tipo\":\"ACCIDENTE\",\"ubicacion\":{\"latitud\":-21.53,\"longitud\":-64.73},"
+                + "\"horaConfirmacion\":\"" + OffsetDateTime.ofInstant(reloj.instant(), java.time.ZoneOffset.UTC)
+                + "\",\"minutosElegidos\":0}";
+    }
+
     private ResultActions con(String jwt, String ruta) throws Exception {
         return mvc.perform(post(ruta).header("Authorization", "Bearer " + jwt)
-                .contentType(MediaType.APPLICATION_JSON).content(EVENTO));
+                .contentType(MediaType.APPLICATION_JSON).content(evento()));
     }
 
     private ResultActions renovar(String token) throws Exception {
@@ -162,7 +166,7 @@ class SesionIntegracionTest extends PruebaIntegracionPostgis {
     @Test
     @DisplayName("CP-33: sin JWT, con uno vencido o con uno falso, las rutas de conductor responden 401")
     void cp33RutasDeConductorExigenJwtVigente() throws Exception {
-        mvc.perform(post("/eventos").contentType(MediaType.APPLICATION_JSON).content(EVENTO))
+        mvc.perform(post("/eventos").contentType(MediaType.APPLICATION_JSON).content(evento()))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.codigo").value("NO_AUTENTICADO"));
         mvc.perform(get("/eventos")).andExpect(status().isUnauthorized());

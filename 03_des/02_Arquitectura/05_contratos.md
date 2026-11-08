@@ -113,6 +113,22 @@ Si hay ruta, responde 200 con:
 - Sin origen o sin destino, o con más de 10 paradas, responde 400 con `PETICION_INVALIDA`. Si el motor no responde a tiempo, se está reiniciando o está apagado, responde 503 con `MOTOR_NO_DISPONIBLE` y la app puede reintentar ([RN-03.15](04_reglas/CU-03_CalcularRutaOptima.md)).
 - La ruta pide JWT y el servidor no la guarda ([RN-03.1](04_reglas/CU-03_CalcularRutaOptima.md), [D-05](08_decisiones_parametros.md)).
 
+### Reporte de evento (`POST /eventos`)
+
+```json
+{"tipo":"CONTROL_POLICIAL","ubicacion":{"latitud":-21.5355,"longitud":-64.7296},"horaConfirmacion":"2026-11-01T08:00:00-04:00","minutosElegidos":5}
+```
+
+Si lo acepta, responde 201 con el evento creado:
+
+```json
+{"id":153,"tipo":"CONTROL_POLICIAL","ubicacion":{"latitud":-21.5355,"longitud":-64.7296},"momentoOcurrencia":"2026-11-01T07:55:00-04:00","estado":"ACTIVO","confirmado":false,"origen":"CONDUCTOR"}
+```
+
+- `minutosElegidos` es opcional y vale 0, 5, 10 o 30; sin él, el evento ocurrió hace 5 minutos. El backend resta los minutos a la hora de confirmación y nunca deja el evento en el futuro ([RN-01.4](04_reglas/CU-01_ReportarEventoVial.md)).
+- Esta respuesta y cualquier consulta posterior nunca dicen quién reportó el evento ([RN-01.12](04_reglas/CU-01_ReportarEventoVial.md)). Los eventos de congestión traen además `nivel`.
+- Rechazos: 400 `PETICION_INVALIDA` si falta el tipo, la ubicación o la hora, o si los minutos no son una de las opciones; 422 `TIPO_NO_REPORTABLE` para la congestión o un tipo que no existe, `UBICACION_FUERA_COBERTURA` fuera de Tarija y `EVENTO_VENCIDO` si ya pasó la vigencia de su tipo; 409 `REPORTE_DUPLICADO` (mismo conductor y tipo, a menos de 100 m y dentro de 10 minutos); 429 `LIMITE_DE_REPORTES` (más de 5 en 10 minutos) ([RN-01.2](04_reglas/CU-01_ReportarEventoVial.md) a [RN-01.9](04_reglas/CU-01_ReportarEventoVial.md)).
+
 ## Backend con el motor core
 
 El backend nunca habla directo con el programa en C++. Llama a métodos del wrapper `MotorDeRutas`, que es Java y vive dentro del backend, y el wrapper traduce cada llamada a un mensaje para el núcleo C++ ([D-15](08_decisiones_parametros.md)). Los nombres de métodos y mensajes son una propuesta, igual que las rutas de la API.

@@ -77,7 +77,7 @@ Qué falta para llegar ahí:
 
 ## Base de datos
 
-Todos los perfiles usan PostgreSQL/PostGIS, Flyway V1/V2 y `ddl-auto: validate`. El ejemplo de `POST /eventos` devuelve el evento sin persistirlo hasta HU-01 (#53). Una base que ya ejecutó una versión anterior de V2 puede tener un checksum distinto; no borres sus datos ni ejecutes `repair` automáticamente.
+Todos los perfiles usan PostgreSQL/PostGIS, las migraciones de Flyway y `ddl-auto: validate`. `POST /eventos` (HU-01) guarda el evento en `evento_vial` (V4), con la ubicación como punto PostGIS. Una base que ya ejecutó una versión anterior de V2 puede tener un checksum distinto; no borres sus datos ni ejecutes `repair` automáticamente.
 
 ### Catálogos
 

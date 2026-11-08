@@ -29,13 +29,19 @@ class AppConfig {
 
   static bool get tieneTokenMapbox => mapboxToken.isNotEmpty;
 
-  static const bool _rutaDeEjemplo = bool.fromEnvironment(
-    'RUTA_DE_EJEMPLO',
-    defaultValue: true,
+  /// Client ID web del proyecto de Google Cloud: el token de identidad sale para él y es el que valida el backend
+  /// (`GOOGLE_CLIENT_ID`). Se pasa con `--dart-define=GOOGLE_SERVER_CLIENT_ID=...apps.googleusercontent.com`.
+  static const String googleServerClientId = String.fromEnvironment(
+    'GOOGLE_SERVER_CLIENT_ID',
   );
 
-  /// Mientras la app no inicia sesión (HU-10), `POST /rutas` responde 401: la vista Cómo llegar usa una ruta de
-  /// ejemplo. Con `--dart-define=RUTA_DE_EJEMPLO=false` pide la ruta al backend. En producción, siempre al backend.
+  static const bool _rutaDeEjemplo = bool.fromEnvironment(
+    'RUTA_DE_EJEMPLO',
+    defaultValue: false,
+  );
+
+  /// Desde HU-10 la app inicia sesión y pide la ruta al backend. Con `--dart-define=RUTA_DE_EJEMPLO=true` la vista
+  /// Cómo llegar usa la ruta de ejemplo, para probar sin backend. En producción, siempre al backend.
   static bool get usarRutaDeEjemplo => _rutaDeEjemplo && !isProduction;
 
   static AppEnvironment get environment {

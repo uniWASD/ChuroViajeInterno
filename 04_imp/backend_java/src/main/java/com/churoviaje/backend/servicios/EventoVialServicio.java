@@ -5,11 +5,13 @@ import com.churoviaje.backend.dominio.EventoVial;
 import com.churoviaje.backend.dominio.Ubicacion;
 import com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana;
 import com.churoviaje.backend.errores.ExcepcionRechazo;
+import com.churoviaje.backend.motor.AvisoTrafico;
 import com.churoviaje.backend.repositorios.CatalogoRepositorio;
 import com.churoviaje.backend.repositorios.EventoVialRepositorio;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +24,15 @@ public class EventoVialServicio {
     private final CatalogoRepositorio catalogo;
     private final CoberturaManchaUrbana cobertura;
     private final Clock reloj;
+    private final ApplicationEventPublisher avisos;
 
     public EventoVialServicio(EventoVialRepositorio eventos, CatalogoRepositorio catalogo,
-            CoberturaManchaUrbana cobertura, Clock reloj) {
+            CoberturaManchaUrbana cobertura, Clock reloj, ApplicationEventPublisher avisos) {
         this.eventos = eventos;
         this.catalogo = catalogo;
         this.cobertura = cobertura;
         this.reloj = reloj;
+        this.avisos = avisos;
     }
 
     /**
@@ -53,6 +57,8 @@ public class EventoVialServicio {
         if (eventos.existeDuplicado(evento)) {
             throw EventoVial.duplicado(); // RN-01.8
         }
-        return evento.conId(eventos.insertar(evento)); // RN-01.10
+        EventoVial guardado = evento.conId(eventos.insertar(evento)); // RN-01.10
+        avisos.publishEvent(AvisoTrafico.nace(guardado)); // T-099: el motor lo recibe cuando quedo guardado
+        return guardado;
     }
 }

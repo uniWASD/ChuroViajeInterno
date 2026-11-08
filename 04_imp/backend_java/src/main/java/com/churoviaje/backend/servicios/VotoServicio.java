@@ -1,12 +1,15 @@
 package com.churoviaje.backend.servicios;
 
+import com.churoviaje.backend.dominio.EstadoEvento;
 import com.churoviaje.backend.dominio.EventoVial;
 import com.churoviaje.backend.dominio.ValorVoto;
 import com.churoviaje.backend.dominio.Voto;
 import com.churoviaje.backend.errores.ExcepcionRechazo;
+import com.churoviaje.backend.motor.AvisoTrafico;
 import com.churoviaje.backend.repositorios.EventoVialRepositorio;
 import java.time.Clock;
 import java.time.Instant;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -18,10 +21,12 @@ public class VotoServicio {
 
     private final EventoVialRepositorio eventos;
     private final Clock reloj;
+    private final ApplicationEventPublisher avisos;
 
-    public VotoServicio(EventoVialRepositorio eventos, Clock reloj) {
+    public VotoServicio(EventoVialRepositorio eventos, Clock reloj, ApplicationEventPublisher avisos) {
         this.eventos = eventos;
         this.reloj = reloj;
+        this.avisos = avisos;
     }
 
     /**
@@ -47,6 +52,9 @@ public class VotoServicio {
             throw votoRepetido(); // la base es la segunda barrera de RN-02.11
         }
         eventos.actualizarVotos(votado, votado.getEstado() != evento.getEstado(), ahora);
+        if (votado.getEstado() == EstadoEvento.RETIRADO && evento.getEstado() != EstadoEvento.RETIRADO) {
+            avisos.publishEvent(AvisoTrafico.retira(eventoId)); // RN-02.15: deja de pesar en las rutas
+        }
         return votado;
     }
 

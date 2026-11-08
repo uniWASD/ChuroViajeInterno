@@ -20,6 +20,10 @@ public class EventoVial {
     /** RN-01.8 y P-03: dos reportes del mismo tipo a menos de 100 m y dentro de 10 minutos son el mismo. */
     public static final double DISTANCIA_DUPLICADO_METROS = 100;
     public static final Duration VENTANA_DUPLICADO = Duration.ofMinutes(10);
+    /** RN-02.13 y P-01: con 3 votos «falso», un evento Activo pasa a Retirado. */
+    public static final int VOTOS_PARA_RETIRAR = 3;
+    /** RN-02.14 y P-11: con 3 votos «real», pasa a Confirmado y ya no se retira por votos. */
+    public static final int VOTOS_PARA_CONFIRMAR = 3;
 
     private final Long id;
     private final TipoEvento tipo;
@@ -108,6 +112,35 @@ public class EventoVial {
     /** RN-02.2 a RN-02.4: se muestra mientras este Activo o Confirmado y no haya pasado su vigencia. */
     public boolean estaVigente(Instant ahora) {
         return estado.seMuestra() && ahora.isBefore(venceEn());
+    }
+
+    /**
+     * Cuenta el voto de un conductor y devuelve el evento con el estado que le corresponde (RN-02.10, RN-02.12 a
+     * RN-02.14). El voto repetido (RN-02.11) lo comprueba el servicio con la base.
+     */
+    public EventoVial registrarVoto(ValorVoto valor, long votante, Instant ahora) {
+        if (origen != OrigenEvento.CONDUCTOR) {
+            throw new ExcepcionRechazo(HttpStatus.UNPROCESSABLE_ENTITY, "VOTO_NO_PERMITIDO",
+                    "La congestión que detecta el sistema no se vota."); // D-20
+        }
+        if (!estaVigente(ahora)) {
+            throw new ExcepcionRechazo(HttpStatus.UNPROCESSABLE_ENTITY, "EVENTO_NO_VIGENTE",
+                    "Este evento ya no está activo.");
+        }
+        if (reportanteId != null && reportanteId == votante) {
+            throw new ExcepcionRechazo(HttpStatus.UNPROCESSABLE_ENTITY, "VOTO_PROPIO",
+                    "No puedes votar un evento que reportaste."); // P-17
+        }
+        int real = votosReal + (valor == ValorVoto.REAL ? 1 : 0);
+        int falso = votosFalso + (valor == ValorVoto.FALSO ? 1 : 0);
+        EstadoEvento nuevoEstado = estado;
+        if (estado == EstadoEvento.ACTIVO && real >= VOTOS_PARA_CONFIRMAR) {
+            nuevoEstado = EstadoEvento.CONFIRMADO;
+        } else if (estado == EstadoEvento.ACTIVO && falso >= VOTOS_PARA_RETIRAR) {
+            nuevoEstado = EstadoEvento.RETIRADO;
+        }
+        return new EventoVial(id, tipo, ubicacion, ocurrioEn, registradoEn, reportanteId, origen, nivel, nuevoEstado,
+                real, falso, simulado);
     }
 
     /** Devuelve el mismo evento con el identificador que le dio la base. */

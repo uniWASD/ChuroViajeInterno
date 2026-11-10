@@ -93,6 +93,20 @@ if(BUILD_TESTING)
   set_tests_properties(ruta_nodos_por_consola PROPERTIES
     PASS_REGULAR_EXPRESSION "Plaza\",\"Mercado\",\"Universidad\",\"Mirador")
 
+  # Con coordenadas: unas muy cerca de la Plaza y del Mirador se ajustan a esos nodos y dan la misma ruta.
+  add_test(NAME ruta_nodos_con_coordenadas
+    COMMAND ruta_nodos --red ${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_irregular.json
+            -21.5356,-64.7297 -21.5291,-64.7221)
+  set_tests_properties(ruta_nodos_con_coordenadas PROPERTIES
+    PASS_REGULAR_EXPRESSION "\"nodo_origen\":\"Plaza\".*\"nodos\":\\[\"Plaza\",\"Mercado\",\"Universidad\",\"Mirador\"\\]")
+
+  # Unas coordenadas lejos de toda calle no se pueden ajustar: PUNTO_INVALIDO, no un error.
+  add_test(NAME ruta_nodos_punto_fuera_de_la_red
+    COMMAND ruta_nodos --red ${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_irregular.json
+            -21.0,-64.0 -21.529,-64.722)
+  set_tests_properties(ruta_nodos_punto_fuera_de_la_red PROPERTIES
+    PASS_REGULAR_EXPRESSION "\"estado\":\"PUNTO_INVALIDO\"")
+
   # Un solo comando que compila y corre todo:  cmake --build build --target pruebas
   add_custom_target(pruebas
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C $<CONFIG>

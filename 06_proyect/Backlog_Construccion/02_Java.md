@@ -11,12 +11,12 @@ Las tareas que tocan la base de datos o los controladores siguen [D-37](../../03
 | Sprint | Issues |
 | --- | --- |
 | S1 (15/10–21/10) | Estructura base del backend · Base de datos, catálogos y zona de cobertura |
-| S2 (22/10–28/10) | HU-10 Iniciar sesión con Google y emitir el JWT · Catálogos para la app · Wrapper `MotorDeRutas` · Medir la API de ANH y revisar sus condiciones de uso |
-| S3 (29/10–04/11) | HU-01 Registrar reportes de eventos viales · HU-03 Consultar eventos vigentes y vencerlos · HU-08 Recibir el análisis de WhatsApp · Vincular las estaciones de ANH con los surtidores |
-| S4 (05/11–11/11) | HU-11 Votar eventos · HU-05 Calcular la ruta · Mantener al día el tráfico del motor · HU-14 Consultar el estado de combustible desde ANH |
-| S5 (12/11–18/11) | HU-07 Consultar surtidores cercanos · HU-12 Registrar confirmaciones de recarga · HU-13 Recibir telemetría y registrar congestión |
-| S6 (19/11–25/11) | HU-06 Revisar la ruta activa · HU-09 Soporte para el simulador · Limpieza de datos vencidos |
-| S7 (26/11–30/11) | Pruebas de punta a punta |
+| S2 (22/10–28/10) | HU-10 Iniciar sesión con Google y emitir el JWT · Catálogos para la app · Wrapper `MotorDeRutas` |
+| S3 (29/10–04/11) | HU-05 Calcular la ruta |
+| S4 (05/11–10/11) | Medir la API de ANH y revisar sus condiciones de uso · HU-01 Registrar reportes de eventos viales · HU-03 Consultar eventos vigentes y vencerlos · HU-11 Votar eventos · Mantener al día el tráfico del motor |
+| S5 (11/11–15/11) | HU-08 Recibir el análisis de WhatsApp · HU-07 Consultar surtidores cercanos · HU-13 Recibir telemetría y registrar congestión · HU-06 Revisar la ruta activa |
+| S6 (16/11–20/11) | Vincular las estaciones de ANH con los surtidores · HU-14 Consultar el estado de combustible desde ANH · HU-12 Registrar confirmaciones de recarga · HU-09 Soporte para el simulador · Limpieza de datos vencidos |
+| S7 (21/11–25/11) | Pruebas de punta a punta |
 
 ---
 
@@ -212,10 +212,49 @@ Lo subes en una nueva rama llamada "feature/T95-java-wrapper-motor" (No olvides 
 
 ---
 
+## Sprint 3
+
+### [HU-05][CU-03][Java] Calcular la ruta
+
+**Caso de uso:** CU-03 — Calcular Ruta Óptima
+**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
+**Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-05][CU-03][C++] Calcular la ruta óptima con A* #58
+**Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
+
+**Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
+
+**Criterios de aceptación**
+- [ ] `POST /rutas` recibe origen y destino obligatorios y paradas opcionales en orden; sin origen o destino responde 400 (RN-03.2).
+- [ ] Un punto fuera de la mancha urbana responde 200 con el estado «punto inválido» y el mensaje «Origen o destino inválido», sin llamar al motor; es la misma respuesta que da el motor cuando no puede ajustar un punto a la red (RN-03.3, RN-03.4).
+- [ ] La ruta se pide a `MotorDeRutas` y se devuelve con su trazado, su distancia, su tiempo estimado, el nombre de la calle de cada tramo y los identificadores de sus tramos, que la app devuelve al revisar la ruta (RN-03.13, D-12).
+- [ ] «Sin ruta» (RN-03.12) y «punto inválido» (RN-03.3, RN-03.4) son respuestas correctas, con código 200 y su mensaje; no son errores.
+- [ ] Si el motor no responde a tiempo o se está reiniciando, el backend responde 503 y la app puede reintentar (RN-03.15).
+- [ ] La ruta no se guarda en la base de datos y el cálculo no usa datos de otros conductores (RN-03.16, RN-03.17, D-05).
+- [ ] Toda la respuesta llega en menos de 3 segundos (RNF-02).
+
+**Tareas**
+- [ ] Implementar el servicio del modelo que valida los puntos y llama a `MotorDeRutas`.
+- [ ] Implementar el controlador REST de rutas.
+- [ ] Traducir las respuestas del motor (`ENCONTRADA`, `SIN_RUTA`, `PUNTO_INVALIDO`, error) a la respuesta de la API.
+- [ ] Escribir pruebas con el núcleo falso y una prueba de integración con el núcleo real.
+
+**Casos de prueba**
+- [ ] CP-92 Caso de prueba: de la Plaza Luis de Fuentes a la terminal se obtiene una ruta con distancia y tiempo en menos de 3 segundos.
+- [ ] CP-93 Caso de prueba: un destino en San Lorenzo responde «Origen o destino inválido».
+- [ ] CP-94 Caso de prueba: con el núcleo detenido, la respuesta es 503 y el siguiente intento, con el núcleo reiniciado, funciona.
+
+**Relacionado:** RF-05 · RNF-02 · RNF-10 · CU-03 · RN-03.1 a RN-03.4, RN-03.12, RN-03.13, RN-03.15 a RN-03.17 · D-05, D-12, D-15
+
+Lo subes en una nueva rama llamada "feature/HU05-CU03-java-calcular-ruta" (No olvides que el source de la rama es la de develop)
+
+---
+
+## Sprint 4
+
 ### [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia
 
 **Tipo:** Tarea de pruebas (cubre CU-09)
-**Tecnología:** Java · **Sprint:** Sprint 2 (22/10–28/10) · **Apoyo:** Marcelo
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11) · **Apoyo:** Marcelo
 **Depende de:** nada
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
 
@@ -248,12 +287,10 @@ Lo subes en una nueva rama llamada "feature/T117-java-medir-api-anh" (No olvides
 
 ---
 
-## Sprint 3
-
 ### [HU-01][CU-01][Java] Registrar reportes de eventos viales
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-094][Java] Catálogos para la app #47
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -294,7 +331,7 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-java-registrar-reporte" (N
 ### [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Apoyo:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11) · **Apoyo:** Jorge
 **Depende de:** [HU-01][CU-01][Java] Registrar reportes de eventos viales #53
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -328,10 +365,80 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-java-consultar-eventos" (N
 
 ---
 
+### [HU-11][CU-02][Java] Votar eventos
+
+**Caso de uso:** CU-02 — Visualizar Eventos Viales
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11)
+**Depende de:** [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos #55
+**Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
+
+**Historia de usuario:** Como conductor de la app, quiero ver la lista de eventos activos y votar si cada uno es real o falso, para que el mapa muestre solo eventos confiables.
+
+**Criterios de aceptación**
+- [ ] `POST /eventos/{id}/votos` registra un voto «real» o «falso» solo sobre eventos Activos o Confirmados que reportó un conductor; la congestión registrada por telemetría no se vota y responde 422 (D-20). Un evento Retirado o Vencido responde 422, y uno que ya no existe, 404 (RN-02.10).
+- [ ] Un segundo voto del mismo conductor sobre el mismo evento responde 409; la base tampoco lo permite (RN-02.11).
+- [ ] El reportante no puede votar su propio evento: responde 422 (RN-02.12, P-17).
+- [ ] Con 3 votos «falso», el evento pasa a Retirado (RN-02.13, P-01).
+- [ ] En la consulta por cambios de `GET /eventos`, un evento retirado llega entre los que dejaron de mostrarse y uno confirmado entre los modificados, para que la app lo quite o lo marque (RN-02.6, RN-02.13, RN-02.14).
+- [ ] Con 3 votos «real», pasa a Confirmado y ya no se retira por votos, solo vence (RN-02.14, P-11).
+- [ ] La respuesta trae el estado del evento después del voto, sin datos de quién votó.
+
+**Tareas**
+- [ ] Crear la migración de `voto`, con un solo voto por conductor y evento.
+- [ ] Implementar el objeto de dominio `Voto` y el recuento y cambio de estado en `EventoVial`.
+- [ ] Implementar el servicio y el controlador de votos.
+- [ ] Escribir pruebas de cada regla, incluida la de dos votos que llegan al mismo tiempo.
+
+**Casos de prueba**
+- [ ] CP-86 Caso de prueba: tres conductores votan «falso» un accidente; queda Retirado y no sale en la siguiente `GET /eventos`.
+- [ ] CP-87 Caso de prueba: un evento con 3 votos «real» recibe después 3 «falso» y sigue Confirmado.
+- [ ] CP-88 Caso de prueba: el mismo conductor vota dos veces; el segundo voto responde 409.
+- [ ] CP-89 Caso de prueba: el reportante intenta votar su evento y recibe 422.
+
+**Relacionado:** RF-12 · RNF-09 · CU-02 · RN-02.10 a RN-02.14 · D-20 · P-01, P-11, P-17
+
+Lo subes en una nueva rama llamada "feature/HU11-CU02-java-votos" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [T-099][Java] Mantener al día el tráfico del motor
+
+**Tipo:** Tarea de desarrollo (cubre CU-02, CU-03 y CU-04; no es una HU específica)
+**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–10/11)
+**Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-11][CU-02][Java] Votar eventos #63 · [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
+**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
+
+**Descripción:** Que el motor calcule siempre con el tráfico al día. El backend le avisa cada vez que un evento nace, cambia su vencimiento, se retira o vence ([D-14](../../03_des/02_Arquitectura/08_decisiones_parametros.md)) y, cada vez que el wrapper arranca el núcleo, le envía todos los eventos vigentes ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+
+**Criterios de aceptación**
+- [ ] Al registrarse un evento, el motor recibe `actualizar_trafico` con su identificador, tipo, ubicación y vencimiento; si es una congestión, también su nivel.
+- [ ] Cuando un evento cambia su vencimiento, el motor recibe el nuevo. Lo usa la congestión que se extiende (RN-04.11), que llega en el sprint 5.
+- [ ] Al retirarse un evento por votos o al vencer, el motor recibe el aviso y el tramo queda con el nivel que le dan los eventos que le quedan, o fluido si no le queda ninguno (RN-02.15).
+- [ ] Al arrancar o reiniciar el núcleo, el wrapper le envía todos los eventos vigentes antes de atender rutas.
+- [ ] Si el aviso al motor falla, el evento igual queda registrado en la base y el aviso se reintenta; nunca se pierde.
+
+**Tareas**
+- [ ] Publicar un evento interno cuando un `EventoVial` nace, cambia su vencimiento, se retira o vence.
+- [ ] Escuchar esos eventos y llamar a `MotorDeRutas.actualizarTrafico`.
+- [ ] Completar el envío de eventos vigentes en el arranque del wrapper.
+- [ ] Escribir pruebas con el núcleo falso que registren qué mensajes recibió.
+
+**Casos de prueba**
+- [ ] CP-99 Caso de prueba: un bloqueo reportado sobre la única calle entre dos puntos hace que la ruta entre ellos responda «sin ruta»; al retirarlo por votos, la ruta vuelve a existir.
+- [ ] CP-100 Caso de prueba: se reinicia el núcleo con 3 eventos vigentes y, antes de la primera ruta, el núcleo ya recibió los 3.
+
+**Relacionado:** RF-05 · RF-06 · CU-02 · CU-03 · CU-04 · RN-02.15, RN-03.9 · D-14, D-15, D-18
+
+Lo subes en una nueva rama llamada "feature/T99-java-trafico-motor" (No olvides que el source de la rama es la de develop)
+
+---
+
+## Sprint 5
+
 ### [HU-08][CU-06][Java] Recibir el análisis de WhatsApp
 
 **Caso de uso:** CU-06 — Monitorear Estado de Surtidores vía WhatsApp
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11)
+**Tecnología:** Java · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46
 **Etiquetas:** `caso-uso:CU-06` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -367,10 +474,121 @@ Lo subes en una nueva rama llamada "feature/HU08-CU06-java-recibir-analisis" (No
 
 ---
 
+### [HU-07][CU-05][Java] Consultar surtidores cercanos
+
+**Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
+**Tecnología:** Java · **Sprint:** Sprint 5 (11/11–15/11)
+**Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
+**Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
+
+**Historia de usuario:** Como conductor de la app, quiero consultar el estado de disponibilidad de combustible en surtidores cercanos, para evitar dirigirme a uno que esté agotado.
+
+**Criterios de aceptación**
+- [ ] `GET /surtidores` recibe la ubicación actual y devuelve los surtidores ordenados del más cercano al más lejano, con la búsqueda por cercanía en PostGIS (RN-05.2).
+- [ ] Para cada surtidor y tipo de combustible sale un solo dato: el más reciente, venga de WhatsApp, de Conductores o de ANH (RN-05.3).
+- [ ] Cada dato trae disponibilidad, tipo, origen y fecha; la fila solo si se conoce. Si el origen es ANH, trae también los litros y el estado de ANH (RN-05.4, RNF-07).
+- [ ] Un dato de más de 6 horas no cuenta (en un dato de ANH, las horas se cuentan desde que el backend lo leyó), y un surtidor sin datos vigentes sale como «sin información reciente» (RN-05.5, RN-09.17, P-30).
+- [ ] Un dato de WhatsApp sin tipo sale con el tipo Desconocido; los datos de ANH siempre traen el tipo del combustible consultado (RN-05.6).
+- [ ] Nunca sale quién aportó el dato (RN-05.7).
+- [ ] La respuesta llega en menos de 3 segundos (RNF-03).
+
+**Tareas**
+- [ ] Implementar en `EstadoCombustible` la elección del dato más reciente entre los tres orígenes y la vigencia de 6 horas (desde `consultado_en` en los datos de ANH).
+- [ ] Implementar la consulta por cercanía en el repositorio.
+- [ ] Implementar el servicio y el controlador de surtidores.
+- [ ] Escribir pruebas con datos de los tres orígenes y datos vencidos.
+
+**Casos de prueba**
+- [ ] CP-102 Caso de prueba: un surtidor con Gasolina «agotado» por WhatsApp a las 10:00 y «disponible» por Conductores a las 10:30 muestra disponible, origen Conductores, 10:30.
+- [ ] CP-103 Caso de prueba: un surtidor cuyo último dato es de hace 7 horas sale como «sin información reciente».
+- [ ] CP-104 Caso de prueba: desde la Plaza, el primer surtidor de la lista es el más cercano.
+
+**Relacionado:** RF-07 · RNF-03 · RNF-07 · CU-05 · RN-05.1 a RN-05.7 · RN-09.12, RN-09.17 · D-28, D-31 · P-30
+
+Lo subes en una nueva rama llamada "feature/HU07-CU05-java-consultar-surtidores" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [HU-13][CU-04][Java] Recibir telemetría y registrar congestión
+
+**Caso de uso:** CU-04 — Recalcular Ruta
+**Tecnología:** Java · **Sprint:** Sprint 5 (11/11–15/11)
+**Depende de:** [T-099][Java] Mantener al día el tráfico del motor #67 · [HU-13][CU-04][C++] Detectar congestión con la telemetría #73
+**Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
+
+**Historia de usuario:** Como sistema, quiero recibir la posición de los conductores mientras tienen la app abierta, para calcular su velocidad y detectar congestión sin depender solo de los reportes manuales.
+
+**Criterios de aceptación**
+- [ ] `POST /telemetria` solo acepta lecturas de conductores con sesión vigente (RN-04.4).
+- [ ] Las lecturas pasan a `MotorDeRutas` con un identificador temporal de recorrido, sin datos del conductor, y no se guardan en la base (RN-04.12).
+- [ ] El identificador de recorrido es un HMAC del conductor con una clave que solo vive en memoria y cambia cada día. La relación con el conductor no se guarda en ningún lado y se pierde al cambiar la clave; mientras tanto, el mismo conductor mantiene el mismo recorrido aunque renueve su JWT.
+- [ ] Cuando el motor informa una congestión, el backend registra un `EventoVial` de tipo Congestión, con origen Telemetría, sin reportante y con el nivel que informó el motor (RN-04.10, D-04).
+- [ ] Cada congestión creada o extendida se avisa al motor con su nivel y su vencimiento, para que pese ×2,5 o ×4,0 según P-12 (D-14).
+- [ ] Si ese tramo ya tiene una congestión vigente, se actualiza su momento (y su nivel, si cambió) en lugar de crear otra (RN-04.11).
+- [ ] La congestión creada aparece en `GET /eventos` y pesa en las rutas como cualquier evento.
+- [ ] El endpoint responde «recibido» en menos de 300 ms, sin esperar a que el motor termine de analizar.
+
+**Tareas**
+- [ ] Crear la migración que agrega el nivel a `evento_vial`.
+- [ ] Implementar el identificador de recorrido con HMAC y la clave diaria en memoria.
+- [ ] Implementar el servicio que entrega las lecturas al motor y procesa las congestiones que devuelve.
+- [ ] Implementar la creación o actualización del evento de congestión.
+- [ ] Implementar el controlador REST de telemetría.
+- [ ] Escribir pruebas con el núcleo falso que devuelve una congestión.
+
+**Casos de prueba**
+- [ ] CP-119 Caso de prueba: cuando el motor informa congestión en un tramo, aparece un evento Congestión con origen Telemetría en `GET /eventos`.
+- [ ] CP-120 Caso de prueba: una segunda congestión en el mismo tramo no crea otro evento; mueve el momento del existente.
+- [ ] CP-121 Caso de prueba: después de procesar las lecturas, la base no tiene ninguna fila de telemetría.
+
+**Relacionado:** RF-14 · RNF-08 · RNF-10 · RNF-13 · CU-04 · RN-04.4, RN-04.10 a RN-04.12 · D-04, D-07, D-14 · P-12
+
+Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [HU-06][CU-04][Java] Revisar la ruta activa
+
+**Caso de uso:** CU-04 — Recalcular Ruta
+**Tecnología:** Java · **Sprint:** Sprint 5 (11/11–15/11)
+**Depende de:** [HU-05][CU-03][Java] Calcular la ruta #65 · [HU-06][CU-04][C++] Revisar la ruta activa #76
+**Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
+
+**Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema me proponga una ruta alternativa cuando un evento vial afecte mi camino, para evitar demoras sin tener que buscarla yo.
+
+**Criterios de aceptación**
+- [ ] `POST /rutas/revision` recibe la posición actual, los tramos que faltan, el destino, las paradas que faltan y los eventos ya avisados en esta ruta (D-12, 05_contratos).
+- [ ] Responde «sin cambios», «sin alternativa» o una ruta alternativa con su costo. Las dos últimas traen el evento que las provocó, para que la app lo agregue a los ya avisados (RN-04.14, RN-04.16, RN-04.19).
+- [ ] Si el motor responde que los tramos ya no existen porque se recargó la red vial, responde «ruta desactualizada» y la app pide la ruta de nuevo.
+- [ ] La alternativa parte de la posición actual y conserva el destino y las paradas que faltan (RN-04.15).
+- [ ] Solo se propone si cuesta menos que seguir por la ruta actual con el tráfico al día (RN-04.16).
+- [ ] Un evento ya avisado en esta ruta no vuelve a provocar una propuesta, porque la app lo envía en la lista (RN-04.19).
+- [ ] El servidor no guarda la ruta (D-05).
+- [ ] La respuesta llega en menos de 3 segundos.
+
+**Tareas**
+- [ ] Implementar el servicio del modelo que llama a `MotorDeRutas.revisarRuta`.
+- [ ] Implementar el controlador REST de revisión.
+- [ ] Escribir pruebas de los tres resultados posibles.
+
+**Casos de prueba**
+- [ ] CP-134 Caso de prueba: con un accidente nuevo sobre un tramo que falta, la respuesta trae una alternativa más barata.
+- [ ] CP-135 Caso de prueba: si no hay camino mejor, la respuesta es «sin alternativa», con el evento que la provocó.
+- [ ] CP-136 Caso de prueba: el mismo evento, enviado como ya avisado, devuelve «sin cambios».
+- [ ] CP-137 Caso de prueba: con tramos que no existen, la respuesta es «ruta desactualizada».
+
+**Relacionado:** RF-06 · CU-04 · RN-04.13 a RN-04.16, RN-04.19 · D-05, D-12
+
+Lo subes en una nueva rama llamada "feature/HU06-CU04-java-revisar-ruta" (No olvides que el source de la rama es la de develop)
+
+---
+
+## Sprint 6
+
 ### [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo
 
 **Tipo:** Tarea de desarrollo (cubre CU-09)
-**Tecnología:** Java · **Sprint:** Sprint 3 (29/10–04/11) · **Apoyo:** Antonio
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11) · **Apoyo:** Antonio
 **Depende de:** [T-089][Java] Base de datos, catálogos y zona de cobertura #41 · [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -401,115 +619,10 @@ Lo subes en una nueva rama llamada "feature/T118-java-vincular-estaciones-anh" (
 
 ---
 
-## Sprint 4
-
-### [HU-11][CU-02][Java] Votar eventos
-
-**Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
-**Depende de:** [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos #55
-**Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
-
-**Historia de usuario:** Como conductor de la app, quiero ver la lista de eventos activos y votar si cada uno es real o falso, para que el mapa muestre solo eventos confiables.
-
-**Criterios de aceptación**
-- [ ] `POST /eventos/{id}/votos` registra un voto «real» o «falso» solo sobre eventos Activos o Confirmados que reportó un conductor; la congestión registrada por telemetría no se vota y responde 422 (D-20). Un evento Retirado o Vencido responde 422, y uno que ya no existe, 404 (RN-02.10).
-- [ ] Un segundo voto del mismo conductor sobre el mismo evento responde 409; la base tampoco lo permite (RN-02.11).
-- [ ] El reportante no puede votar su propio evento: responde 422 (RN-02.12, P-17).
-- [ ] Con 3 votos «falso», el evento pasa a Retirado (RN-02.13, P-01).
-- [ ] En la consulta por cambios de `GET /eventos`, un evento retirado llega entre los que dejaron de mostrarse y uno confirmado entre los modificados, para que la app lo quite o lo marque (RN-02.6, RN-02.13, RN-02.14).
-- [ ] Con 3 votos «real», pasa a Confirmado y ya no se retira por votos, solo vence (RN-02.14, P-11).
-- [ ] La respuesta trae el estado del evento después del voto, sin datos de quién votó.
-
-**Tareas**
-- [ ] Crear la migración de `voto`, con un solo voto por conductor y evento.
-- [ ] Implementar el objeto de dominio `Voto` y el recuento y cambio de estado en `EventoVial`.
-- [ ] Implementar el servicio y el controlador de votos.
-- [ ] Escribir pruebas de cada regla, incluida la de dos votos que llegan al mismo tiempo.
-
-**Casos de prueba**
-- [ ] CP-86 Caso de prueba: tres conductores votan «falso» un accidente; queda Retirado y no sale en la siguiente `GET /eventos`.
-- [ ] CP-87 Caso de prueba: un evento con 3 votos «real» recibe después 3 «falso» y sigue Confirmado.
-- [ ] CP-88 Caso de prueba: el mismo conductor vota dos veces; el segundo voto responde 409.
-- [ ] CP-89 Caso de prueba: el reportante intenta votar su evento y recibe 422.
-
-**Relacionado:** RF-12 · RNF-09 · CU-02 · RN-02.10 a RN-02.14 · D-20 · P-01, P-11, P-17
-
-Lo subes en una nueva rama llamada "feature/HU11-CU02-java-votos" (No olvides que el source de la rama es la de develop)
-
----
-
-### [HU-05][CU-03][Java] Calcular la ruta
-
-**Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
-**Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-05][CU-03][C++] Calcular la ruta óptima con A* #58
-**Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
-
-**Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
-
-**Criterios de aceptación**
-- [ ] `POST /rutas` recibe origen y destino obligatorios y paradas opcionales en orden; sin origen o destino responde 400 (RN-03.2).
-- [ ] Un punto fuera de la mancha urbana responde 200 con el estado «punto inválido» y el mensaje «Origen o destino inválido», sin llamar al motor; es la misma respuesta que da el motor cuando no puede ajustar un punto a la red (RN-03.3, RN-03.4).
-- [ ] La ruta se pide a `MotorDeRutas` y se devuelve con su trazado, su distancia, su tiempo estimado, el nombre de la calle de cada tramo y los identificadores de sus tramos, que la app devuelve al revisar la ruta (RN-03.13, D-12).
-- [ ] «Sin ruta» (RN-03.12) y «punto inválido» (RN-03.3, RN-03.4) son respuestas correctas, con código 200 y su mensaje; no son errores.
-- [ ] Si el motor no responde a tiempo o se está reiniciando, el backend responde 503 y la app puede reintentar (RN-03.15).
-- [ ] La ruta no se guarda en la base de datos y el cálculo no usa datos de otros conductores (RN-03.16, RN-03.17, D-05).
-- [ ] Toda la respuesta llega en menos de 3 segundos (RNF-02).
-
-**Tareas**
-- [ ] Implementar el servicio del modelo que valida los puntos y llama a `MotorDeRutas`.
-- [ ] Implementar el controlador REST de rutas.
-- [ ] Traducir las respuestas del motor (`ENCONTRADA`, `SIN_RUTA`, `PUNTO_INVALIDO`, error) a la respuesta de la API.
-- [ ] Escribir pruebas con el núcleo falso y una prueba de integración con el núcleo real.
-
-**Casos de prueba**
-- [ ] CP-92 Caso de prueba: de la Plaza Luis de Fuentes a la terminal se obtiene una ruta con distancia y tiempo en menos de 3 segundos.
-- [ ] CP-93 Caso de prueba: un destino en San Lorenzo responde «Origen o destino inválido».
-- [ ] CP-94 Caso de prueba: con el núcleo detenido, la respuesta es 503 y el siguiente intento, con el núcleo reiniciado, funciona.
-
-**Relacionado:** RF-05 · RNF-02 · RNF-10 · CU-03 · RN-03.1 a RN-03.4, RN-03.12, RN-03.13, RN-03.15 a RN-03.17 · D-05, D-12, D-15
-
-Lo subes en una nueva rama llamada "feature/HU05-CU03-java-calcular-ruta" (No olvides que el source de la rama es la de develop)
-
----
-
-### [T-099][Java] Mantener al día el tráfico del motor
-
-**Tipo:** Tarea de desarrollo (cubre CU-02, CU-03 y CU-04; no es una HU específica)
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
-**Depende de:** [T-095][Java] Wrapper MotorDeRutas #49 · [HU-11][CU-02][Java] Votar eventos #63 · [HU-05][CU-03][C++] Tráfico de los eventos en los tramos #66
-**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
-
-**Descripción:** Que el motor calcule siempre con el tráfico al día. El backend le avisa cada vez que un evento nace, cambia su vencimiento, se retira o vence ([D-14](../../03_des/02_Arquitectura/08_decisiones_parametros.md)) y, cada vez que el wrapper arranca el núcleo, le envía todos los eventos vigentes ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
-
-**Criterios de aceptación**
-- [ ] Al registrarse un evento, el motor recibe `actualizar_trafico` con su identificador, tipo, ubicación y vencimiento; si es una congestión, también su nivel.
-- [ ] Cuando un evento cambia su vencimiento, el motor recibe el nuevo. Lo usa la congestión que se extiende (RN-04.11), que llega en el sprint 5.
-- [ ] Al retirarse un evento por votos o al vencer, el motor recibe el aviso y el tramo queda con el nivel que le dan los eventos que le quedan, o fluido si no le queda ninguno (RN-02.15).
-- [ ] Al arrancar o reiniciar el núcleo, el wrapper le envía todos los eventos vigentes antes de atender rutas.
-- [ ] Si el aviso al motor falla, el evento igual queda registrado en la base y el aviso se reintenta; nunca se pierde.
-
-**Tareas**
-- [ ] Publicar un evento interno cuando un `EventoVial` nace, cambia su vencimiento, se retira o vence.
-- [ ] Escuchar esos eventos y llamar a `MotorDeRutas.actualizarTrafico`.
-- [ ] Completar el envío de eventos vigentes en el arranque del wrapper.
-- [ ] Escribir pruebas con el núcleo falso que registren qué mensajes recibió.
-
-**Casos de prueba**
-- [ ] CP-99 Caso de prueba: un bloqueo reportado sobre la única calle entre dos puntos hace que la ruta entre ellos responda «sin ruta»; al retirarlo por votos, la ruta vuelve a existir.
-- [ ] CP-100 Caso de prueba: se reinicia el núcleo con 3 eventos vigentes y, antes de la primera ruta, el núcleo ya recibió los 3.
-
-**Relacionado:** RF-05 · RF-06 · CU-02 · CU-03 · CU-04 · RN-02.15, RN-03.9 · D-14, D-15, D-18
-
-Lo subes en una nueva rama llamada "feature/T99-java-trafico-motor" (No olvides que el source de la rama es la de develop)
-
----
-
 ### [HU-14][CU-09][Java] Consultar el estado de combustible desde ANH
 
 **Caso de uso:** CU-09 — Consultar Estado de Combustible desde ANH
-**Tecnología:** Java · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11)
 **Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57 · [T-117][Java] Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia #112 · [T-118][Java] Vincular las estaciones de ANH con los surtidores del catálogo #113
 **Etiquetas:** `caso-uso:CU-09` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -553,47 +666,10 @@ Lo subes en una nueva rama llamada "feature/HU14-CU09-java-consultar-anh" (No ol
 
 ---
 
-## Sprint 5
-
-### [HU-07][CU-05][Java] Consultar surtidores cercanos
-
-**Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11)
-**Depende de:** [HU-08][CU-06][Java] Recibir el análisis de WhatsApp #57
-**Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
-
-**Historia de usuario:** Como conductor de la app, quiero consultar el estado de disponibilidad de combustible en surtidores cercanos, para evitar dirigirme a uno que esté agotado.
-
-**Criterios de aceptación**
-- [ ] `GET /surtidores` recibe la ubicación actual y devuelve los surtidores ordenados del más cercano al más lejano, con la búsqueda por cercanía en PostGIS (RN-05.2).
-- [ ] Para cada surtidor y tipo de combustible sale un solo dato: el más reciente, venga de WhatsApp, de Conductores o de ANH (RN-05.3).
-- [ ] Cada dato trae disponibilidad, tipo, origen y fecha; la fila solo si se conoce. Si el origen es ANH, trae también los litros y el estado de ANH (RN-05.4, RNF-07).
-- [ ] Un dato de más de 6 horas no cuenta (en un dato de ANH, las horas se cuentan desde que el backend lo leyó), y un surtidor sin datos vigentes sale como «sin información reciente» (RN-05.5, RN-09.17, P-30).
-- [ ] Un dato de WhatsApp sin tipo sale con el tipo Desconocido; los datos de ANH siempre traen el tipo del combustible consultado (RN-05.6).
-- [ ] Nunca sale quién aportó el dato (RN-05.7).
-- [ ] La respuesta llega en menos de 3 segundos (RNF-03).
-
-**Tareas**
-- [ ] Implementar en `EstadoCombustible` la elección del dato más reciente entre los tres orígenes y la vigencia de 6 horas (desde `consultado_en` en los datos de ANH).
-- [ ] Implementar la consulta por cercanía en el repositorio.
-- [ ] Implementar el servicio y el controlador de surtidores.
-- [ ] Escribir pruebas con datos de los tres orígenes y datos vencidos.
-
-**Casos de prueba**
-- [ ] CP-102 Caso de prueba: un surtidor con Gasolina «agotado» por WhatsApp a las 10:00 y «disponible» por Conductores a las 10:30 muestra disponible, origen Conductores, 10:30.
-- [ ] CP-103 Caso de prueba: un surtidor cuyo último dato es de hace 7 horas sale como «sin información reciente».
-- [ ] CP-104 Caso de prueba: desde la Plaza, el primer surtidor de la lista es el más cercano.
-
-**Relacionado:** RF-07 · RNF-03 · RNF-07 · CU-05 · RN-05.1 a RN-05.7 · RN-09.12, RN-09.17 · D-28, D-31 · P-30
-
-Lo subes en una nueva rama llamada "feature/HU07-CU05-java-consultar-surtidores" (No olvides que el source de la rama es la de develop)
-
----
-
 ### [HU-12][CU-05][Java] Registrar confirmaciones de recarga
 
 **Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11) · **Apoyo:** Jorge
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11) · **Apoyo:** Antonio
 **Depende de:** [HU-07][CU-05][Java] Consultar surtidores cercanos #69
 **Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -624,86 +700,10 @@ Lo subes en una nueva rama llamada "feature/HU12-CU05-java-confirmar-recarga" (N
 
 ---
 
-### [HU-13][CU-04][Java] Recibir telemetría y registrar congestión
-
-**Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Java · **Sprint:** Sprint 5 (12/11–18/11)
-**Depende de:** [T-099][Java] Mantener al día el tráfico del motor #67 · [HU-13][CU-04][C++] Detectar congestión con la telemetría #73
-**Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
-
-**Historia de usuario:** Como sistema, quiero recibir la posición de los conductores mientras tienen la app abierta, para calcular su velocidad y detectar congestión sin depender solo de los reportes manuales.
-
-**Criterios de aceptación**
-- [ ] `POST /telemetria` solo acepta lecturas de conductores con sesión vigente (RN-04.4).
-- [ ] Las lecturas pasan a `MotorDeRutas` con un identificador temporal de recorrido, sin datos del conductor, y no se guardan en la base (RN-04.12).
-- [ ] El identificador de recorrido es un HMAC del conductor con una clave que solo vive en memoria y cambia cada día. La relación con el conductor no se guarda en ningún lado y se pierde al cambiar la clave; mientras tanto, el mismo conductor mantiene el mismo recorrido aunque renueve su JWT.
-- [ ] Cuando el motor informa una congestión, el backend registra un `EventoVial` de tipo Congestión, con origen Telemetría, sin reportante y con el nivel que informó el motor (RN-04.10, D-04).
-- [ ] Cada congestión creada o extendida se avisa al motor con su nivel y su vencimiento, para que pese ×2,5 o ×4,0 según P-12 (D-14).
-- [ ] Si ese tramo ya tiene una congestión vigente, se actualiza su momento (y su nivel, si cambió) en lugar de crear otra (RN-04.11).
-- [ ] La congestión creada aparece en `GET /eventos` y pesa en las rutas como cualquier evento.
-- [ ] El endpoint responde «recibido» en menos de 300 ms, sin esperar a que el motor termine de analizar.
-
-**Tareas**
-- [ ] Crear la migración que agrega el nivel a `evento_vial`.
-- [ ] Implementar el identificador de recorrido con HMAC y la clave diaria en memoria.
-- [ ] Implementar el servicio que entrega las lecturas al motor y procesa las congestiones que devuelve.
-- [ ] Implementar la creación o actualización del evento de congestión.
-- [ ] Implementar el controlador REST de telemetría.
-- [ ] Escribir pruebas con el núcleo falso que devuelve una congestión.
-
-**Casos de prueba**
-- [ ] CP-119 Caso de prueba: cuando el motor informa congestión en un tramo, aparece un evento Congestión con origen Telemetría en `GET /eventos`.
-- [ ] CP-120 Caso de prueba: una segunda congestión en el mismo tramo no crea otro evento; mueve el momento del existente.
-- [ ] CP-121 Caso de prueba: después de procesar las lecturas, la base no tiene ninguna fila de telemetría.
-
-**Relacionado:** RF-14 · RNF-08 · RNF-10 · RNF-13 · CU-04 · RN-04.4, RN-04.10 a RN-04.12 · D-04, D-07, D-14 · P-12
-
-Lo subes en una nueva rama llamada "feature/HU13-CU04-java-telemetria" (No olvides que el source de la rama es la de develop)
-
----
-
-## Sprint 6
-
-### [HU-06][CU-04][Java] Revisar la ruta activa
-
-**Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11)
-**Depende de:** [HU-05][CU-03][Java] Calcular la ruta #65 · [HU-06][CU-04][C++] Revisar la ruta activa #76
-**Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
-
-**Historia de usuario:** Como conductor navegando una ruta activa, quiero que el sistema me proponga una ruta alternativa cuando un evento vial afecte mi camino, para evitar demoras sin tener que buscarla yo.
-
-**Criterios de aceptación**
-- [ ] `POST /rutas/revision` recibe la posición actual, los tramos que faltan, el destino, las paradas que faltan y los eventos ya avisados en esta ruta (D-12, 05_contratos).
-- [ ] Responde «sin cambios», «sin alternativa» o una ruta alternativa con su costo. Las dos últimas traen el evento que las provocó, para que la app lo agregue a los ya avisados (RN-04.14, RN-04.16, RN-04.19).
-- [ ] Si el motor responde que los tramos ya no existen porque se recargó la red vial, responde «ruta desactualizada» y la app pide la ruta de nuevo.
-- [ ] La alternativa parte de la posición actual y conserva el destino y las paradas que faltan (RN-04.15).
-- [ ] Solo se propone si cuesta menos que seguir por la ruta actual con el tráfico al día (RN-04.16).
-- [ ] Un evento ya avisado en esta ruta no vuelve a provocar una propuesta, porque la app lo envía en la lista (RN-04.19).
-- [ ] El servidor no guarda la ruta (D-05).
-- [ ] La respuesta llega en menos de 3 segundos.
-
-**Tareas**
-- [ ] Implementar el servicio del modelo que llama a `MotorDeRutas.revisarRuta`.
-- [ ] Implementar el controlador REST de revisión.
-- [ ] Escribir pruebas de los tres resultados posibles.
-
-**Casos de prueba**
-- [ ] CP-134 Caso de prueba: con un accidente nuevo sobre un tramo que falta, la respuesta trae una alternativa más barata.
-- [ ] CP-135 Caso de prueba: si no hay camino mejor, la respuesta es «sin alternativa», con el evento que la provocó.
-- [ ] CP-136 Caso de prueba: el mismo evento, enviado como ya avisado, devuelve «sin cambios».
-- [ ] CP-137 Caso de prueba: con tramos que no existen, la respuesta es «ruta desactualizada».
-
-**Relacionado:** RF-06 · CU-04 · RN-04.13 a RN-04.16, RN-04.19 · D-05, D-12
-
-Lo subes en una nueva rama llamada "feature/HU06-CU04-java-revisar-ruta" (No olvides que el source de la rama es la de develop)
-
----
-
 ### [HU-09][CU-07][Java] Soporte para el simulador
 
 **Caso de uso:** CU-07 — Ejecutar Simulador de Tráfico
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11), al inicio, porque el simulador lo usa en el mismo sprint
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11), al inicio, porque el simulador lo usa en el mismo sprint
 **Depende de:** [HU-13][CU-04][Java] Recibir telemetría y registrar congestión #74
 **Etiquetas:** `caso-uso:CU-07` · `tipo:historia-usuario` · `fase:construccion` · `tec:java`
 
@@ -743,7 +743,7 @@ Lo subes en una nueva rama llamada "feature/HU09-CU07-java-soporte-simulador" (N
 ### [T-105][Java] Limpieza de datos vencidos
 
 **Tipo:** Tarea de desarrollo (privacidad y mantenimiento; cubre CU-02 y CU-05)
-**Tecnología:** Java · **Sprint:** Sprint 6 (19/11–25/11)
+**Tecnología:** Java · **Sprint:** Sprint 6 (16/11–20/11)
 **Depende de:** [HU-12][CU-05][Java] Registrar confirmaciones de recarga #72
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:java`
 
@@ -772,7 +772,7 @@ Lo subes en una nueva rama llamada "feature/T105-java-limpieza-datos" (No olvide
 ### [T-107][Java] Pruebas de punta a punta
 
 **Tipo:** Tarea de pruebas (cubre los nueve casos de uso)
-**Tecnología:** Java · **Sprint:** Sprint 7 (26/11–30/11)
+**Tecnología:** Java · **Sprint:** Sprint 7 (21/11–25/11)
 **Depende de:** todos los issues de Java
 **Etiquetas:** `tipo:prueba` · `fase:construccion` · `tec:java`
 

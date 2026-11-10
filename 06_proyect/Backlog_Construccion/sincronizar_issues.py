@@ -234,6 +234,23 @@ def normal(texto):
     return (texto or '').replace('\r\n', '\n').strip()
 
 
+CASILLA = re.compile(r'^([ \t]*[-*] )\[([ xX])\] (.*?)(\r?)$', re.M)
+
+
+def conservar_marcas(cuerpo, en_github):
+    """Las casillas que el equipo ya marcó en GitHub siguen marcadas aunque el archivo las tenga vacías.
+
+    Devuelve el cuerpo con esas marcas y la lista de casillas marcadas cuyo texto ya no está en el archivo
+    (esas se perderían al actualizar)."""
+    hechas = {m.group(3).strip() for m in CASILLA.finditer(normal(en_github)) if m.group(2) in 'xX'}
+    if not hechas:
+        return cuerpo, []
+    en_archivo = {m.group(3).strip() for m in CASILLA.finditer(cuerpo)}
+    nuevo = CASILLA.sub(lambda m: f'{m.group(1)}[x] {m.group(3)}{m.group(4)}'
+                        if m.group(3).strip() in hechas else m.group(0), cuerpo)
+    return nuevo, sorted(hechas - en_archivo)
+
+
 def escribir_numeros(filas, numeros):
     """Anota los números nuevos en el índice, las dependencias y TRAZABILIDAD.md."""
     texto, crlf = leer(INDICE)
@@ -417,6 +434,7 @@ def principal():
     del_equipo = {u for u in usuarios.values() if u}
 
     crear, editar, iguales, cerrados = [], [], 0, []
+    marcas_perdidas = []
     for f in filas:
         i = issues[f['titulo']]
         quiero = asignados(estimacion[f['orden']], usuarios)
@@ -427,6 +445,7 @@ def principal():
         if g is None:
             raise Error(f"El issue #{f['numero']} ({f['titulo']}) no está en GitHub.")
         cuerpo = enlaces_absolutos(dependencias(i['cuerpo'], filas, numeros, True), args.repo, args.rama)
+        cuerpo, perdidas = conservar_marcas(cuerpo, g['body'])
         actuales_e = {e['name'] for e in g.get('labels', [])}
         actuales_a = {a['login'] for a in g.get('assignees', [])}
         poner_a = set(quiero) - actuales_a
@@ -436,6 +455,8 @@ def principal():
             cambios.append('título')
         if normal(g['body']) != normal(cuerpo):
             cambios.append('cuerpo')
+            if perdidas and g['state'] == 'OPEN':
+                marcas_perdidas.append((f, perdidas))
         if ((g.get('milestone') or {}).get('title')) != f['milestone']:
             cambios.append('Milestone')
         if actuales_e != set(f['etiquetas']):
@@ -447,7 +468,7 @@ def principal():
         elif g['state'] != 'OPEN':
             cerrados.append((f, cambios))
         else:
-            editar.append((f, cambios, actuales_e, poner_a, quitar_a))
+            editar.append((f, cambios, actuales_e, poner_a, quitar_a, g['body']))
 
     tablero, en_tablero = None, []
     if args.proyecto:
@@ -466,11 +487,15 @@ def principal():
     for f in crear:
         quien = ', '.join(asignados(estimacion[f['orden']], usuarios)) or 'sin asignar'
         print(f"Crear: {f['titulo']} ({f['milestone']}, {quien})")
-    for f, cambios, _, poner_a, quitar_a in editar:
+    for f, cambios, _, poner_a, quitar_a, _ in editar:
         detalle = ''
         if poner_a or quitar_a:
             detalle = ' [' + ', '.join([f'+{u}' for u in sorted(poner_a)] + [f'-{u}' for u in sorted(quitar_a)]) + ']'
         print(f"Actualizar #{f['numero']} ({', '.join(cambios)}){detalle}: {f['titulo']}")
+    for f, perdidas in marcas_perdidas:
+        print(f"  Ojo, #{f['numero']} pierde {len(perdidas)} casilla(s) marcada(s) cuyo texto cambió:")
+        for texto in perdidas:
+            print(f'    - {texto[:90]}')
     for f, cambios in cerrados:
         print(f"No se toca #{f['numero']} porque está cerrado ({', '.join(cambios)}): {f['titulo']}")
     if tablero:
@@ -511,9 +536,10 @@ def principal():
             en_tablero.append((f, tablero.cambios(f['numero'], None, None)))
         time.sleep(args.pausa)
 
-    for f, cambios, actuales_e, poner_a, quitar_a in editar:
+    for f, cambios, actuales_e, poner_a, quitar_a, cuerpo_github in editar:
         i = issues[f['titulo']]
         cuerpo = enlaces_absolutos(dependencias(i['cuerpo'], filas, numeros, False), args.repo, args.rama)
+        cuerpo, _ = conservar_marcas(cuerpo, cuerpo_github)
         argumentos = ['issue', 'edit', str(f['numero']), '--repo', args.repo, '--title', f['titulo'],
                       '--milestone', f['milestone']]
         for e in sorted(set(f['etiquetas']) - actuales_e):

@@ -2,7 +2,7 @@
 
 [Índice del backlog](README.md)
 
-Responsables: Alex, con Franz en los modos sin conexión (HU-02 y HU-04), la consulta de surtidores (HU-07), la telemetría (HU-13) y la política de privacidad. Código en `04_imp/app_flutter`.
+Responsables: Alex, con Franz en el reporte de eventos y su cola sin conexión (HU-01 y HU-02), la consulta de surtidores (HU-07), la telemetría (HU-13) y la política de privacidad. Código en `04_imp/app_flutter`.
 
 La app es la vista y el controlador de pantalla del MVC: muestra, captura toques y GPS, y habla con el backend. No decide reglas de negocio; la única que repite es la vigencia de un reporte que espera en la cola sin conexión, y lo hace con los tiempos que le da el backend ([02_mvc.md](../../03_des/02_Arquitectura/02_mvc.md), reglas de reparto). Antes de tomar un issue, lee la sección «App y simulador con el backend» de [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md) y las vistas de `02_mvc.md`.
 
@@ -11,11 +11,11 @@ Cuando el endpoint del backend todavía no está listo, la app avanza con respue
 | Sprint | Issues |
 | --- | --- |
 | S1 (15/10–21/10) | Estructura base de la app |
-| S2 (22/10–28/10) | HU-10 Iniciar sesión con Google · Mapa base con Mapbox y ubicación |
-| S3 (29/10–04/11) | HU-03 Ver los eventos en el mapa · HU-01 Reportar un evento vial |
-| S4 (05/11–11/11) | HU-11 Lista de eventos y votos · HU-02 Guardar y reintentar reportes sin conexión · HU-04 Ver eventos guardados sin conexión |
-| S5 (12/11–18/11) | HU-05 Cómo llegar · HU-05 Navegación activa · HU-13 Enviar telemetría con la app abierta · HU-07 Consultar surtidores cercanos |
-| S6 (19/11–25/11) | HU-12 Preguntar por la recarga · HU-06 Aviso de ruta alternativa · Política de privacidad |
+| S3 (29/10–04/11) | Mapa base con Mapbox y ubicación · HU-05 Cómo llegar |
+| S4 (05/11–10/11) | HU-10 Iniciar sesión con Google · HU-03 Ver los eventos en el mapa · HU-01 Reportar un evento vial · HU-02 Guardar y reintentar reportes sin conexión |
+| S5 (11/11–15/11) | HU-11 Lista de eventos y votos · HU-05 Navegación activa · HU-13 Enviar telemetría con la app abierta · HU-06 Aviso de ruta alternativa |
+| S6 (16/11–20/11) | HU-04 Ver eventos guardados sin conexión · HU-07 Consultar surtidores cercanos · HU-12 Preguntar por la recarga |
+| S7 (21/11–25/11) | Política de privacidad |
 
 ---
 
@@ -57,12 +57,84 @@ Lo subes en una nueva rama llamada "feature/T87-flutter-estructura-base" (No olv
 
 ---
 
-## Sprint 2
+## Sprint 3
+
+### [T-093][Flutter] Mapa base con Mapbox y ubicación
+
+**Tipo:** Tarea de desarrollo (base de CU-01 a CU-05)
+**Tecnología:** Flutter · **Sprint:** Sprint 3 (29/10–04/11)
+**Depende de:** [T-087][Flutter] Estructura base de la app #39
+**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
+
+**Descripción:** Mostrar el mapa base de Mapbox en la vista Mapa principal y obtener la ubicación del conductor con su permiso. Mapbox solo da el mapa: las rutas las calcula el motor ([D-08](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+
+**Criterios de aceptación**
+- [ ] La vista Mapa principal muestra Tarija con el SDK de Mapbox, y el token de Mapbox no está en el repositorio.
+- [ ] La app pide el permiso de ubicación y muestra la posición del conductor en el mapa.
+- [ ] La ubicación solo se obtiene con la app abierta en pantalla; al pasar a segundo plano se deja de pedir (RNF-13).
+- [ ] Sin permiso de ubicación, el mapa y lo que no depende de la ubicación siguen funcionando (RN-04.3).
+- [ ] Si el mapa base no carga, la app muestra un error de servicio externo y sugiere reintentar (RN-03.18).
+- [ ] El mapa permite tocar un punto y devolver sus coordenadas, para el ajuste manual del reporte y para elegir destino.
+- [ ] El mapa muestra la atribución de Mapbox y OpenStreetMap que piden sus licencias (RNF-19).
+
+**Tareas**
+- [ ] Crear la cuenta de Mapbox del proyecto y revisar los límites del uso gratuito.
+- [ ] Integrar el SDK de Mapbox para Flutter con el token por configuración.
+- [ ] Implementar el servicio de ubicación con `geolocator`, atado al ciclo de vida de la app.
+- [ ] Implementar la selección de un punto en el mapa.
+
+**Casos de prueba**
+- [ ] CP-29 Caso de prueba: sin conexión a Mapbox, la app muestra el mensaje de error de servicio externo.
+- [x] CP-30 Caso de prueba: al minimizar la app, el ícono de ubicación del sistema operativo se apaga (validado en emulador).
+
+**Relacionado:** RNF-13 · RNF-19 · CU-02 · CU-03 · RN-03.18, RN-04.1, RN-04.3 · D-08
+
+Lo subes en una nueva rama llamada "feature/T93-flutter-mapa-base" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [HU-05][CU-03][Flutter] Cómo llegar
+
+**Caso de uso:** CU-03 — Calcular Ruta Óptima
+**Tecnología:** Flutter · **Sprint:** Sprint 3 (29/10–04/11)
+**Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-05][CU-03][Java] Calcular la ruta #65
+**Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
+
+**Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
+
+Este issue cubre la vista Cómo llegar; la vista Navegación activa va en «[HU-05][CU-03][Flutter] Navegación activa».
+
+**Criterios de aceptación**
+- [ ] La vista Cómo llegar toma la posición actual como origen, o un punto que el conductor marca, y deja elegir el destino tocando el mapa; no hay buscador de lugares (P-19, D-24). Elegir un surtidor como destino se agrega con la consulta de surtidores («[HU-07][CU-05][Flutter] Consultar surtidores cercanos»).
+- [ ] Se pueden agregar paradas intermedias y su orden se respeta (RN-03.2).
+- [ ] La ruta se dibuja con su tiempo y su distancia, visibles antes de confirmar (RN-03.13).
+- [ ] Un punto inválido muestra «Origen o destino inválido» y pide otro; «No se encontró una ruta válida» se muestra como respuesta, no como error (RN-03.3, RN-03.12).
+- [ ] Si el backend responde 503, la app informa el fallo y deja reintentar sin quedar a medias (RN-03.15).
+- [ ] Al tocar «Iniciar», la ruta pasa a Activa y se abre la vista Navegación activa (RN-03.17). Mientras esa vista no exista, el botón se muestra deshabilitado.
+
+**Tareas**
+- [ ] Implementar la vista Cómo llegar y su controlador de ruta.
+- [ ] Implementar la elección de destino tocando el mapa.
+- [ ] Dibujar la ruta con Mapbox.
+- [ ] Escribir pruebas del controlador con respuestas falsas.
+- [ ] Mientras la app no tenga inicio de sesión («[HU-10][CU-08][Flutter] Iniciar sesión con Google», del sprint 4), usar como respuesta falsa uno de los viajes de «[T-120][C++] Rutas de referencia de Tarija para probar el cálculo de ruta».
+
+**Casos de prueba**
+- [ ] CP-105 Caso de prueba: de la posición actual a un punto del mapa, la ruta aparece con tiempo y distancia en menos de 3 segundos.
+- [ ] CP-106 Caso de prueba: un destino fuera de Tarija muestra «Origen o destino inválido».
+
+**Relacionado:** RF-05 · RNF-02 · CU-03 · RN-03.2, RN-03.3, RN-03.12, RN-03.13, RN-03.15, RN-03.17, RN-03.18 · D-24 · P-19
+
+Lo subes en una nueva rama llamada "feature/HU05-CU03-flutter-como-llegar" (No olvides que el source de la rama es la de develop)
+
+---
+
+## Sprint 4
 
 ### [HU-10][CU-08][Flutter] Iniciar sesión con Google
 
 **Caso de uso:** CU-08 — Iniciar Sesión
-**Tecnología:** Flutter · **Sprint:** Sprint 2 (22/10–28/10)
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [T-087][Flutter] Estructura base de la app #39 · [HU-10][CU-08][Java] Iniciar sesión con Google y emitir el JWT #46 · [T-094][Java] Catálogos para la app #47
 **Etiquetas:** `caso-uso:CU-08` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -102,46 +174,10 @@ Lo subes en una nueva rama llamada "feature/HU10-CU08-flutter-inicio-sesion" (No
 
 ---
 
-### [T-093][Flutter] Mapa base con Mapbox y ubicación
-
-**Tipo:** Tarea de desarrollo (base de CU-01 a CU-05)
-**Tecnología:** Flutter · **Sprint:** Sprint 2 (22/10–28/10)
-**Depende de:** [T-087][Flutter] Estructura base de la app #39
-**Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
-
-**Descripción:** Mostrar el mapa base de Mapbox en la vista Mapa principal y obtener la ubicación del conductor con su permiso. Mapbox solo da el mapa: las rutas las calcula el motor ([D-08](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
-
-**Criterios de aceptación**
-- [ ] La vista Mapa principal muestra Tarija con el SDK de Mapbox, y el token de Mapbox no está en el repositorio.
-- [ ] La app pide el permiso de ubicación y muestra la posición del conductor en el mapa.
-- [ ] La ubicación solo se obtiene con la app abierta en pantalla; al pasar a segundo plano se deja de pedir (RNF-13).
-- [ ] Sin permiso de ubicación, el mapa y lo que no depende de la ubicación siguen funcionando (RN-04.3).
-- [ ] Si el mapa base no carga, la app muestra un error de servicio externo y sugiere reintentar (RN-03.18).
-- [ ] El mapa permite tocar un punto y devolver sus coordenadas, para el ajuste manual del reporte y para elegir destino.
-- [ ] El mapa muestra la atribución de Mapbox y OpenStreetMap que piden sus licencias (RNF-19).
-
-**Tareas**
-- [ ] Crear la cuenta de Mapbox del proyecto y revisar los límites del uso gratuito.
-- [ ] Integrar el SDK de Mapbox para Flutter con el token por configuración.
-- [ ] Implementar el servicio de ubicación con `geolocator`, atado al ciclo de vida de la app.
-- [ ] Implementar la selección de un punto en el mapa.
-
-**Casos de prueba**
-- [ ] CP-29 Caso de prueba: sin conexión a Mapbox, la app muestra el mensaje de error de servicio externo.
-- [x] CP-30 Caso de prueba: al minimizar la app, el ícono de ubicación del sistema operativo se apaga (validado en emulador).
-
-**Relacionado:** RNF-13 · RNF-19 · CU-02 · CU-03 · RN-03.18, RN-04.1, RN-04.3 · D-08
-
-Lo subes en una nueva rama llamada "feature/T93-flutter-mapa-base" (No olvides que el source de la rama es la de develop)
-
----
-
-## Sprint 3
-
 ### [HU-03][CU-02][Flutter] Ver los eventos en el mapa
 
 **Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 3 (29/10–04/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-10][CU-08][Flutter] Iniciar sesión con Google #48 · [T-094][Java] Catálogos para la app #47 · [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos #55
 **Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -175,7 +211,7 @@ Lo subes en una nueva rama llamada "feature/HU03-CU02-flutter-ver-eventos" (No o
 ### [HU-01][CU-01][Flutter] Reportar un evento vial
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Flutter · **Sprint:** Sprint 3 (29/10–04/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-10][CU-08][Flutter] Iniciar sesión con Google #48 · [HU-01][CU-01][Java] Registrar reportes de eventos viales #53
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -210,43 +246,10 @@ Lo subes en una nueva rama llamada "feature/HU01-CU01-flutter-reportar-evento" (
 
 ---
 
-## Sprint 4
-
-### [HU-11][CU-02][Flutter] Lista de eventos y votos
-
-**Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
-**Depende de:** [HU-03][CU-02][Flutter] Ver los eventos en el mapa #56 · [HU-11][CU-02][Java] Votar eventos #63
-**Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
-
-**Historia de usuario:** Como conductor de la app, quiero ver la lista de eventos activos y votar si cada uno es real o falso, para que el mapa muestre solo eventos confiables.
-
-**Criterios de aceptación**
-- [ ] La pestaña Eventos muestra los eventos vigentes con su tipo y hace cuánto ocurrieron, con los mismos datos que el mapa (HU-11 c.1).
-- [ ] Votar «real» o «falso» toma un solo toque (HU-11, usabilidad).
-- [ ] Las congestiones registradas por telemetría aparecen en la lista sin botones de voto (RN-02.10, D-20).
-- [ ] Después de votar, los botones de ese evento quedan desactivados; si el backend responde que ya votó o que es su propio evento, la app muestra el mensaje (RN-02.11, RN-02.12).
-- [ ] Un evento retirado desaparece de la lista en la siguiente actualización, y uno confirmado muestra su marca (RN-02.13, RN-02.14).
-
-**Tareas**
-- [ ] Implementar la vista Lista de eventos y su controlador, compartiendo los datos con el mapa.
-- [ ] Implementar el envío del voto y sus mensajes.
-- [ ] Escribir pruebas del controlador.
-
-**Casos de prueba**
-- [ ] CP-90 Caso de prueba: tres teléfonos votan «falso» el mismo evento y desaparece de la lista y del mapa de un cuarto.
-- [ ] CP-91 Caso de prueba: un segundo voto sobre el mismo evento muestra el mensaje del backend y no cambia nada.
-
-**Relacionado:** RF-12 · RNF-09 · CU-02 · RN-02.10 a RN-02.14 · D-20
-
-Lo subes en una nueva rama llamada "feature/HU11-CU02-flutter-votos" (No olvides que el source de la rama es la de develop)
-
----
-
 ### [HU-02][CU-01][Flutter] Guardar y reintentar reportes sin conexión
 
 **Caso de uso:** CU-01 — Reportar Evento Vial
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–10/11)
 **Depende de:** [HU-01][CU-01][Flutter] Reportar un evento vial #54
 **Etiquetas:** `caso-uso:CU-01` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -277,77 +280,43 @@ Lo subes en una nueva rama llamada "feature/HU02-CU01-flutter-cola-sin-conexion"
 
 ---
 
-### [HU-04][CU-02][Flutter] Ver eventos guardados sin conexión
-
-**Caso de uso:** CU-02 — Visualizar Eventos Viales
-**Tecnología:** Flutter · **Sprint:** Sprint 4 (05/11–11/11)
-**Depende de:** [HU-03][CU-02][Flutter] Ver los eventos en el mapa #56
-**Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
-
-**Historia de usuario:** Como conductor de la app, quiero seguir viendo los últimos eventos conocidos cuando no tengo conexión a internet, para no quedarme sin información aunque esté desactualizada.
-
-**Criterios de aceptación**
-- [ ] Cada consulta exitosa guarda en el teléfono los eventos recibidos; los catálogos ya los guarda el inicio de sesión.
-- [ ] Al abrir la app sin conexión, el mapa y la lista muestran los últimos eventos guardados (RN-02.9).
-- [ ] Mientras se muestran datos guardados, una marca visible avisa que pueden estar desactualizados (RN-02.9).
-- [ ] Al volver la red, la app consulta al backend y reemplaza lo guardado por los eventos vigentes (RN-02.9).
-
-**Tareas**
-- [ ] Implementar la caché local de eventos.
-- [ ] Implementar la marca de datos desactualizados.
-- [ ] Escribir pruebas del controlador de mapa sin conexión.
-
-**Casos de prueba**
-- [ ] CP-84 Caso de prueba: se cierra la app con 3 eventos en el mapa, se abre en modo avión y se ven los 3 con la marca de desactualizados.
-- [ ] CP-85 Caso de prueba: al volver la red, la marca desaparece y el mapa muestra los vigentes.
-
-**Relacionado:** RF-04 · CU-02 · RN-02.9 · RN-08.10
-
-Lo subes en una nueva rama llamada "feature/HU04-CU02-flutter-eventos-sin-conexion" (No olvides que el source de la rama es la de develop)
-
----
-
 ## Sprint 5
 
-### [HU-05][CU-03][Flutter] Cómo llegar
+### [HU-11][CU-02][Flutter] Lista de eventos y votos
 
-**Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
-**Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-05][CU-03][Java] Calcular la ruta #65 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69 (para elegir un surtidor como destino)
-**Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
+**Caso de uso:** CU-02 — Visualizar Eventos Viales
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (11/11–15/11)
+**Depende de:** [HU-03][CU-02][Flutter] Ver los eventos en el mapa #56 · [HU-11][CU-02][Java] Votar eventos #63
+**Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
-**Historia de usuario:** Como conductor de la app, quiero calcular la ruta vehicular óptima hacia mi destino, para llegar por el camino más eficiente considerando datos viales vigentes.
-
-Este issue cubre la vista Cómo llegar; la vista Navegación activa va en «[HU-05][CU-03][Flutter] Navegación activa».
+**Historia de usuario:** Como conductor de la app, quiero ver la lista de eventos activos y votar si cada uno es real o falso, para que el mapa muestre solo eventos confiables.
 
 **Criterios de aceptación**
-- [ ] La vista Cómo llegar toma la posición actual como origen, o un punto que el conductor marca, y deja elegir el destino tocando el mapa o eligiendo un surtidor del catálogo; no hay buscador de lugares (P-19, D-24).
-- [ ] Se pueden agregar paradas intermedias y su orden se respeta (RN-03.2).
-- [ ] La ruta se dibuja con su tiempo y su distancia, visibles antes de confirmar (RN-03.13).
-- [ ] Un punto inválido muestra «Origen o destino inválido» y pide otro; «No se encontró una ruta válida» se muestra como respuesta, no como error (RN-03.3, RN-03.12).
-- [ ] Si el backend responde 503, la app informa el fallo y deja reintentar sin quedar a medias (RN-03.15).
-- [ ] Al tocar «Iniciar», la ruta pasa a Activa y se abre la vista Navegación activa (RN-03.17).
+- [ ] La pestaña Eventos muestra los eventos vigentes con su tipo y hace cuánto ocurrieron, con los mismos datos que el mapa (HU-11 c.1).
+- [ ] Votar «real» o «falso» toma un solo toque (HU-11, usabilidad).
+- [ ] Las congestiones registradas por telemetría aparecen en la lista sin botones de voto (RN-02.10, D-20).
+- [ ] Después de votar, los botones de ese evento quedan desactivados; si el backend responde que ya votó o que es su propio evento, la app muestra el mensaje (RN-02.11, RN-02.12).
+- [ ] Un evento retirado desaparece de la lista en la siguiente actualización, y uno confirmado muestra su marca (RN-02.13, RN-02.14).
 
 **Tareas**
-- [ ] Implementar la vista Cómo llegar y su controlador de ruta.
-- [ ] Implementar la elección de destino por mapa y por surtidor.
-- [ ] Dibujar la ruta con Mapbox.
-- [ ] Escribir pruebas del controlador con respuestas falsas.
+- [ ] Implementar la vista Lista de eventos y su controlador, compartiendo los datos con el mapa.
+- [ ] Implementar el envío del voto y sus mensajes.
+- [ ] Escribir pruebas del controlador.
 
 **Casos de prueba**
-- [ ] CP-105 Caso de prueba: de la posición actual a un punto del mapa, la ruta aparece con tiempo y distancia en menos de 3 segundos.
-- [ ] CP-106 Caso de prueba: un destino fuera de Tarija muestra «Origen o destino inválido».
+- [ ] CP-90 Caso de prueba: tres teléfonos votan «falso» el mismo evento y desaparece de la lista y del mapa de un cuarto.
+- [ ] CP-91 Caso de prueba: un segundo voto sobre el mismo evento muestra el mensaje del backend y no cambia nada.
 
-**Relacionado:** RF-05 · RNF-02 · CU-03 · RN-03.2, RN-03.3, RN-03.12, RN-03.13, RN-03.15, RN-03.17, RN-03.18 · D-24 · P-19
+**Relacionado:** RF-12 · RNF-09 · CU-02 · RN-02.10 a RN-02.14 · D-20
 
-Lo subes en una nueva rama llamada "feature/HU05-CU03-flutter-como-llegar" (No olvides que el source de la rama es la de develop)
+Lo subes en una nueva rama llamada "feature/HU11-CU02-flutter-votos" (No olvides que el source de la rama es la de develop)
 
 ---
 
 ### [HU-05][CU-03][Flutter] Navegación activa
 
 **Caso de uso:** CU-03 — Calcular Ruta Óptima
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-05][CU-03][Flutter] Cómo llegar #70
 **Etiquetas:** `caso-uso:CU-03` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -379,7 +348,7 @@ Lo subes en una nueva rama llamada "feature/HU05-CU03-flutter-navegacion-activa"
 ### [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-13][CU-04][Java] Recibir telemetría y registrar congestión #74
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -408,81 +377,10 @@ Lo subes en una nueva rama llamada "feature/HU13-CU04-flutter-telemetria" (No ol
 
 ---
 
-### [HU-07][CU-05][Flutter] Consultar surtidores cercanos
-
-**Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Flutter · **Sprint:** Sprint 5 (12/11–18/11)
-**Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69
-**Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
-
-**Historia de usuario:** Como conductor de la app, quiero consultar el estado de disponibilidad de combustible en surtidores cercanos, para evitar dirigirme a uno que esté agotado.
-
-**Criterios de aceptación**
-- [ ] La pestaña Surtidores pide `GET /surtidores` con la ubicación actual y muestra la lista del más cercano al más lejano (RN-05.2).
-- [ ] Mientras la pestaña sigue abierta, la lista se vuelve a pedir cada 60 segundos (RN-05.17, P-27).
-- [ ] Los surtidores también aparecen como marcadores en el Mapa principal, y al tocar uno se ve su estado. Con el mapa abierto, los marcadores se actualizan cada 60 segundos, igual que la lista (RN-05.17, D-25).
-- [ ] Cada surtidor muestra su estado por tipo de combustible, la fila si se conoce, el origen del dato y su fecha; si el origen es ANH, muestra también el saldo en litros y el estado de ANH (alto, medio o bajo) (RN-05.4).
-- [ ] Los tres orígenes (WhatsApp, Conductores y ANH) se distinguen a simple vista (RNF-07).
-- [ ] Un surtidor sin datos vigentes muestra «sin información reciente» y un dato sin tipo muestra «Desconocido» (RN-05.5, RN-05.6).
-- [ ] Sin permiso de ubicación, la app explica que lo necesita para ordenar por cercanía y deja concederlo.
-- [ ] La lista aparece en menos de 3 segundos (RNF-03).
-
-**Tareas**
-- [ ] Implementar la vista Surtidores y su controlador de combustible.
-- [ ] Diseñar la presentación del origen del dato y del saldo y el estado de ANH.
-- [ ] Escribir pruebas del controlador con respuestas falsas.
-
-**Casos de prueba**
-- [ ] CP-108 Caso de prueba: un surtidor con un aviso de WhatsApp de hace 10 minutos muestra el estado, el origen WhatsApp y la hora.
-- [ ] CP-109 Caso de prueba: un surtidor sin datos muestra «sin información reciente».
-- [ ] CP-110 Caso de prueba: con el mapa abierto, un dato nuevo de un surtidor cambia su marcador en menos de 2 minutos, sin tocar la pantalla.
-
-**Relacionado:** RF-07 · RNF-03 · RNF-04 · RNF-07 · CU-05 · RN-05.2 a RN-05.6, RN-05.17 · RN-09.12 · D-23, D-25, D-31 · P-27
-
-Lo subes en una nueva rama llamada "feature/HU07-CU05-flutter-surtidores" (No olvides que el source de la rama es la de develop)
-
----
-
-## Sprint 6
-
-### [HU-12][CU-05][Flutter] Preguntar por la recarga
-
-**Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
-**Depende de:** [HU-07][CU-05][Flutter] Consultar surtidores cercanos #71 · [HU-12][CU-05][Java] Registrar confirmaciones de recarga #72
-**Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
-
-**Historia de usuario:** Como conductor de la app, quiero indicar que acabo de recargar combustible y de qué tipo, para que los demás conductores sepan que ese surtidor tiene ese combustible.
-
-**Criterios de aceptación**
-- [ ] Con la app abierta, si el conductor está detenido 3 minutos a menos de 50 m de un surtidor del catálogo, aparece «¿Acabas de recargar combustible?» (RN-05.8, D-11, P-09).
-- [ ] Si responde «Sí», elige entre Gasolina, Diesel, Gasolina Premium y Diesel ULS; Desconocido no aparece (RN-05.9).
-- [ ] Si responde «No» o cierra cualquiera de las dos preguntas, no se envía nada (RN-05.10), y la pregunta no vuelve a aparecer mientras siga detenido junto a ese surtidor.
-- [ ] La respuesta toma dos toques como máximo y la pregunta no tapa la navegación ni la lista de surtidores (RN-05.16).
-- [ ] La app envía el surtidor, el tipo y la ubicación donde detectó la parada a `POST /surtidores/{id}/confirmaciones`, aunque el conductor ya haya arrancado, y muestra la confirmación o el rechazo.
-- [ ] Después de confirmar, o si el backend responde que es repetida, la app no vuelve a preguntar por ese surtidor durante 60 minutos (RN-05.14, P-14).
-
-**Tareas**
-- [ ] Implementar la detección de «detenido junto a un surtidor» con la ubicación que ya obtiene la app.
-- [ ] Implementar la vista Pregunta de recarga, no intrusiva.
-- [ ] Implementar el envío y el silencio de 60 minutos por surtidor.
-- [ ] Escribir pruebas del controlador con ubicaciones simuladas.
-
-**Casos de prueba**
-- [ ] CP-130 Caso de prueba: con una ubicación simulada detenida 3 minutos junto a un surtidor, aparece la pregunta; al elegir Diesel, el surtidor muestra Diesel disponible con origen Conductores.
-- [ ] CP-131 Caso de prueba: al responder «No», no se envía nada al backend y la pregunta no reaparece mientras el conductor siga detenido allí.
-- [ ] CP-132 Caso de prueba: 10 minutos después, en el mismo surtidor, la pregunta no vuelve a aparecer.
-
-**Relacionado:** RF-13 · RNF-09 · CU-05 · RN-05.8 a RN-05.10, RN-05.14, RN-05.16 · D-11 · P-09, P-14
-
-Lo subes en una nueva rama llamada "feature/HU12-CU05-flutter-pregunta-recarga" (No olvides que el source de la rama es la de develop)
-
----
-
 ### [HU-06][CU-04][Flutter] Aviso de ruta alternativa
 
 **Caso de uso:** CU-04 — Recalcular Ruta
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 5 (11/11–15/11)
 **Depende de:** [HU-05][CU-03][Flutter] Navegación activa #94 · [HU-06][CU-04][Java] Revisar la ruta activa #82
 **Etiquetas:** `caso-uso:CU-04` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
 
@@ -516,10 +414,115 @@ Lo subes en una nueva rama llamada "feature/HU06-CU04-flutter-ruta-alternativa" 
 
 ---
 
+## Sprint 6
+
+### [HU-04][CU-02][Flutter] Ver eventos guardados sin conexión
+
+**Caso de uso:** CU-02 — Visualizar Eventos Viales
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (16/11–20/11)
+**Depende de:** [HU-03][CU-02][Flutter] Ver los eventos en el mapa #56
+**Etiquetas:** `caso-uso:CU-02` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
+
+**Historia de usuario:** Como conductor de la app, quiero seguir viendo los últimos eventos conocidos cuando no tengo conexión a internet, para no quedarme sin información aunque esté desactualizada.
+
+**Criterios de aceptación**
+- [ ] Cada consulta exitosa guarda en el teléfono los eventos recibidos; los catálogos ya los guarda el inicio de sesión.
+- [ ] Al abrir la app sin conexión, el mapa y la lista muestran los últimos eventos guardados (RN-02.9).
+- [ ] Mientras se muestran datos guardados, una marca visible avisa que pueden estar desactualizados (RN-02.9).
+- [ ] Al volver la red, la app consulta al backend y reemplaza lo guardado por los eventos vigentes (RN-02.9).
+
+**Tareas**
+- [ ] Implementar la caché local de eventos.
+- [ ] Implementar la marca de datos desactualizados.
+- [ ] Escribir pruebas del controlador de mapa sin conexión.
+
+**Casos de prueba**
+- [ ] CP-84 Caso de prueba: se cierra la app con 3 eventos en el mapa, se abre en modo avión y se ven los 3 con la marca de desactualizados.
+- [ ] CP-85 Caso de prueba: al volver la red, la marca desaparece y el mapa muestra los vigentes.
+
+**Relacionado:** RF-04 · CU-02 · RN-02.9 · RN-08.10
+
+Lo subes en una nueva rama llamada "feature/HU04-CU02-flutter-eventos-sin-conexion" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [HU-07][CU-05][Flutter] Consultar surtidores cercanos
+
+**Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (16/11–20/11)
+**Depende de:** [T-093][Flutter] Mapa base con Mapbox y ubicación #45 · [HU-07][CU-05][Java] Consultar surtidores cercanos #69 · [HU-05][CU-03][Flutter] Cómo llegar #70 (para pedir la ruta hacia un surtidor)
+**Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
+
+**Historia de usuario:** Como conductor de la app, quiero consultar el estado de disponibilidad de combustible en surtidores cercanos, para evitar dirigirme a uno que esté agotado.
+
+**Criterios de aceptación**
+- [ ] La pestaña Surtidores pide `GET /surtidores` con la ubicación actual y muestra la lista del más cercano al más lejano (RN-05.2).
+- [ ] Mientras la pestaña sigue abierta, la lista se vuelve a pedir cada 60 segundos (RN-05.17, P-27).
+- [ ] Los surtidores también aparecen como marcadores en el Mapa principal, y al tocar uno se ve su estado. Con el mapa abierto, los marcadores se actualizan cada 60 segundos, igual que la lista (RN-05.17, D-25).
+- [ ] Desde un surtidor de la lista o del mapa se puede abrir Cómo llegar con ese surtidor como destino (D-24).
+- [ ] Cada surtidor muestra su estado por tipo de combustible, la fila si se conoce, el origen del dato y su fecha; si el origen es ANH, muestra también el saldo en litros y el estado de ANH (alto, medio o bajo) (RN-05.4).
+- [ ] Los tres orígenes (WhatsApp, Conductores y ANH) se distinguen a simple vista (RNF-07).
+- [ ] Un surtidor sin datos vigentes muestra «sin información reciente» y un dato sin tipo muestra «Desconocido» (RN-05.5, RN-05.6).
+- [ ] Sin permiso de ubicación, la app explica que lo necesita para ordenar por cercanía y deja concederlo.
+- [ ] La lista aparece en menos de 3 segundos (RNF-03).
+
+**Tareas**
+- [ ] Implementar la vista Surtidores y su controlador de combustible.
+- [ ] Diseñar la presentación del origen del dato y del saldo y el estado de ANH.
+- [ ] Agregar en Cómo llegar la elección de un surtidor como destino.
+- [ ] Escribir pruebas del controlador con respuestas falsas.
+
+**Casos de prueba**
+- [ ] CP-108 Caso de prueba: un surtidor con un aviso de WhatsApp de hace 10 minutos muestra el estado, el origen WhatsApp y la hora.
+- [ ] CP-109 Caso de prueba: un surtidor sin datos muestra «sin información reciente».
+- [ ] CP-110 Caso de prueba: con el mapa abierto, un dato nuevo de un surtidor cambia su marcador en menos de 2 minutos, sin tocar la pantalla.
+
+**Relacionado:** RF-07 · RNF-03 · RNF-04 · RNF-07 · CU-05 · RN-05.2 a RN-05.6, RN-05.17 · RN-09.12 · D-23, D-25, D-31 · P-27
+
+Lo subes en una nueva rama llamada "feature/HU07-CU05-flutter-surtidores" (No olvides que el source de la rama es la de develop)
+
+---
+
+### [HU-12][CU-05][Flutter] Preguntar por la recarga
+
+**Caso de uso:** CU-05 — Consultar Disponibilidad de Combustible
+**Tecnología:** Flutter · **Sprint:** Sprint 6 (16/11–20/11)
+**Depende de:** [HU-07][CU-05][Flutter] Consultar surtidores cercanos #71 · [HU-12][CU-05][Java] Registrar confirmaciones de recarga #72
+**Etiquetas:** `caso-uso:CU-05` · `tipo:historia-usuario` · `fase:construccion` · `tec:flutter`
+
+**Historia de usuario:** Como conductor de la app, quiero indicar que acabo de recargar combustible y de qué tipo, para que los demás conductores sepan que ese surtidor tiene ese combustible.
+
+**Criterios de aceptación**
+- [ ] Con la app abierta, si el conductor está detenido 3 minutos a menos de 50 m de un surtidor del catálogo, aparece «¿Acabas de recargar combustible?» (RN-05.8, D-11, P-09).
+- [ ] Si responde «Sí», elige entre Gasolina, Diesel, Gasolina Premium y Diesel ULS; Desconocido no aparece (RN-05.9).
+- [ ] Si responde «No» o cierra cualquiera de las dos preguntas, no se envía nada (RN-05.10), y la pregunta no vuelve a aparecer mientras siga detenido junto a ese surtidor.
+- [ ] La respuesta toma dos toques como máximo y la pregunta no tapa la navegación ni la lista de surtidores (RN-05.16).
+- [ ] La app envía el surtidor, el tipo y la ubicación donde detectó la parada a `POST /surtidores/{id}/confirmaciones`, aunque el conductor ya haya arrancado, y muestra la confirmación o el rechazo.
+- [ ] Después de confirmar, o si el backend responde que es repetida, la app no vuelve a preguntar por ese surtidor durante 60 minutos (RN-05.14, P-14).
+
+**Tareas**
+- [ ] Implementar la detección de «detenido junto a un surtidor» con la ubicación que ya obtiene la app.
+- [ ] Implementar la vista Pregunta de recarga, no intrusiva.
+- [ ] Implementar el envío y el silencio de 60 minutos por surtidor.
+- [ ] Escribir pruebas del controlador con ubicaciones simuladas.
+
+**Casos de prueba**
+- [ ] CP-130 Caso de prueba: con una ubicación simulada detenida 3 minutos junto a un surtidor, aparece la pregunta; al elegir Diesel, el surtidor muestra Diesel disponible con origen Conductores.
+- [ ] CP-131 Caso de prueba: al responder «No», no se envía nada al backend y la pregunta no reaparece mientras el conductor siga detenido allí.
+- [ ] CP-132 Caso de prueba: 10 minutos después, en el mismo surtidor, la pregunta no vuelve a aparecer.
+
+**Relacionado:** RF-13 · RNF-09 · CU-05 · RN-05.8 a RN-05.10, RN-05.14, RN-05.16 · D-11 · P-09, P-14
+
+Lo subes en una nueva rama llamada "feature/HU12-CU05-flutter-pregunta-recarga" (No olvides que el source de la rama es la de develop)
+
+---
+
+## Sprint 7
+
 ### [T-104][Flutter] Política de privacidad
 
 **Tipo:** Tarea de documentación (cubre CU-04, CU-06, CU-08 y CU-09)
-**Tecnología:** Flutter · **Sprint:** Sprint 6 (19/11–25/11)
+**Tecnología:** Flutter · **Sprint:** Sprint 7 (21/11–25/11)
 **Depende de:** [T-097][Servidor] Dominio, Nginx y HTTPS #52 · [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado #59 · [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta #75
 **Etiquetas:** `tipo:tarea` · `fase:construccion` · `tec:flutter`
 

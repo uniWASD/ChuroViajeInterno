@@ -11,10 +11,10 @@
 | RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #2 | feature/HU01-CU03-calcular-ruta-optima | CP-01, CP-02 | Completado |
 | RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #15 | feature/HU05-CU03-grafo-irregular | CP-14, CP-15, CP-16, CP-17, CP-18, CP-19 | Completado |
 | RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #29 | feature/HU05-CU03-errores-pruebas-ruteo | CP-09, CP-10, CP-11, CP-12, CP-13 | Completado |
-| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #58 · C++ · Sprint 3 | feature/HU05-CU03-cpp-calcular-ruta | CP-71 a CP-73 | Pendiente |
-| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #65 · Java · Sprint 3 | feature/HU05-CU03-java-calcular-ruta | CP-92 a CP-94 | Pendiente |
-| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #66 · C++ · Sprint 3 | feature/HU05-CU03-cpp-trafico-tramos | CP-95 a CP-98 | Pendiente |
-| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #70 · Flutter · Sprint 3 | feature/HU05-CU03-flutter-como-llegar | CP-105, CP-106 | Pendiente |
+| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #58 · C++ · Sprint 3 | feature/HU05-CU03-cpp-calcular-ruta | CP-71 a CP-73 | Completado |
+| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #65 · Java · Sprint 3 | feature/HU05-CU03-java-calcular-ruta | CP-92 a CP-94 | Completado |
+| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #66 · C++ · Sprint 3 | feature/HU05-CU03-cpp-trafico-tramos | CP-95 a CP-98 | Completado |
+| RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #70 · Flutter · Sprint 3 | feature/HU05-CU03-flutter-como-llegar | CP-105, CP-106 | En progreso |
 | RF-05 · RNF-02 · RNF-10 · RNF-17 | CU-03 | HU-05 | [RN-03.1 a RN-03.18](../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md) | #94 · Flutter · Sprint 5 | feature/HU05-CU03-flutter-navegacion-activa | CP-107, CP-155 | Pendiente |
 | RF-06 | CU-04 | HU-06 | [RN-04.13 a RN-04.19, RN-04.21](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #76 · C++ · Sprint 5 | feature/HU06-CU04-cpp-revisar-ruta | CP-124 a CP-126 | Pendiente |
 | RF-06 | CU-04 | HU-06 | [RN-04.13 a RN-04.19, RN-04.21](../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md) | #82 · Java · Sprint 5 | feature/HU06-CU04-java-revisar-ruta | CP-134 a CP-137 | Pendiente |
@@ -61,7 +61,7 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-092 Preparar la instancia de Oracle Cloud | Todos | #44 · Servidor · Sprint 1 | feature/T92-servidor-preparar-instancia | CP-27, CP-28 | Completado |
 | T-093 Mapa base con Mapbox y ubicación | CU-01 a CU-05 | #45 · Flutter · Sprint 3 | feature/T93-flutter-mapa-base | CP-29, CP-30 | En progreso |
 | T-094 Catálogos para la app | CU-01, CU-02, CU-05 | #47 · Java · Sprint 2 | feature/T94-java-catalogos | CP-36 | En progreso |
-| T-095 Wrapper MotorDeRutas | CU-03, CU-04 | #49 · Java · Sprint 2 | feature/T95-java-wrapper-motor | CP-41 a CP-44 | En progreso |
+| T-095 Wrapper MotorDeRutas | CU-03, CU-04 | #49 · Java · Sprint 2 | feature/T95-java-wrapper-motor | CP-41 a CP-44 | Completado |
 | T-096 Cargar la red vial en el núcleo | CU-03, CU-04 | #50 · C++ · Sprint 2 | feature/T96-cpp-cargar-red-vial | CP-47 | En progreso |
 | T-097 Dominio, Nginx y HTTPS | Todos | #52 · Servidor · Sprint 4 | feature/T97-servidor-dominio-https | CP-51 | Pendiente |
 | T-098 Desplegar el backend con el núcleo C++ | Todos | #60 · Servidor · Sprint 4 | feature/T98-servidor-desplegar-backend | CP-79, CP-80 | Pendiente |
@@ -85,4 +85,4 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-117 Medir la API de ANH, revisar sus condiciones de uso y fijar el ciclo de consulta y la vigencia | CU-09 | #112 · Java · Sprint 4 | feature/T117-java-medir-api-anh | CP-157, CP-158 | Pendiente |
 | T-118 Vincular las estaciones de ANH con los surtidores del catálogo | CU-09 | #113 · Java · Sprint 6 | feature/T118-java-vincular-estaciones-anh | CP-159, CP-160 | Pendiente |
 | T-119 Comprobar la salida del servidor hacia la API de ANH | CU-09 | #111 · Servidor · Sprint 2 | feature/T119-servidor-salida-anh | CP-156 | Pendiente |
-| T-120 Rutas de referencia de Tarija para probar el cálculo de ruta | CU-03 | #129 · C++ · Sprint 3 | feature/T120-cpp-rutas-referencia | CP-167, CP-168 | Pendiente |
+| T-120 Rutas de referencia de Tarija para probar el cálculo de ruta | CU-03 | #129 · C++ · Sprint 3 | feature/T120-cpp-rutas-referencia | CP-167, CP-168 | Completado |

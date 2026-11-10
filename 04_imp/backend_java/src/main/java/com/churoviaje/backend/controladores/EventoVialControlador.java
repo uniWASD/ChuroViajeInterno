@@ -1,21 +1,20 @@
 package com.churoviaje.backend.controladores;
 
-import java.time.OffsetDateTime;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.churoviaje.backend.dominio.EventoVial;
-import com.churoviaje.backend.dominio.Ubicacion;
+import com.churoviaje.backend.dto.EventoVialPeticionDTO;
+import com.churoviaje.backend.dto.EventoVialRespuestaDTO;
+import com.churoviaje.backend.seguridad.ConductorAutenticado;
 import com.churoviaje.backend.servicios.EventoVialServicio;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 @RestController
 @RequestMapping("/eventos")
@@ -27,34 +26,28 @@ public class EventoVialControlador {
         this.eventoVialServicio = eventoVialServicio;
     }
 
-    // 1. DTO de entrada: Solo acepta lo que dicta el contrato con mensajes personalizados
-    public record PeticionReporteEvento(
-            @NotBlank(message = "Falta el tipo de evento") String tipo,
-            @NotNull(message = "Falta la ubicación") @Valid Ubicacion ubicacion,
-            @NotNull(message = "Falta la hora de confirmación") OffsetDateTime horaConfirmacion,
-            @NotNull(message = "Faltan los minutos elegidos") Integer minutosElegidos
-    ) {}
-
-    // 2. DTO de salida: No expone la entidad JPA
-    public record EventoVialResponseDto(Long id, String tipo, Ubicacion ubicacion, OffsetDateTime momentoOcurrencia) {}
-
     @PostMapping
-    public ResponseEntity<EventoVialResponseDto> reportarEvento(@Valid @RequestBody PeticionReporteEvento peticion) {
+    public ResponseEntity<EventoVialRespuestaDTO> reportarEvento(
+            @Valid @RequestBody EventoVialPeticionDTO peticion,
+            @AuthenticationPrincipal ConductorAutenticado conductor) {
         
-        // 3. Pasamos los datos al servicio para que él construya la entidad
+        // Pasamos los datos extraídos al servicio, usando el ID real del token (conductor.id())
         EventoVial guardado = eventoVialServicio.registrarEvento(
                 peticion.tipo(),
-                peticion.ubicacion(),
+                peticion.ubicacion().lon(),
+                peticion.ubicacion().lat(),
                 peticion.horaConfirmacion(),
-                peticion.minutosElegidos()
+                peticion.minutos(),
+                conductor.id()
         );
 
-        // 4. Devolvemos los datos reales, no estáticos
-        EventoVialResponseDto respuesta = new EventoVialResponseDto(
+        // Construimos la respuesta con los datos generados por la BD
+        EventoVialRespuestaDTO respuesta = new EventoVialRespuestaDTO(
                 guardado.getId(),
-                guardado.getTipo(),
-                guardado.getUbicacion(),
-                guardado.getFechaOcurrencia()
+                guardado.getTipo().name(),
+                guardado.getEstado(),
+                guardado.getHoraOcurrencia(),
+                guardado.getVotos()
         );
         
         return ResponseEntity.status(HttpStatus.CREATED).body(respuesta);

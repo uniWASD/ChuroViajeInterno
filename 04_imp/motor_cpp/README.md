@@ -31,16 +31,20 @@ motor_nucleo --red <archivo> [--algoritmo a_estrella|dijkstra]
 - El tiempo estimado suma la longitud de cada tramo entre la velocidad de su tipo de vía (55, 40 y 20 km/h), por su factor de tráfico (RN-03.14).
 - La distancia y el tiempo van redondeados a metros y segundos; las coordenadas del trazado, a seis decimales.
 
-## Herramienta de consola: ruta entre dos nodos
+## Herramienta de consola: ruta entre dos puntos
 
-Para probar el cálculo sin el backend, `ruta_nodos` recibe el id de un nodo de origen y uno de destino y devuelve la lista de nodos de la ruta, con su distancia, su tiempo y las calles por las que pasa. No la usa el backend: el contrato sigue siendo `calcular_ruta`.
+Para probar el cálculo sin el backend, `ruta_nodos` recibe un origen y un destino y devuelve la lista de nodos de la ruta, con sus coordenadas, su distancia, su tiempo y las calles por las que pasa. Cada extremo puede ser un id de nodo o unas coordenadas `lat,lon` (sin espacios). No la usa el backend: el contrato sigue siendo `calcular_ruta`.
 
 ```
 ./build/ruta_nodos --red tests/datos/red_irregular.json Plaza Mirador
-{"origen":"Plaza","destino":"Mirador","estado":"ENCONTRADA","nodos":["Plaza","Mercado","Universidad","Mirador"],"distancia_m":1526,"tiempo_s":275,"calles":["Calle Comercio","Av. Las Américas","Camino al Mirador"]}
+{"origen":"Plaza","destino":"Mirador","nodo_origen":"Plaza","nodo_destino":"Mirador","estado":"ENCONTRADA","nodos":["Plaza","Mercado","Universidad","Mirador"],"coordenadas":[[-21.5355,-64.7296],[-21.5348,-64.728],[-21.53,-64.726],[-21.529,-64.722]],"distancia_m":1526,"tiempo_s":275,"calles":["Calle Comercio","Av. Las Américas","Camino al Mirador"]}
+
+./build/ruta_nodos --red tests/datos/red_irregular.json -21.5356,-64.7297 -21.5291,-64.7221
 ```
 
-Sin los dos ids, lee una consulta por línea (`origen destino`) hasta que se cierra la entrada. Con la red real, los ids son los del archivo (`osm:<número>`). Esta herramienta calcula sin tráfico.
+Con coordenadas, cada punto se ajusta a la intersección más cercana si hay una a menos de 100 m, igual que en `calcular_ruta` (RN-03.4). La respuesta dice a qué nodo se ajustó (`nodo_origen`, `nodo_destino`) y a cuántos metros (`ajuste_origen_m`, `ajuste_destino_m`). Si no hay ninguna intersección cerca, el estado es `PUNTO_INVALIDO`. Los otros estados son `ENCONTRADA`, `SIN_RUTA` y `NODO_DESCONOCIDO`. En PowerShell, las coordenadas van entre comillas (`"-21.5356,-64.7297"`), porque una coma sin comillas separa elementos.
+
+Sin los dos extremos, lee una consulta por línea (`origen destino`) hasta que se cierra la entrada. Con la red real, los ids son los del archivo (`osm:<número>` o `corte:...`), así que lo cómodo es escribir coordenadas. Esta herramienta calcula sin tráfico.
 
 ## Tráfico de los eventos
 
@@ -154,7 +158,7 @@ Para escribir mensajes a mano uno por uno, ejecuta `./build/motor_nucleo` y escr
 | `src/trafico.hpp` | Nivel de tráfico y cierre de cada tramo, con sus factores |
 | `src/eventos.hpp/.cpp` | Eventos vigentes: a qué tramos afectan, nivel del tramo según el más grave y vencimiento |
 | `src/tiempo.hpp/.cpp` | Lectura de fechas ISO 8601 con zona horaria |
-| `src/ruta_nodos.cpp` | Herramienta de consola: ruta entre dos nodos |
+| `src/ruta_nodos.cpp` | Herramienta de consola: ruta entre dos puntos (ids de nodo o coordenadas) |
 | `src/main.cpp` | Punto de entrada que arranca el wrapper (`--red <archivo>`) |
 | `tests/` | Pruebas de GoogleTest (`test_red_vial.cpp`: CP-47, rechazos del formato y tiempo de carga; `test_ruta.cpp`: CP-71 a CP-73 y `calcular_ruta`; `test_trafico.cpp`: CP-95 a CP-98, CP-18, CP-19 y `actualizar_trafico`) |
 | `tests/datos/red_irregular.json` | La red irregular del prototipo de `05_pro/PruebaCalculoRuta` en el formato de la red vial (8 nodos, 14 tramos) |

@@ -53,6 +53,7 @@ class ReporteController extends ChangeNotifier {
   String? _mensaje;
   EventoVial? _ultimoEnviado;
   ReporteEvento? _pendienteTrasSesion;
+  bool _abierto = false;
   bool _disposed = false;
 
   ReporteController(
@@ -72,6 +73,10 @@ class ReporteController extends ChangeNotifier {
   EventoVial? get ultimoEnviado => _ultimoEnviado;
   bool get enviando => _estado == EstadoReporte.enviando;
 
+  /// La vista Reportar evento está abierta. Si la sesión vence mientras el conductor la llena, la vista no se
+  /// cierra: al confirmar, el reporte queda guardado y se envía al volver a iniciar sesión (RN-01.16).
+  bool get abierto => _abierto;
+
   /// Los tipos reportables del catálogo guardado; la congestión no aparece (RN-01.3).
   List<TipoEventoCatalogo> get tipos => _sesion.catalogos?.reportables ?? const [];
 
@@ -85,6 +90,7 @@ class ReporteController extends ChangeNotifier {
 
   /// Empieza un reporte nuevo: «Hace 5 minutos» marcado y nada elegido.
   void empezar() {
+    _abierto = true;
     if (_estado == EstadoReporte.esperandoSesion) return; // el anterior todavía espera la sesión
     _estado = EstadoReporte.eligiendo;
     _tipo = null;
@@ -93,6 +99,9 @@ class ReporteController extends ChangeNotifier {
     _mensaje = null;
     _avisar();
   }
+
+  /// Se cerró la vista Reportar evento.
+  void cerrar() => _abierto = false;
 
   void elegirTipo(String codigo) {
     _tipo = codigo;
@@ -172,9 +181,14 @@ class ReporteController extends ChangeNotifier {
       e.codigo == 'ERROR_RED' || e.codigo == 'TIEMPO_ESPERA';
 
   void _alCambiarSesion() {
+    if (!_sesion.conSesion || _estado != EstadoReporte.esperandoSesion) return;
     final pendiente = _pendienteTrasSesion;
-    if (pendiente != null && _sesion.conSesion && _estado == EstadoReporte.esperandoSesion) {
+    if (pendiente != null) {
       _enviar(pendiente);
+    } else {
+      // El reporte quedó en la cola y la cola lo envía al volver la sesión: se puede empezar otro.
+      _estado = EstadoReporte.eligiendo;
+      _mensaje = null;
     }
   }
 

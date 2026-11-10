@@ -18,7 +18,7 @@ Un issue está terminado cuando cumple las tres condiciones:
    - la CI está en verde;
    - Marcelo revisó el PR.
 
-## Sprint 4 (05/11 – 11/11)
+## Sprint 4 (05/11 – 10/11)
 
 10 issues · 35 puntos.
 
@@ -37,7 +37,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-01][CU-01][Java] Registrar reportes de eventos viales · [#53](https://github.com/uniWASD/ChuroViajeInterno/issues/53)
 
-**Responsable:** Jorge · **Fechas:** 05/11 – 11/11
+**Responsable:** Jorge · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -65,7 +65,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-01][CU-01][Flutter] Reportar un evento vial · [#54](https://github.com/uniWASD/ChuroViajeInterno/issues/54)
 
-**Responsable:** Franz · **Fechas:** 05/11 – 11/11
+**Responsable:** Franz · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -91,7 +91,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-02][CU-01][Flutter] Guardar y reintentar reportes sin conexión · [#61](https://github.com/uniWASD/ChuroViajeInterno/issues/61)
 
-**Responsable:** Franz · **Fechas:** 05/11 – 11/11
+**Responsable:** Franz · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -111,7 +111,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-03][CU-02][Java] Consultar eventos vigentes y vencerlos · [#55](https://github.com/uniWASD/ChuroViajeInterno/issues/55)
 
-**Responsable:** Antonio · **Fechas:** 05/11 – 11/11
+**Responsable:** Antonio · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -136,7 +136,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-03][CU-02][Flutter] Ver los eventos en el mapa · [#56](https://github.com/uniWASD/ChuroViajeInterno/issues/56)
 
-**Responsable:** Alex · **Fechas:** 05/11 – 11/11
+**Responsable:** Alex · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -160,7 +160,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-099][Java] Mantener al día el tráfico del motor · [#67](https://github.com/uniWASD/ChuroViajeInterno/issues/67)
 
-**Responsable:** Jorge · **Fechas:** 05/11 – 11/11
+**Responsable:** Jorge · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -180,7 +180,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-10][CU-08][Flutter] Iniciar sesión con Google · [#48](https://github.com/uniWASD/ChuroViajeInterno/issues/48)
 
-**Responsable:** Alex · **Fechas:** 05/11 – 11/11
+**Responsable:** Alex · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -206,7 +206,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-11][CU-02][Java] Votar eventos · [#63](https://github.com/uniWASD/ChuroViajeInterno/issues/63)
 
-**Responsable:** Antonio · **Fechas:** 05/11 – 11/11
+**Responsable:** Antonio · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -229,7 +229,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-098][Servidor] Desplegar el backend con el núcleo C++ · [#60](https://github.com/uniWASD/ChuroViajeInterno/issues/60)
 
-**Responsable:** Marcelo · **Fechas:** 05/11 – 11/11
+**Responsable:** Marcelo · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -250,7 +250,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-097][Servidor] Dominio, Nginx y HTTPS · [#52](https://github.com/uniWASD/ChuroViajeInterno/issues/52)
 
-**Responsable:** Marcelo · **Fechas:** 05/11 – 11/11
+**Responsable:** Marcelo · **Fechas:** 05/11 – 10/11
 
 **Historia de usuario y requisitos**
 
@@ -268,7 +268,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | --- | --- | --- |
 | **CP-51** http://dominio redirige a https://dominio, y el certificado es válido en un teléfono | Salida del comando de comprobación, sin IPs internas, llaves ni contraseñas |  |
 
-## Sprint 5 (12/11 – 18/11)
+## Sprint 5 (11/11 – 15/11)
 
 12 issues · 37 puntos.
 
@@ -289,7 +289,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-05][CU-03][Flutter] Navegación activa · [#94](https://github.com/uniWASD/ChuroViajeInterno/issues/94)
 
-**Responsable:** Alex · **Fechas:** 12/11 – 18/11
+**Responsable:** Alex · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -310,7 +310,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-06][CU-04][C++] Revisar la ruta activa · [#76](https://github.com/uniWASD/ChuroViajeInterno/issues/76)
 
-**Responsable:** Marcelo · **Fechas:** 12/11 – 18/11
+**Responsable:** Marcelo · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -331,7 +331,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-06][CU-04][Java] Revisar la ruta activa · [#82](https://github.com/uniWASD/ChuroViajeInterno/issues/82)
 
-**Responsable:** Jorge · **Fechas:** 12/11 – 18/11
+**Responsable:** Jorge · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -353,7 +353,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-06][CU-04][Flutter] Aviso de ruta alternativa · [#83](https://github.com/uniWASD/ChuroViajeInterno/issues/83)
 
-**Responsable:** Alex · **Fechas:** 12/11 – 18/11
+**Responsable:** Alex · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -374,7 +374,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-07][CU-05][Java] Consultar surtidores cercanos · [#69](https://github.com/uniWASD/ChuroViajeInterno/issues/69)
 
-**Responsable:** Antonio · **Fechas:** 12/11 – 18/11
+**Responsable:** Antonio · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -398,7 +398,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-08][CU-06][Java] Recibir el análisis de WhatsApp · [#57](https://github.com/uniWASD/ChuroViajeInterno/issues/57)
 
-**Responsable:** Antonio · **Fechas:** 12/11 – 18/11
+**Responsable:** Antonio · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -422,7 +422,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-08][CU-06][WhatsApp/LLM] Analizar los mensajes por lotes y enviar el resultado · [#59](https://github.com/uniWASD/ChuroViajeInterno/issues/59)
 
-**Responsable:** Franz · **Fechas:** 12/11 – 18/11
+**Responsable:** Franz · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -448,7 +448,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-102][Simulador] Estructura y parámetros del simulador · [#78](https://github.com/uniWASD/ChuroViajeInterno/issues/78)
 
-**Responsable:** Antonio · **Fechas:** 12/11 – 18/11
+**Responsable:** Antonio · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -467,7 +467,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-11][CU-02][Flutter] Lista de eventos y votos · [#64](https://github.com/uniWASD/ChuroViajeInterno/issues/64)
 
-**Responsable:** Alex · **Fechas:** 12/11 – 18/11
+**Responsable:** Alex · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -488,7 +488,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-13][CU-04][C++] Detectar congestión con la telemetría · [#73](https://github.com/uniWASD/ChuroViajeInterno/issues/73)
 
-**Responsable:** Marcelo · **Fechas:** 12/11 – 18/11
+**Responsable:** Marcelo · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -514,7 +514,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-13][CU-04][Java] Recibir telemetría y registrar congestión · [#74](https://github.com/uniWASD/ChuroViajeInterno/issues/74)
 
-**Responsable:** Jorge · **Fechas:** 12/11 – 18/11
+**Responsable:** Jorge · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -540,7 +540,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-13][CU-04][Flutter] Enviar telemetría con la app abierta · [#75](https://github.com/uniWASD/ChuroViajeInterno/issues/75)
 
-**Responsable:** Franz · **Fechas:** 12/11 – 18/11
+**Responsable:** Franz · **Fechas:** 11/11 – 15/11
 
 **Historia de usuario y requisitos**
 
@@ -560,7 +560,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | **CP-122** con la app abierta 1 minuto llegan 4 envíos al backend; con la app minimizada, ninguno | Video corto de la pantalla y registro del backend con los envíos recibidos |  |
 | **CP-123** al revocar el permiso de ubicación, la telemetría se detiene y el mapa sigue funcionando | Video corto de la pantalla |  |
 
-## Sprint 6 (19/11 – 25/11)
+## Sprint 6 (16/11 – 20/11)
 
 10 issues · 29 puntos.
 
@@ -579,7 +579,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-04][CU-02][Flutter] Ver eventos guardados sin conexión · [#62](https://github.com/uniWASD/ChuroViajeInterno/issues/62)
 
-**Responsable:** Alex · **Fechas:** 19/11 – 25/11
+**Responsable:** Alex · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -598,7 +598,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-07][CU-05][Flutter] Consultar surtidores cercanos · [#71](https://github.com/uniWASD/ChuroViajeInterno/issues/71)
 
-**Responsable:** Franz · **Fechas:** 19/11 – 25/11
+**Responsable:** Franz · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -622,7 +622,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-09][CU-07][Java] Soporte para el simulador · [#84](https://github.com/uniWASD/ChuroViajeInterno/issues/84)
 
-**Responsable:** Jorge · **Fechas:** 19/11 – 25/11
+**Responsable:** Jorge · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -644,7 +644,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-09][CU-07][Simulador] Usuarios fantasma que envían eventos y telemetría · [#87](https://github.com/uniWASD/ChuroViajeInterno/issues/87)
 
-**Responsable:** Antonio · **Fechas:** 19/11 – 25/11
+**Responsable:** Antonio · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -665,7 +665,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-12][CU-05][Java] Registrar confirmaciones de recarga · [#72](https://github.com/uniWASD/ChuroViajeInterno/issues/72)
 
-**Responsable:** Jorge · **Fechas:** 19/11 – 25/11
+**Responsable:** Jorge · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -687,7 +687,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [HU-12][CU-05][Flutter] Preguntar por la recarga · [#80](https://github.com/uniWASD/ChuroViajeInterno/issues/80)
 
-**Responsable:** Alex · **Fechas:** 19/11 – 25/11
+**Responsable:** Alex · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -710,7 +710,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-100][Servidor] Desplegar el servicio de WhatsApp/LLM · [#68](https://github.com/uniWASD/ChuroViajeInterno/issues/68)
 
-**Responsable:** Marcelo · **Fechas:** 19/11 – 25/11
+**Responsable:** Marcelo · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -729,7 +729,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-103][Servidor] Respaldos de la base de datos y registros · [#79](https://github.com/uniWASD/ChuroViajeInterno/issues/79)
 
-**Responsable:** Marcelo · **Fechas:** 19/11 – 25/11
+**Responsable:** Marcelo · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -748,7 +748,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-105][Java] Limpieza de datos vencidos · [#85](https://github.com/uniWASD/ChuroViajeInterno/issues/85)
 
-**Responsable:** Antonio · **Fechas:** 19/11 – 25/11
+**Responsable:** Antonio · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -767,7 +767,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-106][Servidor] Ambiente de pruebas para el simulador · [#86](https://github.com/uniWASD/ChuroViajeInterno/issues/86)
 
-**Responsable:** Marcelo · **Fechas:** 19/11 – 25/11
+**Responsable:** Marcelo · **Fechas:** 16/11 – 20/11
 
 **Historia de usuario y requisitos**
 
@@ -783,7 +783,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | --- | --- | --- |
 | **CP-145** POST /sesion/prueba funciona en pruebas.dominio y responde 403 en el dominio de producción | Salida del comando de comprobación, sin IPs internas, llaves ni contraseñas |  |
 
-## Sprint 7 (26/11 – 30/11)
+## Sprint 7 (21/11 – 25/11)
 
 6 issues · 18 puntos.
 
@@ -798,7 +798,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-101][WhatsApp/LLM] Prueba con mensajes reales · [#77](https://github.com/uniWASD/ChuroViajeInterno/issues/77)
 
-**Responsable:** Franz · **Fechas:** 26/11 – 30/11
+**Responsable:** Franz · **Fechas:** 21/11 – 25/11
 
 **Historia de usuario y requisitos**
 
@@ -818,7 +818,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-107][Java] Pruebas de punta a punta · [#88](https://github.com/uniWASD/ChuroViajeInterno/issues/88)
 
-**Responsable:** Jorge y Antonio · **Fechas:** 26/11 – 30/11
+**Responsable:** Jorge y Antonio · **Fechas:** 21/11 – 25/11
 
 **Historia de usuario y requisitos**
 
@@ -840,7 +840,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-108][Simulador] Pruebas de carga y reporte · [#89](https://github.com/uniWASD/ChuroViajeInterno/issues/89)
 
-**Responsable:** Antonio · **Fechas:** 26/11 – 30/11
+**Responsable:** Antonio · **Fechas:** 21/11 – 25/11
 
 **Historia de usuario y requisitos**
 
@@ -863,7 +863,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-109][C++] Rendimiento con la red real de Tarija · [#90](https://github.com/uniWASD/ChuroViajeInterno/issues/90)
 
-**Responsable:** Marcelo · **Fechas:** 26/11 – 30/11
+**Responsable:** Marcelo · **Fechas:** 21/11 – 25/11
 
 **Historia de usuario y requisitos**
 
@@ -881,7 +881,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-110][Servidor] Despliegue final y revisión de seguridad · [#91](https://github.com/uniWASD/ChuroViajeInterno/issues/91)
 
-**Responsable:** Marcelo · **Fechas:** 26/11 – 30/11
+**Responsable:** Marcelo · **Fechas:** 21/11 – 25/11
 
 **Historia de usuario y requisitos**
 
@@ -903,7 +903,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ### [T-104][Flutter] Política de privacidad · [#81](https://github.com/uniWASD/ChuroViajeInterno/issues/81)
 
-**Responsable:** Franz · **Fechas:** 26/11 – 30/11
+**Responsable:** Franz · **Fechas:** 21/11 – 25/11
 
 **Historia de usuario y requisitos**
 

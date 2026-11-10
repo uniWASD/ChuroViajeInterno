@@ -1,0 +1,156 @@
+{
+  "version": 1,
+  "red": {
+    "fuente": "OpenStreetMap",
+    "fecha_extracto": "2026-11-02"
+  },
+  "revision": {
+    "revisado": false,
+    "por": null,
+    "fecha": null,
+    "nota": "Las calles esperadas salen de la primera corrida del núcleo con este extracto. Falta que alguien que maneje en Tarija las revise; hasta entonces sirven para detectar cambios, no para validar el cálculo."
+  },
+  "tolerancia_distancia": 0.15,
+  "viajes": [
+    {
+      "nombre": "Plaza Luis de Fuentes a la ex terminal de buses",
+      "descripcion": "Desde la esquina Sucre y 15 de Abril hasta la ex terminal, por la avenida Las Américas.",
+      "origen": [
+        -21.5344253,
+        -64.7339992
+      ],
+      "destino": [
+        -21.541756,
+        -64.725011
+      ],
+      "nodo_origen": "osm:1440030690",
+      "nodo_destino": "osm:2142126167",
+      "calles_esperadas": [
+        "Calle Daniel Campos",
+        "Avenida Las Américas"
+      ],
+      "distancia_aprox_m": 1500
+    },
+    {
+      "nombre": "Plaza Luis de Fuentes al campus de la UAJMS",
+      "descripcion": "Desde la esquina Sucre y 15 de Abril hasta el Laboratorio de Topografía de la universidad.",
+      "origen": [
+        -21.5344253,
+        -64.7339992
+      ],
+      "destino": [
+        -21.544435,
+        -64.723305
+      ],
+      "nodo_origen": "osm:1440030690",
+      "nodo_destino": "osm:2142126171",
+      "calles_esperadas": [
+        "Calle Daniel Campos",
+        "Avenida Las Américas",
+        "Calle Heriberto Trigo"
+      ],
+      "distancia_aprox_m": 1950
+    },
+    {
+      "nombre": "Mercado Bolívar a la Caja Nacional de Salud",
+      "descripcion": "Cruza el centro hacia el oeste: la calle Bolívar es de un solo sentido y en este sentido sí se puede usar.",
+      "origen": [
+        -21.536342,
+        -64.72042
+      ],
+      "destino": [
+        -21.532227,
+        -64.732349
+      ],
+      "nodo_origen": "osm:1496126234",
+      "nodo_destino": "osm:1259150352",
+      "calles_esperadas": [
+        "Calle Bolivar",
+        "Calle Bolívar"
+      ],
+      "distancia_aprox_m": 1400
+    },
+    {
+      "nombre": "Caja Nacional de Salud al Mercado Bolívar",
+      "descripcion": "El mismo viaje al revés: la calle Bolívar es de un solo sentido hacia el oeste y la ruta no debe usarla.",
+      "origen": [
+        -21.532227,
+        -64.732349
+      ],
+      "destino": [
+        -21.536342,
+        -64.72042
+      ],
+      "nodo_origen": "osm:1259150352",
+      "nodo_destino": "osm:1496126234",
+      "calles_esperadas": [
+        "Calle Ingavi",
+        "Calle Oruro"
+      ],
+      "no_debe_pasar_por": [
+        "Calle Bolívar",
+        "Calle Bolivar"
+      ],
+      "distancia_aprox_m": 1600
+    },
+    {
+      "nombre": "Plaza Luis de Fuentes a la posta de Tomatitas",
+      "descripcion": "Sale del centro por la avenida Víctor Paz Estenssoro y cruza el río Guadalquivir.",
+      "origen": [
+        -21.5344253,
+        -64.7339992
+      ],
+      "destino": [
+        -21.492273,
+        -64.761447
+      ],
+      "nodo_origen": "osm:1440030690",
+      "nodo_destino": "osm:319535521",
+      "calles_esperadas": [
+        "Calle La Madrid",
+        "Calle Campero",
+        "Calle Bolívar",
+        "Avenida Domingo Paz",
+        "Avenida Víctor Paz Estenssoro",
+        "Camino Tarija-San Lorenzo"
+      ],
+      "cruza_el_guadalquivir": true,
+      "distancia_aprox_m": 6100
+    },
+    {
+      "nombre": "Centro de Salud San Luis al Mercado San Bernardo, pasando por la ex terminal",
+      "descripcion": "De sur a norte, con una parada intermedia en la ex terminal.",
+      "origen": [
+        -21.565235,
+        -64.705896
+      ],
+      "destino": [
+        -21.525353,
+        -64.723676
+      ],
+      "paradas": [
+        [
+          -21.541756,
+          -64.725011
+        ]
+      ],
+      "nodo_origen": "osm:10711383884",
+      "nodo_destino": "osm:3629536945",
+      "calles_esperadas": [
+        "Avenida San Luis",
+        "Calle Las Flores",
+        "Calle Cap. Arturo Valle Peralta",
+        "Avenida Edmundo Torrejon Cardozo",
+        "Calle Napoleon Raña",
+        "Avenida Jaime Paz Zamora",
+        "Calle España",
+        "Calle Bolivar",
+        "Pasaje Guemes",
+        "Avenida La Paz",
+        "Avenida Circunvalación",
+        "Avenida San Cristobal"
+      ],
+      "distancia_aprox_m": 7650
+    }
+  ]
+}

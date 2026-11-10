@@ -35,7 +35,15 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-Puedes cambiar `DB_HOST`, `DB_PORT`, `DB_NAME` y `DB_USER`; `DB_PASSWORD` es obligatoria. La cobertura usa `../datos/mancha_urbana_tarija.geojson`, salvo que definas `CHUROVIAJE_GEOJSON_PATH`.
+Puedes cambiar `DB_HOST`, `DB_PORT`, `DB_NAME` y `DB_USER`; `DB_PASSWORD` es obligatoria.
+
+La seguridad (CU-08, D-13) pide tres variables más, sin valor por defecto: si falta alguna, el backend no arranca y dice cuál.
+
+| Variable | Qué es |
+| --- | --- |
+| `JWT_SECRET` | Clave que firma el JWT: al menos 32 caracteres, larga y aleatoria. Por ejemplo, `openssl rand -base64 48` |
+| `GOOGLE_CLIENT_ID` | Client ID de la app en Google, contra el que se valida el token de identidad |
+| `SERVICE_CREDENTIAL` | Credencial del servicio de WhatsApp/LLM: al menos 32 caracteres. Es el mismo valor que usa el servicio (`SERVICE_TOKEN`) | La cobertura usa `../datos/mancha_urbana_tarija.geojson`, salvo que definas `CHUROVIAJE_GEOJSON_PATH`.
 
 ### Pruebas
 
@@ -51,7 +59,7 @@ Un arranque manual con este perfil requiere `TEST_DATABASE_URL`, `TEST_DB_USER` 
 
 ### Producción
 
-Define `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD` y `CHUROVIAJE_GEOJSON_PATH`. Este perfil deshabilita Swagger y rechaza coberturas provisionales. `JWT_SECRET` y `SERVICE_CREDENTIAL` se incorporarán con las historias de seguridad correspondientes.
+Define `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD` y `CHUROVIAJE_GEOJSON_PATH`. Este perfil deshabilita Swagger y rechaza coberturas provisionales. Define también `JWT_SECRET`, `GOOGLE_CLIENT_ID` y `SERVICE_CREDENTIAL`, que viven solo en el servidor con acceso restringido.
 
 ## Acceso a datos
 
@@ -82,3 +90,17 @@ Las coordenadas usan `GEOGRAPHY(Point,4326)`. SQL y GeoJSON reciben longitud-lat
 `../datos/mancha_urbana_tarija.geojson` delimita la cobertura operativa de Tarija, Tomatitas y el corredor de El Rancho; no es un límite administrativo ni catastral. El backend carga el archivo al iniciar: reinícialo si sustituyes la geometría.
 
 La raíz y cada entidad deben tener metadata de aprobación. Producción rechaza archivos sin aprobar y cualquier intento de habilitar borradores. Las fuentes y la revisión están registradas en el propio GeoJSON.
+
+## Motor de rutas (núcleo C++)
+
+`MotorDeRutas` es la única clase que habla con el núcleo (pipe, una línea de JSON por mensaje). El backend solo arranca el núcleo si se configura:
+
+| Variable | Qué es |
+|---|---|
+| `MOTOR_HABILITADO` | `true` para que el backend arranque el núcleo. Por defecto `false`: las operaciones del motor responden 503. |
+| `MOTOR_PATH` | Ruta del ejecutable del núcleo. |
+| `RED_VIAL_PATH` | Ruta del archivo de la red vial; se le pasa al núcleo con `--red <ruta>`. |
+
+Los tiempos (`motor.tiempo-maximo` 3 s, `motor.espera-arranque`, `motor.espera-reinicio`) están en `application.yml`. Las pruebas usan un núcleo falso en `src/test/resources/nucleo_falso/NucleoFalso.java` y no necesitan Docker ni el ejecutable de C++.
+
+`POST /rutas` (HU-05) es la primera operación que usa el motor: comprueba que origen, destino y paradas estén en la mancha urbana sin llamar al núcleo y, si lo están, le pide la ruta. El formato está en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#rutas-post-rutas). Sus pruebas reemplazan `MotorDeRutas` por un doble; con `MOTOR_PATH` y `RED_VIAL_PATH` definidos, `MotorDeRutasNucleoRealTest` y `RutaConNucleoRealTest` usan el núcleo real (por ejemplo, con `04_imp/motor_cpp/tests/datos/red_irregular.json`). Con `MOTOR_PATH` y `RED_VIAL_REAL` (la red real de Tarija), `RutasReferenciaNucleoRealTest` calcula los viajes de referencia de [04_imp/datos](../datos/README.md#viajes-de-referencia) a través de `MotorDeRutas` (T-120).

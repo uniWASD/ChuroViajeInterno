@@ -38,6 +38,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1
   http: ^1.6.0
+  mapbox_maps_flutter: ^3.34.1
+  geolocator: ^13.0.4
 
 dev_dependencies:
   flutter_test:
@@ -60,6 +62,10 @@ flutter:
   # included with your application, so that you can use the icons in
   # the material Icons class.
   uses-material-design: true
+
+  assets:
+    # Respuesta de ejemplo de POST /rutas: copia de 04_imp/datos/ruta_ejemplo_post_rutas.json (T-120).
+    - assets/datos/ruta_ejemplo_post_rutas.json
 
   # To add assets to your application, add an assets section, like this:
   # assets:

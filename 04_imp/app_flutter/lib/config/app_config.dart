@@ -21,6 +21,23 @@ class AppConfig {
     defaultValue: '',
   );
 
+  /// Token público de Mapbox. No va en el repositorio: se pasa con
+  /// `--dart-define=MAPBOX_ACCESS_TOKEN=pk...` al compilar o ejecutar la app.
+  static const String mapboxToken = String.fromEnvironment(
+    'MAPBOX_ACCESS_TOKEN',
+  );
+
+  static bool get tieneTokenMapbox => mapboxToken.isNotEmpty;
+
+  static const bool _rutaDeEjemplo = bool.fromEnvironment(
+    'RUTA_DE_EJEMPLO',
+    defaultValue: true,
+  );
+
+  /// Mientras la app no inicia sesión (HU-10), `POST /rutas` responde 401: la vista Cómo llegar usa una ruta de
+  /// ejemplo. Con `--dart-define=RUTA_DE_EJEMPLO=false` pide la ruta al backend. En producción, siempre al backend.
+  static bool get usarRutaDeEjemplo => _rutaDeEjemplo && !isProduction;
+
   static AppEnvironment get environment {
     switch (_environment) {
       case 'testing':

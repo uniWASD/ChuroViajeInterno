@@ -11,6 +11,6 @@ namespace churoviaje {
 //  - `salida`: SOLO respuestas, una por línea, vaciada después de cada una.
 //  - `registro`: mensajes para el humano o para el log del backend (la salida de errores).
 // Devuelve el código de salida del proceso: 0 si la entrada se cerró con normalidad.
-int ejecutar(std::istream& entrada, std::ostream& salida, std::ostream& registro, const Nucleo& nucleo);
+int ejecutar(std::istream& entrada, std::ostream& salida, std::ostream& registro, Nucleo& nucleo);
 
 }  // namespace churoviaje

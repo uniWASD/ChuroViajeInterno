@@ -1,0 +1,225 @@
+{
+  "estado": "ENCONTRADA",
+  "distanciaM": 1524,
+  "tiempoS": 163,
+  "trazado": [
+    {
+      "latitud": -21.534425,
+      "longitud": -64.733999
+    },
+    {
+      "latitud": -21.534689,
+      "longitud": -64.7332
+    },
+    {
+      "latitud": -21.535442,
+      "longitud": -64.733472
+    },
+    {
+      "latitud": -21.536167,
+      "longitud": -64.733721
+    },
+    {
+      "latitud": -21.536916,
+      "longitud": -64.734006
+    },
+    {
+      "latitud": -21.537727,
+      "longitud": -64.734311
+    },
+    {
+      "latitud": -21.537923,
+      "longitud": -64.734114
+    },
+    {
+      "latitud": -21.538206,
+      "longitud": -64.733621
+    },
+    {
+      "latitud": -21.538615,
+      "longitud": -64.732857
+    },
+    {
+      "latitud": -21.539019,
+      "longitud": -64.732079
+    },
+    {
+      "latitud": -21.539363,
+      "longitud": -64.731419
+    },
+    {
+      "latitud": -21.539638,
+      "longitud": -64.730889
+    },
+    {
+      "latitud": -21.539817,
+      "longitud": -64.730513
+    },
+    {
+      "latitud": -21.539894,
+      "longitud": -64.730322
+    },
+    {
+      "latitud": -21.539991,
+      "longitud": -64.730056
+    },
+    {
+      "latitud": -21.540069,
+      "longitud": -64.729782
+    },
+    {
+      "latitud": -21.540242,
+      "longitud": -64.728802
+    },
+    {
+      "latitud": -21.540369,
+      "longitud": -64.728073
+    },
+    {
+      "latitud": -21.540388,
+      "longitud": -64.727892
+    },
+    {
+      "latitud": -21.540395,
+      "longitud": -64.727679
+    },
+    {
+      "latitud": -21.540385,
+      "longitud": -64.727532
+    },
+    {
+      "latitud": -21.540366,
+      "longitud": -64.727358
+    },
+    {
+      "latitud": -21.540405,
+      "longitud": -64.727285
+    },
+    {
+      "latitud": -21.540439,
+      "longitud": -64.72725
+    },
+    {
+      "latitud": -21.540478,
+      "longitud": -64.727216
+    },
+    {
+      "latitud": -21.540527,
+      "longitud": -64.727177
+    },
+    {
+      "latitud": -21.54056,
+      "longitud": -64.727205
+    },
+    {
+      "latitud": -21.54061,
+      "longitud": -64.727224
+    },
+    {
+      "latitud": -21.540692,
+      "longitud": -64.727249
+    },
+    {
+      "latitud": -21.540843,
+      "longitud": -64.727279
+    },
+    {
+      "latitud": -21.540912,
+      "longitud": -64.726903
+    },
+    {
+      "latitud": -21.541042,
+      "longitud": -64.726253
+    },
+    {
+      "latitud": -21.54122,
+      "longitud": -64.725848
+    },
+    {
+      "latitud": -21.541356,
+      "longitud": -64.725202
+    }
+  ],
+  "tramos": [
+    {
+      "id": "osm:315409633:8:ida",
+      "calle": "Calle 15 de Abril"
+    },
+    {
+      "id": "osm:397865059:3:ida",
+      "calle": "Calle Daniel Campos"
+    },
+    {
+      "id": "osm:397865059:4:ida",
+      "calle": "Calle Daniel Campos"
+    },
+    {
+      "id": "osm:397865059:5:ida",
+      "calle": "Calle Daniel Campos"
+    },
+    {
+      "id": "osm:397865059:6:ida",
+      "calle": "Calle Daniel Campos"
+    },
+    {
+      "id": "osm:398617446:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:405031554:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:405031553:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:405031555:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:405031556:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:405031557:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:405031558:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:405031560:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:754715917:1:ida",
+      "calle": "Avenida Las Américas"
+    },
+    {
+      "id": "osm:754715915:4:ida",
+      "calle": "Rotonda Puente Bolívar"
+    },
+    {
+      "id": "osm:754715915:5:ida",
+      "calle": "Rotonda Puente Bolívar"
+    },
+    {
+      "id": "osm:754715924:1:ida",
+      "calle": "Rotonda Puente Bolívar"
+    },
+    {
+      "id": "osm:397497504:1:ida",
+      "calle": "Sin nombre"
+    },
+    {
+      "id": "osm:754715921:1:ida",
+      "calle": "Sin nombre"
+    },
+    {
+      "id": "osm:403736383:2:ida",
+      "calle": "Avenida Jaime Paz Zamora"
+    }
+  ]
+}

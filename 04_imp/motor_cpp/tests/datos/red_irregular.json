@@ -1,0 +1,315 @@
+{
+  "version": 1,
+  "fuente": "OpenStreetMap",
+  "fecha_extracto": "2026-10-28",
+  "nodos": [
+    {
+      "id": "Plaza",
+      "lat": -21.5355,
+      "lon": -64.7296
+    },
+    {
+      "id": "Mercado",
+      "lat": -21.5348,
+      "lon": -64.728
+    },
+    {
+      "id": "Terminal",
+      "lat": -21.541,
+      "lon": -64.735
+    },
+    {
+      "id": "Hospital",
+      "lat": -21.533,
+      "lon": -64.731
+    },
+    {
+      "id": "Universidad",
+      "lat": -21.53,
+      "lon": -64.726
+    },
+    {
+      "id": "Barrio_Sur",
+      "lat": -21.542,
+      "lon": -64.727
+    },
+    {
+      "id": "Mirador",
+      "lat": -21.529,
+      "lon": -64.722
+    },
+    {
+      "id": "Aislado",
+      "lat": -21.55,
+      "lon": -64.74
+    }
+  ],
+  "tramos": [
+    {
+      "id": "Plaza-Mercado",
+      "desde": "Plaza",
+      "hasta": "Mercado",
+      "opuesto": "Mercado-Plaza",
+      "nombre": "Calle Comercio",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 182.883,
+      "geometria": [
+        [
+          -21.5355,
+          -64.7296
+        ],
+        [
+          -21.5348,
+          -64.728
+        ]
+      ]
+    },
+    {
+      "id": "Mercado-Plaza",
+      "desde": "Mercado",
+      "hasta": "Plaza",
+      "opuesto": "Plaza-Mercado",
+      "nombre": "Calle Comercio",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 182.883,
+      "geometria": [
+        [
+          -21.5348,
+          -64.728
+        ],
+        [
+          -21.5355,
+          -64.7296
+        ]
+      ]
+    },
+    {
+      "id": "Plaza-Hospital",
+      "desde": "Plaza",
+      "hasta": "Hospital",
+      "opuesto": "Hospital-Plaza",
+      "nombre": "Av. Circunvalación",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 313.442,
+      "geometria": [
+        [
+          -21.5355,
+          -64.7296
+        ],
+        [
+          -21.533,
+          -64.731
+        ]
+      ]
+    },
+    {
+      "id": "Hospital-Plaza",
+      "desde": "Hospital",
+      "hasta": "Plaza",
+      "opuesto": "Plaza-Hospital",
+      "nombre": "Av. Circunvalación",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 313.442,
+      "geometria": [
+        [
+          -21.533,
+          -64.731
+        ],
+        [
+          -21.5355,
+          -64.7296
+        ]
+      ]
+    },
+    {
+      "id": "Mercado-Universidad",
+      "desde": "Mercado",
+      "hasta": "Universidad",
+      "opuesto": "Universidad-Mercado",
+      "nombre": "Av. Las Américas",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 572.424,
+      "geometria": [
+        [
+          -21.5348,
+          -64.728
+        ],
+        [
+          -21.53,
+          -64.726
+        ]
+      ]
+    },
+    {
+      "id": "Universidad-Mercado",
+      "desde": "Universidad",
+      "hasta": "Mercado",
+      "opuesto": "Mercado-Universidad",
+      "nombre": "Av. Las Américas",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 572.424,
+      "geometria": [
+        [
+          -21.53,
+          -64.726
+        ],
+        [
+          -21.5348,
+          -64.728
+        ]
+      ]
+    },
+    {
+      "id": "Hospital-Universidad",
+      "desde": "Hospital",
+      "hasta": "Universidad",
+      "opuesto": null,
+      "nombre": "Calle La Cuesta (bajada)",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 615.428,
+      "geometria": [
+        [
+          -21.533,
+          -64.731
+        ],
+        [
+          -21.53,
+          -64.726
+        ]
+      ]
+    },
+    {
+      "id": "Universidad-Mirador",
+      "desde": "Universidad",
+      "hasta": "Mirador",
+      "opuesto": "Mirador-Universidad",
+      "nombre": "Camino al Mirador",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 771.172,
+      "geometria": [
+        [
+          -21.53,
+          -64.726
+        ],
+        [
+          -21.529,
+          -64.722
+        ]
+      ]
+    },
+    {
+      "id": "Mirador-Universidad",
+      "desde": "Mirador",
+      "hasta": "Universidad",
+      "opuesto": "Universidad-Mirador",
+      "nombre": "Camino al Mirador",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 771.172,
+      "geometria": [
+        [
+          -21.529,
+          -64.722
+        ],
+        [
+          -21.53,
+          -64.726
+        ]
+      ]
+    },
+    {
+      "id": "Plaza-Terminal",
+      "desde": "Plaza",
+      "hasta": "Terminal",
+      "opuesto": "Terminal-Plaza",
+      "nombre": "Av. Domingo Paredes",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 993.881,
+      "geometria": [
+        [
+          -21.5355,
+          -64.7296
+        ],
+        [
+          -21.541,
+          -64.735
+        ]
+      ]
+    },
+    {
+      "id": "Terminal-Plaza",
+      "desde": "Terminal",
+      "hasta": "Plaza",
+      "opuesto": "Plaza-Terminal",
+      "nombre": "Av. Domingo Paredes",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 993.881,
+      "geometria": [
+        [
+          -21.541,
+          -64.735
+        ],
+        [
+          -21.5355,
+          -64.7296
+        ]
+      ]
+    },
+    {
+      "id": "Terminal-Barrio_Sur",
+      "desde": "Terminal",
+      "hasta": "Barrio_Sur",
+      "opuesto": "Barrio_Sur-Terminal",
+      "nombre": "Calle del Sur",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 834.865,
+      "geometria": [
+        [
+          -21.541,
+          -64.735
+        ],
+        [
+          -21.542,
+          -64.727
+        ]
+      ]
+    },
+    {
+      "id": "Barrio_Sur-Terminal",
+      "desde": "Barrio_Sur",
+      "hasta": "Terminal",
+      "opuesto": "Terminal-Barrio_Sur",
+      "nombre": "Calle del Sur",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 834.865,
+      "geometria": [
+        [
+          -21.542,
+          -64.727
+        ],
+        [
+          -21.541,
+          -64.735
+        ]
+      ]
+    },
+    {
+      "id": "Mercado-Terminal",
+      "desde": "Mercado",
+      "hasta": "Terminal",
+      "opuesto": null,
+      "nombre": "Pasaje El Atajo",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 999.742,
+      "geometria": [
+        [
+          -21.5348,
+          -64.728
+        ],
+        [
+          -21.541,
+          -64.735
+        ]
+      ]
+    }
+  ]
+}

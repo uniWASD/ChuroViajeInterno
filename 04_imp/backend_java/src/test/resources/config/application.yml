@@ -1,0 +1,8 @@
+# Valores solo para las pruebas. No son secretos reales ni sirven en ningun ambiente.
+churoviaje:
+  seguridad:
+    jwt:
+      secreto: clave-solo-para-pruebas-no-usar-en-ningun-ambiente-0123456789
+    google:
+      client-id: client-id-de-pruebas.apps.googleusercontent.com
+    credencial-servicio: credencial-de-servicio-solo-para-pruebas-0123456789

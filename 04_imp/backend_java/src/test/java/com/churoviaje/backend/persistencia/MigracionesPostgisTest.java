@@ -79,7 +79,8 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
         assertEquals(0, contar(base, "SELECT count(*) FROM information_schema.tables WHERE table_schema='public'"));
         var flyway = Flyway.configure().dataSource(base, postgres.getUsername(), postgres.getPassword())
                 .locations("classpath:db/migration").cleanDisabled(true).load();
-        assertEquals(2, flyway.migrate().migrationsExecuted);
+        // Todas las migraciones del proyecto (V1 y V2 de T-089, V3 de HU-10 y las que vengan) se aplican de cero.
+        assertEquals(flyway.info().all().length, flyway.migrate().migrationsExecuted);
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted, "Reejecutar Flyway no debe duplicar datos");
     }
@@ -105,7 +106,7 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
 
     private void verificarEstructura(String base) throws SQLException {
         assertEquals(1, contar(base, "SELECT count(*) FROM pg_extension WHERE extname='postgis'"));
-        for (String tabla : List.of("tipo_evento", "tipo_combustible", "surtidor", "surtidor_alias")) {
+        for (String tabla : List.of("tipo_evento", "tipo_combustible", "surtidor", "surtidor_alias", "conductor", "sesion")) {
             assertEquals(1, contar(base, "SELECT count(*) FROM information_schema.tables "
                     + "WHERE table_schema='public' AND table_name='" + tabla + "'"), tabla);
         }
@@ -116,6 +117,11 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
         assertEquals(1, contar(base, "SELECT count(*) FROM pg_constraint "
                 + "WHERE conrelid='surtidor_alias'::regclass AND conname='fk_surtidor_alias_surtidor' "
                 + "AND confdeltype='c'"));
+        // HU-10: un solo conductor por cuenta de Google (RN-08.4) y sesiones que mueren con su conductor.
+        assertEquals(1, contar(base, "SELECT count(*) FROM pg_constraint "
+                + "WHERE conrelid='conductor'::regclass AND conname='uq_conductor_google_id' AND contype='u'"));
+        assertEquals(1, contar(base, "SELECT count(*) FROM pg_constraint "
+                + "WHERE conrelid='sesion'::regclass AND conname='fk_sesion_conductor' AND confdeltype='c'"));
         assertEquals(0, contar(base, "SELECT count(*) FROM surtidor WHERE ST_SRID(ubicacion::geometry)<>4326 "
                 + "OR ST_GeometryType(ubicacion::geometry)<>'ST_Point'"));
     }

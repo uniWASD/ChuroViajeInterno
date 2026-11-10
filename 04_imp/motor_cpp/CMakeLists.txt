@@ -33,13 +33,21 @@ endif()
 # --- Biblioteca del núcleo (la reutilizan el ejecutable y las pruebas) ---
 add_library(nucleo STATIC
   src/nucleo.cpp
-  src/bucle.cpp)
+  src/bucle.cpp
+  src/red_vial.cpp
+  src/ruta.cpp
+  src/eventos.cpp
+  src/tiempo.cpp)
 target_include_directories(nucleo PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(nucleo PUBLIC nlohmann_json::nlohmann_json)
 
 # --- Ejecutable que arranca el wrapper ---
 add_executable(motor_nucleo src/main.cpp)
 target_link_libraries(motor_nucleo PRIVATE nucleo)
+
+# --- Herramienta de consola: ruta entre dos nodos (no la usa el backend) ---
+add_executable(ruta_nodos src/ruta_nodos.cpp)
+target_link_libraries(ruta_nodos PRIVATE nucleo)
 
 # --- Pruebas: GoogleTest (BUILD_TESTING=OFF en el servidor si no se quieren) ---
 include(CTest)
@@ -55,8 +63,15 @@ if(BUILD_TESTING)
   endif()
   include(GoogleTest)
 
-  add_executable(pruebas_nucleo tests/test_nucleo.cpp tests/test_bucle.cpp)
+  add_executable(pruebas_nucleo tests/test_nucleo.cpp tests/test_bucle.cpp tests/test_red_vial.cpp tests/test_ruta.cpp
+    tests/test_trafico.cpp tests/test_rutas_referencia.cpp)
   target_link_libraries(pruebas_nucleo PRIVATE nucleo GTest::gtest_main)
+  # Archivos de datos de las pruebas (red pequeña hecha a mano y el ejemplo del formato)
+  target_compile_definitions(pruebas_nucleo PRIVATE
+    RED_PRUEBA_PLAZA="${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_prueba_plaza.json"
+    RED_IRREGULAR="${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_irregular.json"
+    RED_EJEMPLO_FORMATO="${CMAKE_CURRENT_SOURCE_DIR}/preparacion/ejemplos/red_vial_ejemplo.json"
+    RUTAS_REFERENCIA="${CMAKE_CURRENT_SOURCE_DIR}/../datos/rutas_referencia.json")
   gtest_discover_tests(pruebas_nucleo)
 
   # Prueba de extremo a extremo: el script arranca el ejecutable real por pipe, como el wrapper.
@@ -65,12 +80,37 @@ if(BUILD_TESTING)
     add_test(NAME pipe_extremo_a_extremo
       COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/enviar_mensajes.py
               --nucleo $<TARGET_FILE:motor_nucleo> --verificar)
+    # Lo mismo, pero con una red vial: consultar_estado debe decir que está cargada.
+    add_test(NAME pipe_con_red_vial
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/enviar_mensajes.py
+              --nucleo $<TARGET_FILE:motor_nucleo> --verificar
+              --red ${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_prueba_plaza.json --esperar-nodos 6)
   endif()
+
+  # La herramienta de consola devuelve la lista de nodos de la ruta.
+  add_test(NAME ruta_nodos_por_consola
+    COMMAND ruta_nodos --red ${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_irregular.json Plaza Mirador)
+  set_tests_properties(ruta_nodos_por_consola PROPERTIES
+    PASS_REGULAR_EXPRESSION "Plaza\",\"Mercado\",\"Universidad\",\"Mirador")
+
+  # Con coordenadas: unas muy cerca de la Plaza y del Mirador se ajustan a esos nodos y dan la misma ruta.
+  add_test(NAME ruta_nodos_con_coordenadas
+    COMMAND ruta_nodos --red ${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_irregular.json
+            -21.5356,-64.7297 -21.5291,-64.7221)
+  set_tests_properties(ruta_nodos_con_coordenadas PROPERTIES
+    PASS_REGULAR_EXPRESSION "\"nodo_origen\":\"Plaza\".*\"nodos\":\\[\"Plaza\",\"Mercado\",\"Universidad\",\"Mirador\"\\]")
+
+  # Unas coordenadas lejos de toda calle no se pueden ajustar: PUNTO_INVALIDO, no un error.
+  add_test(NAME ruta_nodos_punto_fuera_de_la_red
+    COMMAND ruta_nodos --red ${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_irregular.json
+            -21.0,-64.0 -21.529,-64.722)
+  set_tests_properties(ruta_nodos_punto_fuera_de_la_red PROPERTIES
+    PASS_REGULAR_EXPRESSION "\"estado\":\"PUNTO_INVALIDO\"")
 
   # Un solo comando que compila y corre todo:  cmake --build build --target pruebas
   add_custom_target(pruebas
     COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -C $<CONFIG>
-    DEPENDS pruebas_nucleo motor_nucleo
+    DEPENDS pruebas_nucleo motor_nucleo ruta_nodos
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     USES_TERMINAL)
 endif()

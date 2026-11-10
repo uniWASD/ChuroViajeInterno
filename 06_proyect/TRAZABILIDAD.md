@@ -59,7 +59,7 @@ No pertenecen a una sola historia de usuario, pero sus casos de prueba también 
 | T-090 Estructura del núcleo y protocolo por pipe | CU-03, CU-04 | #42 · C++ · Sprint 1 | feature/T90-cpp-estructura-nucleo | CP-24, CP-25 | Completado |
 | T-091 Estructura del servicio | CU-06 | #43 · WhatsApp/LLM · Sprint 1 | feature/T91-whatsapp-estructura-servicio | CP-26 | Completado |
 | T-092 Preparar la instancia de Oracle Cloud | Todos | #44 · Servidor · Sprint 1 | feature/T92-servidor-preparar-instancia | CP-27, CP-28 | Completado |
-| T-093 Mapa base con Mapbox y ubicación | CU-01 a CU-05 | #45 · Flutter · Sprint 3 | feature/T93-flutter-mapa-base | CP-29, CP-30 | Pendiente |
+| T-093 Mapa base con Mapbox y ubicación | CU-01 a CU-05 | #45 · Flutter · Sprint 3 | feature/T93-flutter-mapa-base | CP-29, CP-30 | En progreso |
 | T-094 Catálogos para la app | CU-01, CU-02, CU-05 | #47 · Java · Sprint 2 | feature/T94-java-catalogos | CP-36 | En progreso |
 | T-095 Wrapper MotorDeRutas | CU-03, CU-04 | #49 · Java · Sprint 2 | feature/T95-java-wrapper-motor | CP-41 a CP-44 | En progreso |
 | T-096 Cargar la red vial en el núcleo | CU-03, CU-04 | #50 · C++ · Sprint 2 | feature/T96-cpp-cargar-red-vial | CP-47 | En progreso |

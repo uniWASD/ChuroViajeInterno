@@ -7,6 +7,7 @@ Aplicación móvil del proyecto ChuroViaje, desarrollada con Flutter y Dart. Est
 * Flutter SDK **3.47.2** (Dart 3.13.2).
 * Android Studio o un dispositivo Android para ejecutar la aplicación.
 * Un emulador Android o dispositivo físico para probar la conexión con el backend.
+* Un token público de Mapbox (empieza con `pk.`) para ver el mapa base. No va en el repositorio.
 
 ## Estructura del proyecto
 
@@ -19,27 +20,43 @@ Aplicación móvil del proyecto ChuroViaje, desarrollada con Flutter y Dart. Est
 │   │   └── app_config.dart
 │   ├── controllers/
 │   │   ├── map_controller.dart
-│   │   └── navigation_controller.dart
+│   │   ├── navigation_controller.dart
+│   │   └── ruta_controller.dart
 │   ├── services/
-│   │   └── api/
-│   │       └── api_client.dart
+│   │   ├── api/
+│   │   │   └── api_client.dart
+│   │   ├── rutas/
+│   │   │   └── servicio_rutas.dart
+│   │   └── ubicacion/
+│   │       └── servicio_ubicacion.dart
 │   ├── models/
-│   │   └── .gitkeep
+│   │   ├── coordenada.dart
+│   │   └── ruta.dart
 │   ├── storage/
 │   │   └── .gitkeep
 │   └── views/
 │       ├── main/
 │       │   └── main_screen.dart
 │       ├── map/
-│       │   └── map_screen.dart
+│       │   ├── map_screen.dart
+│       │   ├── mapa_base.dart
+│       │   └── mapa_mapbox.dart
+│       ├── ruta/
+│       │   └── como_llegar_screen.dart
 │       ├── events/
 │       │   └── events_screen.dart
 │       └── stations/
 │           └── stations_screen.dart
 └── test/
+    ├── dobles/
+    │   └── dobles_mapa.dart
     ├── widget_test.dart
     ├── api_client_test.dart
-    └── map_controller_test.dart
+    ├── como_llegar_screen_test.dart
+    ├── map_screen_test.dart
+    ├── ruta_controller_test.dart
+    ├── ruta_test.dart
+    └── ubicacion_test.dart
 ```
 
 ### Responsabilidades
@@ -78,6 +95,8 @@ Variables disponibles:
 | `API_URL_DEV`  | Dirección del backend de desarrollo.                |
 | `API_URL_TEST` | Dirección del backend de pruebas.                   |
 | `API_URL_PROD` | Dirección del backend de producción.                |
+| `MAPBOX_ACCESS_TOKEN` | Token público de Mapbox para el mapa base. Sin él, la vista Mapa muestra el error de mapa no disponible. |
+| `RUTA_DE_EJEMPLO` | `true` por defecto: Cómo llegar muestra una ruta de ejemplo en vez de llamar a `POST /rutas`. Con `false` pide la ruta al backend. En producción siempre llama al backend. |
 
 ### Desarrollo en Android
 
@@ -102,6 +121,33 @@ flutter run --dart-define=APP_ENV=production --dart-define=API_URL_PROD=https://
 ```
 
 Reemplazar `https://TU-DOMINIO-API` por la dirección oficial correspondiente.
+
+## Mapa base y ubicación
+
+La vista Mapa usa el SDK de Mapbox solo para dibujar el mapa (D-08): las rutas las calcula el motor del backend. El token se pasa al ejecutar o compilar:
+
+```bash
+flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.xxxxx --dart-define=API_URL_DEV=http://10.0.2.2:8080
+```
+
+* Las vistas no usan Mapbox directamente: piden un `ConstructorMapa` (en `mapa_base.dart`) y la app les da el de Mapbox (`mapa_mapbox.dart`). Las pruebas les dan un mapa falso, porque el mapa nativo no corre en `flutter test`.
+* El mapa abre en la plaza Luis de Fuentes. Tocar un punto lo marca y muestra sus coordenadas; lo usarán el ajuste manual del reporte y la elección de destino.
+* La ubicación se pide con `geolocator` al abrir la vista Mapa. Solo se sigue con la app en pantalla: al pasar a segundo plano se cancela y al volver se retoma (RNF-13). No se pide permiso de ubicación en segundo plano.
+* Sin permiso o con el GPS apagado, el mapa sigue funcionando y un aviso ofrece dar el permiso o abrir los ajustes (RN-04.3).
+* Si el estilo del mapa no carga (sin conexión, token inválido), la vista muestra «No se pudo cargar el mapa. Revisa tu conexión e inténtalo de nuevo.» con un botón para reintentar (RN-03.18). Los mosaicos que fallan sueltos no cuentan como error.
+* El logo y la atribución de Mapbox y OpenStreetMap quedan visibles (RNF-19).
+
+## Cómo llegar
+
+El botón «Cómo llegar» de la vista Mapa abre la vista del mismo nombre (CU-03). Si había un punto elegido en el mapa, pasa a ser el destino.
+
+* El origen es la posición actual; con «Marcar» se puede tocar otro punto. Si no hay ubicación ni origen marcado, la vista lo pide antes de llamar al backend.
+* El destino y las paradas se eligen tocando el mapa (no hay buscador, P-19 y D-24). Las paradas van en el orden en que se agregan y son 10 como máximo (RN-03.2).
+* La app manda los puntos a `POST /rutas` y dibuja lo que vuelve, con su tiempo y su distancia (RN-03.13). Las reglas las aplica el backend.
+* «No se encontró una ruta válida» y «Origen o destino inválido» se muestran como respuesta, no como error. Si el backend no responde o responde 503, se muestra el fallo con «Reintentar» (RN-03.15).
+* «Iniciar» se ve deshabilitado hasta que exista la vista Navegación activa.
+
+Mientras la app no inicie sesión (HU-10), `POST /rutas` responde 401. Por eso, fuera de producción y salvo `--dart-define=RUTA_DE_EJEMPLO=false`, la vista usa `assets/datos/ruta_ejemplo_post_rutas.json`: la respuesta del primer viaje de referencia de Tarija (T-120, de la plaza Luis de Fuentes a la ex terminal), copiada de `04_imp/datos`. Es siempre la misma ruta, elija el conductor los puntos que elija, y la vista lo avisa.
 
 ## Cliente HTTP
 
@@ -131,7 +177,7 @@ Para ejecutar todas las pruebas automatizadas:
 flutter test
 ```
 
-La prueba de widget **CP-20** simula el backend apagado y comprueba que se muestra el error de red sin cerrar la pantalla principal.
+La prueba de widget **CP-20** simula el backend apagado y comprueba que, al calcular una ruta, se muestra el error de red sin cerrar la pantalla. **CP-105** (la ruta aparece con tiempo y distancia) y **CP-106** (un destino fuera de Tarija muestra «Origen o destino inválido») usan respuestas falsas del backend. **CP-29** (el mapa no carga) y **CP-30** (en segundo plano se deja de pedir la ubicación) se prueban con el mapa y la ubicación falsos; en un teléfono hay que comprobar además que el ícono de ubicación del sistema se apaga al minimizar la app.
 
 Para analizar el código:
 
@@ -141,8 +187,6 @@ flutter analyze
 
 ## Estado actual
 
-Esta entrega proporciona la estructura inicial de la aplicación, la navegación principal, la gestión de estado con Provider, la configuración por entornos y un cliente HTTP centralizado.
+La app tiene la estructura inicial, la navegación principal, la gestión de estado con Provider, la configuración por entornos, un cliente HTTP centralizado, el mapa base de Mapbox con la ubicación del conductor (T-093) y la vista Cómo llegar (HU-05).
 
-Las funcionalidades de mapas, eventos y surtidores se incorporarán en etapas posteriores.
-
-El botón «Probar conexión» es temporal y solo aparece fuera de producción; se retirará en T-093 al incorporar el mapa base.
+La navegación activa, los eventos y los surtidores se incorporarán en etapas posteriores.

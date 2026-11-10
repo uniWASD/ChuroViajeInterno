@@ -85,7 +85,7 @@ Lo subes en una nueva rama llamada "feature/T87-flutter-estructura-base" (No olv
 
 **Casos de prueba**
 - [ ] CP-29 Caso de prueba: sin conexión a Mapbox, la app muestra el mensaje de error de servicio externo.
-- [ ] CP-30 Caso de prueba: al minimizar la app, el ícono de ubicación del sistema operativo se apaga.
+- [x] CP-30 Caso de prueba: al minimizar la app, el ícono de ubicación del sistema operativo se apaga (validado en emulador).
 
 **Relacionado:** RNF-13 · RNF-19 · CU-02 · CU-03 · RN-03.18, RN-04.1, RN-04.3 · D-08
 

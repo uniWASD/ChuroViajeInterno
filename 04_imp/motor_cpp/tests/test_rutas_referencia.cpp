@@ -5,6 +5,7 @@
 
 #include <cmath>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -37,7 +38,7 @@ const json& referencia() {
 const RedVial* red_real() {
   static const std::unique_ptr<RedVial> red = []() -> std::unique_ptr<RedVial> {
     const char* ruta = std::getenv("RED_VIAL_REAL");
-    if (ruta == nullptr || *ruta == '\0') return nullptr;
+    if (ruta == nullptr || *ruta == '\0' || !std::filesystem::is_regular_file(ruta)) return nullptr;
     return std::make_unique<RedVial>(RedVial::cargar_archivo(ruta));
   }();
   return red.get();
@@ -86,15 +87,18 @@ TEST(RutasReferencia, ElArchivoTieneLosViajesQuePideLaTarea) {
   const json& viajes = referencia().at("viajes");
   ASSERT_GE(viajes.size(), 5u);
   bool con_parada = false;
+  bool con_cruce = false;
   bool con_calle_prohibida = false;
   for (const auto& v : viajes) {
     EXPECT_TRUE(v.contains("origen") && v.contains("destino") && v.contains("nodo_origen") &&
                 v.contains("nodo_destino") && v.contains("calles_esperadas") && v.contains("distancia_aprox_m"))
         << v.value("nombre", "?");
     if (!v.value("paradas", json::array()).empty()) con_parada = true;
+    if (v.value("cruza_el_guadalquivir", false)) con_cruce = true;
     if (v.contains("no_debe_pasar_por")) con_calle_prohibida = true;
   }
   EXPECT_TRUE(con_parada);
+  EXPECT_TRUE(con_cruce);
   EXPECT_TRUE(con_calle_prohibida);
 }
 
@@ -145,4 +149,19 @@ TEST(RutasReferencia, CP168_NingunaRutaRecorreUnaCalleAContramano) {
       for (const auto& prohibida : prohibidas) EXPECT_NE(calle, prohibida);
     }
   }
+}
+
+// Verifica de forma explícita que el extracto auditado no tenga arista inversa
+// para la Calle Bolívar usada en CP-168; no sustituye la señalización en campo.
+TEST(RutasReferencia, CP168_CalleBolivarNoTieneOpuestoEnElGrafo) {
+  SALTAR_SIN_RED_REAL();
+  const RedVial& red = *red_real();
+  std::size_t encontrados = 0;
+  for (const auto& tramo : red.tramos()) {
+    if (tramo.nombre == "Calle Bolívar" || tramo.nombre == "Calle Bolivar") {
+      ++encontrados;
+      EXPECT_FALSE(tramo.opuesto.has_value()) << tramo.id;
+    }
+  }
+  EXPECT_GT(encontrados, 0u) << "No hay tramos de la Calle Bolívar en el extracto";
 }

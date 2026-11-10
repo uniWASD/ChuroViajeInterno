@@ -356,7 +356,7 @@ TEST(RedVialRendimiento, UnaRedGrandeCargaEnMenosDe10Segundos) {
   constexpr int lado = 150;
   json doc = {{"version", 1}, {"fuente", "OpenStreetMap"}, {"fecha_extracto", "2026-10-28"},
               {"nodos", json::array()}, {"tramos", json::array()}};
-  auto id_nodo = [](int i, int j) { return "n" + std::to_string(i * lado + j); };
+  auto id_nodo = [lado](int i, int j) { return "n" + std::to_string(i * lado + j); };
   for (int i = 0; i < lado; ++i) {
     for (int j = 0; j < lado; ++j) {
       doc["nodos"].push_back({{"id", id_nodo(i, j)}, {"lat", -21.55 + i * 0.0009}, {"lon", -64.75 + j * 0.0009}});

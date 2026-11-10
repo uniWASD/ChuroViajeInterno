@@ -21,3 +21,6 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+
+# T-120/D-33: grafo OSM generado localmente (no subir a Git)
+datos/red_vial_*.json

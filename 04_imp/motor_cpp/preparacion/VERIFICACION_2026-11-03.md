@@ -10,14 +10,14 @@ Las cifras de ejecución y la transferencia al servidor se sustentan en **los re
 
 | Propiedad | Valor |
 | --- | --- |
-| Archivo del repositorio | `04_imp/datos/red_vial_tarija.json` |
+| Archivo | `red_vial_tarija.json`, fuera de Git (D-33) |
 | Formato | JSON v1, coordenadas `[lat, lon]` |
 | Fuente | © colaboradores de OpenStreetMap (ODbL) |
 | Fecha de extracto | `2026-11-03` |
 | Nodos | **8.908** |
 | Tramos dirigidos | **23.193** |
 | Bytes | **6.934.403** |
-| SHA-256 | `4011ad148a9a7f885f18df88097ba43414487a84e01416458868322842fb83d0` |
+| SHA-256 | `4011ad148a9a7f885f18df88097ba43414487a84e01416458868322842fb83d0` (generado en Windows, con CRLF al final; con LF mide 6.934.402 bytes y es `e6e8856bdfb66207913bcd4dc7981185b00e197871ead043e9e71e52093f4c64`, la misma red) |
 | Tramos sin nombre | 10.814 |
 | Componentes fuertes | 23, la mayor contiene 8.813 nodos |
 | Componentes débiles | 20, la mayor contiene 8.813 nodos |
@@ -45,7 +45,7 @@ El tamaño y la huella corresponden a la red generada y validada, no al JSON sin
 
 El `develop` público consultado el 2026-11-04 contiene `--red` en `04_imp/motor_cpp/src/main.cpp` y `cargar_red_para_arranque()` en la implementación de `RedVial`. El contrato del núcleo devuelve `red_cargada`, `fecha_extracto`, `nodos` y `tramos` mediante `consultar_estado`. **No sobrescribir estas implementaciones con los archivos anteriores del ZIP de T-111.**
 
-La compatibilidad efectiva con este JSON se certificará cuando se ejecute el **binario construido desde la rama integrada**, pasando `--red 04_imp/datos/red_vial_tarija.json` y verificando por pipe `red_cargada=true`, 8.908 nodos y 23.193 tramos. No se afirma que este ensayo se haya ejecutado todavía.
+Se comprobó el 10/11/2026 en Linux con el binario de `develop`: `motor_nucleo --red red_vial_tarija.json` respondió a `consultar_estado` con `red_cargada:true`, `fecha_extracto:"2026-11-03"`, 8.908 nodos y 23.193 tramos, y cargó la red en 208 ms.
 
 ## Pendientes y límites
 
@@ -53,7 +53,7 @@ La compatibilidad efectiva con este JSON se certificará cuando se ejecute el **
 2. Existen **10.814 tramos** con el nombre `Sin nombre`, relevantes para instrucciones de navegación basadas en nombres de calles.
 3. El generador conservador descarta varias etiquetas condicionales. No contempla actualmente todas las variantes, por ejemplo `vehicle:conditional` y `oneway:vehicle:conditional`; debe tratarse como mejora futura antes de regeneraciones con requisitos de circulación por horario.
 4. La carga real y la latencia del proceso C++ en ARM, así como la integración con el wrapper Java, necesitan prueba por separado.
-5. La decisión D-33 proponía mantener el JSON generado fuera de Git. Esta rama incluye una **instantánea versionada por requerimiento explícito de entrega**, pero el archivo de operación en el servidor debe administrarse por separado y su ubicación se configura mediante `RED_VIAL_PATH` (cuando esté implementado el wrapper correspondiente).
+5. La red no se versiona (D-33). El archivo del servidor se administra por separado y su ubicación se configura con `RED_VIAL_PATH`.
 
 ## Reproducción de las comprobaciones
 

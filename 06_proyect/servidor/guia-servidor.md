@@ -1,8 +1,8 @@
 # Guía del servidor de ChuroViaje
 
-Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los issues T-092 (#44), T-119 (#111) y T-097 (#52). Se actualiza a medida que se avanza.
+Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los issues T-092 (#44) y T-119 (#111). Se actualiza a medida que se avanza.
 
-Última actualización: 12 de noviembre de 2026.
+Última actualización: 29 de octubre de 2026.
 
 > Esta guía no lleva contraseñas, llaves ni la IP del servidor. La IP pública se comparte por el chat del equipo. Donde aparece `<IP_PUBLICA>`, se reemplaza por esa IP.
 
@@ -14,22 +14,17 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los i
 | Sistema actualizado y reiniciado | Hecho |
 | Usuario `deploy` con una llave por integrante | Hecho. Marcelo, Franz, Alex y Jorge ya tienen su llave y Franz ya entró con la suya. La de Antonio se agrega más adelante (T-103 y T-106) |
 | SSH solo con llave, sin root | Hecho y verificado |
-| Reglas de la VCN y del firewall de Ubuntu | Hecho. Confirmado el 23/10/2026 en la consola: la instancia no tiene ningún NSG asignado. El 12/11/2026 se abrieron el 80 y el 443 (T-097) |
+| Reglas de la VCN y del firewall de Ubuntu | Hecho. Confirmado el 23/10/2026 en la consola: la instancia no tiene ningún NSG asignado |
 | Actualizaciones automáticas de seguridad | Hecho (ya venían activas; se comprobó la configuración) |
 | Java 21 y herramientas de C++ (ARM) | Hecho. OpenJDK 21.0.12, g++ 13.3 y CMake 3.28 sobre aarch64 |
 | Node.js LTS | Hecho. Node.js 24.22 (LTS) y npm 11.19, desde el repositorio de NodeSource |
 | Git en el servidor | Hecho. Instalado; comprobado con `git --version` el 23/10/2026 |
 | PostgreSQL y PostGIS, solo local | Hecho. PostgreSQL 16 con PostGIS 3.4; solo escucha en 127.0.0.1 |
 | Base de datos `churoviaje` y su usuario sin permisos de administrador | Hecho. Usuario `churoviaje_app`, sin atributos de administrador |
-| CP-27 (desde fuera solo responde SSH) | Hecho el 20/10/2026. Desde el 12/11/2026 también responden el 80 y el 443, que atiende Nginx (T-097) |
+| CP-27 (desde fuera solo responde SSH) | Hecho el 20/10/2026 |
 | CP-28 (desde fuera el puerto de PostgreSQL no responde) | Hecho el 20/10/2026, con PostgreSQL instalado y corriendo |
 | Salida hacia la API de ANH con el certificado verificado | Hecho el 29/10/2026 (T-119). Detalle en la sección «Salida hacia la API de ANH» |
 | CP-156 (desde la instancia, las estaciones de Tarija de gasolina responden con el certificado verificado) | Hecho el 29/10/2026 |
-| Dominio `churoviaje.orelqu.com` apuntando a la IP reservada | Hecho el 12/11/2026 (T-097) |
-| Nginx como proxy inverso hacia el backend | Hecho el 12/11/2026. Nginx 1.24 |
-| Certificado de Let's Encrypt con renovación automática | Hecho el 12/11/2026. Vence el 10/02/2027 y se renueva solo; la renovación de prueba pasó |
-| Nota de SSL Labs | A, el 12/11/2026, con TLS 1.3 |
-| CP-51 (HTTP redirige a HTTPS y el certificado es válido en un teléfono) | Hecho el 12/11/2026 |
 
 ## Datos del servidor
 
@@ -38,8 +33,7 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los i
 - Imagen: Ubuntu 24.04 LTS, arquitectura ARM (aarch64)
 - Tamaño: 2 OCPU y 12 GB de RAM (capa gratuita)
 - IP pública: reservada, no cambia al reiniciar
-- Dominio: `churoviaje.orelqu.com`, un subdominio de `orelqu.com` (dominio de Marcelo, registrado en Cloudflare) ([D-26](../../03_des/02_Arquitectura/08_decisiones_parametros.md))
-- Puerto del backend: 8080, solo para la propia máquina. Desde internet se llega por Nginx, con HTTPS. El servicio de WhatsApp lo llama en `127.0.0.1:8080` ([contrato](../../03_des/02_Arquitectura/05_contratos.md))
+- Puerto del backend: 8080, solo para la propia máquina. El servicio de WhatsApp lo llama en `127.0.0.1:8080` ([contrato](../../03_des/02_Arquitectura/05_contratos.md))
 
 ## Usuarios y acceso
 
@@ -124,10 +118,10 @@ Antes de cerrar la sesión de administración se prueba el acceso desde otra ven
 
 ### 5. Puertos y firewall
 
-Hay dos capas y las dos dejan abiertos solo los puertos 22, 80 y 443:
+Hay dos capas y las dos dejan abierto solo el puerto 22:
 
-- **Red de Oracle (VCN):** la instancia está en `public subnet-proyectos-vcn`, que usa la `Default Security List for proyectos-vcn`. Esa lista permite TCP 22, 80 y 443 desde internet, y los dos ICMP de siempre (descubrimiento de MTU y errores internos). No hay regla para el 5432. La `security list for private subnet-proyectos-vcn` es de la otra subred y no se toca.
-- **Firewall del servidor:** la imagen de Oracle trae reglas de `iptables` que dejan pasar solo SSH, las respuestas a conexiones ya abiertas, ICMP y el tráfico local, y rechazan el resto con una regla `REJECT` al final. El 80 y el 443 se agregaron justo antes de esa regla (sección 9). Se guardan con `netfilter-persistent`, así que sobreviven a los reinicios. No se instaló `ufw`: duplicaría las reglas y podría pisarlas. No se tocan las reglas `InstanceServices`, que Oracle necesita para que el servidor hable con sus servicios internos.
+- **Red de Oracle (VCN):** las Security Lists de `proyectos-vcn` solo permiten TCP 22 y los dos ICMP de siempre (descubrimiento de MTU y errores internos). No hay reglas para 80, 443 ni 5432. HTTP y HTTPS se abren en el sprint 2, en la VCN y en el servidor.
+- **Firewall del servidor:** la imagen de Oracle trae reglas de `iptables` que dejan pasar solo SSH, las respuestas a conexiones ya abiertas, ICMP y el tráfico local, y rechazan el resto. Se guardan con `netfilter-persistent`, así que sobreviven a los reinicios. No se instaló `ufw`: duplicaría las reglas y podría pisarlas. No se tocan las reglas `InstanceServices`, que Oracle necesita para que el servidor hable con sus servicios internos.
 
 Para abrir un puerto más adelante hay que abrirlo en los dos lados.
 
@@ -137,7 +131,7 @@ Se apagó `rpcbind` (puerto 111), que no se usa y estaba escuchando en todas las
 sudo systemctl disable --now rpcbind.service rpcbind.socket
 ```
 
-Hacia afuera solo escuchan SSH y Nginx.
+Ahora hacia afuera solo escucha SSH.
 
 ### 6. Actualizaciones automáticas de seguridad
 
@@ -203,68 +197,6 @@ sudo apt-get update && sudo apt-get upgrade
 
 Para cambiar a otra versión mayor (por ejemplo la 26) se cambia el número en `node_24.x` dentro de `/etc/apt/sources.list.d/nodesource.list` y se actualiza.
 
-### 9. Dominio, Nginx y HTTPS
-
-Hecho el 12 de noviembre de 2026 (T-097, #52). Nginx recibe las peticiones de internet en el 80 y el 443 y las pasa al backend, que solo escucha en `127.0.0.1:8080`.
-
-**Dominio.** `orelqu.com` está registrado en Cloudflare. En su panel, **DNS → Records**, hay un registro:
-
-| Tipo | Nombre | Valor | Proxy |
-|---|---|---|---|
-| `A` | `churoviaje` | `<IP_PUBLICA>` | DNS only (nube gris) |
-
-El proxy de Cloudflare queda apagado a propósito: con la nube naranja, Cloudflare se pondría delante del servidor con su propio certificado, y el certificado de Let's Encrypt de Nginx dejaría de ser el que ve la app.
-
-**Puertos.** En la VCN se agregaron a la `Default Security List for proyectos-vcn` dos reglas de entrada: TCP 80 y TCP 443, desde `0.0.0.0/0`. En el servidor se agregaron antes de la regla `REJECT`, que estaba en la posición 5:
-
-```bash
-sudo iptables -L INPUT -n --line-numbers   # ver en qué línea está el REJECT
-sudo iptables -I INPUT 5 -p tcp -m state --state NEW --dport 443 -j ACCEPT
-sudo iptables -I INPUT 5 -p tcp -m state --state NEW --dport 80 -j ACCEPT
-sudo netfilter-persistent save
-```
-
-Quedan en orden 22, 80, 443 y el `REJECT` al final.
-
-**Nginx y certbot.**
-
-```bash
-sudo apt update
-sudo apt install -y nginx certbot python3-certbot-nginx
-```
-
-El sitio está en `/etc/nginx/sites-available/churoviaje`, enlazado desde `sites-enabled`; el sitio `default` de Nginx se quitó. La copia del archivo, tal como quedó después de certbot, está en [nginx/churoviaje.conf](nginx/churoviaje.conf). Antes de certbot solo tenía el bloque `server` del puerto 80 con el `location /` que pasa al backend.
-
-```bash
-sudo ln -s /etc/nginx/sites-available/churoviaje /etc/nginx/sites-enabled/
-sudo rm /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-Para que Nginx no muestre su versión en ninguna respuesta, se activó `server_tokens off` en `/etc/nginx/nginx.conf`, que vale para todos los sitios:
-
-```bash
-sudo sed -i 's/# server_tokens off;/server_tokens off;/' /etc/nginx/nginx.conf
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-El certificado se pidió con el complemento de Nginx de certbot, que además agrega el bloque del 443 y la redirección de HTTP a HTTPS:
-
-```bash
-sudo certbot --nginx -d churoviaje.orelqu.com --redirect -m <CORREO> --agree-tos --no-eff-email
-```
-
-`<CORREO>` es el correo donde Let's Encrypt avisa si la renovación falla.
-
-**Renovación.** Certbot instala el temporizador `certbot.timer`, que revisa dos veces al día y renueva cuando faltan menos de 30 días. Para comprobarlo:
-
-```bash
-sudo certbot renew --dry-run
-systemctl list-timers | grep certbot
-```
-
-El 80 queda abierto solo para redirigir a HTTPS y para la validación de Let's Encrypt al renovar.
-
 ## Salida hacia la API de ANH
 
 Antes de que el backend dependa de ANH, el 29 de octubre de 2026 se comprobó desde la instancia que las consultas llegan y que el certificado se verifica. Cubre el issue T-119 (#111) y el caso de prueba CP-156. El informe técnico de ANH y el cliente de prueba están en `05_pro/PruebaApiANH`.
@@ -279,7 +211,7 @@ Antes de que el backend dependa de ANH, el 29 de octubre de 2026 se comprobó de
 
 - **Certificados:** el almacén del sistema y el de Java validaron el certificado de ANH sin instalar nada. No faltó ningún certificado y la verificación no se desactivó en ningún momento.
 - **Límites de ANH:** se hicieron 10 consultas seguidas, una por segundo, y todas dieron 200 en menos de 0,75 s. ANH no rechazó ni frenó las peticiones que llegan desde la IP de Oracle. No se probó con una frecuencia mayor, así que esto no descarta un límite más estricto.
-- **Puertos:** la salida no abre ningún puerto de entrada. Después de las pruebas, hacia afuera seguía escuchando solo el 22, y PostgreSQL solo en `127.0.0.1`.
+- **Puertos:** la salida no abre ningún puerto de entrada. Después de las pruebas, hacia afuera sigue escuchando solo el 22, y PostgreSQL solo en `127.0.0.1`.
 - **Cliente Python en Linux ARM:** funciona sin cambios. Para correrlo hay que instalar `python3-venv` y crear un entorno virtual:
 
 ```bash
@@ -307,16 +239,6 @@ ssh -o PubkeyAuthentication=no -o PreferredAuthentications=password deploy@<IP_P
 # debe rechazar
 ssh -i $HOME\.ssh\churoviaje-deploy root@<IP_PUBLICA>
 
-# el 22, el 80 y el 443 deben dar True; el 111 y el 5432, False
+# el 22 debe dar True y todos los demás False
 22,80,443,111,5432 | ForEach-Object { Test-NetConnection <IP_PUBLICA> -Port $_ -WarningAction SilentlyContinue | Select-Object RemotePort, TcpTestSucceeded }
-
-# debe responder 301 con Location: https://churoviaje.orelqu.com/ y "Server: nginx" sin versión
-curl.exe -I http://churoviaje.orelqu.com
-
-# debe responder sin error de certificado (502 mientras el backend no corre)
-curl.exe -I https://churoviaje.orelqu.com
 ```
-
-Desde un teléfono, `http://churoviaje.orelqu.com` debe pasar solo a `https://` y abrir sin aviso de certificado.
-
-La nota de HTTPS se revisa en [SSL Labs](https://www.ssllabs.com/ssltest/analyze.html?d=churoviaje.orelqu.com&hideResults=on) (con `hideResults=on`, el resultado no sale en la lista pública). Debe ser A o mejor.

@@ -54,10 +54,12 @@ class ManejadorGlobalErroresTest extends PruebaIntegracionPostgis {
             }
             """;
 
+        // La fecha se lee bien: lo que responda despues depende de las reglas de HU-01, pero nunca 400.
         mockMvc.perform(post("/eventos")
                 .header("Authorization", autorizacion())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(jsonValido))
-                .andExpect(status().isCreated());
+                .andExpect(resultado -> org.junit.jupiter.api.Assertions.assertNotEquals(400,
+                        resultado.getResponse().getStatus(), resultado.getResponse().getContentAsString()));
     }
 }

@@ -45,7 +45,19 @@ class ServicioEventos {
         mensaje: 'El servidor devolvió una respuesta inválida.',
       );
     }
-    return EventoVial.fromJson(datos);
+    try {
+      return EventoVial.fromJson(datos);
+    } on FormatException {
+      throw const ApiException(
+        codigo: 'RESPUESTA_INVALIDA',
+        mensaje: 'El servidor devolvió un evento con formato inválido.',
+      );
+    } on TypeError {
+      throw const ApiException(
+        codigo: 'RESPUESTA_INVALIDA',
+        mensaje: 'El servidor devolvió un evento incompleto.',
+      );
+    }
   }
 
   /// `GET /eventos`: los vigentes o, con [marca], solo los cambios desde la consulta anterior (CU-02).

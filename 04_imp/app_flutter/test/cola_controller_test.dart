@@ -34,6 +34,11 @@ class BackendCola {
     if (pedido.url.path == '/sesion/renovar') {
       return http.Response('{"codigo":"SESION_VENCIDA","mensaje":"Tu sesión venció."}', 401);
     }
+    // Al volver a iniciar sesión se solicita otra vez el catálogo.
+    // Responder '{}' borraba los tipos cargados y bloqueaba el reenvío RN-01.16.
+    if (pedido.url.path == '/catalogos') {
+      return http.Response.bytes(utf8.encode(catalogosJson), 200);
+    }
     if (pedido.url.path != '/eventos') return http.Response('{}', 200);
     if (modo == 'sesionVencida' && pedido.headers['Authorization'] != 'Bearer jwt-$jwt') {
       return http.Response('{"codigo":"NO_AUTENTICADO","mensaje":"Inicia sesión."}', 401);
@@ -155,6 +160,77 @@ void main() {
     backend.modo = 'acepta';
     await cola.reenviar();
     expect(cola.pendientes, isEmpty);
+  });
+
+  test('CP-83: un HTTP 503 en la confirmación inicial también se guarda para reintentar', () async {
+    await preparar();
+    final ubicacion = UbicacionFalsa();
+    final mapa = MapController(ubicacion);
+    await mapa.activarUbicacion();
+    ubicacion.emitir(const Coordenada(-21.5355, -64.7296));
+    await Future<void>.delayed(Duration.zero);
+    final reportes = ReporteController(servicio, sesion, mapa, cola: cola, reloj: () => ahora)
+      ..empezar()
+      ..elegirTipo('ACCIDENTE');
+
+    backend.modo = 'caido';
+    await reportes.confirmar();
+    expect(reportes.estado, EstadoReporte.guardadoEnCola);
+    expect(cola.pendientes, hasLength(1), reason: '503 no es rechazo definitivo');
+
+    backend.modo = 'acepta';
+    await cola.reenviar();
+    expect(backend.recibidos.single['tipo'], 'ACCIDENTE');
+    expect(cola.pendientes, isEmpty);
+    reportes.dispose();
+    mapa.dispose();
+  });
+
+  test('RN-01.14: sin catálogo no reenvía a ciegas y recupera las vigencias al volver la red', () async {
+    backend = BackendCola();
+    ahora = DateTime.utc(2026, 11, 1, 12);
+    almacenCola = ColaFalsa();
+    red = ConectividadFalsa();
+    var catalogoDisponible = false;
+    var posts = 0;
+    final almacen = AlmacenFalso.conSesionVigente();
+    final api = ApiClient(client: MockClient((pedido) async {
+      if (pedido.url.path == '/catalogos') {
+        if (!catalogoDisponible) {
+          return http.Response('{"codigo":"SIN_RED","mensaje":"No disponible."}', 503);
+        }
+        return http.Response.bytes(utf8.encode(catalogosJson), 200);
+      }
+      if (pedido.method == 'POST' && pedido.url.path == '/eventos') {
+        posts++;
+        return http.Response('{}', 201);
+      }
+      return http.Response('{}', 200);
+    }));
+    sesion = SesionController(
+      servicio: ServicioSesion(api),
+      google: GoogleFalso(),
+      almacen: almacen,
+      catalogos: ServicioCatalogos(api, almacen),
+    );
+    api.gestor = sesion;
+    await sesion.cargar();
+    await Future<void>.delayed(Duration.zero);
+    cola = ColaController(almacenCola, ServicioEventos(api), sesion,
+        reloj: () => ahora, conectividad: red, cadaCuanto: Duration.zero);
+    await cola.guardar(reporte('CONTROL_POLICIAL',
+        confirmado: ahora.subtract(const Duration(minutes: 70)), minutos: 0));
+
+    await cola.reenviar();
+    expect(posts, 0);
+    expect(cola.pendientes, hasLength(1));
+    expect(cola.avisos.single, contains('no se pudo verificar su vigencia'));
+
+    catalogoDisponible = true;
+    await cola.reenviar();
+    expect(posts, 0, reason: 'ya venció y NO debe enviarse al recuperar el catálogo');
+    expect(cola.pendientes, isEmpty);
+    expect(cola.avisos.last, contains('perdió vigencia'));
   });
 
   test('Sin red se detiene en el primero y los demás esperan, en orden', () async {

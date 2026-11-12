@@ -32,6 +32,7 @@ class ColaController extends ChangeNotifier {
   List<ReportePendiente> _pendientes = const [];
   final List<String> _avisos = [];
   bool _reenviando = false;
+  bool _avisoCatalogoPendiente = false;
   bool _disposed = false;
 
   ColaController(
@@ -83,7 +84,11 @@ class ColaController extends ChangeNotifier {
     if (_reenviando || _disposed || !_sesion.conSesion) return;
     _reenviando = true;
     try {
-      for (final pendiente in await _cola.pendientes()) {
+      final lista = await _cola.pendientes();
+      if (lista.isEmpty) return;
+      // No se debe reenviar a ciegas si faltan los tiempos de vigencia del catálogo.
+      await _sesion.asegurarCatalogos();
+      for (final pendiente in lista) {
         if (!await _reenviarUno(pendiente)) break;
       }
     } finally {
@@ -96,7 +101,17 @@ class ColaController extends ChangeNotifier {
   Future<bool> _reenviarUno(ReportePendiente pendiente) async {
     final reporte = pendiente.reporte;
     final tipo = _sesion.catalogos?.tipo(reporte.tipo);
-    if (tipo != null && _perdioVigencia(reporte, tipo)) {
+    if (tipo == null) {
+      // Si falta el catálogo (o un tipo), esperar y conservar el reporte.
+      // Enviar sin validar incumpliría RN-01.14.
+      if (!_avisoCatalogoPendiente) {
+        _avisoCatalogoPendiente = true;
+        _avisar('El reporte sigue pendiente: no se pudo verificar su vigencia con el catálogo.');
+      }
+      return false;
+    }
+    _avisoCatalogoPendiente = false;
+    if (_perdioVigencia(reporte, tipo)) {
       await _cola.quitar(pendiente.id); // RN-01.14
       _avisar('Tu reporte de ${_nombre(tipo, reporte)} no se envió porque perdió vigencia.');
       return true;
@@ -141,6 +156,7 @@ class ColaController extends ChangeNotifier {
   Future<void> vaciar() async {
     await _cola.vaciar();
     _avisos.clear();
+    _avisoCatalogoPendiente = false;
     await _refrescar();
   }
 

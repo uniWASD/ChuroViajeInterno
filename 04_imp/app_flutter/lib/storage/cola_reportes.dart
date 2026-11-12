@@ -42,7 +42,7 @@ class ColaReportesSqflite implements ColaReportes {
 
   Future<Database> _abrir() async {
     final fabrica = _fabrica ?? databaseFactory;
-    final ruta = _nombre == inMemoryDatabasePath
+    final ruta = _nombre == inMemoryDatabasePath || p.isAbsolute(_nombre)
         ? _nombre
         : p.join(await fabrica.getDatabasesPath(), _nombre);
     return fabrica.openDatabase(
@@ -87,4 +87,13 @@ class ColaReportesSqflite implements ColaReportes {
 
   @override
   Future<void> vaciar() async => (await _abierta).delete(_tabla);
+
+  /// Cierra el archivo SQLite al finalizar pruebas o desmontar almacenamiento.
+  Future<void> cerrar() async {
+    final actual = _base;
+    if (actual == null) return;
+    final base = await actual;
+    if (base.isOpen) await base.close();
+    _base = null;
+  }
 }

@@ -22,7 +22,32 @@ class ServicioCatalogos {
         mensaje: 'El servidor devolvió una respuesta inválida.',
       );
     }
-    final catalogos = Catalogos.fromJson(datos);
+    // Un objeto vacío (o sin los datos esenciales) no es un catálogo útil.
+    // No debe reemplazar el catálogo válido que está guardado en el teléfono:
+    // la cola necesita tipos y vigencias para reenviar reportes (RN-01.14).
+    final tipos = datos['tiposEvento'];
+    final tiempos = datos['tiemposReporte'];
+    if (tipos is! List || tipos.isEmpty || tiempos is! List || tiempos.isEmpty) {
+      throw const ApiException(
+        codigo: 'RESPUESTA_INVALIDA',
+        mensaje: 'El servidor devolvió una respuesta inválida.',
+      );
+    }
+    late final Catalogos catalogos;
+    try {
+      catalogos = Catalogos.fromJson(datos);
+    } on TypeError {
+      throw const ApiException(
+        codigo: 'RESPUESTA_INVALIDA',
+        mensaje: 'El servidor devolvió una respuesta inválida.',
+      );
+    } on FormatException {
+      throw const ApiException(
+        codigo: 'RESPUESTA_INVALIDA',
+        mensaje: 'El servidor devolvió una respuesta inválida.',
+      );
+    }
+    // La persistencia solo ocurre después de validar la respuesta.
     await _almacen.guardar(clave, jsonEncode(catalogos.toJson()));
     return catalogos;
   }

@@ -37,6 +37,7 @@ class SesionController extends ChangeNotifier implements GestorToken {
   String? _error;
   bool _ocupado = false;
   Future<bool>? _renovando;
+  Future<void>? _cargandoCatalogos;
   bool _disposed = false;
 
   SesionController({
@@ -185,6 +186,15 @@ class SesionController extends ChangeNotifier implements GestorToken {
         debugPrint('No se pudo borrar un dato guardado: $e');
       }
     }
+  }
+
+  /// Antes de vaciar la cola es obligatorio conocer la vigencia del tipo.
+  /// Si los catálogos no pudieron descargarse al iniciar sesión, se reintentan al volver la red.
+  Future<void> asegurarCatalogos() async {
+    if (_catalogosActuales != null) return;
+    await (_cargandoCatalogos ??= _actualizarCatalogos().whenComplete(() {
+      _cargandoCatalogos = null;
+    }));
   }
 
   Future<void> _actualizarCatalogos() async {

@@ -157,18 +157,20 @@ class ReporteController extends ChangeNotifier {
   /// Decide qué hacer cuando el envío falla.
   Future<void> _alFallarEnvio(ReporteEvento reporte, ApiException error) async {
     if (error.codigo == 'SESION_VENCIDA' && _cola != null) {
-      await _cola.guardar(reporte); // RN-01.16: queda en la cola y se envía al volver a iniciar sesión
-      _estado = EstadoReporte.esperandoSesion;
-      _mensaje = mensajeEsperandoSesion;
+      if (await _guardarEnCola(reporte)) {
+        _estado = EstadoReporte.esperandoSesion;
+        _mensaje = mensajeEsperandoSesion;
+      }
     } else if (error.codigo == 'SESION_VENCIDA') {
       _pendienteTrasSesion = reporte; // RN-01.16: se conserva y se envía al volver a iniciar sesión
       _estado = EstadoReporte.esperandoSesion;
       _mensaje = mensajeEsperandoSesion;
-    } else if (esErrorDeRed(error) && _cola != null) {
-      await _cola.guardar(reporte); // RN-01.13: se envía solo cuando vuelva la red
-      _estado = EstadoReporte.guardadoEnCola;
-      _mensaje = ColaController.mensajeGuardado;
-    } else if (esErrorDeRed(error)) {
+    } else if (esErrorTemporal(error) && _cola != null) {
+      if (await _guardarEnCola(reporte)) {
+        _estado = EstadoReporte.guardadoEnCola;
+        _mensaje = ColaController.mensajeGuardado;
+      }
+    } else if (esErrorTemporal(error)) {
       _estado = EstadoReporte.sinRed;
       _mensaje = error.mensaje;
     } else {
@@ -177,8 +179,25 @@ class ReporteController extends ChangeNotifier {
     }
   }
 
-  static bool esErrorDeRed(ApiException e) =>
-      e.codigo == 'ERROR_RED' || e.codigo == 'TIEMPO_ESPERA';
+  /// Un servidor que responde 5xx también es indisponibilidad temporal (CP-83).
+  static bool esErrorTemporal(ApiException e) =>
+      e.codigo == 'ERROR_RED' ||
+      e.codigo == 'TIEMPO_ESPERA' ||
+      (e.statusCode != null && e.statusCode! >= 500);
+
+  /// Si SQLite falla, no se cierra la pantalla ni se afirma que el reporte quedó guardado.
+  Future<bool> _guardarEnCola(ReporteEvento reporte) async {
+    try {
+      await _cola!.guardar(reporte);
+      return true;
+    } on Object catch (e) {
+      debugPrint('No se pudo guardar el reporte pendiente: $e');
+      _estado = EstadoReporte.sinRed;
+      _mensaje = 'No se pudo guardar el reporte en el teléfono. '
+          'Mantén esta pantalla abierta e inténtalo de nuevo.';
+      return false;
+    }
+  }
 
   void _alCambiarSesion() {
     if (!_sesion.conSesion || _estado != EstadoReporte.esperandoSesion) return;

@@ -10,15 +10,28 @@ import 'package:app_flutter/storage/cola_reportes.dart';
 /// HU-02 (#61): la cola de reportes en SQLite, con la base de escritorio de `sqflite_common_ffi`.
 void main() {
   late Directory carpeta;
+  late List<ColaReportesSqflite> abiertas;
 
   setUpAll(sqfliteFfiInit);
-  setUp(() async => carpeta = await Directory.systemTemp.createTemp('cola_reportes'));
-  tearDown(() async => carpeta.delete(recursive: true));
+  setUp(() async {
+    carpeta = await Directory.systemTemp.createTemp('cola_reportes');
+    abiertas = [];
+  });
+  tearDown(() async {
+    for (final base in abiertas) {
+      await base.cerrar(); // en Windows no se puede borrar un SQLite abierto
+    }
+    await carpeta.delete(recursive: true);
+  });
 
-  ColaReportesSqflite abrir() => ColaReportesSqflite(
-    fabrica: databaseFactoryFfi,
-    nombre: '${carpeta.path}/cola.db',
-  );
+  ColaReportesSqflite abrir() {
+    final base = ColaReportesSqflite(
+      fabrica: databaseFactoryFfi,
+      nombre: '${carpeta.path}/cola.db',
+    );
+    abiertas.add(base);
+    return base;
+  }
 
   ReporteEvento reporte(String tipo, int minutos) => ReporteEvento(
     tipo: tipo,
@@ -31,6 +44,8 @@ void main() {
     final cola = abrir();
     await cola.agregar(reporte('ACCIDENTE', 5));
     await cola.agregar(reporte('BLOQUEO', 10));
+    expect(await File('${carpeta.path}/cola.db').exists(), isTrue,
+        reason: 'la ruta absoluta de SQLite debe respetarse en Windows y Linux');
 
     final pendientes = await cola.pendientes();
     expect(pendientes.map((p) => p.reporte.tipo), ['ACCIDENTE', 'BLOQUEO']);

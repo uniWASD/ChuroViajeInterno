@@ -1,0 +1,4 @@
+# Los scripts y archivos que se usan en el servidor Linux se guardan siempre con finales de línea LF.
+# Con CRLF (lo que deja Git en Windows), bash falla con errores como $'\r': command not found.
+*.sh       text eol=lf
+*.service  text eol=lf

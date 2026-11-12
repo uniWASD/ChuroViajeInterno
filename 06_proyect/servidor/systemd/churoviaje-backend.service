@@ -1,0 +1,37 @@
+# Servicio del backend de ChuroViaje (T-098, #60).
+# Copia de /etc/systemd/system/churoviaje-backend.service en churoviaje-server.
+# El backend arranca el núcleo C++ como proceso hijo (D-15), así que este servicio
+# cubre los dos. Los secretos están en /etc/churoviaje/backend.env, fuera del repositorio.
+
+[Unit]
+Description=ChuroViaje backend (Spring Boot y núcleo C++)
+After=network-online.target postgresql.service
+Wants=network-online.target postgresql.service
+
+[Service]
+Type=simple
+User=churoviaje
+Group=churoviaje
+EnvironmentFile=/etc/churoviaje/backend.env
+WorkingDirectory=/opt/churoviaje
+ExecStart=/usr/bin/java -Xms256m -Xmx1g -jar /opt/churoviaje/actual/backend.jar
+# Java termina con 143 cuando recibe SIGTERM al detener el servicio: no es un fallo.
+SuccessExitStatus=143
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+# Endurecimiento: el servicio solo lee /opt/churoviaje y escribe en su /tmp privado.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/churoviaje
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,6 +1,6 @@
 # Guía del servidor de ChuroViaje
 
-Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los issues T-092 (#44), T-119 (#111) y T-097 (#52). Se actualiza a medida que se avanza.
+Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los issues T-092 (#44), T-119 (#111), T-097 (#52) y T-098 (#60). Se actualiza a medida que se avanza.
 
 Última actualización: 12 de noviembre de 2026.
 
@@ -30,6 +30,12 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los i
 | Certificado de Let's Encrypt con renovación automática | Hecho el 12/11/2026. Vence el 10/02/2027 y se renueva solo; la renovación de prueba pasó |
 | Nota de SSL Labs | A, el 12/11/2026, con TLS 1.3 |
 | CP-51 (HTTP redirige a HTTPS y el certificado es válido en un teléfono) | Hecho el 12/11/2026 |
+| Backend y núcleo C++ como servicio del sistema | Hecho el 12/11/2026 (T-098). Servicio `churoviaje-backend`, corre como el usuario `churoviaje` |
+| Secretos del backend en un archivo de entorno | Hecho el 12/11/2026. `/etc/churoviaje/backend.env`, solo lo lee `churoviaje` |
+| Script de despliegue y de vuelta atrás | Hecho el 12/11/2026. `scripts/desplegar.sh` y `scripts/volver.sh` |
+| Carga de la red vial en el servidor | 244 ms, el 12/11/2026 (criterio de T-096) |
+| CP-79 (tras reiniciar, el backend y el núcleo vuelven solos) | Hecho el 12/11/2026. Falta probar el inicio de sesión desde la app |
+| CP-80 (al matar el núcleo, el backend lo vuelve a arrancar) | Hecho el 12/11/2026 |
 
 ## Datos del servidor
 
@@ -39,14 +45,15 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los i
 - Tamaño: 2 OCPU y 12 GB de RAM (capa gratuita)
 - IP pública: reservada, no cambia al reiniciar
 - Dominio: `churoviaje.orelqu.com`, un subdominio de `orelqu.com` (dominio de Marcelo, registrado en Cloudflare) ([D-26](../../03_des/02_Arquitectura/08_decisiones_parametros.md))
-- Puerto del backend: 8080, solo para la propia máquina. Desde internet se llega por Nginx, con HTTPS. El servicio de WhatsApp lo llama en `127.0.0.1:8080` ([contrato](../../03_des/02_Arquitectura/05_contratos.md))
+- Puerto del backend: 8080, solo para la propia máquina (`SERVER_ADDRESS=127.0.0.1`). La salud del backend está en `127.0.0.1:8081`, que tampoco se ve desde fuera. Desde internet se llega por Nginx, con HTTPS. El servicio de WhatsApp lo llama en `127.0.0.1:8080` ([contrato](../../03_des/02_Arquitectura/05_contratos.md))
 
 ## Usuarios y acceso
 
 | Usuario | Para qué | Quién entra |
 |---|---|---|
 | `ubuntu` | Administrar el servidor (tiene `sudo`) | Marcelo, con su llave `proyectos-key` |
-| `deploy` | Desplegar la aplicación (sin `sudo`, sin contraseña) | Cada integrante que despliega, con su propia llave |
+| `deploy` | Desplegar la aplicación (sin `sudo`, salvo reiniciar el backend y ver su registro; sin contraseña) | Cada integrante que despliega, con su propia llave |
+| `churoviaje` | Correr el backend y el núcleo (usuario de sistema, sin login ni llave) | Nadie: lo usa systemd |
 
 Solo se entra con llave. No hay acceso con contraseña ni como root.
 
@@ -101,7 +108,7 @@ sudo chown deploy:deploy /home/deploy/.ssh/authorized_keys
 sudo chmod 600 /home/deploy/.ssh/authorized_keys
 ```
 
-El usuario no tiene contraseña ni `sudo`. Si más adelante necesita reiniciar un servicio, se le da ese permiso puntual.
+El usuario no tiene contraseña ni `sudo`. Solo puede reiniciar el backend y ver su registro, para desplegar (sección 10).
 
 ### 4. SSH solo con llave
 
@@ -265,6 +272,109 @@ systemctl list-timers | grep certbot
 
 El 80 queda abierto solo para redirigir a HTTPS y para la validación de Let's Encrypt al renovar.
 
+### 10. Backend y núcleo C++ como servicio
+
+Hecho el 12 de noviembre de 2026 (T-098, #60). El backend corre como un servicio de systemd y arranca el núcleo C++ como proceso hijo ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)), así que un solo servicio cubre los dos.
+
+**Dónde está cada cosa**
+
+| Ruta | Qué hay | Dueño |
+|---|---|---|
+| `/opt/churoviaje/releases/<fecha>-<commit>/` | Una versión: `backend.jar` y `motor_nucleo`. Se guardan las 5 más recientes | `deploy` |
+| `/opt/churoviaje/actual` | Enlace a la versión que corre | `deploy` |
+| `/opt/churoviaje/datos/` | `red_vial_tarija.json` (fuera de Git, D-33) y `mancha_urbana_tarija.geojson` | `deploy` |
+| `/etc/churoviaje/backend.env` | Secretos y configuración del backend | `churoviaje`, permisos `600` |
+| `/etc/systemd/system/churoviaje-backend.service` | El servicio. Copia en [systemd/churoviaje-backend.service](systemd/churoviaje-backend.service) | `root` |
+| `/home/deploy/ChuroViajeInterno` | Clon del repositorio desde el que se compila | `deploy` |
+
+`/opt/churoviaje` y sus carpetas son de `deploy` con el grupo `churoviaje` (permisos `750`): `deploy` despliega y `churoviaje` solo lee.
+
+**Usuario del servicio.** El servicio corre como `churoviaje`, un usuario de sistema sin login, que es el único que puede leer los secretos. `deploy` compila y despliega, pero no los ve.
+
+```bash
+sudo adduser --system --group --no-create-home --home /opt/churoviaje churoviaje
+sudo install -d -o deploy -g churoviaje -m 750 /opt/churoviaje /opt/churoviaje/releases /opt/churoviaje/datos
+sudo install -d -o root -g root -m 755 /etc/churoviaje
+```
+
+**Archivo de entorno.** Tiene el perfil `prod`, la base, la ruta del GeoJSON, los secretos ([D-34](../../03_des/02_Arquitectura/08_decisiones_parametros.md)) y el núcleo ([D-35](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). La contraseña de `churoviaje_app` y el Client ID web de Google se escriben en la terminal con `read`, sin que queden en pantalla ni en el historial; la clave del JWT y la credencial de servicio se generan al azar ahí mismo.
+
+```bash
+read -rp "GOOGLE_CLIENT_ID: " GCID
+read -rsp "Contraseña de churoviaje_app: " DBPASS; echo
+sudo install -m 600 -o churoviaje -g churoviaje /dev/null /etc/churoviaje/backend.env
+sudo tee /etc/churoviaje/backend.env > /dev/null <<EOF
+SPRING_PROFILES_ACTIVE=prod
+SERVER_ADDRESS=127.0.0.1
+SERVER_PORT=8080
+DB_URL=jdbc:postgresql://127.0.0.1:5432/churoviaje
+DB_USER=churoviaje_app
+DB_PASSWORD=$DBPASS
+CHUROVIAJE_GEOJSON_PATH=/opt/churoviaje/datos/mancha_urbana_tarija.geojson
+JWT_SECRET=$(openssl rand -base64 48)
+GOOGLE_CLIENT_ID=$GCID
+SERVICE_CREDENTIAL=$(openssl rand -hex 32)
+MOTOR_HABILITADO=true
+MOTOR_PATH=/opt/churoviaje/actual/motor_nucleo
+RED_VIAL_PATH=/opt/churoviaje/datos/red_vial_tarija.json
+EOF
+unset GCID DBPASS
+```
+
+- Si se cambia la contraseña de `churoviaje_app` (`sudo -u postgres psql -c "\password churoviaje_app"`), hay que cambiarla también aquí. Conviene que no tenga comillas ni barras invertidas, porque systemd las interpreta.
+- `SERVICE_CREDENTIAL` es el mismo valor que el servicio de WhatsApp usa como `SERVICE_TOKEN` (D-13). Se copia desde este archivo cuando se despliegue ese servicio (T-100).
+- Para cambiar un valor: `sudo nano /etc/churoviaje/backend.env` y `sudo systemctl restart churoviaje-backend`.
+
+**Servicio.** El archivo está en [systemd/churoviaje-backend.service](systemd/churoviaje-backend.service). Arranca con la máquina, se reinicia a los 5 segundos si el backend se cae, y está endurecido: solo lee `/opt/churoviaje`, escribe en su `/tmp` privado y no puede ganar privilegios.
+
+```bash
+sudo cp /home/deploy/ChuroViajeInterno/06_proyect/servidor/systemd/churoviaje-backend.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now churoviaje-backend
+```
+
+Si el núcleo se cae, el backend lo vuelve a arrancar solo (`motor.espera-reinicio`). Si se cae el backend, lo vuelve a arrancar systemd.
+
+**Permiso de `deploy`.** Para desplegar, `deploy` puede reiniciar el backend y ver su registro, y nada más:
+
+```bash
+echo 'deploy ALL=(root) NOPASSWD: /usr/bin/systemctl restart churoviaje-backend, /usr/bin/journalctl -u churoviaje-backend -n 80 --no-pager' > /tmp/churoviaje-deploy
+sudo visudo -cf /tmp/churoviaje-deploy && sudo install -m 440 -o root -g root /tmp/churoviaje-deploy /etc/sudoers.d/churoviaje-deploy
+rm /tmp/churoviaje-deploy
+```
+
+`visudo -cf` revisa el archivo antes de instalarlo: un error en `sudoers.d` dejaría sin `sudo` al servidor.
+
+**Desplegar una versión nueva.** Como `deploy`, desde `develop` (o desde otra rama, pasando su nombre):
+
+```bash
+bash ~/ChuroViajeInterno/06_proyect/servidor/scripts/desplegar.sh
+```
+
+El script trae la rama, compila el núcleo y el backend sin pruebas (ya corren en la CI), arma la versión en `releases`, mueve `actual` a ella y reinicia el servicio. Después espera hasta 90 segundos a que la salud responda `UP` y el núcleo esté corriendo; si no pasa, vuelve solo a la versión anterior y termina con error. La primera compilación del backend tarda unos minutos porque Maven descarga sus dependencias.
+
+Desde el sprint 4, cada sprint termina con lo fusionado en `develop` desplegado.
+
+**Volver a una versión anterior.**
+
+```bash
+bash ~/ChuroViajeInterno/06_proyect/servidor/scripts/volver.sh --lista      # ver las versiones
+bash ~/ChuroViajeInterno/06_proyect/servidor/scripts/volver.sh              # la anterior a la actual
+bash ~/ChuroViajeInterno/06_proyect/servidor/scripts/volver.sh <versión>    # una concreta
+```
+
+No compila nada: mueve `actual` y reinicia. Si la versión elegida no arranca, deja la que había.
+
+**Revisar el servicio** (como `ubuntu`):
+
+```bash
+systemctl status churoviaje-backend --no-pager
+sudo journalctl -u churoviaje-backend -n 100 --no-pager
+curl -s http://127.0.0.1:8081/actuator/health
+```
+
+Los mensajes del núcleo aparecen en el registro del backend con el nivel `WARN`, aunque sean normales, porque el wrapper registra así todo lo que el núcleo escribe en su salida de errores.
+
 ## Salida hacia la API de ANH
 
 Antes de que el backend dependa de ANH, el 29 de octubre de 2026 se comprobó desde la instancia que las consultas llegan y que el certificado se verifica. Cubre el issue T-119 (#111) y el caso de prueba CP-156. El informe técnico de ANH y el cliente de prueba están en `05_pro/PruebaApiANH`.
@@ -313,9 +423,36 @@ ssh -i $HOME\.ssh\churoviaje-deploy root@<IP_PUBLICA>
 # debe responder 301 con Location: https://churoviaje.orelqu.com/ y "Server: nginx" sin versión
 curl.exe -I http://churoviaje.orelqu.com
 
-# debe responder sin error de certificado (502 mientras el backend no corre)
+# debe responder sin error de certificado
 curl.exe -I https://churoviaje.orelqu.com
+
+# la salud no se ve desde fuera: debe dar HTTP 404
+curl.exe -s -w "`nHTTP %{http_code}`n" https://churoviaje.orelqu.com/actuator/health
+
+# un token de Google falso: debe dar TOKEN_GOOGLE_INVALIDO y HTTP 401, sin emitir ningún JWT
+'{"tokenGoogle":"falso"}' | Out-File -Encoding ascii body.json
+curl.exe -s -w "`nHTTP %{http_code}`n" -X POST https://churoviaje.orelqu.com/sesion/google -H "Content-Type: application/json" --data "@body.json"
 ```
+
+En el servidor, como `ubuntu`:
+
+```bash
+# el backend y el núcleo corren, y la salud responde UP
+systemctl is-active churoviaje-backend nginx postgresql
+pgrep -a motor_nucleo
+curl -s http://127.0.0.1:8081/actuator/health
+
+# el 8080 y el 8081 escuchan solo en 127.0.0.1
+sudo ss -tlnp | grep -E ':8080|:8081'
+
+# CP-80: al matar el núcleo, aparece otro con un PID distinto en unos segundos
+sudo pkill -x motor_nucleo; sleep 5; pgrep -a motor_nucleo
+
+# deploy no puede leer los secretos: debe dar Permission denied
+sudo -u deploy cat /etc/churoviaje/backend.env
+```
+
+CP-79: después de `sudo reboot`, los mismos comandos deben dar lo mismo sin tocar nada.
 
 Desde un teléfono, `http://churoviaje.orelqu.com` debe pasar solo a `https://` y abrir sin aviso de certificado.
 

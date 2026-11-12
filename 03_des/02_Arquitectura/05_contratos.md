@@ -129,6 +129,19 @@ Si lo acepta, responde 201 con el evento creado:
 - Esta respuesta y cualquier consulta posterior nunca dicen quién reportó el evento ([RN-01.12](04_reglas/CU-01_ReportarEventoVial.md)). Los eventos de congestión traen además `nivel`.
 - Rechazos: 400 `PETICION_INVALIDA` si falta el tipo, la ubicación o la hora, o si los minutos no son una de las opciones; 422 `TIPO_NO_REPORTABLE` para la congestión o un tipo que no existe, `UBICACION_FUERA_COBERTURA` fuera de Tarija y `EVENTO_VENCIDO` si ya pasó la vigencia de su tipo; 409 `REPORTE_DUPLICADO` (mismo conductor y tipo, a menos de 100 m y dentro de 10 minutos); 429 `LIMITE_DE_REPORTES` (más de 5 en 10 minutos) ([RN-01.2](04_reglas/CU-01_ReportarEventoVial.md) a [RN-01.9](04_reglas/CU-01_ReportarEventoVial.md)).
 
+### Consulta de eventos (`GET /eventos`)
+
+La primera consulta va sin parámetros y trae todos los eventos vigentes. Las siguientes mandan la marca que recibió la anterior, `GET /eventos?desde=2026-11-01T11:59:58Z`, y traen solo los cambios:
+
+```json
+{"marca":"2026-11-01T12:00:03Z","completa":false,"eventos":[{"id":153,"tipo":"CONTROL_POLICIAL","ubicacion":{"latitud":-21.5355,"longitud":-64.7296},"momentoOcurrencia":"2026-11-01T07:55:00-04:00","estado":"CONFIRMADO","confirmado":true,"origen":"CONDUCTOR"}],"quitados":[150]}
+```
+
+- `completa` es verdadero cuando la respuesta trae todos los vigentes (la consulta sin marca); entonces `quitados` va vacío.
+- Con marca, `eventos` trae los nuevos y los que cambiaron (por ejemplo, los que se confirmaron) y `quitados` los identificadores de los que dejaron de mostrarse por vencidos o retirados. La app reemplaza los que ya tenía con el mismo `id` y borra los quitados ([RN-02.6](04_reglas/CU-02_VisualizarEventosViales.md)).
+- La vigencia se calcula en cada consulta: un evento que venció hace segundos ya llega entre los quitados, aunque la tarea periódica todavía no lo haya marcado ([RN-02.4](04_reglas/CU-02_VisualizarEventosViales.md)).
+- La marca queda 2 segundos antes de la consulta, para no perder un evento que se estaba guardando en ese momento; por eso algún cambio puede llegar dos veces. Una marca que no es una fecha responde 400 `PETICION_INVALIDA`.
+
 ## Backend con el motor core
 
 El backend nunca habla directo con el programa en C++. Llama a métodos del wrapper `MotorDeRutas`, que es Java y vive dentro del backend, y el wrapper traduce cada llamada a un mensaje para el núcleo C++ ([D-15](08_decisiones_parametros.md)). Los nombres de métodos y mensajes son una propuesta, igual que las rutas de la API.

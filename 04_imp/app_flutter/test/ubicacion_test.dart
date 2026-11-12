@@ -40,6 +40,21 @@ void main() {
       },
     );
 
+    test('CP-58: si el GPS se desactiva, no se reutiliza la última ubicación', () async {
+      final ubicacion = UbicacionFalsa();
+      final controller = MapController(ubicacion);
+      await controller.activarUbicacion();
+      ubicacion.emitir(const Coordenada(-21.53, -64.73));
+      await Future<void>.delayed(Duration.zero);
+      expect(controller.posicion, isNotNull);
+
+      ubicacion.permiso = PermisoUbicacion.servicioApagado;
+      await controller.activarUbicacion();
+      expect(controller.posicion, isNull);
+      expect(controller.siguiendoUbicacion, isFalse);
+      controller.dispose();
+    });
+
     test('CP-30: en segundo plano deja de pedir la ubicación y la retoma al volver (RNF-13)', () async {
       final ubicacion = UbicacionFalsa();
       final controller = MapController(ubicacion);
@@ -49,6 +64,7 @@ void main() {
       controller.alSalirDePantalla();
       expect(ubicacion.escuchando, 0);
       expect(controller.siguiendoUbicacion, isFalse);
+      expect(controller.posicion, isNull, reason: 'al volver no se reutiliza un GPS obsoleto');
 
       controller.alVolverAPantalla();
       expect(ubicacion.escuchando, 1);

@@ -137,6 +137,15 @@ flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.xxxxx --dart-define=API_URL_DEV
 * Si el estilo del mapa no carga (sin conexión, token inválido), la vista muestra «No se pudo cargar el mapa. Revisa tu conexión e inténtalo de nuevo.» con un botón para reintentar (RN-03.18). Los mosaicos que fallan sueltos no cuentan como error.
 * El logo y la atribución de Mapbox y OpenStreetMap quedan visibles (RNF-19).
 
+### Uso gratuito de Mapbox
+
+Mapbox cobra el SDK para móviles por usuario activo al mes: cuenta como activo cualquier teléfono o emulador que abra un mapa en el mes. Lo que se revisó el 10/11/2026 en la [página de precios](https://www.mapbox.com/pricing) y en la [guía de registro](https://docs.mapbox.com/accounts/guides/signup/):
+
+* Con una tarjeta registrada en la cuenta, los primeros 25 000 usuarios activos al mes son gratis. Para el proyecto alcanza de sobra.
+* Sin tarjeta, la cuenta queda en modo de prueba y el SDK para móviles se corta a los 100 usuarios activos al mes. Para las pruebas del equipo y la demo también alcanza.
+* Cada emulador cuenta como un usuario, y desinstalar y volver a instalar la app cuenta como uno nuevo. Conviene no reinstalar sin necesidad.
+* El token público (`pk.`) es el que va en la app. Si la cuenta tiene tarjeta, conviene configurar en la cuenta un aviso por correo cuando el uso se acerque al límite gratuito.
+
 ## Cómo llegar
 
 El botón «Cómo llegar» de la vista Mapa abre la vista del mismo nombre (CU-03). Si había un punto elegido en el mapa, pasa a ser el destino.

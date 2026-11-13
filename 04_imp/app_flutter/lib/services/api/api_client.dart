@@ -21,10 +21,27 @@ class ApiException implements Exception {
   String toString() => mensaje;
 }
 
+/// Quien lleva la sesión (el controlador de sesión). El cliente HTTP le pide el JWT antes de cada petición y le
+/// avisa cuando el backend responde 401, para renovar la sesión sin que el conductor intervenga (RN-08.11).
+abstract class GestorToken {
+  /// El JWT vigente, o null si no hay sesión.
+  String? get token;
+
+  /// Renueva el JWT si está por vencer (RN-08.12). Devuelve false si no hay sesión.
+  Future<bool> asegurarTokenVigente();
+
+  /// El backend rechazó el JWT: lo renueva. Devuelve false si no pudo y hay que volver a iniciar sesión.
+  Future<bool> renovarTrasRechazo();
+}
+
 class ApiClient {
   final http.Client _client;
   final Duration timeoutDuration;
   String? _token;
+
+  /// Si está puesto, el JWT sale de aquí y un 401 se reintenta una vez con la sesión renovada. Las rutas
+  /// `/sesion/*` no lo usan: son las que renuevan.
+  GestorToken? gestor;
 
   ApiClient({
     http.Client? client,
@@ -35,12 +52,23 @@ class ApiClient {
     _token = token;
   }
 
-  Map<String, String> get _headers => {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    if (_token != null && _token!.isNotEmpty)
-      'Authorization': 'Bearer $_token',
-  };
+  Map<String, String> _headers(bool conSesion) {
+    final token = conSesion ? (gestor?.token ?? _token) : null;
+    return {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  static const ApiException _sesionVencida = ApiException(
+    codigo: 'SESION_VENCIDA',
+    mensaje: 'Tu sesión venció. Inicia sesión de nuevo.',
+    statusCode: 401,
+  );
+
+  static bool _esDeSesion(String path) =>
+      path.startsWith('/sesion/') || path.startsWith('sesion/');
 
   Uri _buildUri(String path) {
     final baseUrl = AppConfig.apiBaseUrl;
@@ -52,23 +80,48 @@ class ApiClient {
     return Uri.parse('$normalizedBase$normalizedPath');
   }
 
-  Future<dynamic> get(String path) {
-    return _send(() => _client.get(_buildUri(path), headers: _headers));
+  Future<dynamic> get(String path, {Map<String, String>? query}) {
+    final conSesion = !_esDeSesion(path);
+    return _send(
+      conSesion,
+      () => _client.get(
+        _buildUri(path).replace(queryParameters: query),
+        headers: _headers(conSesion),
+      ),
+    );
   }
 
   Future<dynamic> post(String path, {Object? body}) {
+    final conSesion = !_esDeSesion(path);
     return _send(
+      conSesion,
       () => _client.post(
         _buildUri(path),
-        headers: _headers,
+        headers: _headers(conSesion),
         body: body == null ? null : jsonEncode(body),
       ),
     );
   }
 
-  Future<dynamic> _send(Future<http.Response> Function() peticion) async {
+  Future<dynamic> _send(
+    bool conSesion,
+    Future<http.Response> Function() peticion,
+  ) async {
     try {
-      final response = await peticion().timeout(timeoutDuration);
+      final gestor = conSesion ? this.gestor : null;
+      if (gestor != null &&
+          !await gestor.asegurarTokenVigente() &&
+          gestor.token == null) {
+        throw _sesionVencida; // no hay sesión: ni siquiera se intenta
+      }
+      var response = await peticion().timeout(timeoutDuration);
+      if (response.statusCode == 401 && gestor != null) {
+        // RN-08.11: el JWT venció o lo rechazaron. Se renueva y se reintenta una sola vez.
+        if (!await gestor.renovarTrasRechazo()) {
+          throw _sesionVencida;
+        }
+        response = await peticion().timeout(timeoutDuration);
+      }
       return _handleResponse(response);
     } on ApiException {
       rethrow;

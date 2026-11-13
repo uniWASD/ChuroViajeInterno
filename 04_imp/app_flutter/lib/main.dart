@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 import 'app_providers.dart';
 import 'config/app_config.dart';
-import 'views/main/main_screen.dart';
+import 'views/inicio.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,7 +41,7 @@ class ChuroViajeApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF087E8B)),
         useMaterial3: true,
       ),
-      home: const MainScreen(),
+      home: const Inicio(),
     );
   }
 }

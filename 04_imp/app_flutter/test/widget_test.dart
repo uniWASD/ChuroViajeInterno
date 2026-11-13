@@ -12,6 +12,7 @@ import 'package:app_flutter/services/rutas/servicio_rutas.dart';
 import 'package:app_flutter/views/main/main_screen.dart';
 
 import 'dobles/dobles_mapa.dart';
+import 'dobles/dobles_sesion.dart';
 
 void main() {
   late MapaFalso mapa;
@@ -28,6 +29,8 @@ void main() {
         ubicacion: UbicacionFalsa(),
         servicioRutas: ServicioRutasApi(client),
         constructorMapa: mapa.construir,
+        almacen: AlmacenFalso.conSesionVigente(),
+        google: GoogleFalso(),
       ),
       child: const MaterialApp(
         locale: Locale('es'),

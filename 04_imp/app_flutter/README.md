@@ -96,7 +96,8 @@ Variables disponibles:
 | `API_URL_TEST` | Dirección del backend de pruebas.                   |
 | `API_URL_PROD` | Dirección del backend de producción.                |
 | `MAPBOX_ACCESS_TOKEN` | Token público de Mapbox para el mapa base. Sin él, la vista Mapa muestra el error de mapa no disponible. |
-| `RUTA_DE_EJEMPLO` | `true` por defecto: Cómo llegar muestra una ruta de ejemplo en vez de llamar a `POST /rutas`. Con `false` pide la ruta al backend. En producción siempre llama al backend. |
+| `RUTA_DE_EJEMPLO` | `false` por defecto: Cómo llegar pide la ruta a `POST /rutas`. Con `true` muestra una ruta de ejemplo, para probar sin backend. En producción siempre llama al backend. |
+| `GOOGLE_SERVER_CLIENT_ID` | Client ID **web** del proyecto de Google Cloud. El token de identidad de Google sale para ese Client ID, que es el mismo `GOOGLE_CLIENT_ID` que valida el backend (HU-10). |
 
 ### Desarrollo en Android
 
@@ -147,7 +148,7 @@ El botón «Cómo llegar» de la vista Mapa abre la vista del mismo nombre (CU-0
 * «No se encontró una ruta válida» y «Origen o destino inválido» se muestran como respuesta, no como error. Si el backend no responde o responde 503, se muestra el fallo con «Reintentar» (RN-03.15).
 * «Iniciar» se ve deshabilitado hasta que exista la vista Navegación activa.
 
-Mientras la app no inicie sesión (HU-10), `POST /rutas` responde 401. Por eso, fuera de producción y salvo `--dart-define=RUTA_DE_EJEMPLO=false`, la vista usa `assets/datos/ruta_ejemplo_post_rutas.json`: la respuesta del primer viaje de referencia de Tarija (T-120, de la plaza Luis de Fuentes a la ex terminal), copiada de `04_imp/datos`. Es siempre la misma ruta, elija el conductor los puntos que elija, y la vista lo avisa.
+Desde HU-10 la app inicia sesión y pide la ruta al backend. Con `--dart-define=RUTA_DE_EJEMPLO=true` (fuera de producción) la vista usa `assets/datos/ruta_ejemplo_post_rutas.json`: la respuesta del primer viaje de referencia de Tarija (T-120, de la plaza Luis de Fuentes a la ex terminal), copiada de `04_imp/datos`. Es siempre la misma ruta, elija el conductor los puntos que elija, y la vista lo avisa.
 
 ## Cliente HTTP
 
@@ -190,3 +191,13 @@ flutter analyze
 La app tiene la estructura inicial, la navegación principal, la gestión de estado con Provider, la configuración por entornos, un cliente HTTP centralizado, el mapa base de Mapbox con la ubicación del conductor (T-093) y la vista Cómo llegar (HU-05).
 
 La navegación activa, los eventos y los surtidores se incorporarán en etapas posteriores.
+
+## Inicio de sesión (HU-10)
+
+- Sin sesión, la app muestra solo la vista Inicio de sesión. El botón «Iniciar sesión con Google» abre el selector de cuentas (`google_sign_in`) y envía el token de identidad a `POST /sesion/google`.
+- El JWT y el token de renovación se guardan con `flutter_secure_storage` (Keystore en Android, Keychain en iOS). Con un token de renovación vigente, la app entra directo al mapa aunque no haya red.
+- `ApiClient` pide el JWT a `SesionController` antes de cada petición: si le quedan menos de 2 minutos, lo renueva con `POST /sesion/renovar`. Si el backend responde 401, renueva y repite la petición una vez; si no puede renovar, la app vuelve a Inicio de sesión.
+- Al iniciar sesión se guardan los catálogos (`GET /catalogos`); las demás pantallas toman de ahí los tipos, colores, vigencias y tiempos.
+- «Cerrar sesión», en el menú de la cuenta del Mapa principal, llama a `POST /sesion/cerrar` y borra todo lo guardado.
+
+Para que el selector de cuentas funcione en Android hay que registrar en Google Cloud un Client ID de Android con el nombre del paquete y la huella SHA-1 de la llave de firma, además del Client ID web que se pasa en `GOOGLE_SERVER_CLIENT_ID`.

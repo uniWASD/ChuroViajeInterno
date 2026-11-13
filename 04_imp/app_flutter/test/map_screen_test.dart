@@ -12,6 +12,7 @@ import 'package:app_flutter/services/ubicacion/servicio_ubicacion.dart';
 import 'package:app_flutter/views/map/map_screen.dart';
 
 import 'dobles/dobles_mapa.dart';
+import 'dobles/dobles_sesion.dart';
 
 void main() {
   late UbicacionFalsa ubicacion;
@@ -27,6 +28,8 @@ void main() {
         ),
         ubicacion: ubicacion,
         constructorMapa: mapa.construir,
+        almacen: AlmacenFalso.conSesionVigente(),
+        google: GoogleFalso(),
       ),
       child: const MaterialApp(home: Scaffold(body: MapScreen())),
     );

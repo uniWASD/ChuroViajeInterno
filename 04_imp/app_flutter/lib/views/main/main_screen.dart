@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/navigation_controller.dart';
+import '../../controllers/sesion_controller.dart';
 import '../map/map_screen.dart';
 import '../events/events_screen.dart';
 import '../stations/stations_screen.dart';
@@ -20,7 +21,11 @@ class MainScreen extends StatelessWidget {
     return Consumer<NavigationController>(
       builder: (context, controller, child) {
         return Scaffold(
-          appBar: AppBar(title: const Text('ChuroViaje'), centerTitle: true),
+          appBar: AppBar(
+            title: const Text('ChuroViaje'),
+            centerTitle: true,
+            actions: const [_MenuCuenta()],
+          ),
           body: IndexedStack(
             index: controller.selectedIndex,
             children: _screens,
@@ -48,6 +53,33 @@ class MainScreen extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// Menú de la cuenta del Mapa principal: «Cerrar sesión».
+class _MenuCuenta extends StatelessWidget {
+  const _MenuCuenta();
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String>(
+      key: const Key('menu-cuenta'),
+      tooltip: 'Cuenta',
+      icon: const Icon(Icons.account_circle_outlined),
+      onSelected: (opcion) {
+        if (opcion == 'cerrar') context.read<SesionController>().cerrarSesion();
+      },
+      itemBuilder: (_) => const [
+        PopupMenuItem(
+          value: 'cerrar',
+          child: ListTile(
+            leading: Icon(Icons.logout),
+            title: Text('Cerrar sesión'),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -6,6 +6,7 @@ import '../models/evento_vial.dart';
 import '../models/reporte_evento.dart';
 import '../services/api/api_client.dart';
 import '../services/eventos/servicio_eventos.dart';
+import 'cola_controller.dart';
 import 'map_controller.dart';
 import 'sesion_controller.dart';
 
@@ -21,8 +22,11 @@ enum EstadoReporte {
   /// El backend no lo aceptó: duplicado, límite, fuera de Tarija o vencido. Se muestra su mensaje.
   rechazado,
 
-  /// No hay red: se conserva lo elegido (guardarlo en la cola es HU-02).
+  /// No hay red y no hay cola: se conserva lo elegido.
   sinRed,
+
+  /// No hay red: el reporte quedó en la cola y se enviará solo (HU-02, RN-01.13).
+  guardadoEnCola,
 
   /// La sesión venció y no se pudo renovar: al volver a iniciar sesión, el reporte se envía solo (RN-01.16).
   esperandoSesion,
@@ -39,6 +43,7 @@ class ReporteController extends ChangeNotifier {
   final ServicioEventos _servicio;
   final SesionController _sesion;
   final MapController _mapa;
+  final ColaController? _cola;
   final DateTime Function() _ahora;
 
   EstadoReporte _estado = EstadoReporte.eligiendo;
@@ -48,12 +53,14 @@ class ReporteController extends ChangeNotifier {
   String? _mensaje;
   EventoVial? _ultimoEnviado;
   ReporteEvento? _pendienteTrasSesion;
+  bool _abierto = false;
   bool _disposed = false;
 
   ReporteController(
     this._servicio,
     this._sesion,
     this._mapa, {
+    this._cola,
     DateTime Function()? reloj,
   }) : _ahora = reloj ?? DateTime.now {
     _sesion.addListener(_alCambiarSesion);
@@ -65,6 +72,10 @@ class ReporteController extends ChangeNotifier {
   String? get mensaje => _mensaje;
   EventoVial? get ultimoEnviado => _ultimoEnviado;
   bool get enviando => _estado == EstadoReporte.enviando;
+
+  /// La vista Reportar evento está abierta. Si la sesión vence mientras el conductor la llena, la vista no se
+  /// cierra: al confirmar, el reporte queda guardado y se envía al volver a iniciar sesión (RN-01.16).
+  bool get abierto => _abierto;
 
   /// Los tipos reportables del catálogo guardado; la congestión no aparece (RN-01.3).
   List<TipoEventoCatalogo> get tipos => _sesion.catalogos?.reportables ?? const [];
@@ -79,6 +90,7 @@ class ReporteController extends ChangeNotifier {
 
   /// Empieza un reporte nuevo: «Hace 5 minutos» marcado y nada elegido.
   void empezar() {
+    _abierto = true;
     if (_estado == EstadoReporte.esperandoSesion) return; // el anterior todavía espera la sesión
     _estado = EstadoReporte.eligiendo;
     _tipo = null;
@@ -87,6 +99,9 @@ class ReporteController extends ChangeNotifier {
     _mensaje = null;
     _avisar();
   }
+
+  /// Se cerró la vista Reportar evento.
+  void cerrar() => _abierto = false;
 
   void elegirTipo(String codigo) {
     _tipo = codigo;
@@ -141,11 +156,21 @@ class ReporteController extends ChangeNotifier {
 
   /// Decide qué hacer cuando el envío falla.
   Future<void> _alFallarEnvio(ReporteEvento reporte, ApiException error) async {
-    if (error.codigo == 'SESION_VENCIDA') {
+    if (error.codigo == 'SESION_VENCIDA' && _cola != null) {
+      if (await _guardarEnCola(reporte)) {
+        _estado = EstadoReporte.esperandoSesion;
+        _mensaje = mensajeEsperandoSesion;
+      }
+    } else if (error.codigo == 'SESION_VENCIDA') {
       _pendienteTrasSesion = reporte; // RN-01.16: se conserva y se envía al volver a iniciar sesión
       _estado = EstadoReporte.esperandoSesion;
       _mensaje = mensajeEsperandoSesion;
-    } else if (esErrorDeRed(error)) {
+    } else if (esErrorTemporal(error) && _cola != null) {
+      if (await _guardarEnCola(reporte)) {
+        _estado = EstadoReporte.guardadoEnCola;
+        _mensaje = ColaController.mensajeGuardado;
+      }
+    } else if (esErrorTemporal(error)) {
       _estado = EstadoReporte.sinRed;
       _mensaje = error.mensaje;
     } else {
@@ -154,13 +179,35 @@ class ReporteController extends ChangeNotifier {
     }
   }
 
-  static bool esErrorDeRed(ApiException e) =>
-      e.codigo == 'ERROR_RED' || e.codigo == 'TIEMPO_ESPERA';
+  /// Un servidor que responde 5xx también es indisponibilidad temporal (CP-83).
+  static bool esErrorTemporal(ApiException e) =>
+      e.codigo == 'ERROR_RED' ||
+      e.codigo == 'TIEMPO_ESPERA' ||
+      (e.statusCode != null && e.statusCode! >= 500);
+
+  /// Si SQLite falla, no se cierra la pantalla ni se afirma que el reporte quedó guardado.
+  Future<bool> _guardarEnCola(ReporteEvento reporte) async {
+    try {
+      await _cola!.guardar(reporte);
+      return true;
+    } on Object catch (e) {
+      debugPrint('No se pudo guardar el reporte pendiente: $e');
+      _estado = EstadoReporte.sinRed;
+      _mensaje = 'No se pudo guardar el reporte en el teléfono. '
+          'Mantén esta pantalla abierta e inténtalo de nuevo.';
+      return false;
+    }
+  }
 
   void _alCambiarSesion() {
+    if (!_sesion.conSesion || _estado != EstadoReporte.esperandoSesion) return;
     final pendiente = _pendienteTrasSesion;
-    if (pendiente != null && _sesion.conSesion && _estado == EstadoReporte.esperandoSesion) {
+    if (pendiente != null) {
       _enviar(pendiente);
+    } else {
+      // El reporte quedó en la cola y la cola lo envía al volver la sesión: se puede empezar otro.
+      _estado = EstadoReporte.eligiendo;
+      _mensaje = null;
     }
   }
 

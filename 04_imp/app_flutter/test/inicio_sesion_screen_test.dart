@@ -50,6 +50,8 @@ void main() {
         constructorMapa: MapaFalso().construir,
         almacen: almacen,
         google: google,
+        cola: ColaFalsa(),
+        conectividad: ConectividadFalsa(),
       ),
       child: const MaterialApp(
         locale: Locale('es'),

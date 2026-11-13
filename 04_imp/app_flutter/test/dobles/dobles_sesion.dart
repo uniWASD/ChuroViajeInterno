@@ -1,11 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
 import 'package:app_flutter/controllers/sesion_controller.dart';
+import 'package:app_flutter/models/reporte_evento.dart';
 import 'package:app_flutter/models/sesion.dart';
+import 'package:app_flutter/services/conectividad/conectividad.dart';
 import 'package:app_flutter/services/sesion/almacen_local.dart';
 import 'package:app_flutter/services/sesion/proveedor_google.dart';
+import 'package:app_flutter/storage/cola_reportes.dart';
 
 /// Almacenamiento en memoria, en lugar del almacenamiento seguro del teléfono.
 class AlmacenFalso implements AlmacenLocal {
@@ -55,6 +59,47 @@ class GoogleFalso implements ProveedorGoogle {
 
   @override
   Future<void> cerrar() async => cierres++;
+}
+
+/// Cola de reportes en memoria, en lugar de la base SQLite del teléfono.
+class ColaFalsa implements ColaReportes {
+  final List<ReportePendiente> filas = [];
+  int _siguiente = 1;
+
+  @override
+  Future<int> agregar(ReporteEvento reporte) async {
+    filas.add(ReportePendiente(id: _siguiente, reporte: reporte, intentos: 0));
+    return _siguiente++;
+  }
+
+  @override
+  Future<List<ReportePendiente>> pendientes() async => List.of(filas);
+
+  @override
+  Future<void> quitar(int id) async => filas.removeWhere((f) => f.id == id);
+
+  @override
+  Future<void> sumarIntento(int id) async {
+    final i = filas.indexWhere((f) => f.id == id);
+    if (i >= 0) {
+      final f = filas[i];
+      filas[i] = ReportePendiente(id: f.id, reporte: f.reporte, intentos: f.intentos + 1);
+    }
+  }
+
+  @override
+  Future<void> vaciar() async => filas.clear();
+}
+
+/// Conectividad falsa: la prueba decide cuándo vuelve la red.
+class ConectividadFalsa implements Conectividad {
+  final StreamController<bool> _cambios = StreamController<bool>.broadcast();
+
+  void volvioLaRed() => _cambios.add(true);
+  void seFueLaRed() => _cambios.add(false);
+
+  @override
+  Stream<bool> get cambios => _cambios.stream;
 }
 
 /// Responde `GET /eventos` con un mapa sin eventos y deja los demás pedidos a [resto].

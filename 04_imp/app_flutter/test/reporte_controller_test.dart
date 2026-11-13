@@ -20,6 +20,7 @@ import 'package:app_flutter/services/eventos/servicio_eventos.dart';
 import 'package:app_flutter/services/sesion/servicio_sesion.dart';
 import 'package:app_flutter/services/ubicacion/servicio_ubicacion.dart';
 import 'package:app_flutter/views/main/main_screen.dart';
+import 'package:app_flutter/views/inicio.dart';
 
 import 'dobles/dobles_mapa.dart';
 import 'dobles/dobles_sesion.dart';
@@ -219,6 +220,8 @@ void main() {
         constructorMapa: MapaFalso().construir,
         almacen: almacenWidget,
         google: GoogleFalso(),
+        cola: ColaFalsa(),
+        conectividad: ConectividadFalsa(),
       ),
       child: const MaterialApp(
         locale: Locale('es'),
@@ -246,6 +249,79 @@ void main() {
     expect(enviados.single['minutosElegidos'], 5);
     expect(find.text(ReporteController.mensajeEnviado), findsOneWidget);
     expect(find.text('Cómo llegar'), findsOneWidget, reason: 'vuelve al mapa');
+  });
+
+  testWidgets('RN-01.16: si la sesión vence mientras se llena el reporte, la vista sigue abierta y el reporte se envía '
+      'al volver a iniciar sesión', (tester) async {
+    final backend = BackendReportes();
+    var ahora = DateTime.now().toUtc();
+    final almacenWidget = AlmacenFalso()
+      ..datos[SesionController.claveSesion] = jsonEncode(Sesion(
+        jwt: 'jwt-0',
+        expiraEn: ahora.add(const Duration(hours: 1)),
+        tokenRenovacion: 'renovacion',
+        iniciadaEn: ahora,
+      ).toJson())
+      ..datos[ServicioCatalogos.clave] = catalogosJson;
+    final cola = ColaFalsa();
+    final ubicacionWidget = UbicacionFalsa();
+    await tester.pumpWidget(MultiProvider(
+      providers: createAppProviders(
+        apiClient: ApiClient(client: backend.cliente),
+        ubicacion: ubicacionWidget,
+        constructorMapa: MapaFalso().construir,
+        almacen: almacenWidget,
+        google: GoogleFalso(),
+        cola: cola,
+        conectividad: ConectividadFalsa(),
+        reloj: () => ahora,
+      ),
+      child: const MaterialApp(
+        locale: Locale('es'),
+        supportedLocales: [Locale('es')],
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Inicio(),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    ubicacionWidget.emitir(const Coordenada(-21.5355, -64.7296));
+    await tester.pump();
+    await tester.tap(find.text('Reportar evento'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Control policial'));
+    await tester.pump();
+
+    // Mientras el conductor elige, vence el JWT y la renovación ya no vale: la consulta de eventos pierde la sesión.
+    ahora = ahora.add(const Duration(hours: 2));
+    backend.estadoRenovar = 401;
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump();
+    expect(tester.element(find.byKey(const Key('confirmar-reporte'))).read<SesionController>().estado,
+        EstadoSesion.sinSesion);
+    expect(find.byKey(const Key('confirmar-reporte')), findsOneWidget, reason: 'la vista no se cerró');
+
+    await tester.tap(find.byKey(const Key('confirmar-reporte')));
+    await tester.pumpAndSettle();
+    expect(cola.filas.single.reporte.tipo, 'CONTROL_POLICIAL', reason: 'quedó guardado para enviarse después');
+    expect(find.text('Iniciar sesión con Google'), findsOneWidget);
+
+    backend.estadoRenovar = 200;
+    await tester.tap(find.text('Iniciar sesión con Google'));
+    await tester.pumpAndSettle();
+    final enviados = backend.pedidos.where((p) => p.method == 'POST' && p.url.path == '/eventos').toList();
+    expect(enviados, hasLength(1), reason: 'se envió con la sesión nueva, sin volver a llenarlo');
+    expect(enviados.single.headers['Authorization'], isNot('Bearer jwt-0'));
+    expect(cola.filas, isEmpty);
+
+    await tester.tap(find.text('Reportar evento'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('confirmar-reporte')), findsOneWidget, reason: 'se puede empezar otro reporte');
+    expect(tester.widget<FilledButton>(find.byKey(const Key('confirmar-reporte'))).onPressed, isNull,
+        reason: 'empieza sin tipo elegido');
   });
 
   test('El modelo de sesión que se guarda incluye cuándo se inició, para contar los 30 días', () {

@@ -30,6 +30,8 @@ void main() {
         constructorMapa: mapa.construir,
         almacen: AlmacenFalso.conSesionVigente(),
         google: GoogleFalso(),
+        cola: ColaFalsa(),
+        conectividad: ConectividadFalsa(),
       ),
       child: const MaterialApp(home: Scaffold(body: MapScreen())),
     );

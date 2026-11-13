@@ -201,3 +201,11 @@ La navegación activa, los eventos y los surtidores se incorporarán en etapas p
 - «Cerrar sesión», en el menú de la cuenta del Mapa principal, llama a `POST /sesion/cerrar` y borra todo lo guardado.
 
 Para que el selector de cuentas funcione en Android hay que registrar en Google Cloud un Client ID de Android con el nombre del paquete y la huella SHA-1 de la llave de firma, además del Client ID web que se pasa en `GOOGLE_SERVER_CLIENT_ID`.
+
+## Eventos viales (HU-01, HU-02 y HU-03)
+
+- **Reportar (HU-01):** «Reportar evento» en el mapa abre la vista con los tipos reportables del catálogo y «Hace 5 minutos» marcado: con el tipo y «Confirmar» son tres toques. La app usa la ubicación del GPS o, si no hay, el punto que el conductor marca en el mapa. Envía la hora de confirmación y los minutos; nunca calcula el momento del evento.
+- **Sin conexión (HU-02):** si no hay red, el reporte se guarda en una base SQLite del teléfono (`sqflite`) y se reenvía solo cuando vuelve la red (`connectivity_plus`) o cada 30 segundos con la app abierta. Antes de reenviarlo, la app comprueba su vigencia con el catálogo guardado. Los que fallan varias veces se muestran como pendientes en el mapa.
+- **Ver (HU-03):** con el mapa abierto, la app consulta `GET /eventos` cada 5 segundos, pidiendo solo los cambios con la marca de la consulta anterior. Cada evento se dibuja con el color de su tipo; al tocarlo se ven su tipo y hace cuánto ocurrió. Si el backend no responde, el mapa conserva lo último y avisa «No se pudo actualizar eventos».
+
+Las pruebas de la cola usan `sqflite_common_ffi`, que necesita SQLite instalado en la máquina donde se corren (en Windows viene con el paquete; en Linux, `libsqlite3`).

@@ -45,6 +45,8 @@ void main() {
         constructorMapa: mapa.construir,
         almacen: AlmacenFalso.conSesionVigente()..datos[ServicioCatalogos.clave] = catalogosJson,
         google: GoogleFalso(),
+        cola: ColaFalsa(),
+        conectividad: ConectividadFalsa(),
       ),
       child: const MaterialApp(
         locale: Locale('es'),

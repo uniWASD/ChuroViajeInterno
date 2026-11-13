@@ -70,8 +70,10 @@ public class NucleoFalso {
                     eventosRecibidos++;
                     salida.println("{\"id\":" + numero + ",\"ok\":true,\"eventos_recibidos\":" + eventosRecibidos + "}");
                 }
+                // eventos_recibidos: cuantos avisos de trafico recibio este proceso antes de esta peticion (T-099)
                 case "calcular_ruta", "revisar_ruta", "analizar_telemetria" ->
-                    salida.println("{\"id\":" + numero + ",\"ok\":true,\"operacion\":\"" + operacion.group(1) + "\"}");
+                    salida.println("{\"id\":" + numero + ",\"ok\":true,\"operacion\":\"" + operacion.group(1)
+                            + "\",\"eventos_recibidos\":" + eventosRecibidos + "}");
                 default -> salida.println("{\"id\":" + numero + ",\"ok\":false,\"error\":{\"codigo\":"
                         + "\"OPERACION_DESCONOCIDA\",\"descripcion\":\"no existe\"}}");
             }

@@ -113,4 +113,73 @@ class EventoVialTest {
         assertEquals(HttpStatus.TOO_MANY_REQUESTS, error.getEstadoHttp());
         assertEquals("LIMITE_DE_REPORTES", error.getCodigo());
     }
+
+    // ------------------------------------------------------------------ votos (HU-11, #63)
+
+    private static EventoVial activo() {
+        return reportar(ACCIDENTE, CONFIRMACION, 0); // reportado por el conductor 7
+    }
+
+    private static EventoVial votar(EventoVial evento, ValorVoto valor, long... votantes) {
+        EventoVial resultado = evento;
+        for (long votante : votantes) {
+            resultado = resultado.registrarVoto(valor, votante, AHORA);
+        }
+        return resultado;
+    }
+
+    @Test
+    @DisplayName("RN-02.13: con 3 votos «falso» un evento Activo pasa a Retirado")
+    void tresFalsosLoRetiran() {
+        assertEquals(EstadoEvento.ACTIVO, votar(activo(), ValorVoto.FALSO, 1, 2).getEstado());
+        EventoVial retirado = votar(activo(), ValorVoto.FALSO, 1, 2, 3);
+        assertEquals(EstadoEvento.RETIRADO, retirado.getEstado());
+        assertEquals(3, retirado.getVotosFalso());
+    }
+
+    @Test
+    @DisplayName("RN-02.14: con 3 votos «real» pasa a Confirmado y despues ya no se retira por votos")
+    void tresRealesLoConfirman() {
+        EventoVial confirmado = votar(activo(), ValorVoto.REAL, 1, 2, 3);
+        assertEquals(EstadoEvento.CONFIRMADO, confirmado.getEstado());
+        EventoVial conFalsos = votar(confirmado, ValorVoto.FALSO, 4, 5, 6, 8);
+        assertEquals(EstadoEvento.CONFIRMADO, conFalsos.getEstado());
+        assertEquals(4, conFalsos.getVotosFalso());
+    }
+
+    @Test
+    @DisplayName("RN-02.12: el reportante no puede votar su propio evento (422)")
+    void elReportanteNoVota() {
+        ExcepcionRechazo error = assertThrows(ExcepcionRechazo.class,
+                () -> activo().registrarVoto(ValorVoto.REAL, 7, AHORA));
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, error.getEstadoHttp());
+        assertEquals("VOTO_PROPIO", error.getCodigo());
+    }
+
+    @Test
+    @DisplayName("RN-02.10: no se vota un evento retirado ni uno que ya vencio (422)")
+    void soloSeVotanLosVigentes() {
+        EventoVial retirado = votar(activo(), ValorVoto.FALSO, 1, 2, 3);
+        assertEquals("EVENTO_NO_VIGENTE",
+                assertThrows(ExcepcionRechazo.class, () -> retirado.registrarVoto(ValorVoto.REAL, 4, AHORA)).getCodigo());
+        assertEquals("EVENTO_NO_VIGENTE", assertThrows(ExcepcionRechazo.class,
+                () -> activo().registrarVoto(ValorVoto.REAL, 4, AHORA.plusSeconds(3600))).getCodigo());
+    }
+
+    @Test
+    @DisplayName("D-20: la congestion que detecta el sistema no se vota (422)")
+    void laCongestionDeTelemetriaNoSeVota() {
+        EventoVial congestion = EventoVial.desdeRegistro(9, CONGESTION, PLAZA, AHORA, AHORA, null,
+                OrigenEvento.TELEMETRIA, "CONGESTIONADO", EstadoEvento.ACTIVO, 0, 0, false);
+        assertEquals("VOTO_NO_PERMITIDO", assertThrows(ExcepcionRechazo.class,
+                () -> congestion.registrarVoto(ValorVoto.FALSO, 4, AHORA)).getCodigo());
+    }
+
+    @Test
+    @DisplayName("El voto se lee sin importar mayusculas; otro valor responde 400")
+    void valoresDeVoto() {
+        assertEquals(ValorVoto.REAL, ValorVoto.desdeTexto("real"));
+        assertEquals(ValorVoto.FALSO, ValorVoto.desdeTexto(" FALSO "));
+        assertEquals(HttpStatus.BAD_REQUEST, rechazo(() -> ValorVoto.desdeTexto("quizas")));
+    }
 }

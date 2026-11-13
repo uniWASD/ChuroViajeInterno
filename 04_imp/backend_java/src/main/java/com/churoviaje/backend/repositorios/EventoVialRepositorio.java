@@ -4,6 +4,7 @@ import com.churoviaje.backend.dominio.EstadoEvento;
 import com.churoviaje.backend.dominio.EventoVial;
 import com.churoviaje.backend.dominio.OrigenEvento;
 import com.churoviaje.backend.dominio.Ubicacion;
+import com.churoviaje.backend.dominio.Voto;
 import com.churoviaje.backend.dominio.catalogo.TipoEvento;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
@@ -132,6 +133,46 @@ public class EventoVialRepositorio {
                 where t.codigo = e.tipo_codigo and %s and %s <= ?
                 returning e.id
                 """.formatted(SE_MUESTRA, VENCE), Long.class, Timestamp.from(ahora), Timestamp.from(ahora));
+    }
+
+    /**
+     * Trae el evento y lo bloquea hasta que termine la transaccion: dos votos que llegan juntos se cuentan de a
+     * uno y ninguno se pierde (RN-02.13, RN-02.14).
+     */
+    public Optional<EventoVial> buscarParaVotar(long id) {
+        return jdbc.query(SELECCION + " where e.id = ? for update of e", MAPEO, id).stream().findFirst();
+    }
+
+    /** Si el conductor esta registrado, devuelve si es simulado (RN-02.16). */
+    public Optional<Boolean> conductorSimulado(long conductorId) {
+        return jdbc.query("select simulado from conductor where id = ?",
+                (fila, n) -> fila.getBoolean("simulado"), conductorId).stream().findFirst();
+    }
+
+    /** RN-02.11: si el conductor ya voto este evento. */
+    public boolean yaVoto(long eventoId, long conductorId) {
+        Boolean existe = jdbc.queryForObject(
+                "select exists (select 1 from voto where evento_id = ? and conductor_id = ?)",
+                Boolean.class, eventoId, conductorId);
+        return Boolean.TRUE.equals(existe);
+    }
+
+    public void insertarVoto(Voto voto) {
+        jdbc.update("insert into voto (evento_id, conductor_id, valor, fecha, simulado) values (?, ?, ?, ?, ?)",
+                voto.eventoId(), voto.conductorId(), voto.valor().name(), Timestamp.from(voto.fecha()), voto.simulado());
+    }
+
+    /**
+     * Guarda los votos y el estado del evento. Si el estado cambio, tambien su marca de cambio, para que la
+     * consulta por cambios lo entregue (RN-02.6).
+     */
+    public void actualizarVotos(EventoVial evento, boolean cambioDeEstado, Instant ahora) {
+        jdbc.update("""
+                update evento_vial set votos_real = ?, votos_falso = ?, estado = ?,
+                       actualizado_en = case when ? then ? else actualizado_en end
+                where id = ?
+                """, evento.getVotosReal(), evento.getVotosFalso(), evento.getEstado().name(), cambioDeEstado,
+                Timestamp.from(ahora), evento.getId());
     }
 
     private static EventoVial mapear(ResultSet fila, int numero) throws SQLException {

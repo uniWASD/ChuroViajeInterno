@@ -1,10 +1,12 @@
 package com.churoviaje.backend.servicios;
 
+import com.churoviaje.backend.motor.AvisoTrafico;
 import com.churoviaje.backend.repositorios.EventoVialRepositorio;
 import java.time.Clock;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,10 +22,12 @@ public class VencimientoEventos {
 
     private final EventoVialRepositorio eventos;
     private final Clock reloj;
+    private final ApplicationEventPublisher avisos;
 
-    public VencimientoEventos(EventoVialRepositorio eventos, Clock reloj) {
+    public VencimientoEventos(EventoVialRepositorio eventos, Clock reloj, ApplicationEventPublisher avisos) {
         this.eventos = eventos;
         this.reloj = reloj;
+        this.avisos = avisos;
     }
 
     /** Devuelve los identificadores de los eventos que vencio. */
@@ -35,6 +39,7 @@ public class VencimientoEventos {
         if (!vencidos.isEmpty()) {
             LOG.info("{} eventos pasaron a Vencido", vencidos.size());
         }
+        vencidos.forEach(id -> avisos.publishEvent(AvisoTrafico.vence(id))); // RN-02.15
         return vencidos;
     }
 }

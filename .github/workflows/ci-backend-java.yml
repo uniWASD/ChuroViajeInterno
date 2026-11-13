@@ -5,6 +5,7 @@ on:
     branches: [ "develop", "main" ]
     paths:
       - '04_imp/backend_java/**'
+      - '04_imp/motor_cpp/**'
       - '.github/workflows/ci-backend-java.yml'
 
 jobs:
@@ -25,5 +26,17 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # El núcleo C++ se compila para que corran las pruebas del backend con el núcleo real
+      # (CP-99, MotorDeRutas y la ruta). Usan la red de prueba del repositorio; la red real
+      # de Tarija no está en el repositorio (D-33) y su prueba se salta.
+      - name: Compilar el núcleo C++
+        working-directory: 04_imp/motor_cpp
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=OFF
+          cmake --build build --target motor_nucleo --parallel
+
       - name: Compilar y ejecutar pruebas (JUnit 5)
+        env:
+          MOTOR_PATH: ${{ github.workspace }}/04_imp/motor_cpp/build/motor_nucleo
+          RED_VIAL_PATH: ${{ github.workspace }}/04_imp/motor_cpp/tests/datos/red_irregular.json
         run: ./mvnw -B clean test

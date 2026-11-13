@@ -142,6 +142,21 @@ La primera consulta va sin parámetros y trae todos los eventos vigentes. Las si
 - La vigencia se calcula en cada consulta: un evento que venció hace segundos ya llega entre los quitados, aunque la tarea periódica todavía no lo haya marcado ([RN-02.4](04_reglas/CU-02_VisualizarEventosViales.md)).
 - La marca queda 2 segundos antes de la consulta, para no perder un evento que se estaba guardando en ese momento; por eso algún cambio puede llegar dos veces. Una marca que no es una fecha responde 400 `PETICION_INVALIDA`.
 
+### Votos (`POST /eventos/{id}/votos`)
+
+```json
+{"valor":"real"}
+```
+
+Responde 201 con el estado del evento después del voto, sin datos de quién votó:
+
+```json
+{"eventoId":153,"estado":"CONFIRMADO","confirmado":true}
+```
+
+- `valor` es `real` o `falso`, sin importar mayúsculas. Con 3 votos `falso`, un evento Activo pasa a Retirado; con 3 `real`, pasa a Confirmado y ya no se retira por votos ([RN-02.13](04_reglas/CU-02_VisualizarEventosViales.md), [RN-02.14](04_reglas/CU-02_VisualizarEventosViales.md)).
+- Rechazos: 400 `PETICION_INVALIDA` si el voto falta o no es `real` ni `falso`; 404 `EVENTO_NO_ENCONTRADO`; 409 `VOTO_REPETIDO` si el conductor ya votó ese evento; 422 `VOTO_NO_PERMITIDO` para la congestión que detecta el sistema ([D-20](08_decisiones_parametros.md)), `EVENTO_NO_VIGENTE` si ya está retirado o vencido y `VOTO_PROPIO` si lo reportó el mismo conductor ([RN-02.10](04_reglas/CU-02_VisualizarEventosViales.md) a [RN-02.12](04_reglas/CU-02_VisualizarEventosViales.md)).
+
 ## Backend con el motor core
 
 El backend nunca habla directo con el programa en C++. Llama a métodos del wrapper `MotorDeRutas`, que es Java y vive dentro del backend, y el wrapper traduce cada llamada a un mensaje para el núcleo C++ ([D-15](08_decisiones_parametros.md)). Los nombres de métodos y mensajes son una propuesta, igual que las rutas de la API.

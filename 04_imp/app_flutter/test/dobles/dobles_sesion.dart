@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:http/http.dart' as http;
+
 import 'package:app_flutter/controllers/sesion_controller.dart';
 import 'package:app_flutter/models/sesion.dart';
 import 'package:app_flutter/services/sesion/almacen_local.dart';
@@ -53,4 +55,23 @@ class GoogleFalso implements ProveedorGoogle {
 
   @override
   Future<void> cerrar() async => cierres++;
+}
+
+/// Responde `GET /eventos` con un mapa sin eventos y deja los demás pedidos a [resto].
+/// Así las pruebas de pantalla no dependen del refresco de eventos (cada 5 s).
+Future<http.Response> Function(http.Request) sinEventos(
+  Future<http.Response> Function(http.Request) resto,
+) {
+  return (pedido) async {
+    if (pedido.method != 'GET' || pedido.url.path != '/eventos') return resto(pedido);
+    return http.Response(
+      jsonEncode({
+        'marca': DateTime.now().toUtc().toIso8601String(),
+        'completa': true,
+        'eventos': [],
+        'quitados': [],
+      }),
+      200,
+    );
+  };
 }

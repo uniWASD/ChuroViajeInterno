@@ -21,7 +21,7 @@ void main() {
     mapa = MapaFalso();
     final client =
         apiClient ??
-        ApiClient(client: MockClient((_) async => http.Response('{}', 200)));
+        ApiClient(client: MockClient(sinEventos((_) async => http.Response('{}', 200))));
 
     return MultiProvider(
       providers: createAppProviders(

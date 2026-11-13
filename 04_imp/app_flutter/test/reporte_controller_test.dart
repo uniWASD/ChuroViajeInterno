@@ -200,7 +200,7 @@ void main() {
 
   testWidgets('CP-57: desde el mapa, el reporte se completa en 3 toques: «Reportar evento», el tipo y «Confirmar»', (tester) async {
     final enviados = <Map<String, dynamic>>[];
-    final api = ApiClient(client: MockClient((pedido) async {
+    final api = ApiClient(client: MockClient(sinEventos((pedido) async {
       if (pedido.url.path == '/eventos') {
         enviados.add(jsonDecode(pedido.body) as Map<String, dynamic>);
         return http.Response.bytes(utf8.encode(jsonEncode({'id': 1, 'tipo': 'CONTROL_POLICIAL',
@@ -209,7 +209,7 @@ void main() {
             'origen': 'CONDUCTOR'})), 201);
       }
       return http.Response('{}', 200);
-    }));
+    })));
     final almacenWidget = AlmacenFalso.conSesionVigente()..datos[ServicioCatalogos.clave] = catalogosJson;
     final ubicacionWidget = UbicacionFalsa();
     await tester.pumpWidget(MultiProvider(

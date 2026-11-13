@@ -6,8 +6,32 @@ import 'package:http/testing.dart';
 
 import 'package:app_flutter/services/api/api_client.dart';
 
+class GestorConRenovacionTemporalmenteIndisponible implements GestorToken {
+  @override
+  String? get token => 'jwt-expirado';
+
+  @override
+  Future<bool> asegurarTokenVigente() async => false;
+
+  @override
+  Future<bool> renovarTrasRechazo() async => false;
+}
+
 void main() {
   group('ApiClient', () {
+    test('No envía reportes con JWT caducado si falla la renovación por red', () async {
+      var pedidos = 0;
+      final api = ApiClient(client: MockClient((_) async {
+        pedidos++;
+        return http.Response('{}', 201);
+      }))..gestor = GestorConRenovacionTemporalmenteIndisponible();
+
+      await expectLater(api.post('/eventos', body: {'tipo': 'ACCIDENTE'}),
+          throwsA(isA<ApiException>().having((e) => e.codigo, 'codigo', 'ERROR_RED')));
+      expect(pedidos, 0);
+      api.dispose();
+    });
+
     test('Incluye el JWT en la petición', () async {
       final mockClient = MockClient((request) async {
         expect(request.headers['Authorization'], 'Bearer token-prueba');

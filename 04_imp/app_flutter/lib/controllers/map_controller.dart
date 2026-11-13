@@ -57,6 +57,9 @@ class MapController extends ChangeNotifier {
       _seguir();
     } else {
       _dejarDeSeguir();
+      // Nunca se debe reportar usando una posición antigua cuando el GPS está apagado
+      // o el conductor retiró el permiso (CP-58, RN-01.5).
+      _posicion = null;
     }
     notifyListeners();
   }
@@ -64,10 +67,12 @@ class MapController extends ChangeNotifier {
   /// La app pasó a segundo plano: se deja de pedir la ubicación (RNF-13).
   void alSalirDePantalla() {
     _enPantalla = false;
+    // Al volver debe obtenerse una posición nueva: la última podría haberse quedado obsoleta.
+    _posicion = null;
     if (_suscripcion != null) {
       _dejarDeSeguir();
-      notifyListeners();
     }
+    notifyListeners();
   }
 
   /// La app volvió a estar en pantalla: si había permiso, se vuelve a seguir la posición.
@@ -114,8 +119,9 @@ class MapController extends ChangeNotifier {
         notifyListeners();
       },
       onError: (Object error) {
-        // Por ejemplo, el conductor apagó el GPS: se queda la última posición conocida.
+        // Por ejemplo, el conductor apagó el GPS: se descarta la última lectura.
         debugPrint('Error de ubicación: $error');
+        _posicion = null; // el último punto ya no es una lectura GPS fiable
         _dejarDeSeguir();
         notifyListeners();
       },

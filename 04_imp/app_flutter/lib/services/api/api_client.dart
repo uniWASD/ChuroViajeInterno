@@ -109,10 +109,16 @@ class ApiClient {
   ) async {
     try {
       final gestor = conSesion ? this.gestor : null;
-      if (gestor != null &&
-          !await gestor.asegurarTokenVigente() &&
-          gestor.token == null) {
-        throw _sesionVencida; // no hay sesión: ni siquiera se intenta
+      if (gestor != null && !await gestor.asegurarTokenVigente()) {
+        if (gestor.token == null) {
+          throw _sesionVencida; // renovación realmente vencida o sesión inexistente
+        }
+        // Hay sesión local pero no se pudo renovar el JWT (p. ej. backend sin red).
+        // No lo confundimos con una sesión cerrada ni enviamos con un JWT ya caduco.
+        throw const ApiException(
+          codigo: 'ERROR_RED',
+          mensaje: 'No se pudo renovar la sesión. Comprueba tu conexión e inténtalo de nuevo.',
+        );
       }
       var response = await peticion().timeout(timeoutDuration);
       if (response.statusCode == 401 && gestor != null) {
@@ -135,6 +141,11 @@ class ApiClient {
       throw const ApiException(
         codigo: 'ERROR_RED',
         mensaje: 'No se pudo conectar con el servidor. Verifica tu conexión.',
+      );
+    } on TlsException {
+      throw const ApiException(
+        codigo: 'ERROR_RED',
+        mensaje: 'No se pudo establecer una conexión segura con el servidor.',
       );
     } on http.ClientException {
       throw const ApiException(

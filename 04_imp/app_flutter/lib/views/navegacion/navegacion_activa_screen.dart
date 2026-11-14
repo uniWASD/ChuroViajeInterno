@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/navegacion_controller.dart';
 import '../../models/coordenada.dart';
 import '../../models/navegacion.dart';
 import '../../models/ruta.dart';
+import '../../services/rutas/servicio_rutas.dart';
 import '../map/map_screen.dart';
 import '../map/mapa_base.dart';
 
@@ -21,9 +23,18 @@ class NavegacionActivaScreen extends StatelessWidget {
     List<Coordenada> paradas = const [],
   }) {
     final mapa = context.read<MapController>();
+    final rutas = context.read<ServicioRutas>();
+    final eventos = context.read<EventosController>();
     return MaterialPageRoute(
       builder: (_) => ChangeNotifierProvider(
-        create: (_) => NavegacionController(ruta: ruta, destino: destino, paradas: paradas, mapa: mapa),
+        create: (_) => NavegacionController(
+          ruta: ruta,
+          destino: destino,
+          paradas: paradas,
+          mapa: mapa,
+          rutas: rutas, // CU-04: revisa la ruta Activa cada 5 segundos
+          eventos: () => eventos.eventos,
+        ),
         child: const NavegacionActivaScreen(),
       ),
     );
@@ -34,6 +45,7 @@ class NavegacionActivaScreen extends StatelessWidget {
     final construirMapa = context.read<ConstructorMapa>();
     final mapa = context.watch<MapController>();
     final nav = context.watch<NavegacionController>();
+    final eventos = context.watch<EventosController>();
     return PopScope(
       // Volver atrás también termina la ruta: una ruta Activa sin su vista no se sigue (D-05).
       onPopInvokedWithResult: (salio, _) {
@@ -57,6 +69,16 @@ class NavegacionActivaScreen extends StatelessWidget {
                       MarcaMapa(nav.destino, TipoMarca.destino),
                     ],
                     trazado: nav.ruta?.trazado ?? const [],
+                    // RN-04.18: el evento queda a la vista, se acepte o se rechace la alternativa.
+                    eventos: [
+                      for (final e in eventos.eventos)
+                        MarcaEvento(
+                          id: e.id,
+                          coordenada: e.ubicacion,
+                          color: eventos.catalogos?.tipo(e.tipo)?.colorFlutter ?? Colors.grey,
+                          confirmado: e.confirmado,
+                        ),
+                    ],
                     alTocar: (_) {},
                     alFallar: mapa.informarErrorMapa,
                   ),
@@ -76,7 +98,16 @@ class NavegacionActivaScreen extends StatelessWidget {
               bottom: 8,
               child: SafeArea(
                 top: false,
-                child: nav.activa ? _Resumen(nav: nav, sinUbicacion: mapa.posicion == null) : _Fin(nav: nav),
+                child: nav.activa
+                    ? Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (nav.aviso != null) _Aviso(nav: nav, aviso: nav.aviso!, eventos: eventos),
+                          _Resumen(nav: nav, sinUbicacion: mapa.posicion == null),
+                        ],
+                      )
+                    : _Fin(nav: nav),
               ),
             ),
           ],
@@ -118,6 +149,64 @@ class _Indicacion extends StatelessWidget {
           style: Theme.of(context).textTheme.titleMedium?.copyWith(color: esquema.onPrimaryContainer),
         ),
         subtitle: detalle == null ? null : Text(detalle, style: TextStyle(color: esquema.onPrimaryContainer)),
+      ),
+    );
+  }
+}
+
+/// RN-04.17: el aviso no tapa la indicación ni el mapa. Con alternativa, «Aceptar» y «Rechazar»; sin ella, solo
+/// informa. Se cierra solo a los 15 segundos (RN-04.21) y lo dice.
+class _Aviso extends StatelessWidget {
+  final NavegacionController nav;
+  final AvisoRuta aviso;
+  final EventosController eventos;
+
+  const _Aviso({required this.nav, required this.aviso, required this.eventos});
+
+  @override
+  Widget build(BuildContext context) {
+    final esquema = Theme.of(context).colorScheme;
+    final evento = aviso.evento;
+    final tipo = evento == null ? null : eventos.catalogos?.tipo(evento.tipo)?.nombre ?? evento.tipo;
+    final que = tipo == null ? 'Un evento afecta tu ruta.' : '$tipo en tu ruta.';
+    final alternativa = aviso.alternativa;
+    return Card(
+      key: const Key('aviso-ruta'),
+      color: esquema.tertiaryContainer,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: esquema.onTertiaryContainer),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(que, style: Theme.of(context).textTheme.titleMedium),
+                ),
+                Text('${aviso.segundosRestantes} s', key: const Key('aviso-segundos')),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              alternativa == null
+                  ? 'No hay un camino mejor: sigue por esta ruta.'
+                  : 'Hay una ruta mejor: ${textoTiempo(alternativa.tiempoS)} · ${textoDistancia(alternativa.distanciaM)}.',
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: alternativa == null
+                  ? [TextButton(onPressed: nav.cerrarAviso, child: const Text('Entendido'))]
+                  : [
+                      TextButton(onPressed: nav.rechazarAlternativa, child: const Text('Rechazar')),
+                      const SizedBox(width: 8),
+                      FilledButton(onPressed: nav.aceptarAlternativa, child: const Text('Aceptar')),
+                    ],
+            ),
+          ],
+        ),
       ),
     );
   }

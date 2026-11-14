@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:app_flutter/models/coordenada.dart';
+import 'package:app_flutter/models/revision_ruta.dart';
 import 'package:app_flutter/models/ruta.dart';
 import 'package:app_flutter/services/api/api_client.dart';
 import 'package:app_flutter/services/rutas/servicio_rutas.dart';
@@ -100,6 +101,19 @@ class ServicioRutasFalso implements ServicioRutas {
     final e = error;
     if (e != null) throw e;
     return respuesta;
+  }
+
+  /// Lo que responde `POST /rutas/revision`; por defecto, sin cambios.
+  RevisionRuta revision = const RevisionRuta(estado: EstadoRevision.sinCambios);
+  ApiException? errorRevision;
+  final List<PedidoRevision> revisiones = [];
+
+  @override
+  Future<RevisionRuta> revisar(PedidoRevision pedido) async {
+    revisiones.add(pedido);
+    final e = errorRevision;
+    if (e != null) throw e;
+    return revision;
   }
 }
 

@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 import 'package:app_flutter/app_providers.dart';
 import 'package:app_flutter/models/coordenada.dart';
+import 'package:app_flutter/models/revision_ruta.dart';
+import 'package:app_flutter/models/ruta.dart';
 import 'package:app_flutter/services/api/api_client.dart';
 import 'package:app_flutter/views/map/map_screen.dart';
 import 'package:app_flutter/views/navegacion/navegacion_activa_screen.dart';
@@ -18,15 +20,17 @@ import 'dobles/rutas_de_navegacion.dart';
 void main() {
   late UbicacionFalsa ubicacion;
   late MapaFalso mapa;
+  late ServicioRutasFalso rutas;
 
   Widget app() {
     ubicacion = UbicacionFalsa();
     mapa = MapaFalso();
+    rutas = ServicioRutasFalso(respuesta: rutaEnL);
     return MultiProvider(
       providers: createAppProviders(
         apiClient: ApiClient(client: MockClient(sinEventos((_) async => http.Response('{}', 200)))),
         ubicacion: ubicacion,
-        servicioRutas: ServicioRutasFalso(respuesta: rutaEnL),
+        servicioRutas: rutas,
         constructorMapa: mapa.construir,
         almacen: AlmacenFalso.conSesionVigente(),
         google: GoogleFalso(),
@@ -103,4 +107,57 @@ void main() {
     expect(find.byType(NavegacionActivaScreen), findsNothing);
     expect(find.byType(MapScreen), findsOneWidget);
   });
+
+  final alternativa = RutaCalculada(
+    estado: EstadoRuta.encontrada,
+    distanciaM: 420,
+    tiempoS: 90,
+    trazado: [esquinaA, desplazar(esquinaA, surM: 200), esquinaC],
+    tramos: const [TramoRuta('osm:9:0:ida', 'Calle Colón'), TramoRuta('osm:9:1:ida', 'Calle Ingavi')],
+  );
+
+  testWidgets('CP-138 y CP-139: el aviso de alternativa aparece sin tapar la navegación y al rechazarlo no vuelve',
+      (tester) async {
+    await iniciarNavegacion(tester);
+    rutas.revision = RevisionRuta(estado: EstadoRevision.alternativa, eventoId: 153, alternativa: alternativa);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    expect(find.byKey(const Key('aviso-ruta')), findsOneWidget);
+    expect(find.text('Hay una ruta mejor: 2 min · 420 m.'), findsOneWidget);
+    expect(find.byKey(const Key('indicacion-navegacion')), findsOneWidget, reason: 'la navegación sigue a la vista');
+    expect(find.text('15 s'), findsOneWidget);
+
+    await tester.tap(find.text('Rechazar'));
+    await tester.pump();
+    expect(find.byKey(const Key('aviso-ruta')), findsNothing);
+    expect(find.text('Gira a la derecha en Avenida Las Américas'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    expect(find.byKey(const Key('aviso-ruta')), findsNothing);
+    expect(rutas.revisiones.last.eventosAvisados, [153]);
+  });
+
+  testWidgets('CP-140: si el conductor no toca el aviso, a los 15 segundos se cierra y la ruta sigue', (tester) async {
+    await iniciarNavegacion(tester);
+    rutas.revision = RevisionRuta(estado: EstadoRevision.alternativa, eventoId: 153, alternativa: alternativa);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 10));
+    expect(find.text('5 s'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    expect(find.byKey(const Key('aviso-ruta')), findsNothing);
+    expect(mapa.navegacion!.trazado, rutaEnL.trazado);
+  });
+
+  testWidgets('Al aceptar, el mapa dibuja la alternativa y la indicación sigue la ruta nueva', (tester) async {
+    await iniciarNavegacion(tester);
+    rutas.revision = RevisionRuta(estado: EstadoRevision.alternativa, eventoId: 153, alternativa: alternativa);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pump();
+    await tester.tap(find.text('Aceptar'));
+    await tester.pump();
+    expect(mapa.navegacion!.trazado, alternativa.trazado);
+    expect(find.text('Gira a la izquierda en Calle Ingavi'), findsOneWidget);
+  });
 }
+

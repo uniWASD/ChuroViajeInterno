@@ -195,6 +195,16 @@ La vista sigue la posición del conductor (la cámara de Mapbox va detrás de é
 * El controlador guarda los tramos que faltan para revisar la ruta (D-12), desde el primer tramo de la calle por la que va el conductor, y las paradas que faltan (se quitan al pasar a menos de 30 m).
 * A menos de 30 m del destino, o al tocar «Cancelar» o volver atrás, la ruta pasa a Terminada y se borra de la memoria. Nunca se guarda en el teléfono ni en el servidor (D-05).
 
+## Ruta alternativa (HU-06, #83)
+
+Mientras la ruta está Activa, cada 5 segundos (con la consulta de eventos) el controlador de navegación manda a `POST /rutas/revision` su posición, los tramos y las paradas que faltan, el destino y los eventos ya avisados (RN-04.13, D-12). La llamada es asíncrona: la interfaz no espera la respuesta.
+
+* **Alternativa:** un aviso sobre el resumen, sin tapar la indicación ni el mapa, con «Aceptar» y «Rechazar» y los segundos que le quedan (RN-04.17). Al aceptar, la alternativa pasa a ser la ruta Activa; al rechazar, sigue la original y el evento queda en el mapa (RN-04.18). Sin respuesta en 15 segundos se cierra solo (RN-04.21, P-26). Mientras está a la vista no se revisa.
+* **Sin alternativa:** avisa del evento y mantiene la ruta (RN-04.16).
+* **Ruta desactualizada:** pide la ruta de nuevo a `POST /rutas` desde la posición, con el mismo destino y las paradas que faltan.
+* **Falla** (sin red, 503): sigue con la ruta sin mostrar nada y reintenta en el ciclo siguiente.
+* Todo evento que provocó un aviso queda entre los avisados y no vuelve, se acepte, se rechace o se cierre solo (RN-04.19). Como los tramos que faltan se cuentan desde el comienzo de la calle actual, el backend puede avisar de un evento que ya quedó atrás en esa calle: si la app lo conoce por `GET /eventos` y está detrás del conductor sobre el trazado, no lo muestra y lo cuenta como avisado.
+
 ## Estado actual
 
 La app tiene la estructura inicial, la navegación principal, la gestión de estado con Provider, la configuración por entornos, un cliente HTTP centralizado, el mapa base de Mapbox con la ubicación del conductor (T-093) y la vista Cómo llegar (HU-05).

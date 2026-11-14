@@ -164,6 +164,8 @@ class _MapaMapboxState extends State<MapaMapbox> {
         lineWidth: 5,
       ),
     );
+    // En la Navegación activa la cámara sigue al conductor: no se encuadra la ruta.
+    if (_siguiendo) return;
     final camara = await mapa.cameraForCoordinatesPadding(
       puntos,
       CameraOptions(),
@@ -173,6 +175,8 @@ class _MapaMapboxState extends State<MapaMapbox> {
     );
     await mapa.flyTo(camara, MapAnimationOptions(duration: 600));
   }
+
+  bool get _siguiendo => widget.datos.seguirUbicacion && widget.datos.mostrarUbicacion;
 
   static Point _punto(Coordenada c) =>
       Point(coordinates: Position(c.longitud, c.latitud));
@@ -184,10 +188,12 @@ class _MapaMapboxState extends State<MapaMapbox> {
     }
     return MapWidget(
       styleUri: MapboxStyles.STANDARD,
-      viewport: CameraViewportState(
-        center: _punto(widget.datos.centro),
-        zoom: 13.5,
-      ),
+      viewport: _siguiendo
+          ? const FollowPuckViewportState(zoom: 16.5, pitch: 40)
+          : CameraViewportState(
+              center: _punto(widget.datos.centro),
+              zoom: 13.5,
+            ),
       onMapCreated: _alCrear,
       onMapLoadErrorListener: (error) {
         // Solo el estilo deja el mapa sin cargar; un mosaico que falla se vuelve a pedir solo.

@@ -200,6 +200,22 @@ Un aviso de tráfico y su respuesta:
 - `vence` va en ISO 8601 con zona horaria. Un evento cuyo vencimiento ya pasó deja de contar aunque el aviso `vence` no haya llegado.
 - La respuesta trae los tramos que el evento afecta, o los que afectaba si se quitó. Un evento a más de 100 m de una calle, o que ya venció, no afecta ninguno ([RN-03.9](04_reglas/CU-03_CalcularRutaOptima.md)).
 
+### Revisar la ruta activa (`revisar_ruta`)
+
+```json
+{"id":21,"operacion":"revisar_ruta","posicion":[-21.5355,-64.7296],"tramos":["osm:5001:1:ida","osm:5002:1:ida"],"destino":[-21.5300,-64.7260],"paradas":[],"eventos_avisados":["150"]}
+{"id":21,"ok":true,"estado":"ALTERNATIVA","evento":"153","costo":1700,"costo_actual":3244,"distancia_m":1700,"tiempo_s":306,"trazado":[[-21.5355,-64.7296],[-21.5330,-64.7310],[-21.5300,-64.7260]],"tramos":[{"id":"osm:6001:1:ida","calle":"Av. Circunvalación"},{"id":"osm:6002:1:ida","calle":"Calle La Cuesta"}]}
+```
+
+- `posicion` y `destino` son `[latitud, longitud]`; `tramos` son los `id` de los tramos que faltan, en orden, tal como llegaron en la ruta ([D-12](08_decisiones_parametros.md)). `paradas` (las que faltan) y `eventos_avisados` (ids de los eventos que ya provocaron un aviso en esta ruta) pueden faltar o venir vacíos.
+- `estado` es una de cuatro respuestas correctas, todas con `"ok":true`:
+  - `SIN_CAMBIOS`: ningún evento vigente que no esté entre los avisados cae sobre lo que falta ([RN-04.14](04_reglas/CU-04_RecalcularRuta.md), [RN-04.19](04_reglas/CU-04_RecalcularRuta.md)).
+  - `SIN_ALTERNATIVA`: hay un evento, pero ningún camino desde la posición actual cuesta menos que seguir ([RN-04.16](04_reglas/CU-04_RecalcularRuta.md)). Trae `evento`.
+  - `ALTERNATIVA`: hay un camino que cuesta menos. Trae `evento`, `costo` (el de la alternativa) y `costo_actual` (el de seguir), en metros ponderados por el tráfico, y los mismos campos que una ruta de `calcular_ruta`. Si un bloqueo corta lo que falta, seguir no es posible y no viene `costo_actual`.
+  - `RUTA_DESACTUALIZADA`: algún `id` de `tramos` ya no existe porque se recargó la red vial; la app pide la ruta de nuevo.
+- Cuenta cualquier evento vigente, de cualquier tipo y origen, que afecte a un tramo que falta. Si hay varios nuevos, se toma el primero en el orden de la ruta.
+- La alternativa sale de la intersección más cercana a la posición y pasa por las paradas que faltan, en orden ([RN-04.15](04_reglas/CU-04_RecalcularRuta.md)). El costo de seguir se mide desde esa misma intersección.
+
 ### Arranque, demoras y caídas
 
 - **Arranque.** Cada vez que el wrapper arranca el núcleo, espera a que cargue la red vial (mensaje `consultar_estado`) y le envía todos los eventos vigentes con `actualizar_trafico`. Recién entonces atiende rutas. Así el núcleo nunca empieza con el tráfico en blanco y nunca necesita llamar al backend.

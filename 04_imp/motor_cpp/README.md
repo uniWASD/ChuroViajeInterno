@@ -2,7 +2,7 @@
 
 Programa que mantiene la red vial y calcula rutas ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). No tiene servidor web ni abre puertos: el backend lo arranca como proceso hijo a través del wrapper Java `MotorDeRutas` y le habla por pipe. El contrato completo está en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#backend-con-el-motor-core).
 
-**Estado (T-090, T-096, #58 y #66):** estructura, protocolo, carga de la red vial, cálculo de rutas con A* y tráfico de los eventos. `consultar_estado`, `calcular_ruta` y `actualizar_trafico` responden de verdad; `revisar_ruta` y `analizar_telemetria` responden «no implementada» hasta que lleguen sus issues.
+**Estado (T-090, T-096, #58, #66 y #76):** estructura, protocolo, carga de la red vial, cálculo de rutas con A*, tráfico de los eventos y revisión de la ruta activa. `consultar_estado`, `calcular_ruta`, `actualizar_trafico` y `revisar_ruta` responden de verdad; `analizar_telemetria` responde «no implementada» hasta que llegue su issue.
 
 ## Arranque y red vial
 
@@ -60,6 +60,23 @@ El backend avisa con `actualizar_trafico` cada vez que un evento nace, cambia su
 - Al retirarse o vencer el último evento de un tramo, el tramo vuelve a fluido (RN-02.15). Un evento cuyo vencimiento pasó deja de contar aunque no llegue su aviso, y un aviso nuevo del mismo evento reemplaza al anterior.
 - Los eventos viven solo en la memoria del núcleo: si se reinicia, el wrapper se los vuelve a enviar.
 
+## Revisar la ruta activa
+
+Mientras el conductor navega, la app manda lo que le falta de la ruta y el núcleo revisa si un evento la afecta (CU-04, #76). El formato está en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#revisar-la-ruta-activa-revisar_ruta).
+
+```json
+{"id":21,"operacion":"revisar_ruta","posicion":[-21.5355,-64.7296],"tramos":["Plaza-Mercado","Mercado-Universidad","Universidad-Mirador"],"destino":[-21.529,-64.722],"paradas":[],"eventos_avisados":[]}
+{"id":21,"ok":true,"estado":"ALTERNATIVA","evento":"153","costo":1700,"costo_actual":3244,"distancia_m":1700,"tiempo_s":306,"trazado":[[-21.5355,-64.7296],[-21.533,-64.731],[-21.53,-64.726],[-21.529,-64.722]],"tramos":[{"id":"Plaza-Hospital","calle":"Av. Circunvalación"},{"id":"Hospital-Universidad","calle":"Calle La Cuesta (bajada)"},{"id":"Universidad-Mirador","calle":"Camino al Mirador"}]}
+```
+
+(Respuesta con `tests/datos/red_irregular.json` y un accidente en la Av. Las Américas.)
+
+- Busca, en el orden de la ruta, el primer evento vigente sobre un tramo que falta que no esté en `eventos_avisados`. Cuenta cualquier tipo y origen, también la congestión por telemetría (RN-04.14, RN-04.19).
+- Si no hay ninguno, responde `SIN_CAMBIOS`. Si lo hay, calcula la alternativa desde la posición actual, con el destino y las paradas que faltan (RN-04.15).
+- Propone la alternativa (`ALTERNATIVA`) solo si cuesta menos que seguir por la ruta actual con el tráfico al día; si no, responde `SIN_ALTERNATIVA` (RN-04.16). Las dos traen el `evento` que las provocó, para que la app lo agregue a los ya avisados.
+- Los dos costos se miden desde la misma intersección: la más cercana a la posición. Un bloqueo en lo que falta hace imposible seguir, y entonces la respuesta no trae `costo_actual`.
+- Si algún id de `tramos` no existe (se recargó la red vial), responde `RUTA_DESACTUALIZADA` y la app pide la ruta de nuevo.
+
 ## Protocolo
 
 - **Entrada estándar:** una petición por línea, en JSON. Lleva `id` (entero o texto) y `operacion`.
@@ -87,7 +104,7 @@ Traen `error` con un `codigo` y una `descripcion` en español. El núcleo sigue 
 | `PETICION_INVALIDA` | Es JSON, pero no es un objeto, o falta `id` u `operacion`, o tienen un tipo incorrecto | el de la petición si se pudo leer; si no, `null` |
 | `OPERACION_DESCONOCIDA` | La `operacion` no existe en el contrato | el de la petición |
 | `NO_IMPLEMENTADA` | La operación es del contrato pero aún no se programó | el de la petición |
-| `RED_NO_CARGADA` | `calcular_ruta` o `actualizar_trafico` llegó y el núcleo no tiene la red vial | el de la petición |
+| `RED_NO_CARGADA` | `calcular_ruta`, `revisar_ruta` o `actualizar_trafico` llegó y el núcleo no tiene la red vial | el de la petición |
 | `ERROR_INTERNO` | Fallo inesperado del núcleo | el de la petición si se conocía |
 
 Que no haya ruta (`SIN_RUTA`, `PUNTO_INVALIDO`) **no** es un error: va como `"ok":true`. Una petición de ruta sin `origen` o `destino`, o con un punto que no es `[latitud, longitud]`, responde `PETICION_INVALIDA`.
@@ -121,7 +138,7 @@ cmake --build build --target pruebas
 
 También sirve `ctest --test-dir build --output-on-failure` (en Visual Studio agrega `-C Release`).
 
-Las pruebas cubren, entre otras, **CP-24** (`consultar_estado` responde en una sola línea con el mismo `id`), **CP-25** (una línea que no es JSON responde `"ok":false` y la siguiente petición válida se atiende normal), **CP-71** (la red irregular del prototipo da las mismas rutas que en Python), **CP-72** (una parada intermedia), **CP-95 a CP-98** (accidente, bloqueo, retiro del bloqueo y sentidos afectados) y **CP-73** (100 consultas en una red de 10 000 esquinas, cada una en menos de 1 segundo). Con `RED_VIAL_REAL=<ruta de red_vial_tarija.json>` también se mide CP-73 con la red real y se calculan los viajes de referencia de Tarija (**CP-167** y **CP-168**, T-120; ver [04_imp/datos](../datos/README.md#viajes-de-referencia)); sin esa variable, esas pruebas se saltan.
+Las pruebas cubren, entre otras, **CP-24** (`consultar_estado` responde en una sola línea con el mismo `id`), **CP-25** (una línea que no es JSON responde `"ok":false` y la siguiente petición válida se atiende normal), **CP-71** (la red irregular del prototipo da las mismas rutas que en Python), **CP-72** (una parada intermedia), **CP-95 a CP-98** (accidente, bloqueo, retiro del bloqueo y sentidos afectados), **CP-124 a CP-126** (revisión de la ruta activa: alternativa más barata, sin alternativa y evento ya avisado) y **CP-73** (100 consultas en una red de 10 000 esquinas, cada una en menos de 1 segundo). Con `RED_VIAL_REAL=<ruta de red_vial_tarija.json>` también se mide CP-73 con la red real y se calculan los viajes de referencia de Tarija (**CP-167** y **CP-168**, T-120; ver [04_imp/datos](../datos/README.md#viajes-de-referencia)); sin esa variable, esas pruebas se saltan.
 
 ## Mandar un mensaje a mano
 

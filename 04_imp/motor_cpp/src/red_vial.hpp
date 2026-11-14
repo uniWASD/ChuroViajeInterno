@@ -82,6 +82,8 @@ class RedVial {
   const std::vector<std::size_t>& tramos_que_salen(std::size_t nodo) const { return salientes_[nodo]; }
   // Posición del nodo con ese id, o std::nullopt si no existe.
   std::optional<std::size_t> buscar_nodo(const std::string& id) const;
+  // Posición del tramo con ese id, o std::nullopt si no existe (por ejemplo, porque se recargó la red).
+  std::optional<std::size_t> buscar_tramo(const std::string& id) const;
   // Por cuánto se multiplica la distancia en línea recta para que la estimación del A* nunca supere el costo
   // real (RN-03.11). Es 1 si toda longitud es al menos la línea recta entre sus extremos (RN-03.7), con un
   // pequeño margen por redondeo; si algún tramo del archivo fuera más corto, baja lo necesario.
@@ -106,6 +108,7 @@ class RedVial {
   std::vector<Tramo> tramos_;
   std::vector<std::vector<std::size_t>> salientes_;
   std::unordered_map<std::string, std::size_t> posicion_nodo_;
+  std::unordered_map<std::string, std::size_t> posicion_tramo_;
   double factor_estimacion_ = 1.0;
   double lat0_ = 0;
   double lon0_ = 0;

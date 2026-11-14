@@ -1,14 +1,21 @@
 package com.churoviaje.backend.infraestructura.pg;
 
+import static com.churoviaje.backend.infraestructura.pg.ValoresSql.leerInstante;
 import static com.churoviaje.backend.infraestructura.pg.ValoresSql.ponerInstante;
 
 import com.churoviaje.backend.config.ConfiguracionAccesoDatos;
 import com.churoviaje.backend.dominio.EstadoCombustible;
 import com.churoviaje.backend.dominio.EstadoCombustibleRepository;
+import com.churoviaje.backend.dominio.OrigenCombustible;
+import com.churoviaje.backend.dominio.catalogo.ValorFila;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Repository;
@@ -59,6 +66,30 @@ public class PgEstadoCombustibleRepository implements EstadoCombustibleRepositor
             return sentencia.executeUpdate() == 1;
         } catch (SQLException e) {
             throw new ErrorDeBaseDeDatos("guardar el estado de combustible", e);
+        }
+    }
+
+    @Override
+    public List<EstadoCombustible> todos() {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement("""
+                        select surtidor_id, tipo_codigo, origen, disponible, fila, fecha_dato, litros, estado_anh,
+                               consultado_en
+                        from estado_combustible""");
+                ResultSet fila = sentencia.executeQuery()) {
+            List<EstadoCombustible> estados = new ArrayList<>();
+            while (fila.next()) {
+                String valorFila = fila.getString("fila");
+                OffsetDateTime consultado = fila.getObject("consultado_en", OffsetDateTime.class);
+                estados.add(new EstadoCombustible(fila.getLong("surtidor_id"), fila.getString("tipo_codigo"),
+                        OrigenCombustible.valueOf(fila.getString("origen")), fila.getBoolean("disponible"),
+                        valorFila == null ? null : ValorFila.valueOf(valorFila), leerInstante(fila, "fecha_dato"),
+                        fila.getBigDecimal("litros"), fila.getString("estado_anh"),
+                        consultado == null ? null : consultado.toInstant()));
+            }
+            return estados;
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("leer los estados de combustible", e);
         }
     }
 }

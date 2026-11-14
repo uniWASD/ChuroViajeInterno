@@ -29,6 +29,16 @@ public class PgSurtidorRepository implements SurtidorRepository {
             group by s.id
             order by s.nombre""";
 
+    /** La distancia sobre el elipsoide (geography); a igual distancia, por nombre. */
+    private static final String POR_CERCANIA = """
+            select s.id, s.nombre, ST_Y(s.ubicacion::geometry) as latitud, ST_X(s.ubicacion::geometry) as longitud,
+                   coalesce(array_agg(a.alias order by a.alias) filter (where a.alias is not null), '{}') as alias,
+                   ST_Distance(s.ubicacion, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) as distancia
+            from surtidor s
+            left join surtidor_alias a on a.surtidor_id = s.id
+            group by s.id
+            order by distancia, s.nombre""";
+
     private final DataSource conexiones;
 
     public PgSurtidorRepository(
@@ -48,6 +58,24 @@ public class PgSurtidorRepository implements SurtidorRepository {
             return surtidores;
         } catch (SQLException e) {
             throw new ErrorDeBaseDeDatos("leer los surtidores", e);
+        }
+    }
+
+    @Override
+    public List<Cercano> porCercania(Ubicacion punto) {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement(POR_CERCANIA)) {
+            sentencia.setBigDecimal(1, punto.longitud());
+            sentencia.setBigDecimal(2, punto.latitud());
+            try (ResultSet fila = sentencia.executeQuery()) {
+                List<Cercano> cercanos = new ArrayList<>();
+                while (fila.next()) {
+                    cercanos.add(new Cercano(surtidor(fila), fila.getDouble("distancia")));
+                }
+                return cercanos;
+            }
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("buscar los surtidores cercanos", e);
         }
     }
 

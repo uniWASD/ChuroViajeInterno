@@ -29,3 +29,4 @@ Ningún secreto va al repositorio ([D-13](../03_des/02_Arquitectura/08_decisione
 | `MOTOR_HABILITADO`, `MOTOR_PATH`, `RED_VIAL_PATH` | Backend | Arranque del núcleo C++ ([D-35](../03_des/02_Arquitectura/08_decisiones_parametros.md)). Sin `MOTOR_HABILITADO=true`, el motor queda apagado |
 | `BACKEND_URL`, `SERVICE_TOKEN`, `ALLOWED_GROUP_IDS` | Servicio de WhatsApp/LLM | Dirección del backend, credencial de servicio y grupos que se leen |
 | `WHATSAPP_ENABLED`, `WHATSAPP_PHONE_NUMBER`, `WHATSAPP_SESSION_PATH`, `WHATSAPP_AUTHORIZATIONS_FILE`, `WHATSAPP_RECONNECT_MS` | Servicio de WhatsApp/LLM | Lectura de los grupos ([D-36](../03_des/02_Arquitectura/08_decisiones_parametros.md)) |
+| `LLM_API_KEY`, `LLM_MODEL`, `ANALYSIS_INTERVAL_MS`, `MAINTENANCE_INTERVAL_MS` | Servicio de WhatsApp/LLM | Clave y modelo de Gemini, y ciclos de análisis (5 min) y de vencidos (1 min). Sin `LLM_API_KEY` no se llama al LLM ([D-17](../03_des/02_Arquitectura/08_decisiones_parametros.md)) |

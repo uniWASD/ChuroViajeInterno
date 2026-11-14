@@ -2,9 +2,14 @@
 const EVENTS = new Set(['SERVICIO_INICIADO','SERVICIO_DETENIDO','MANTENIMIENTO',
   'ERROR_CONFIGURACION','ERROR_SQLITE','ERROR_MANTENIMIENTO','ERROR_INESPERADO',
   'WHATSAPP_CONECTADO','WHATSAPP_DESCONECTADO','WHATSAPP_REINTENTO',
-  'WHATSAPP_SESION_CERRADA','WHATSAPP_CUENTA_INVALIDA','ERROR_LECTURA_WHATSAPP']);
-const METRICS = new Set(['caducados','pendientes','depurados']);
-const CODES = new Set(['CONFIG_INVALIDA','AUTORIZACION_INVALIDA','SESION_INVALIDA','ESQUEMA_NO_PERMITIDO','SERVICIO_CERRADO','ERR_SQLITE_ERROR','ERR_SQLITE_CANTOPEN']);
+  'WHATSAPP_SESION_CERRADA','WHATSAPP_CUENTA_INVALIDA','ERROR_LECTURA_WHATSAPP',
+  'ANALISIS_DESACTIVADO','LOTE_ANALIZADO','LLM_FALLO','CATALOGO_NO_DISPONIBLE',
+  'RESULTADO_ENVIADO','RESULTADO_GUARDADO','RESULTADO_RECHAZADO','RESULTADO_ESPERA_CREDENCIAL',
+  'RESULTADO_VENCIDO','ERROR_ANALISIS']);
+const METRICS = new Set(['caducados','pendientes','depurados','mensajes','avisos','descartados','descartadosValidador',
+  'aceptados','descartadosBackend','estadoHttp','resultados']);
+const CODES = new Set(['CONFIG_INVALIDA','AUTORIZACION_INVALIDA','SESION_INVALIDA','ESQUEMA_NO_PERMITIDO','SERVICIO_CERRADO','ERR_SQLITE_ERROR','ERR_SQLITE_CANTOPEN',
+  'LLM_NO_DISPONIBLE','LLM_CUOTA','LLM_FORMATO','BACKEND_CONEXION','BACKEND_HTTP','BACKEND_FORMATO','CATALOGO_INVALIDO','RESULTADO_INVALIDO']);
 const SYSTEM_CODE = /^E[A-Z0-9]+$/;
 // Los únicos detalles registrables son frases fijas del código; nada externo.
 const DETAILS = new Set([
@@ -24,6 +29,7 @@ const DETAILS = new Set([
   'WHATSAPP_ENABLED debe ser true o false.', 'WHATSAPP_PHONE_NUMBER inválido.',
   'Falta WHATSAPP_SESSION_PATH.', 'WHATSAPP_AUTHORIZATIONS_FILE debe ser una ruta absoluta.',
   'WHATSAPP_RECONNECT_MS inválido.', 'WHATSAPP_SESSION_PATH no puede ser temporal.',
+  'LLM_API_KEY inválido.', 'LLM_MODEL inválido.', 'LLM_BASE_URL no es válida.', 'ANALYSIS_INTERVAL_MS inválido.',
   'Falta configurar la cuenta, sesión o autorizaciones de WhatsApp.',
   'La sesión y los mensajes requieren archivos independientes.',
   'El registro externo de autorizaciones es inválido o incompleto.',

@@ -1,15 +1,14 @@
 package com.churoviaje.backend.servicios;
 
+import com.churoviaje.backend.dominio.catalogo.CatalogoRepository;
+import com.churoviaje.backend.dominio.catalogo.CatalogosRespuesta;
+import com.churoviaje.backend.dominio.catalogo.CatalogosRespuesta.TiempoReporteDto;
+import com.churoviaje.backend.dominio.catalogo.CatalogosRespuesta.TipoCombustibleDto;
+import com.churoviaje.backend.dominio.catalogo.CatalogosRespuesta.TipoEventoDto;
+import com.churoviaje.backend.dominio.catalogo.CatalogosRespuesta.ValorFilaDto;
 import com.churoviaje.backend.dominio.catalogo.TiempoReporte;
 import com.churoviaje.backend.dominio.catalogo.TipoCombustible;
-import com.churoviaje.backend.dominio.catalogo.TipoEvento;
 import com.churoviaje.backend.dominio.catalogo.ValorFila;
-import com.churoviaje.backend.dto.CatalogosRespuesta;
-import com.churoviaje.backend.dto.CatalogosRespuesta.TiempoReporteDto;
-import com.churoviaje.backend.dto.CatalogosRespuesta.TipoCombustibleDto;
-import com.churoviaje.backend.dto.CatalogosRespuesta.TipoEventoDto;
-import com.churoviaje.backend.dto.CatalogosRespuesta.ValorFilaDto;
-import com.churoviaje.backend.repositorios.CatalogoRepositorio;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -25,21 +24,19 @@ public class CatalogoServicio {
     private static final List<String> ORDEN_COMBUSTIBLES =
             List.of("GASOLINA", "DIESEL", "GASOLINA_PREMIUM", "DIESEL_ULS", TipoCombustible.DESCONOCIDO);
 
-    private final CatalogoRepositorio repositorio;
+    private final CatalogoRepository repositorio;
 
-    public CatalogoServicio(CatalogoRepositorio repositorio) {
+    public CatalogoServicio(CatalogoRepository repositorio) {
         this.repositorio = repositorio;
     }
 
     public CatalogosRespuesta obtenerCatalogos() {
         return new CatalogosRespuesta(
-                repositorio.tiposDeEvento().stream()
-                        .sorted(porOrden(ORDEN_EVENTOS, TipoEvento::codigo))
-                        .map(t -> new TipoEventoDto(t.codigo(), t.nombre(), t.color(), t.vigenciaMinutos(), t.reportable()))
+                repositorio.tiposDeEventoParaMostrar().stream()
+                        .sorted(porOrden(ORDEN_EVENTOS, TipoEventoDto::codigo))
                         .toList(),
-                repositorio.tiposDeCombustible().stream()
-                        .sorted(porOrden(ORDEN_COMBUSTIBLES, TipoCombustible::codigo))
-                        .map(t -> new TipoCombustibleDto(t.codigo(), t.nombre(), t.seleccionable()))
+                repositorio.tiposDeCombustibleParaMostrar().stream()
+                        .sorted(porOrden(ORDEN_COMBUSTIBLES, TipoCombustibleDto::codigo))
                         .toList(),
                 TiempoReporte.OPCIONES.stream()
                         .map(t -> new TiempoReporteDto(t.minutos(), t.nombre(), t.porDefecto()))

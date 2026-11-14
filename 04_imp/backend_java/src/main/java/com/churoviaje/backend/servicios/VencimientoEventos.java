@@ -1,7 +1,7 @@
 package com.churoviaje.backend.servicios;
 
+import com.churoviaje.backend.dominio.EventoRepository;
 import com.churoviaje.backend.motor.AvisoTrafico;
-import com.churoviaje.backend.repositorios.EventoVialRepositorio;
 import java.time.Clock;
 import java.util.List;
 import org.slf4j.Logger;
@@ -20,11 +20,11 @@ public class VencimientoEventos {
 
     private static final Logger LOG = LoggerFactory.getLogger(VencimientoEventos.class);
 
-    private final EventoVialRepositorio eventos;
+    private final EventoRepository eventos;
     private final Clock reloj;
     private final ApplicationEventPublisher avisos;
 
-    public VencimientoEventos(EventoVialRepositorio eventos, Clock reloj, ApplicationEventPublisher avisos) {
+    public VencimientoEventos(EventoRepository eventos, Clock reloj, ApplicationEventPublisher avisos) {
         this.eventos = eventos;
         this.reloj = reloj;
         this.avisos = avisos;

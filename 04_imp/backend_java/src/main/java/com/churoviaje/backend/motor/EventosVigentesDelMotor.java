@@ -1,6 +1,6 @@
 package com.churoviaje.backend.motor;
 
-import com.churoviaje.backend.repositorios.EventoVialRepositorio;
+import com.churoviaje.backend.dominio.EventoRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Clock;
@@ -14,11 +14,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class EventosVigentesDelMotor implements EventosVigentesParaMotor {
 
-    private final EventoVialRepositorio eventos;
+    private final EventoRepository eventos;
     private final ObjectMapper json;
     private final Clock reloj;
 
-    public EventosVigentesDelMotor(EventoVialRepositorio eventos, ObjectMapper json, Clock reloj) {
+    public EventosVigentesDelMotor(EventoRepository eventos, ObjectMapper json, Clock reloj) {
         this.eventos = eventos;
         this.json = json;
         this.reloj = reloj;

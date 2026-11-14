@@ -1,6 +1,6 @@
 package com.churoviaje.backend.controladores;
 
-import com.churoviaje.backend.dto.CatalogosRespuesta;
+import com.churoviaje.backend.dominio.catalogo.CatalogosRespuesta;
 import com.churoviaje.backend.servicios.CatalogoServicio;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -15,7 +15,8 @@ import java.util.Objects;
  * su vencimiento, que se retiro o que vencio. Los servicios lo publican como evento interno de Spring y
  * {@link TraficoDelMotor} se lo pasa al nucleo como un mensaje {@code actualizar_trafico}.
  */
-public record AvisoTrafico(long eventoId, Accion accion, String tipo, String nivel, Ubicacion ubicacion, Instant vence) {
+public record AvisoTrafico(long eventoId, Accion accion, String tipo, String nivel, String tramo, Ubicacion ubicacion,
+        Instant vence) {
 
     /** Las fechas van con la zona horaria de Bolivia, como en el contrato. */
     private static final ZoneId ZONA = ZoneId.of("America/La_Paz");
@@ -59,16 +60,16 @@ public record AvisoTrafico(long eventoId, Accion accion, String tipo, String niv
     }
 
     public static AvisoTrafico retira(long eventoId) {
-        return new AvisoTrafico(eventoId, Accion.RETIRA, null, null, null, null);
+        return new AvisoTrafico(eventoId, Accion.RETIRA, null, null, null, null, null);
     }
 
     public static AvisoTrafico vence(long eventoId) {
-        return new AvisoTrafico(eventoId, Accion.VENCE, null, null, null, null);
+        return new AvisoTrafico(eventoId, Accion.VENCE, null, null, null, null, null);
     }
 
     private static AvisoTrafico guardar(Accion accion, EventoVial evento) {
         return new AvisoTrafico(evento.getId(), accion, evento.getTipo().codigo(), evento.getNivel(),
-                evento.getUbicacion(), evento.venceEn());
+                evento.getTramoId(), evento.getUbicacion(), evento.venceEn());
     }
 
     /** El cuerpo del mensaje {@code actualizar_trafico}, sin {@code id} ni {@code operacion}, que pone el wrapper. */
@@ -80,6 +81,9 @@ public record AvisoTrafico(long eventoId, Accion accion, String tipo, String niv
             mensaje.put("tipo", tipo);
             if (nivel != null) {
                 mensaje.put("nivel", nivel);
+            }
+            if (tramo != null) {
+                mensaje.put("tramo", tramo); // D-18: la congestión afecta solo el sentido donde se midió
             }
             mensaje.putArray("ubicacion").add(ubicacion.latitud()).add(ubicacion.longitud());
             mensaje.put("vence", FORMATO.format(OffsetDateTime.ofInstant(vence, ZONA)));

@@ -38,7 +38,7 @@ public class PgEventoRepository implements EventoRepository {
     /** Columnas de un evento con su tipo; la ubicacion sale como latitud y longitud. */
     private static final String SELECCION = """
             select e.id, e.ocurrio_en, e.registrado_en, e.reportante_id, e.origen, e.nivel, e.estado,
-                   e.votos_real, e.votos_falso, e.simulado,
+                   e.votos_real, e.votos_falso, e.simulado, e.tramo_id,
                    ST_Y(e.ubicacion::geometry) as latitud, ST_X(e.ubicacion::geometry) as longitud,
                    t.codigo, t.nombre, t.color, t.vigencia_minutos, t.reportable
             from evento_vial e join tipo_evento t on t.codigo = e.tipo_codigo
@@ -91,8 +91,9 @@ public class PgEventoRepository implements EventoRepository {
     public long guardarNuevo(EventoVial evento) {
         List<Long> id = listar("guardar el evento", """
                 insert into evento_vial (tipo_codigo, ubicacion, ocurrio_en, registrado_en, actualizado_en,
-                                         reportante_id, origen, nivel, estado, votos_real, votos_falso, simulado)
-                values (?, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                         reportante_id, origen, nivel, estado, votos_real, votos_falso, simulado,
+                                         tramo_id)
+                values (?, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 returning id
                 """,
                 sentencia -> {
@@ -109,6 +110,7 @@ public class PgEventoRepository implements EventoRepository {
                     sentencia.setInt(11, evento.getVotosReal());
                     sentencia.setInt(12, evento.getVotosFalso());
                     sentencia.setBoolean(13, evento.isSimulado());
+                    sentencia.setString(14, evento.getTramoId());
                 },
                 fila -> fila.getLong("id"));
         if (id.isEmpty()) {
@@ -182,6 +184,48 @@ public class PgEventoRepository implements EventoRepository {
                 PgEventoRepository::evento).stream().findFirst();
     }
 
+    /** {@code for update of e}: dos análisis que llegan juntos no crean dos congestiones en el mismo tramo. */
+    @Override
+    public Optional<EventoVial> buscarCongestionActivaEnTramo(String tramoId, boolean simulado) {
+        return listar("buscar la congestión del tramo",
+                SELECCION + " where e.tramo_id = ? and e.simulado = ? and " + SE_MUESTRA + " for update of e",
+                sentencia -> {
+                    sentencia.setString(1, tramoId);
+                    sentencia.setBoolean(2, simulado);
+                },
+                PgEventoRepository::evento).stream().findFirst();
+    }
+
+    @Override
+    public void actualizarCongestion(EventoVial evento, Instant ahora) {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement(
+                        "update evento_vial set ocurrio_en = ?, nivel = ?, actualizado_en = ? where id = ?")) {
+            ponerInstante(sentencia, 1, evento.getOcurrioEn());
+            sentencia.setString(2, evento.getNivel());
+            ponerInstante(sentencia, 3, ahora);
+            sentencia.setLong(4, evento.getId());
+            sentencia.executeUpdate();
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("extender la congestión", e);
+        }
+    }
+
+    @Override
+    public void marcarVencido(long id, Instant ahora) {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement("""
+                        update evento_vial set estado = 'VENCIDO', actualizado_en = greatest(?, registrado_en)
+                        where id = ? and estado in ('ACTIVO', 'CONFIRMADO')
+                        """)) {
+            ponerInstante(sentencia, 1, ahora);
+            sentencia.setLong(2, id);
+            sentencia.executeUpdate();
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("marcar el evento como vencido", e);
+        }
+    }
+
     @Override
     public void actualizarVotos(EventoVial evento, boolean cambioDeEstado, Instant ahora) {
         try (Connection conexion = conexiones.getConnection();
@@ -239,6 +283,6 @@ public class PgEventoRepository implements EventoRepository {
                 leerInstante(fila, "registrado_en"), leerLongONulo(fila, "reportante_id"),
                 OrigenEvento.valueOf(fila.getString("origen")), fila.getString("nivel"),
                 EstadoEvento.valueOf(fila.getString("estado")), fila.getInt("votos_real"), fila.getInt("votos_falso"),
-                fila.getBoolean("simulado"));
+                fila.getBoolean("simulado"), fila.getString("tramo_id"));
     }
 }

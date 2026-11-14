@@ -49,6 +49,19 @@ public interface EventoRepository {
     Optional<EventoVial> buscarParaVotar(long id);
 
     /**
+     * Para operar: la congestión Activa o Confirmada del tramo, con la misma marca de simulado, bloqueada hasta que
+     * termine la transacción (RN-04.11, RN-04.20). Puede estar ya vencida si la tarea periódica todavía no la marcó:
+     * quien la pide lo decide con {@link EventoVial#estaVigente}.
+     */
+    Optional<EventoVial> buscarCongestionActivaEnTramo(String tramoId, boolean simulado);
+
+    /** RN-04.11: guarda el momento y el nivel nuevos de una congestión que se extiende, y su marca de cambio. */
+    void actualizarCongestion(EventoVial evento, Instant ahora);
+
+    /** RN-02.4: marca un evento como Vencido aunque la tarea periódica todavía no lo haya hecho. */
+    void marcarVencido(long id, Instant ahora);
+
+    /**
      * Guarda los votos y el estado del evento. Si el estado cambio, tambien su marca de cambio, para que la consulta
      * por cambios lo entregue (RN-02.6).
      */

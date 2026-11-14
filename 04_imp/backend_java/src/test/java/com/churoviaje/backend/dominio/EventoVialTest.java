@@ -182,4 +182,36 @@ class EventoVialTest {
         assertEquals(ValorVoto.FALSO, ValorVoto.desdeTexto(" FALSO "));
         assertEquals(HttpStatus.BAD_REQUEST, rechazo(() -> ValorVoto.desdeTexto("quizas")));
     }
+
+    @Test
+    @DisplayName("RN-04.10: la congestión de telemetría nace activa, sin reportante, con su tramo y su nivel")
+    void congestionDeTelemetria() {
+        EventoVial e = EventoVial.detectarCongestion(CONGESTION, PLAZA, "osm:1:0:ida", "CONGESTIONADO", false, AHORA);
+        assertAll(
+                () -> assertEquals(OrigenEvento.TELEMETRIA, e.getOrigen()),
+                () -> assertNull(e.getReportanteId()),
+                () -> assertEquals("osm:1:0:ida", e.getTramoId()),
+                () -> assertEquals("CONGESTIONADO", e.getNivel()),
+                () -> assertEquals(AHORA, e.getOcurrioEn()),
+                () -> assertEquals(AHORA.plusSeconds(30 * 60), e.venceEn()));
+        assertThrows(IllegalArgumentException.class,
+                () -> EventoVial.detectarCongestion(ACCIDENTE, PLAZA, "osm:1:0:ida", "CONGESTIONADO", false, AHORA));
+        assertThrows(IllegalArgumentException.class,
+                () -> EventoVial.detectarCongestion(CONGESTION, PLAZA, "osm:1:0:ida", "LENTO", false, AHORA));
+    }
+
+    @Test
+    @DisplayName("RN-04.11: extender una congestión mueve su momento y su vencimiento, y toma el nivel nuevo")
+    void extenderCongestion() {
+        EventoVial e = EventoVial.detectarCongestion(CONGESTION, PLAZA, "osm:1:0:ida", "CONGESTIONADO", false, AHORA);
+        EventoVial extendida = e.extenderCongestion("MUY_CONGESTIONADO", AHORA.plusSeconds(600));
+        assertEquals(AHORA.plusSeconds(600), extendida.getOcurrioEn());
+        assertEquals(AHORA, extendida.getRegistradoEn());
+        assertEquals("MUY_CONGESTIONADO", extendida.getNivel());
+        assertEquals(AHORA.plusSeconds(600 + 30 * 60), extendida.venceEn());
+        // Una lectura atrasada no le quita tiempo.
+        assertEquals(AHORA.plusSeconds(600), extendida.extenderCongestion("CONGESTIONADO", AHORA).getOcurrioEn());
+        EventoVial reportado = reportar(ACCIDENTE, CONFIRMACION, 0);
+        assertThrows(IllegalStateException.class, () -> reportado.extenderCongestion("CONGESTIONADO", AHORA));
+    }
 }

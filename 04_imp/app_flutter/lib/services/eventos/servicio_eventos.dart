@@ -30,6 +30,24 @@ class RespuestaEventos {
   );
 }
 
+/// El voto de un conductor sobre un evento (CU-02).
+enum ValorVoto { real, falso }
+
+/// Respuesta de `POST /eventos/{id}/votos`: el estado del evento después del voto, sin datos de quién votó.
+class ResultadoVoto {
+  final int eventoId;
+  final String estado;
+  final bool confirmado;
+
+  const ResultadoVoto({required this.eventoId, required this.estado, required this.confirmado});
+
+  factory ResultadoVoto.fromJson(Map<String, dynamic> json) => ResultadoVoto(
+    eventoId: (json['eventoId'] as num).toInt(),
+    estado: json['estado'] as String,
+    confirmado: json['confirmado'] as bool? ?? false,
+  );
+}
+
 /// Las rutas `/eventos` del backend (05_contratos.md).
 class ServicioEventos {
   final ApiClient _api;
@@ -71,4 +89,19 @@ class ServicioEventos {
     }
     return RespuestaEventos.fromJson(datos);
   }
+
+  /// `POST /eventos/{id}/votos`. Un rechazo (ya votó, es su propio evento, ya no está vigente) llega como
+  /// [ApiException] con el mensaje del backend (RN-02.10 a RN-02.12).
+  Future<ResultadoVoto> votar(int eventoId, ValorVoto valor) async {
+    final datos = await _api.post('/eventos/$eventoId/votos', body: {'valor': valor.name});
+    try {
+      return ResultadoVoto.fromJson(datos as Map<String, dynamic>);
+    } on Object {
+      throw const ApiException(
+        codigo: 'RESPUESTA_INVALIDA',
+        mensaje: 'El servidor devolvió una respuesta inválida.',
+      );
+    }
+  }
 }
+

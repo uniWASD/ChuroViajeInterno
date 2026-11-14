@@ -42,6 +42,20 @@ class EventoVial {
     );
   }
 
+  /// D-20: la congestión que detecta el sistema con la telemetría no se vota.
+  bool get votable => origen != 'TELEMETRIA';
+
+  EventoVial conEstado(String estado, bool confirmado) => EventoVial(
+    id: id,
+    tipo: tipo,
+    ubicacion: ubicacion,
+    momentoOcurrencia: momentoOcurrencia,
+    estado: estado,
+    confirmado: confirmado,
+    origen: origen,
+    nivel: nivel,
+  );
+
   /// Texto de «hace cuánto ocurrió» para la ficha del evento (RN-02.7).
   String haceCuanto(DateTime ahora) {
     final minutos = ahora.difference(momentoOcurrencia).inMinutes;

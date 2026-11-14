@@ -205,6 +205,15 @@ Mientras la ruta está Activa, cada 5 segundos (con la consulta de eventos) el c
 * **Falla** (sin red, 503): sigue con la ruta sin mostrar nada y reintenta en el ciclo siguiente.
 * Todo evento que provocó un aviso queda entre los avisados y no vuelve, se acepte, se rechace o se cierre solo (RN-04.19). Como los tramos que faltan se cuentan desde el comienzo de la calle actual, el backend puede avisar de un evento que ya quedó atrás en esa calle: si la app lo conoce por `GET /eventos` y está detrás del conductor sobre el trazado, no lo muestra y lo cuenta como avisado.
 
+## Telemetría (HU-13, #75)
+
+`TelemetriaController` sigue al controlador del mapa y a la sesión: con la app en pantalla, con sesión y con permiso de ubicación, toma una lectura del GPS cada 3 segundos y las envía en grupos cada 15 a `POST /telemetria`, haya o no una ruta activa (P-13, RN-04.2). Cada lectura lleva posición, precisión y momento; la velocidad la calcula el motor (RN-04.1).
+
+* Las lecturas salen de un flujo del GPS sin filtro de distancia (en Android, cada 3 segundos), para que un auto detenido también las mande. Si el GPS no dio una lectura nueva, no se repite la anterior.
+* Al pasar a segundo plano, al cerrar la sesión o si se pierde el permiso, deja de leer y de enviar, y lo que no se envió se descarta (RN-04.1, RN-04.3, RNF-13). Sin permiso, el resto de la app funciona igual.
+* Un grupo que no se pudo enviar se descarta: la telemetría no se reintenta.
+* La prueba de batería de 30 minutos comparada con Google Maps (RNF-18) se hace a mano en un teléfono.
+
 ## Estado actual
 
 La app tiene la estructura inicial, la navegación principal, la gestión de estado con Provider, la configuración por entornos, un cliente HTTP centralizado, el mapa base de Mapbox con la ubicación del conductor (T-093) y la vista Cómo llegar (HU-05).

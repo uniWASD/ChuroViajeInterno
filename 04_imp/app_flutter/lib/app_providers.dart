@@ -8,6 +8,7 @@ import 'controllers/map_controller.dart';
 import 'controllers/navigation_controller.dart';
 import 'controllers/reporte_controller.dart';
 import 'controllers/sesion_controller.dart';
+import 'controllers/telemetria_controller.dart';
 import 'services/api/api_client.dart';
 import 'services/catalogos/servicio_catalogos.dart';
 import 'services/conectividad/conectividad.dart';
@@ -16,6 +17,7 @@ import 'services/rutas/servicio_rutas.dart';
 import 'services/sesion/almacen_local.dart';
 import 'services/sesion/proveedor_google.dart';
 import 'services/sesion/servicio_sesion.dart';
+import 'services/telemetria/servicio_telemetria.dart';
 import 'services/ubicacion/servicio_ubicacion.dart';
 import 'storage/cola_reportes.dart';
 import 'views/map/mapa_base.dart';
@@ -66,8 +68,20 @@ List<SingleChildWidget> createAppProviders({
   Provider<ConstructorMapa>.value(
     value: constructorMapa ?? construirMapaMapbox,
   ),
+  Provider<ServicioUbicacion>.value(value: ubicacion ?? ServicioUbicacionGeolocator()),
   ChangeNotifierProvider<MapController>(
-    create: (_) => MapController(ubicacion ?? ServicioUbicacionGeolocator()),
+    create: (context) => MapController(context.read<ServicioUbicacion>()),
+  ),
+  // HU-13: la telemetría sigue al mapa (en pantalla y con permiso) y a la sesión; arranca sola.
+  Provider<TelemetriaController>(
+    lazy: false,
+    create: (context) => TelemetriaController(
+      context.read<MapController>(),
+      context.read<SesionController>(),
+      context.read<ServicioUbicacion>(),
+      ServicioTelemetria(context.read<ApiClient>()),
+    ),
+    dispose: (_, telemetria) => telemetria.dispose(),
   ),
   Provider<ServicioEventos>(
     create: (context) => servicioEventos ?? ServicioEventos(context.read<ApiClient>()),

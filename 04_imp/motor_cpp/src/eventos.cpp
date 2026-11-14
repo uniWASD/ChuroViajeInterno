@@ -63,6 +63,11 @@ std::vector<std::size_t> TablaEventos::quitar(const std::string& id) {
   return tramos;
 }
 
+const std::vector<std::string>& TablaEventos::eventos_en(std::size_t tramo) const {
+  static const std::vector<std::string> ninguno;
+  return tramo < por_tramo_.size() ? por_tramo_[tramo] : ninguno;
+}
+
 const Trafico& TablaEventos::trafico(std::int64_t ahora) {
   std::vector<std::string> vencidos;
   for (const auto& [id, g] : eventos_) {

@@ -78,7 +78,7 @@ TEST_P(OperacionPendiente, RespondeNoImplementada) {
 }
 
 INSTANTIATE_TEST_SUITE_P(Contrato, OperacionPendiente,
-                         ::testing::Values("revisar_ruta", "analizar_telemetria"));
+                         ::testing::Values("analizar_telemetria"));
 
 TEST(Nucleo, OperacionDesconocida) {
   Nucleo nucleo;

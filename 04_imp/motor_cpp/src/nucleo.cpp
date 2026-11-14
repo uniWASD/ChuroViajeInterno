@@ -7,6 +7,7 @@
 #include <exception>
 #include <utility>
 
+#include "revision.hpp"
 #include "tiempo.hpp"
 
 #include <nlohmann/json.hpp>
@@ -17,9 +18,10 @@ namespace {
 // Se usa ordered_json para que las respuestas salgan con "id" y "ok" primero, como en el contrato.
 using json = nlohmann::ordered_json;
 
-constexpr std::array<std::string_view, 2> kOperacionesPendientes = {"revisar_ruta", "analizar_telemetria"};
+constexpr std::array<std::string_view, 1> kOperacionesPendientes = {"analizar_telemetria"};
 constexpr std::string_view kConsultarEstado = "consultar_estado";
 constexpr std::string_view kCalcularRuta = "calcular_ruta";
+constexpr std::string_view kRevisarRuta = "revisar_ruta";
 constexpr std::string_view kActualizarTrafico = "actualizar_trafico";
 
 bool es_pendiente(std::string_view operacion) {
@@ -68,6 +70,20 @@ const char* texto_estado(EstadoRuta estado) {
   return "SIN_RUTA";
 }
 
+// Los campos de una ruta encontrada: distancia, tiempo, trazado y tramos con su calle (05_contratos.md).
+void agregar_ruta(json& r, const RedVial& red, const Ruta& ruta) {
+  json trazado = json::array();
+  for (const Punto& p : ruta.trazado) trazado.push_back({redondear(p.lat), redondear(p.lon)});
+  json tramos = json::array();
+  for (const std::size_t t : ruta.tramos) {
+    tramos.push_back({{"id", red.tramos()[t].id}, {"calle", red.tramos()[t].nombre}});
+  }
+  r["distancia_m"] = static_cast<long long>(std::llround(ruta.distancia_m));
+  r["tiempo_s"] = static_cast<long long>(std::llround(ruta.tiempo_s));
+  r["trazado"] = std::move(trazado);
+  r["tramos"] = std::move(tramos);
+}
+
 // calcular_ruta: origen y destino obligatorios, paradas opcionales (RN-03.2). «Sin ruta» y «punto inválido»
 // son respuestas correctas, con "ok":true (RN-03.12).
 Respuesta responder_ruta(const json& id, const json& peticion, const RedVial* red, TablaEventos& eventos,
@@ -102,17 +118,96 @@ Respuesta responder_ruta(const json& id, const json& peticion, const RedVial* re
 
   const Ruta ruta = calcular_ruta(*red, *origen, *destino, paradas, &eventos.trafico(ahora), algoritmo);
   json r = {{"id", id}, {"ok", true}, {"estado", texto_estado(ruta.estado)}};
-  if (ruta.estado == EstadoRuta::encontrada) {
-    json trazado = json::array();
-    for (const Punto& p : ruta.trazado) trazado.push_back({redondear(p.lat), redondear(p.lon)});
-    json tramos = json::array();
-    for (const std::size_t t : ruta.tramos) {
-      tramos.push_back({{"id", red->tramos()[t].id}, {"calle", red->tramos()[t].nombre}});
+  if (ruta.estado == EstadoRuta::encontrada) agregar_ruta(r, *red, ruta);
+  return respuesta_ok(std::move(r));
+}
+
+const char* texto_revision(EstadoRevision estado) {
+  switch (estado) {
+    case EstadoRevision::sin_alternativa: return "SIN_ALTERNATIVA";
+    case EstadoRevision::alternativa: return "ALTERNATIVA";
+    case EstadoRevision::ruta_desactualizada: return "RUTA_DESACTUALIZADA";
+    case EstadoRevision::sin_cambios: break;
+  }
+  return "SIN_CAMBIOS";
+}
+
+// Un id de evento llega como texto o como entero; se guarda como texto, igual que en actualizar_trafico.
+std::optional<std::string> leer_id_evento(const json& valor) {
+  if (valor.is_string()) return valor.get<std::string>();
+  if (valor.is_number_integer()) return valor.dump();
+  return std::nullopt;
+}
+
+// revisar_ruta (#76): posición, tramos que faltan y destino obligatorios; paradas y eventos ya avisados,
+// opcionales. Las cuatro respuestas son correctas, con "ok":true.
+Respuesta responder_revision(const json& id, const json& peticion, const RedVial* red, TablaEventos& eventos,
+                             std::int64_t ahora, Algoritmo algoritmo) {
+  PeticionRevision revision;
+  const auto it_posicion = peticion.find("posicion");
+  const auto it_destino = peticion.find("destino");
+  const auto posicion = it_posicion != peticion.end() ? leer_punto(*it_posicion) : std::nullopt;
+  const auto destino = it_destino != peticion.end() ? leer_punto(*it_destino) : std::nullopt;
+  if (!posicion || !destino) {
+    return respuesta_error(id, codigo_error::peticion_invalida,
+                           "\"posicion\" y \"destino\" son obligatorios y van como [latitud, longitud].");
+  }
+  revision.posicion = *posicion;
+  revision.destino = *destino;
+
+  const auto it_tramos = peticion.find("tramos");
+  if (it_tramos == peticion.end() || !it_tramos->is_array()) {
+    return respuesta_error(id, codigo_error::peticion_invalida,
+                           "\"tramos\" es obligatorio: la lista de ids de los tramos que faltan.");
+  }
+  for (const json& t : *it_tramos) {
+    if (!t.is_string()) {
+      return respuesta_error(id, codigo_error::peticion_invalida, "Cada tramo va como el texto de su id.");
     }
-    r["distancia_m"] = static_cast<long long>(std::llround(ruta.distancia_m));
-    r["tiempo_s"] = static_cast<long long>(std::llround(ruta.tiempo_s));
-    r["trazado"] = std::move(trazado);
-    r["tramos"] = std::move(tramos);
+    revision.tramos.push_back(t.get<std::string>());
+  }
+
+  const auto it_paradas = peticion.find("paradas");
+  if (it_paradas != peticion.end() && !it_paradas->is_null()) {
+    if (!it_paradas->is_array()) {
+      return respuesta_error(id, codigo_error::peticion_invalida, "\"paradas\" debe ser una lista de puntos.");
+    }
+    for (const json& p : *it_paradas) {
+      const auto parada = leer_punto(p);
+      if (!parada) {
+        return respuesta_error(id, codigo_error::peticion_invalida, "Cada parada va como [latitud, longitud].");
+      }
+      revision.paradas.push_back(*parada);
+    }
+  }
+
+  const auto it_avisados = peticion.find("eventos_avisados");
+  if (it_avisados != peticion.end() && !it_avisados->is_null()) {
+    if (!it_avisados->is_array()) {
+      return respuesta_error(id, codigo_error::peticion_invalida,
+                             "\"eventos_avisados\" debe ser una lista de ids de eventos.");
+    }
+    for (const json& e : *it_avisados) {
+      const auto evento = leer_id_evento(e);
+      if (!evento) {
+        return respuesta_error(id, codigo_error::peticion_invalida, "Cada evento avisado va como texto o entero.");
+      }
+      revision.avisados.push_back(*evento);
+    }
+  }
+  if (!red) {
+    return respuesta_error(id, codigo_error::red_no_cargada, "El núcleo no tiene la red vial cargada.");
+  }
+
+  const Revision resultado = revisar_ruta(*red, eventos, ahora, revision, algoritmo);
+  json r = {{"id", id}, {"ok", true}, {"estado", texto_revision(resultado.estado)}};
+  if (!resultado.evento.empty()) r["evento"] = resultado.evento;
+  if (resultado.estado == EstadoRevision::alternativa) {
+    r["costo"] = static_cast<long long>(std::llround(resultado.alternativa.costo));
+    if (std::isfinite(resultado.costo_actual)) {
+      r["costo_actual"] = static_cast<long long>(std::llround(resultado.costo_actual));
+    }
+    agregar_ruta(r, *red, resultado.alternativa);
   }
   return respuesta_ok(std::move(r));
 }
@@ -255,6 +350,9 @@ std::optional<Respuesta> Nucleo::atender(std::string_view linea) noexcept {
     }
     if (operacion == kCalcularRuta) {
       return responder_ruta(id, peticion, red_.get(), eventos_, reloj_(), algoritmo_);
+    }
+    if (operacion == kRevisarRuta) {
+      return responder_revision(id, peticion, red_.get(), eventos_, reloj_(), algoritmo_);
     }
     if (operacion == kActualizarTrafico) {
       return responder_trafico(id, peticion, red_.get(), eventos_, reloj_());

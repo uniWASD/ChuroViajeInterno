@@ -180,6 +180,7 @@ RedVial RedVial::desde_json(const json& documento) {
   red.salientes_.assign(red.nodos_.size(), {});
   for (std::size_t i = 0; i < red.tramos_.size(); ++i) red.salientes_[red.tramos_[i].desde].push_back(i);
   red.posicion_nodo_ = std::move(posicion_nodo);
+  red.posicion_tramo_ = std::move(posicion_tramo);
 
   // La estimación del A* es la línea recta por este factor: así nunca supera el costo de ningún tramo.
   double factor = 1.0;
@@ -257,6 +258,12 @@ std::pair<double, double> RedVial::proyectar(double lat, double lon) const {
 
 std::int64_t RedVial::clave_celda(std::int64_t cx, std::int64_t cy) {
   return cx * 4000003 + cy;  // cabe de sobra: las celdas de una ciudad no llegan a miles
+}
+
+std::optional<std::size_t> RedVial::buscar_tramo(const std::string& id) const {
+  const auto it = posicion_tramo_.find(id);
+  if (it == posicion_tramo_.end()) return std::nullopt;
+  return it->second;
 }
 
 std::optional<std::size_t> RedVial::buscar_nodo(const std::string& id) const {

@@ -48,6 +48,10 @@ class TablaEventos {
 
   std::size_t cantidad() const { return eventos_.size(); }
 
+  // Los ids de los eventos que afectan al tramo, en el orden en que llegaron. Para que no incluya los vencidos,
+  // hay que llamar antes a trafico(ahora).
+  const std::vector<std::string>& eventos_en(std::size_t tramo) const;
+
  private:
   struct Guardado {
     TipoEvento tipo;

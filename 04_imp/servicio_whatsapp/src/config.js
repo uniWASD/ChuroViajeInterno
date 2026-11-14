@@ -54,6 +54,17 @@ function backendUrl(raw) {
   if (u.pathname !== '/' && u.pathname !== '') invalid('BACKEND_URL debe ser la URL base sin rutas.');
   return u.origin;
 }
+function llmUrl(raw) {
+  if (typeof raw !== 'string') invalid('LLM_BASE_URL no es válida.');
+  let u;
+  try { u = new URL(raw.trim()); } catch { invalid('LLM_BASE_URL no es válida.'); }
+  if (u.username || u.password || u.search || u.hash || (u.pathname !== '/' && u.pathname !== '')) invalid('LLM_BASE_URL no es válida.');
+  // Solo un LLM simulado en la misma máquina puede ir por HTTP.
+  if (u.protocol !== 'https:' && !(u.protocol === 'http:' && ['127.0.0.1', '[::1]', 'localhost'].includes(u.hostname))) {
+    invalid('LLM_BASE_URL no es válida.');
+  }
+  return u.origin;
+}
 export function loadConfig(env = process.env, {filePath} = {}) {
   const source = externalJson(filePath ?? env.WHATSAPP_SERVICE_CONFIG_FILE);
   const read = (key, fallback) => env[key] !== undefined ? env[key] : (source[key] ?? fallback);
@@ -67,11 +78,19 @@ export function loadConfig(env = process.env, {filePath} = {}) {
   if (env.POLL_INTERVAL_MS !== undefined || source.POLL_INTERVAL_MS !== undefined) {
     invalid('POLL_INTERVAL_MS fue reemplazado por MAINTENANCE_INTERVAL_MS.');
   }
-  const interval = Number(read('MAINTENANCE_INTERVAL_MS', 300000));
+  // RN-06.11: la revisión de vencidos corre cada minuto (además del aviso exacto de cada mensaje).
+  const interval = Number(read('MAINTENANCE_INTERVAL_MS', 60000));
   if (!Number.isSafeInteger(interval) || interval < 1000 || interval > 86400000) invalid('MAINTENANCE_INTERVAL_MS inválido.');
   const sqlite = required(read('SQLITE_PATH', './data/pendientes.sqlite'), 'SQLITE_PATH');
   const llm = read('LLM_API_KEY', '');
   if (typeof llm !== 'string') invalid('LLM_API_KEY debe ser una cadena.');
+  if (/[\r\n]/.test(llm)) invalid('LLM_API_KEY inválido.');
+  const llmModel = read('LLM_MODEL', 'gemini-3.1-flash-lite');
+  if (typeof llmModel !== 'string' || !/^[a-z0-9][a-z0-9.-]{0,63}$/.test(llmModel)) invalid('LLM_MODEL inválido.');
+  const llmBaseUrl = llmUrl(read('LLM_BASE_URL', 'https://generativelanguage.googleapis.com'));
+  // RN-06.5: el análisis corre cada 5 minutos.
+  const analysis = Number(read('ANALYSIS_INTERVAL_MS', 300000));
+  if (!Number.isSafeInteger(analysis) || analysis < 1000 || analysis > 86400000) invalid('ANALYSIS_INTERVAL_MS inválido.');
   const serviceToken = required(read('SERVICE_TOKEN'), 'SERVICE_TOKEN');
   if (/[\r\n]/.test(serviceToken)) invalid('SERVICE_TOKEN inválido.');
   const enabledRaw = read('WHATSAPP_ENABLED', 'false');
@@ -89,7 +108,8 @@ export function loadConfig(env = process.env, {filePath} = {}) {
     backendUrl: backend,
     serviceToken, serviceAuthHeader: header, serviceTokenPrefix: prefix,
     allowedGroupIds: groups(read('ALLOWED_GROUP_IDS')),
-    llmApiKey: llm, // reservado para la integración LLM: T-091 no llama al proveedor
+    llmApiKey: llm, llmModel, llmBaseUrl,
+    analysisIntervalMs: analysis,
     sqlitePath: sqlite === ':memory:' ? sqlite : resolve(SERVICE_ROOT, sqlite),
     maintenanceIntervalMs: interval,
     whatsappEnabled, whatsappPhoneNumber: phone,

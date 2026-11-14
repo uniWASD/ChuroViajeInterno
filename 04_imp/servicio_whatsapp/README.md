@@ -1,8 +1,8 @@
 # Servicio WhatsApp/LLM de ChuroViaje
 
-Servicio Node.js del monitoreo de surtidores (CU-06, HU-08; base de T-091, issue #43 y lectura de grupos del issue #51). Su ubicación en el repositorio es `04_imp/servicio_whatsapp/`.
+Servicio Node.js del monitoreo de surtidores (CU-06, HU-08; base de T-091, issue #43, lectura de grupos del issue #51 y análisis por lotes del issue #59). Su ubicación en el repositorio es `04_imp/servicio_whatsapp/`.
 
-El servicio contiene su **propio SQLite** para mensajes de texto pendientes, configura un cliente HTTP hacia las dos rutas de monitoreo y ejecuta mantenimiento al iniciar y durante su ejecución. **Incorpora conexión de solo lectura con Baileys al activar `WHATSAPP_ENABLED=true`. No invoca un LLM ni consulta o modifica automáticamente los surtidores**: el análisis corresponde a otro issue. El cliente HTTP se usa solo si otro componente lo llama de forma explícita.
+El servicio contiene su **propio SQLite** para mensajes de texto pendientes, configura un cliente HTTP hacia las dos rutas de monitoreo y ejecuta mantenimiento al iniciar y durante su ejecución. **Incorpora conexión de solo lectura con Baileys al activar `WHATSAPP_ENABLED=true`.** Con `LLM_API_KEY` configurada, cada 5 minutos analiza los pendientes con Gemini y entrega el resultado al backend (sección del issue #59). Sin esa clave no se llama al LLM y los mensajes vencen a los 30 minutos sin salir de la máquina.
 
 ## Requisitos de ejecución
 
@@ -114,7 +114,7 @@ El esquema tiene `PRAGMA user_version=1`, admite columnas técnicas y tablas aux
 
 `src/backend-client.js` prepara solicitudes `GET /monitoreo/surtidores` y `POST /monitoreo/resultados`, usando la credencial de servicio y protecciones de tiempo de espera, HTTPS remoto y saneamiento de errores. Un `POST` aceptado con `204 No Content` devuelve `null`; las respuestas con cuerpo deben ser objetos JSON.
 
-**El formato exacto del catálogo, del resultado del POST, de los valores de fila y de la cabecera de autenticación sigue pendiente del acuerdo con el responsable del backend Java** (D-13 y contrato de arquitectura `05_contratos.md`). El backend, no el servicio Node, valida los surtidores, combustibles y filas. La demostración usa un doble local con una forma de JSON meramente ilustrativa. Antes de integrar con Java, confirmar el contrato de `03_des/02_Arquitectura/05_contratos.md` con el equipo responsable del backend.
+El formato del catálogo y del resultado es el de `03_des/02_Arquitectura/05_contratos.md`, sección «Servicio de WhatsApp/LLM con el backend», que implementa el backend en el issue #57. El servicio filtra la salida del LLM antes de enviarla, pero quien decide qué se guarda es el backend, que vuelve a validar cada aviso (RN-06.15). La demostración `npm run demo` usa un doble local.
 
 ## Organización y tareas próximas
 
@@ -122,7 +122,7 @@ El esquema tiene `PRAGMA user_version=1`, admite columnas técnicas y tablas aux
 - `test/`, `test-support/`: pruebas automatizadas con datos sintéticos y carpetas temporales.
 - `demo/run-demo.js`: demostración local y doble HTTP; **no es** el simulador de tráfico de CU-07.
 
-Los métodos `ingestText`, `listPending`, `markProcessed` y el temporizador preciso dejan preparada parte de la infraestructura de las tareas de lectura de grupos y análisis por lotes. `ingestText` devuelve `IGNORADO` para grupos no autorizados, sin escribir en SQLite. **La lectura Baileys se implementa en `whatsapp-reader.js`** con filtrado y deduplicación. No hay procesamiento LLM ni cola de resultados para el backend en el alcance del issue #51.
+Los métodos `ingestText`, `listPending`, `markProcessed` y el temporizador preciso dejan preparada parte de la infraestructura de las tareas de lectura de grupos y análisis por lotes. `ingestText` devuelve `IGNORADO` para grupos no autorizados, sin escribir en SQLite. **La lectura Baileys se implementa en `whatsapp-reader.js`** con filtrado y deduplicación. El análisis con el LLM y la cola de resultados para el backend se agregaron en el issue #59.
 
 ## HU-08 / issue #51: lectura de grupos autorizados
 
@@ -194,3 +194,42 @@ Aplicar ACL privada también al JSON de autorizaciones y a la sesión creada. Ma
 ### Responsabilidad y alcance
 
 La verificación de autorizaciones es documental: el software exige un registro externo afirmativo, pero solo el equipo puede comprobar que la autorización fue concedida verdaderamente por cada administrador. La integración con WhatsApp es mediante una librería no oficial, con riesgo de bloqueo o cambios externos. Los ensayos simulados verifican la lógica implementada pero no sustituyen la prueba de conectividad real. Ningún análisis LLM, actualización de combustible ni envío a grupos está incluido en este issue.
+
+## HU-08 / issue #59: análisis por lotes y entrega al backend
+
+### Ciclo
+
+- **Cada minuto** (`MAINTENANCE_INTERVAL_MS`, 60000) se descartan los mensajes con más de 30 minutos y se borra su texto. Además, cada mensaje tiene su propio aviso al vencer, así que nunca espera al ciclo (RN-06.11, RN-06.12).
+- **Cada 5 minutos** (`ANALYSIS_INTERVAL_MS`, 300000) corre `analyzeCycle()` (RN-06.5): primero reenvía los resultados que el backend no recibió (RN-06.19); después, si hay pendientes, pide el catálogo con `GET /monitoreo/surtidores`, arma un solo lote ordenado por fecha y lo manda al LLM. Sin pendientes no se llama al LLM ni al backend. Dos ciclos nunca se superponen.
+- Si el LLM falla (sin conexión, error, cuota o una respuesta que no cumple el esquema), los mensajes siguen pendientes para el ciclo siguiente (RN-06.10). Como vencen a los 30 minutos, un mensaje tiene unos cinco intentos.
+- Si el backend no entrega el catálogo, se usa el último que se leyó; si nunca se leyó uno, el lote espera.
+- Analizado el lote, en **una sola transacción** de SQLite los mensajes quedan `PROCESADO` sin texto y el resultado queda en la tabla `resultado_pendiente`, que solo guarda los avisos del contrato (surtidor, combustible, estado, fila y fecha) (RN-06.12, RN-06.19). Enseguida se envía con `POST /monitoreo/resultados` (RN-06.18). Con 200 se borra; con 400 o 422 se registra y se suelta; con 401, 403, 5xx o sin conexión se conserva y se reenvía en el ciclo siguiente. Un resultado que no se pudo entregar en 24 horas se suelta. Más de 1000 avisos se entregan en varios lotes.
+
+### Qué viaja al LLM
+
+Solo el texto y la fecha de cada mensaje, con un identificador que es su posición en el lote (`m1`, `m2`…), no el de WhatsApp; no viajan el grupo ni nada del remitente. Antes de enviarlo, `src/phone-mask.js` reemplaza por `[número]` toda secuencia de 7 a 15 dígitos, con o sin `+` y con espacios, puntos o guiones (RN-06.6). Junto al lote viaja el catálogo del backend: surtidores con sus alias, combustibles y filas.
+
+El prompt (`src/llm-prompt.js`) es el de la investigación del issue #10 (rama `feature/HU08-CU06-AnalisisLLM`, `05_pro/PruebaAnalisisLLM/03des/HU08_CU06_investigacion_LLM.md`, sección 8.2), con dos cambios: el catálogo sale del backend y no de una lista fija, y cada mensaje se analiza solo, sin ventanas de contexto. Se pide salida estructurada (`responseJsonSchema`) con los surtidores, combustibles y filas del catálogo como valores cerrados. El LLM no devuelve fechas: la fecha del aviso es siempre la del mensaje (RN-06.16).
+
+### Validación antes de enviar
+
+`src/analysis.js` aplica la validación determinista de la sección 9 de la investigación. Se descarta un aviso si: el mensaje no existe en el lote; el surtidor, combustible, estado o fila no son del catálogo; el surtidor no aparece en el texto por su nombre o un alias; el mensaje es una pregunta (lleva «¿» o termina en «?»); o el mismo mensaje dice que hay y que no hay del mismo surtidor y combustible (RN-06.7 a RN-06.9). Un combustible no mencionado va como `Desconocido` (RN-06.8). El registro cuenta los descartes del LLM y los del validador, nunca su contenido.
+
+### Gemini y sus términos (D-17)
+
+Se usa la API de Gemini, modelo `gemini-3.1-flash-lite` (`LLM_MODEL`), con la clave en la cabecera `x-goog-api-key`, nunca en la URL. **La capa gratuita es un «servicio no pagado»: según los términos adicionales de la API de Gemini, Google usa lo enviado y las respuestas para mejorar sus productos, personas pueden leerlo y Google pide no enviar información personal o confidencial.** Por eso se enmascaran los teléfonos y no viajan grupos ni remitentes; la investigación del issue #10 recomienda activar la facturación antes de procesar conversaciones reales. Términos: <https://ai.google.dev/terms> (vigentes desde el 23 de marzo de 2026), revisados el 14 de noviembre de 2026.
+
+### Configuración
+
+| Variable | Por defecto | Uso |
+| --- | --- | --- |
+| `LLM_API_KEY` | vacía | Sin ella no se programa el análisis (`ANALISIS_DESACTIVADO`) |
+| `LLM_MODEL` | `gemini-3.1-flash-lite` | Modelo de Gemini |
+| `LLM_BASE_URL` | `https://generativelanguage.googleapis.com` | Solo para pruebas con un LLM simulado: HTTPS, o HTTP en `127.0.0.1`/`localhost` |
+| `ANALYSIS_INTERVAL_MS` | `300000` | Ciclo de análisis (RN-06.5) |
+| `MAINTENANCE_INTERVAL_MS` | `60000` | Revisión de vencidos (RN-06.11) |
+
+### Pruebas
+
+`test/analisis-lotes.test.js` y `test/llm.test.js` usan un LLM y un backend simulados: CP-74 (aviso de Las Vegas, Gasolina, disponible, fila corta), CP-75 (la pregunta se descarta), CP-76 (LLM caído y reintento), CP-78 (el número llega enmascarado), backend caído y reenvío, 400 y 403 del backend, validador, catálogo caído, lotes de más de 1000 avisos y ciclos superpuestos. Las pruebas imprimen el registro del servicio como evidencia; no contiene textos, números ni nombres. CP-77 (de punta a punta con el backend real) se comprobó con `demo/cp77-extremo-a-extremo.js`; ver su encabezado.
+

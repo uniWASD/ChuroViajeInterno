@@ -28,6 +28,17 @@ const CREATE_TABLE = `CREATE TABLE IF NOT EXISTS mensaje_pendiente (
     OR (estado IN ('PROCESADO','DESCARTADO') AND texto IS NULL AND finalizado_ms IS NOT NULL))
 )`;
 
+// RN-06.19: el resultado de un lote que el backend no recibió, ya sin el texto de los mensajes. Solo los avisos del
+// contrato (surtidor, combustible, estado, fila y fecha) y el momento en que se guardó.
+const CREATE_RESULTS = `CREATE TABLE IF NOT EXISTS resultado_pendiente (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  lote TEXT NOT NULL,
+  avisos TEXT NOT NULL,
+  creado_ms INTEGER NOT NULL
+)`;
+// Un resultado que no se pudo entregar en 24 h ya no le sirve a nadie: se suelta.
+export const RESULT_RETENTION_MS = 24 * 60 * 60 * 1000;
+
 function validate(message) {
   if (!message || typeof message !== 'object' || Array.isArray(message)) throw new ErrorServicio('MENSAJE_INVALIDO', 'Mensaje inválido.');
   const keys = Object.keys(message);
@@ -64,6 +75,10 @@ export class MessageStore {
       this.finish = this.db.prepare(`UPDATE mensaje_pendiente SET estado=?, texto=NULL, finalizado_ms=?
         WHERE id=? AND estado='PENDIENTE'`);
       this.purge = this.db.prepare("DELETE FROM mensaje_pendiente WHERE estado!='PENDIENTE' AND finalizado_ms < ?");
+      this.db.exec(CREATE_RESULTS);
+      this.addResult = this.db.prepare('INSERT INTO resultado_pendiente (lote, avisos, creado_ms) VALUES (?, ?, ?)');
+      this.removeResult = this.db.prepare('DELETE FROM resultado_pendiente WHERE id=?');
+      this.purgeResults = this.db.prepare('DELETE FROM resultado_pendiente WHERE creado_ms < ?');
     } catch (error) { this.db.close(); throw error; }
   }
   #checkAndUpgradeSchema() {
@@ -131,5 +146,25 @@ export class MessageStore {
   markProcessed(id) { return this.#finish(id, STATUS.PROCESSED); }
   markDiscarded(id) { return this.#finish(id, STATUS.DISCARDED); }
   #finish(id, status) { return Number(this.finish.run(status, this.clock(), id).changes); }
+  /**
+   * RN-06.12 y RN-06.19 en una sola transacción: los mensajes del lote quedan procesados y sin texto, y los resultados
+   * quedan guardados para enviarlos. Si el proceso se corta, no hay un lote analizado a medias.
+   */
+  finishBatch(ids, results) {
+    this.db.exec('BEGIN IMMEDIATE');
+    try {
+      const now = this.clock();
+      for (const id of ids) this.finish.run(STATUS.PROCESSED, now, id);
+      const saved = results.map(r => Number(this.addResult.run(r.lote, JSON.stringify(r.avisos), now).lastInsertRowid));
+      this.db.exec('COMMIT');
+      return saved;
+    } catch (error) { this.db.exec('ROLLBACK'); throw error; }
+  }
+  listResults() {
+    return this.db.prepare('SELECT id, lote, avisos FROM resultado_pendiente ORDER BY id').all()
+      .map(row => ({id: Number(row.id), lote: row.lote, avisos: JSON.parse(row.avisos)}));
+  }
+  deleteResult(id) { return Number(this.removeResult.run(id).changes); }
+  purgeOldResults() { return Number(this.purgeResults.run(this.clock() - RESULT_RETENTION_MS).changes); }
   close() { this.db.close(); }
 }

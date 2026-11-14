@@ -28,10 +28,10 @@ test('arranque no llama al backend HTTP ni al LLM',t=>{
   const {holder,service}=context(t);
   service.start();assert.deepEqual({get:holder.get,post:holder.post},{get:0,post:0});
 });
-test('intervalo de mantenimiento por defecto 5 minutos',t=>{
+test('intervalo de mantenimiento por defecto 1 minuto (RN-06.11)',t=>{
   const {holder,service}=context(t);
   service.start();
-  assert.equal(holder.period,300000);
+  assert.equal(holder.period,60000);
   holder.interval();assert(holder.events.filter(line=>line.includes('MANTENIMIENTO')).length>=2);
 });
 test('grupo autorizado guarda, no envía mensajes',t=>{

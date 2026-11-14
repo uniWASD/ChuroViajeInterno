@@ -355,7 +355,7 @@ El servicio toma del backend el catálogo que entrega al LLM. Así hay una sola 
 
 ### Catálogo (`GET /monitoreo/surtidores`)
 
-La lista de combustibles trae los cuatro del catálogo. «Desconocido» no va en la lista: es un valor fijo de [RN-06.8](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md). Los valores de `filas` son los de [P-15](08_decisiones_parametros.md). Los alias de este ejemplo son inventados.
+La lista de combustibles trae los cuatro del catálogo. «Desconocido» no va en la lista: es un valor fijo de [RN-06.8](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md). Los valores de `filas` son los de [P-15](08_decisiones_parametros.md). Los alias de este ejemplo son inventados. Los alias reales llegan como los guarda el catálogo: en minúsculas, sin tildes ni signos.
 
 ```json
 {
@@ -395,7 +395,9 @@ Un resultado tiene esta forma:
 
 - `SIN_FILA` significa que el mensaje dice que no hay fila. Si el campo `fila` no está, el mensaje no la menciona. Un valor de `fila` desconocido se acepta, pero el aviso se guarda sin fila.
 - Los mensajes descartados por el LLM no viajan al backend.
-- Un lote tiene como máximo 1000 avisos; uno más grande responde 400.
+- Un lote tiene como máximo 1000 avisos; uno más grande, o un cuerpo sin la lista `avisos`, responde 400 `PETICION_INVALIDA` y no guarda nada.
+- El surtidor se busca por nombre o alias, y el combustible por nombre o código, sin importar mayúsculas, tildes ni signos; «Desconocido» es válido. El estado también se acepta en minúsculas.
+- La fecha debe traer la zona horaria y no puede estar más de 5 minutos en el futuro, por la diferencia entre relojes; si no, `FECHA_INVALIDA`. Si falta el surtidor, el combustible, el estado o la fecha, o no son texto, o el aviso no es un objeto, `FORMATO_INVALIDO`.
 
 La respuesta es siempre 200 con un cuerpo. `indice` es la posición del aviso en el lote, empezando en 0. Ejemplo para el lote de arriba si «El Portillo» no estuviera en el catálogo:
 

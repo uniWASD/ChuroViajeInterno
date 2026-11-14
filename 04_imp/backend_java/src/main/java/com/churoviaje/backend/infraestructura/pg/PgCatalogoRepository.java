@@ -61,6 +61,21 @@ public class PgCatalogoRepository implements CatalogoRepository {
     }
 
     @Override
+    public List<TipoCombustible> tiposDeCombustible() {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement(TIPOS_DE_COMBUSTIBLE);
+                ResultSet fila = sentencia.executeQuery()) {
+            List<TipoCombustible> tipos = new ArrayList<>();
+            while (fila.next()) {
+                tipos.add(new TipoCombustible(fila.getString("codigo"), fila.getString("nombre")));
+            }
+            return tipos;
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("leer los tipos de combustible", e);
+        }
+    }
+
+    @Override
     public List<TipoCombustibleDto> tiposDeCombustibleParaMostrar() {
         try (Connection conexion = conexiones.getConnection();
                 PreparedStatement sentencia = conexion.prepareStatement(TIPOS_DE_COMBUSTIBLE);

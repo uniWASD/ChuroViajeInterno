@@ -2,7 +2,7 @@
 
 Programa que mantiene la red vial y calcula rutas ([D-15](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). No tiene servidor web ni abre puertos: el backend lo arranca como proceso hijo a través del wrapper Java `MotorDeRutas` y le habla por pipe. El contrato completo está en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#backend-con-el-motor-core).
 
-**Estado (T-090, T-096, #58, #66 y #76):** estructura, protocolo, carga de la red vial, cálculo de rutas con A*, tráfico de los eventos y revisión de la ruta activa. `consultar_estado`, `calcular_ruta`, `actualizar_trafico` y `revisar_ruta` responden de verdad; `analizar_telemetria` responde «no implementada» hasta que llegue su issue.
+**Estado (T-090, T-096, #58, #66, #76 y #73):** estructura, protocolo, carga de la red vial, cálculo de rutas con A*, tráfico de los eventos, revisión de la ruta activa y detección de congestión con la telemetría. Las cinco operaciones del contrato responden de verdad.
 
 ## Arranque y red vial
 
@@ -77,6 +77,27 @@ Mientras el conductor navega, la app manda lo que le falta de la ruta y el núcl
 - Los dos costos se miden desde la misma intersección: la más cercana a la posición. Un bloqueo en lo que falta hace imposible seguir, y entonces la respuesta no trae `costo_actual`.
 - Si algún id de `tramos` no existe (se recargó la red vial), responde `RUTA_DESACTUALIZADA` y la app pide la ruta de nuevo.
 
+## Detectar congestión con la telemetría
+
+El backend le pasa las lecturas del GPS agrupadas por un identificador temporal de recorrido, sin datos del conductor (CU-04, #73). El formato está en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#analizar-la-telemetría-analizar_telemetria).
+
+```json
+{"id":32,"operacion":"analizar_telemetria","recorridos":[{"recorrido":"3f9a1c","simulado":false,"lecturas":[{"posicion":[-21.54,-64.735357],"precision_m":8,"momento":"2026-11-14T10:02:03-04:00"}]}]}
+{"id":32,"ok":true,"congestiones":[{"tramo":"avenida:ida","punto":[-21.54,-64.735357],"nivel":"MUY_CONGESTIONADO","simulado":false}],"lecturas_validas":1,"lecturas_descartadas":0}
+```
+
+(Respuesta con `tests/datos/red_telemetria.json`, después de 2 minutos de un recorrido a 8 km/h por la avenida.)
+
+Las fórmulas son las de `05_pro/CalculoVelocidad` (haversine y azimut); los umbrales de lentitud dependen del tipo de vía (P-02):
+
+- La velocidad sale de la distancia y el tiempo entre dos lecturas seguidas del mismo recorrido (RN-04.5).
+- Se descarta la lectura con precisión peor que 50 m o que implica más de 150 km/h (RN-04.6). Una lectura repetida o fuera de orden tampoco da velocidad.
+- Una lectura de 25 km/h o menos con un cambio de rumbo de más de 40 grados es un giro y corta la racha lenta (RN-04.7). Si el vehículo se movió menos de 3 m, no se calcula el rumbo: un auto detenido no gira.
+- Cada lectura válida va al tramo que pasa a no más de 30 m (RN-04.8, P-24); más lejos, se ignora. En una calle de doble sentido va al tramo cuyo sentido se parece más al rumbo del vehículo (D-18).
+- Un tramo está lento por debajo de la mitad de la velocidad esperada de su vía (55, 40 o 20 km/h). Cuando un recorrido lleva 2 minutos seguidos lento en el mismo tramo, el núcleo informa la congestión con el tramo, el punto de la última lectura y el nivel: muy congestionado si la velocidad media de esos 2 minutos queda por debajo de la cuarta parte de la esperada (RN-04.9, RN-04.10). Mientras siga lento, la vuelve a informar en cada mensaje, y el backend extiende el mismo evento (RN-04.11).
+- Los recorridos simulados y los reales no se mezclan, aunque tengan el mismo identificador, y una congestión que sale de uno simulado va con `"simulado":true` (RN-04.20). Si varios recorridos de un mensaje congestionan el mismo tramo, va una sola, la más grave.
+- De cada recorrido el núcleo solo guarda la última lectura y la racha en curso, y lo olvida a los 5 minutos sin lecturas nuevas (RN-04.12, P-25).
+
 ## Protocolo
 
 - **Entrada estándar:** una petición por línea, en JSON. Lleva `id` (entero o texto) y `operacion`.
@@ -103,8 +124,8 @@ Traen `error` con un `codigo` y una `descripcion` en español. El núcleo sigue 
 | `JSON_INVALIDO` | La línea no es JSON | `null` |
 | `PETICION_INVALIDA` | Es JSON, pero no es un objeto, o falta `id` u `operacion`, o tienen un tipo incorrecto | el de la petición si se pudo leer; si no, `null` |
 | `OPERACION_DESCONOCIDA` | La `operacion` no existe en el contrato | el de la petición |
-| `NO_IMPLEMENTADA` | La operación es del contrato pero aún no se programó | el de la petición |
-| `RED_NO_CARGADA` | `calcular_ruta`, `revisar_ruta` o `actualizar_trafico` llegó y el núcleo no tiene la red vial | el de la petición |
+| `NO_IMPLEMENTADA` | Ya no se usa: todas las operaciones del contrato están implementadas | el de la petición |
+| `RED_NO_CARGADA` | `calcular_ruta`, `revisar_ruta`, `actualizar_trafico` o `analizar_telemetria` llegó y el núcleo no tiene la red vial | el de la petición |
 | `ERROR_INTERNO` | Fallo inesperado del núcleo | el de la petición si se conocía |
 
 Que no haya ruta (`SIN_RUTA`, `PUNTO_INVALIDO`) **no** es un error: va como `"ok":true`. Una petición de ruta sin `origen` o `destino`, o con un punto que no es `[latitud, longitud]`, responde `PETICION_INVALIDA`.
@@ -138,7 +159,7 @@ cmake --build build --target pruebas
 
 También sirve `ctest --test-dir build --output-on-failure` (en Visual Studio agrega `-C Release`).
 
-Las pruebas cubren, entre otras, **CP-24** (`consultar_estado` responde en una sola línea con el mismo `id`), **CP-25** (una línea que no es JSON responde `"ok":false` y la siguiente petición válida se atiende normal), **CP-71** (la red irregular del prototipo da las mismas rutas que en Python), **CP-72** (una parada intermedia), **CP-95 a CP-98** (accidente, bloqueo, retiro del bloqueo y sentidos afectados), **CP-124 a CP-126** (revisión de la ruta activa: alternativa más barata, sin alternativa y evento ya avisado) y **CP-73** (100 consultas en una red de 10 000 esquinas, cada una en menos de 1 segundo). Con `RED_VIAL_REAL=<ruta de red_vial_tarija.json>` también se mide CP-73 con la red real y se calculan los viajes de referencia de Tarija (**CP-167** y **CP-168**, T-120; ver [04_imp/datos](../datos/README.md#viajes-de-referencia)); sin esa variable, esas pruebas se saltan.
+Las pruebas cubren, entre otras, **CP-24** (`consultar_estado` responde en una sola línea con el mismo `id`), **CP-25** (una línea que no es JSON responde `"ok":false` y la siguiente petición válida se atiende normal), **CP-71** (la red irregular del prototipo da las mismas rutas que en Python), **CP-72** (una parada intermedia), **CP-95 a CP-98** (accidente, bloqueo, retiro del bloqueo y sentidos afectados), **CP-124 a CP-126** (revisión de la ruta activa: alternativa más barata, sin alternativa y evento ya avisado), **CP-114 a CP-118** (congestión con la telemetría: 2 minutos lentos en una avenida, giro en la esquina, lectura imprecisa, un solo sentido y recorrido simulado) y **CP-73** (100 consultas en una red de 10 000 esquinas, cada una en menos de 1 segundo). Con `RED_VIAL_REAL=<ruta de red_vial_tarija.json>` también se mide CP-73 con la red real y se calculan los viajes de referencia de Tarija (**CP-167** y **CP-168**, T-120; ver [04_imp/datos](../datos/README.md#viajes-de-referencia)); sin esa variable, esas pruebas se saltan.
 
 ## Mandar un mensaje a mano
 

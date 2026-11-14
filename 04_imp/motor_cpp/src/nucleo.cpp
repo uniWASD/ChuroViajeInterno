@@ -1,6 +1,6 @@
 #include "nucleo.hpp"
 
-#include <array>
+#include <algorithm>
 #include <cmath>
 #include <optional>
 #include <vector>
@@ -18,18 +18,11 @@ namespace {
 // Se usa ordered_json para que las respuestas salgan con "id" y "ok" primero, como en el contrato.
 using json = nlohmann::ordered_json;
 
-constexpr std::array<std::string_view, 1> kOperacionesPendientes = {"analizar_telemetria"};
 constexpr std::string_view kConsultarEstado = "consultar_estado";
 constexpr std::string_view kCalcularRuta = "calcular_ruta";
 constexpr std::string_view kRevisarRuta = "revisar_ruta";
 constexpr std::string_view kActualizarTrafico = "actualizar_trafico";
-
-bool es_pendiente(std::string_view operacion) {
-  for (auto pendiente : kOperacionesPendientes) {
-    if (pendiente == operacion) return true;
-  }
-  return false;
-}
+constexpr std::string_view kAnalizarTelemetria = "analizar_telemetria";
 
 std::string_view recortar(std::string_view texto) {
   constexpr std::string_view blancos = " \t\r\n\f\v";
@@ -294,12 +287,102 @@ Respuesta responder_trafico(const json& id, const json& peticion, const RedVial*
   return respuesta_ok({{"id", id}, {"ok", true}, {"tramos", ids_de_tramos(*red, eventos.registrar(aviso, ahora))}});
 }
 
+const char* texto_nivel(NivelTrafico nivel) {
+  return nivel == NivelTrafico::muy_congestionado ? "MUY_CONGESTIONADO" : "CONGESTIONADO";
+}
+
+// analizar_telemetria (#73): lecturas agrupadas por recorrido, con la marca de simulado y sin datos del conductor.
+// Responde las congestiones que se cumplen: tramo, punto, nivel y si salen de recorridos simulados (RN-04.10).
+Respuesta responder_telemetria(const json& id, const json& peticion, const RedVial* red,
+                               AnalizadorTelemetria& telemetria, std::int64_t ahora) {
+  struct Grupo {
+    std::string recorrido;
+    bool simulado = false;
+    std::vector<LecturaTelemetria> lecturas;
+  };
+  const auto it_recorridos = peticion.find("recorridos");
+  if (it_recorridos == peticion.end() || !it_recorridos->is_array()) {
+    return respuesta_error(id, codigo_error::peticion_invalida,
+                           "\"recorridos\" es obligatorio: una lista de {recorrido, simulado, lecturas}.");
+  }
+  std::vector<Grupo> grupos;
+  for (const json& g : *it_recorridos) {
+    const auto it_rec = g.is_object() ? g.find("recorrido") : g.end();
+    if (!g.is_object() || it_rec == g.end() || !it_rec->is_string() || it_rec->get_ref<const std::string&>().empty()) {
+      return respuesta_error(id, codigo_error::peticion_invalida,
+                             "Cada recorrido lleva \"recorrido\": su identificador temporal, como texto.");
+    }
+    Grupo grupo;
+    grupo.recorrido = it_rec->get<std::string>();
+    const auto it_sim = g.find("simulado");
+    if (it_sim != g.end() && !it_sim->is_null()) {
+      if (!it_sim->is_boolean()) {
+        return respuesta_error(id, codigo_error::peticion_invalida, "\"simulado\" debe ser true o false.");
+      }
+      grupo.simulado = it_sim->get<bool>();
+    }
+    const auto it_lecturas = g.find("lecturas");
+    if (it_lecturas == g.end() || !it_lecturas->is_array()) {
+      return respuesta_error(id, codigo_error::peticion_invalida, "Cada recorrido lleva \"lecturas\": una lista.");
+    }
+    for (const json& l : *it_lecturas) {
+      const auto it_pos = l.is_object() ? l.find("posicion") : l.end();
+      const auto posicion = it_pos != l.end() ? leer_punto(*it_pos) : std::nullopt;
+      const auto it_prec = l.is_object() ? l.find("precision_m") : l.end();
+      const auto it_mom = l.is_object() ? l.find("momento") : l.end();
+      const auto momento = (it_mom != l.end() && it_mom->is_string())
+                               ? segundos_desde_iso(it_mom->get<std::string>())
+                               : std::nullopt;
+      if (!posicion || it_prec == l.end() || !it_prec->is_number() || !momento) {
+        return respuesta_error(id, codigo_error::peticion_invalida,
+                               "Cada lectura lleva \"posicion\" [latitud, longitud], \"precision_m\" (número) y "
+                               "\"momento\" (ISO 8601 con zona horaria).");
+      }
+      grupo.lecturas.push_back({*posicion, it_prec->get<double>(), *momento});
+    }
+    grupos.push_back(std::move(grupo));
+  }
+  if (!red) return respuesta_error(id, codigo_error::red_no_cargada, "El núcleo no tiene la red vial cargada.");
+
+  // Una congestión por tramo y por marca de simulado: si varios recorridos la confirman, vale la más grave.
+  std::vector<CongestionDetectada> congestiones;
+  std::size_t validas = 0, descartadas = 0;
+  for (Grupo& grupo : grupos) {
+    const ResultadoTelemetria r = telemetria.analizar(grupo.recorrido, grupo.simulado, std::move(grupo.lecturas), ahora);
+    validas += r.validas;
+    descartadas += r.descartadas;
+    for (const CongestionDetectada& c : r.congestiones) {
+      auto ya = std::find_if(congestiones.begin(), congestiones.end(), [&](const CongestionDetectada& x) {
+        return x.tramo == c.tramo && x.simulado == c.simulado;
+      });
+      if (ya == congestiones.end()) {
+        congestiones.push_back(c);
+      } else if (c.nivel > ya->nivel) {
+        *ya = c;
+      }
+    }
+  }
+  json lista = json::array();
+  for (const CongestionDetectada& c : congestiones) {
+    lista.push_back({{"tramo", red->tramos()[c.tramo].id},
+                     {"punto", {redondear(c.punto.lat), redondear(c.punto.lon)}},
+                     {"nivel", texto_nivel(c.nivel)},
+                     {"simulado", c.simulado}});
+  }
+  return respuesta_ok({{"id", id},
+                       {"ok", true},
+                       {"congestiones", std::move(lista)},
+                       {"lecturas_validas", validas},
+                       {"lecturas_descartadas", descartadas}});
+}
+
 }  // namespace
 
 Nucleo::Nucleo(EstadoRed estado) : estado_(std::move(estado)), reloj_(ahora_en_segundos) {}
 
 Nucleo::Nucleo(std::shared_ptr<const RedVial> red, Algoritmo algoritmo)
-    : red_(std::move(red)), algoritmo_(algoritmo), eventos_(red_.get()), reloj_(ahora_en_segundos) {
+    : red_(std::move(red)), algoritmo_(algoritmo), eventos_(red_.get()), telemetria_(red_.get()),
+      reloj_(ahora_en_segundos) {
   if (red_) {
     estado_.cargada = true;
     estado_.fecha_extracto = red_->fecha_extracto();
@@ -357,9 +440,8 @@ std::optional<Respuesta> Nucleo::atender(std::string_view linea) noexcept {
     if (operacion == kActualizarTrafico) {
       return responder_trafico(id, peticion, red_.get(), eventos_, reloj_());
     }
-    if (es_pendiente(operacion)) {
-      return respuesta_error(id, codigo_error::no_implementada,
-                             "La operación \"" + operacion + "\" todavía no está implementada.");
+    if (operacion == kAnalizarTelemetria) {
+      return responder_telemetria(id, peticion, red_.get(), telemetria_, reloj_());
     }
     return respuesta_error(id, codigo_error::operacion_desconocida,
                            "La operación \"" + operacion + "\" no existe en el contrato.");

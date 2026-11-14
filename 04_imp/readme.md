@@ -15,6 +15,7 @@ Aquí vive el código fuente del sistema de software bajo diseño (SUD).
 | Núcleo del motor | `motor_cpp` | `cmake --build build --target pruebas` | CMake y un compilador de C++17. Las dependencias (nlohmann/json y GoogleTest) se descargan solas |
 | Servicio de WhatsApp/LLM | `servicio_whatsapp` | `npm test` | Node.js 22.13 o posterior. Las pruebas usan dobles de Baileys: no se conectan a WhatsApp |
 | App | `app_flutter` | `flutter test` | Flutter |
+| Simulador | `simulador` | `python -m unittest` | Python 3.11 o posterior, sin paquetes externos |
 
 ## Variables de entorno
 

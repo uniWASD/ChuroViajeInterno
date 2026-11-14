@@ -56,6 +56,10 @@ class DatosMapa {
   /// Si se muestra la posición del conductor (solo con permiso y con la app en pantalla).
   final bool mostrarUbicacion;
 
+  /// Si la cámara sigue la posición del conductor, como en la Navegación activa (CP-107). Sin la ubicación a la
+  /// vista no tiene efecto.
+  final bool seguirUbicacion;
+
   /// El punto que tocó el conductor, si hay uno; el mapa lo marca.
   final Coordenada? puntoSeleccionado;
 
@@ -80,6 +84,7 @@ class DatosMapa {
   const DatosMapa({
     this.centro = centroTarija,
     this.mostrarUbicacion = false,
+    this.seguirUbicacion = false,
     this.puntoSeleccionado,
     this.marcas = const [],
     this.trazado = const [],

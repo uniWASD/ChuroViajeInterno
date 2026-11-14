@@ -8,6 +8,7 @@ import '../../models/ruta.dart';
 import '../../services/rutas/servicio_rutas.dart';
 import '../map/map_screen.dart';
 import '../map/mapa_base.dart';
+import '../navegacion/navegacion_activa_screen.dart';
 
 /// Vista Cómo llegar (CU-03): origen, destino y paradas; la ruta con su tiempo y su distancia; el botón para
 /// iniciar. No hay buscador de lugares: los puntos se eligen tocando el mapa (P-19, D-24).
@@ -215,14 +216,19 @@ class _Panel extends StatelessWidget {
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
-          // RN-03.17: «Iniciar» abre la Navegación activa, que llega con «[HU-05][CU-03][Flutter] Navegación
-          // activa». Hasta entonces el botón está deshabilitado.
-          const FilledButton(onPressed: null, child: Text('Iniciar')),
-          const SizedBox(height: 4),
-          Text(
-            'La navegación paso a paso llega en una próxima versión.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
+          // RN-03.17: «Iniciar» pone la ruta Activa y abre la Navegación activa en lugar de Cómo llegar.
+          FilledButton.icon(
+            key: const Key('iniciar-navegacion'),
+            onPressed: () => Navigator.of(context).pushReplacement(
+              NavegacionActivaScreen.ruta(
+                context,
+                ruta: resultado,
+                destino: ruta.destino!,
+                paradas: ruta.paradas,
+              ),
+            ),
+            icon: const Icon(Icons.navigation),
+            label: const Text('Iniciar'),
           ),
         ],
         if (ruta.aviso != null) ...[

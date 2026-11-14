@@ -146,7 +146,7 @@ El botón «Cómo llegar» de la vista Mapa abre la vista del mismo nombre (CU-0
 * El destino y las paradas se eligen tocando el mapa (no hay buscador, P-19 y D-24). Las paradas van en el orden en que se agregan y son 10 como máximo (RN-03.2).
 * La app manda los puntos a `POST /rutas` y dibuja lo que vuelve, con su tiempo y su distancia (RN-03.13). Las reglas las aplica el backend.
 * «No se encontró una ruta válida» y «Origen o destino inválido» se muestran como respuesta, no como error. Si el backend no responde o responde 503, se muestra el fallo con «Reintentar» (RN-03.15).
-* «Iniciar» se ve deshabilitado hasta que exista la vista Navegación activa.
+* «Iniciar» pone la ruta Activa y abre la vista Navegación activa en lugar de Cómo llegar (RN-03.17).
 
 Desde HU-10 la app inicia sesión y pide la ruta al backend. Con `--dart-define=RUTA_DE_EJEMPLO=true` (fuera de producción) la vista usa `assets/datos/ruta_ejemplo_post_rutas.json`: la respuesta del primer viaje de referencia de Tarija (T-120, de la plaza Luis de Fuentes a la ex terminal), copiada de `04_imp/datos`. Es siempre la misma ruta, elija el conductor los puntos que elija, y la vista lo avisa.
 
@@ -186,11 +186,20 @@ Para analizar el código:
 flutter analyze
 ```
 
+## Navegación activa (HU-05, #94)
+
+La vista sigue la posición del conductor (la cámara de Mapbox va detrás de él) y muestra la calle que sigue con el sentido del giro, la distancia hasta esa esquina y el tiempo y la distancia que faltan (RN-03.17, D-22). `NavegacionController` lo calcula en el teléfono con el trazado y los nombres de calle que trae la ruta; `lib/models/navegacion.dart` tiene la geometría.
+
+* El conductor se ubica proyectando su posición sobre el trazado. Nunca retrocede: un salto del GPS hacia atrás no cambia lo recorrido.
+* La ruta trae los tramos en orden con su calle, pero no dice en qué punto del trazado empieza cada uno. Los tramos seguidos de la misma calle forman una calle; los cambios de calle se ubican en los puntos del trazado donde más gira el rumbo, midiendo 15 m antes y 15 m después de cada punto. Menos de 30° es «sigue derecho». Una calle que cambia de nombre sin girar, junto a una curva más cerrada de otra calle, puede quedar mal ubicada.
+* El controlador guarda los tramos que faltan para revisar la ruta (D-12), desde el primer tramo de la calle por la que va el conductor, y las paradas que faltan (se quitan al pasar a menos de 30 m).
+* A menos de 30 m del destino, o al tocar «Cancelar» o volver atrás, la ruta pasa a Terminada y se borra de la memoria. Nunca se guarda en el teléfono ni en el servidor (D-05).
+
 ## Estado actual
 
 La app tiene la estructura inicial, la navegación principal, la gestión de estado con Provider, la configuración por entornos, un cliente HTTP centralizado, el mapa base de Mapbox con la ubicación del conductor (T-093) y la vista Cómo llegar (HU-05).
 
-La navegación activa, los eventos y los surtidores se incorporarán en etapas posteriores.
+La navegación activa llegó con HU-05 (#94). Los surtidores se incorporarán en etapas posteriores.
 
 ## Inicio de sesión (HU-10)
 

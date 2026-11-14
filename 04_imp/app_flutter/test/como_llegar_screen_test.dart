@@ -72,11 +72,9 @@ void main() {
         servicio.pedidos.single.$1,
         const Coordenada(-21.5344253, -64.7339992),
       );
-      // «Iniciar» se ve, pero hasta que exista la Navegación activa está deshabilitado.
-      final iniciar = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, 'Iniciar'),
-      );
-      expect(iniciar.onPressed, isNull);
+      // «Iniciar» abre la Navegación activa (#94).
+      final iniciar = tester.widget<ButtonStyleButton>(find.byKey(const Key('iniciar-navegacion')));
+      expect(iniciar.onPressed, isNotNull);
     },
   );
 

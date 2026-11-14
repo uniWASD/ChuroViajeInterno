@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:app_flutter/models/coordenada.dart';
+import 'package:app_flutter/models/lectura_ubicacion.dart';
 import 'package:app_flutter/models/revision_ruta.dart';
 import 'package:app_flutter/models/ruta.dart';
 import 'package:app_flutter/services/api/api_client.dart';
@@ -18,15 +19,34 @@ class UbicacionFalsa implements ServicioUbicacion {
   int vecesPedido = 0;
   int ajustesAbiertos = 0;
   final List<StreamController<Coordenada>> _flujos = [];
+  final List<StreamController<LecturaUbicacion>> _flujosLecturas = [];
+
+  /// El momento de cada lectura de telemetría; las pruebas con tiempo simulado lo reemplazan.
+  DateTime Function() reloj = DateTime.now;
 
   UbicacionFalsa({this.permiso = PermisoUbicacion.concedido});
+
+  /// Cuántas suscripciones a las lecturas de telemetría siguen abiertas.
+  int get escuchandoLecturas => _flujosLecturas.where((f) => f.hasListener).length;
+
+  /// Simula que el sistema retiró el permiso o apagó el GPS: los dos flujos dan error.
+  void fallar(Object error) {
+    for (final f in [..._flujos, ..._flujosLecturas]) {
+      if (f.hasListener) f.addError(error);
+    }
+  }
 
   /// Cuántas suscripciones a las posiciones siguen abiertas.
   int get escuchando => _flujos.where((f) => f.hasListener).length;
 
-  void emitir(Coordenada c) {
+  /// Una posición nueva: llega al mapa y, como lectura con 5 m de precisión, a la telemetría.
+  void emitir(Coordenada c, {double precisionM = 5}) {
     for (final f in _flujos) {
       if (f.hasListener) f.add(c);
+    }
+    final lectura = LecturaUbicacion(c, precisionM, reloj());
+    for (final f in _flujosLecturas) {
+      if (f.hasListener) f.add(lectura);
     }
   }
 
@@ -40,6 +60,13 @@ class UbicacionFalsa implements ServicioUbicacion {
   Stream<Coordenada> posiciones() {
     final flujo = StreamController<Coordenada>();
     _flujos.add(flujo);
+    return flujo.stream;
+  }
+
+  @override
+  Stream<LecturaUbicacion> lecturas() {
+    final flujo = StreamController<LecturaUbicacion>();
+    _flujosLecturas.add(flujo);
     return flujo.stream;
   }
 

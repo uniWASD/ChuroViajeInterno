@@ -63,10 +63,8 @@ void main() {
     await tester.tap(find.text('Eventos').last);
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Aquí se mostrarán los eventos de ChuroViaje.'),
-      findsOneWidget,
-    );
+    // La pestaña Eventos es la lista de eventos (#64); sin eventos lo dice.
+    expect(find.text('No hay eventos vigentes por ahora.'), findsOneWidget);
 
     await tester.tap(find.text('Surtidores').last);
     await tester.pumpAndSettle();

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/catalogos.dart';
 import '../models/evento_vial.dart';
+import '../services/api/api_client.dart';
 import '../services/eventos/servicio_eventos.dart';
 import 'sesion_controller.dart';
 
@@ -26,6 +27,12 @@ class EventosController extends ChangeNotifier {
   bool _sinActualizar = false;
   int? _seleccionado;
   bool _disposed = false;
+
+  /// Los eventos que este conductor ya votó en esta sesión, o cuyo voto el backend rechazó: sus botones quedan
+  /// desactivados (RN-02.11, RN-02.12).
+  final Set<int> _votados = {};
+  final Set<int> _votando = {};
+  final List<String> _mensajes = [];
 
   EventosController(
     this._servicio,
@@ -100,6 +107,40 @@ class EventosController extends ChangeNotifier {
     _avisar();
   }
 
+  /// true si los botones de voto de [e] se pueden tocar.
+  bool puedeVotar(EventoVial e) => e.votable && !_votados.contains(e.id) && !_votando.contains(e.id);
+
+  bool yaVoto(int id) => _votados.contains(id);
+
+  /// El próximo mensaje para el conductor (por ejemplo, «ya votaste este evento»), o null.
+  String? tomarMensaje() => _mensajes.isEmpty ? null : _mensajes.removeAt(0);
+
+  /// Un toque: vota «real» o «falso» (HU-11). El backend decide; si lo rechaza, se muestra su mensaje y nada cambia.
+  Future<void> votar(int id, ValorVoto valor) async {
+    final evento = _eventos[id];
+    if (evento == null || !puedeVotar(evento)) return;
+    _votando.add(id);
+    _avisar();
+    try {
+      final r = await _servicio.votar(id, valor);
+      _votados.add(id);
+      final actual = _eventos[id];
+      if (r.estado == 'RETIRADO' || r.estado == 'VENCIDO') {
+        _eventos.remove(id); // RN-02.13: con el tercer «falso» deja de mostrarse
+      } else if (actual != null) {
+        _eventos[id] = actual.conEstado(r.estado, r.confirmado); // RN-02.14
+      }
+      _mensajes.add(valor == ValorVoto.real ? 'Gracias: votaste que es real.' : 'Gracias: votaste que es falso.');
+    } on ApiException catch (e) {
+      // VOTO_REPETIDO, VOTO_PROPIO, EVENTO_NO_VIGENTE o VOTO_NO_PERMITIDO: el voto no se puede repetir.
+      if ((e.statusCode ?? 0) >= 400 && (e.statusCode ?? 0) < 500 && e.statusCode != 401) _votados.add(id);
+      _mensajes.add(e.mensaje);
+    } finally {
+      _votando.remove(id);
+      _avisar();
+    }
+  }
+
   void seleccionar(int id) {
     _seleccionado = id;
     _avisar();
@@ -129,6 +170,8 @@ class EventosController extends ChangeNotifier {
     _marca = null;
     _seleccionado = null;
     _sinActualizar = false;
+    _votados.clear();
+    _mensajes.clear();
   }
 
   void _avisar() {

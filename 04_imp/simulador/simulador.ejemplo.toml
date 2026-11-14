@@ -1,0 +1,11 @@
+# Parámetros del simulador de ChuroViaje (CU-07). Copiar y ajustar; un argumento de la línea de comandos manda sobre
+# este archivo. Estos valores son la «carga normal» de las pruebas.
+usuarios = 50              # usuarios fantasma a la vez
+navegando = 10             # cuántos de ellos navegan una ruta y envían telemetría
+eventos_por_minuto = 6     # eventos viales entre todos
+duracion_minutos = 15
+# Archivo con la lista «viajes»; relativo a la carpeta desde la que se corre el simulador.
+rutas = "../datos/rutas_referencia.json"
+# Ambiente de pruebas en esta máquina (RN-07.12). Otro servidor exige ambiente_remoto = true y HTTPS.
+backend = "http://127.0.0.1:8080"
+# semilla = 7              # opcional: repite la misma simulación

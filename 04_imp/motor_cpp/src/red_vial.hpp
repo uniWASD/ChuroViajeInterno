@@ -97,6 +97,12 @@ class RedVial {
   // Entre los dos sentidos de una calle, que comparten trazado, devuelve el que aparece primero.
   std::optional<TramoCercano> tramo_mas_cercano(double lat, double lon) const;
 
+  // El tramo donde está un vehículo (RN-04.8, D-18): el que pasa más cerca de (lat, lon), si está a no más de
+  // `radio_m` (como máximo kRadioAjusteMetros). Entre los dos sentidos de una calle, que comparten trazado, elige
+  // el que va más parecido a `rumbo` (grados desde el norte, en sentido horario); sin rumbo, el que aparece primero.
+  std::optional<TramoCercano> tramo_en_sentido(double lat, double lon, std::optional<double> rumbo,
+                                               double radio_m) const;
+
  private:
   RedVial() = default;
   void construir_indice();

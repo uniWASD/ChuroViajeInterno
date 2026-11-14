@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "fuente": "Prueba de telemetría (#73): una avenida principal de doble sentido que cruza una calle residencial",
+  "fecha_extracto": "2026-11-14",
+  "nodos": [
+    {
+      "id": "Oeste",
+      "lat": -21.54,
+      "lon": -64.74
+    },
+    {
+      "id": "Cruce",
+      "lat": -21.54,
+      "lon": -64.73
+    },
+    {
+      "id": "Este",
+      "lat": -21.54,
+      "lon": -64.72
+    },
+    {
+      "id": "Norte",
+      "lat": -21.531,
+      "lon": -64.73
+    }
+  ],
+  "tramos": [
+    {
+      "id": "avenida:ida",
+      "desde": "Oeste",
+      "hasta": "Cruce",
+      "opuesto": "avenida:vuelta",
+      "nombre": "Av. La Banda",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 1034.295,
+      "geometria": [
+        [
+          -21.54,
+          -64.74
+        ],
+        [
+          -21.54,
+          -64.73
+        ]
+      ]
+    },
+    {
+      "id": "avenida:vuelta",
+      "desde": "Cruce",
+      "hasta": "Oeste",
+      "opuesto": "avenida:ida",
+      "nombre": "Av. La Banda",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 1034.295,
+      "geometria": [
+        [
+          -21.54,
+          -64.73
+        ],
+        [
+          -21.54,
+          -64.74
+        ]
+      ]
+    },
+    {
+      "id": "avenida2:ida",
+      "desde": "Cruce",
+      "hasta": "Este",
+      "opuesto": "avenida2:vuelta",
+      "nombre": "Av. La Banda",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 1034.295,
+      "geometria": [
+        [
+          -21.54,
+          -64.73
+        ],
+        [
+          -21.54,
+          -64.72
+        ]
+      ]
+    },
+    {
+      "id": "avenida2:vuelta",
+      "desde": "Este",
+      "hasta": "Cruce",
+      "opuesto": "avenida2:ida",
+      "nombre": "Av. La Banda",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 1034.295,
+      "geometria": [
+        [
+          -21.54,
+          -64.72
+        ],
+        [
+          -21.54,
+          -64.73
+        ]
+      ]
+    },
+    {
+      "id": "calle:ida",
+      "desde": "Cruce",
+      "hasta": "Norte",
+      "opuesto": "calle:vuelta",
+      "nombre": "Calle Sucre",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 1000.757,
+      "geometria": [
+        [
+          -21.54,
+          -64.73
+        ],
+        [
+          -21.531,
+          -64.73
+        ]
+      ]
+    },
+    {
+      "id": "calle:vuelta",
+      "desde": "Norte",
+      "hasta": "Cruce",
+      "opuesto": "calle:ida",
+      "nombre": "Calle Sucre",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 1000.757,
+      "geometria": [
+        [
+          -21.531,
+          -64.73
+        ],
+        [
+          -21.54,
+          -64.73
+        ]
+      ]
+    }
+  ]
+}

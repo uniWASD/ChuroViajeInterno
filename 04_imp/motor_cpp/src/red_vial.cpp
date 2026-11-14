@@ -335,6 +335,81 @@ std::optional<TramoCercano> RedVial::tramo_mas_cercano(double lat, double lon) c
   return mejor;
 }
 
+std::optional<TramoCercano> RedVial::tramo_en_sentido(double lat, double lon, std::optional<double> rumbo,
+                                                      double radio_m) const {
+  if (tramos_.empty() || !std::isfinite(lat) || !std::isfinite(lon) || lat < -90 || lat > 90 || lon < -180 ||
+      lon > 180) {
+    return std::nullopt;
+  }
+  radio_m = std::min(radio_m, kRadioAjusteMetros);  // la grilla solo mira las celdas vecinas
+  const auto [px, py] = proyectar(lat, lon);
+  if (std::fabs(px) > 1e9 || std::fabs(py) > 1e9) return std::nullopt;
+  const auto cx = static_cast<std::int64_t>(std::floor(px / kRadioAjusteMetros));
+  const auto cy = static_cast<std::int64_t>(std::floor(py / kRadioAjusteMetros));
+
+  // Diferencia entre dos rumbos, de 0 a 180 grados.
+  auto diferencia = [](double a, double b) {
+    const double d = std::fmod(std::fabs(a - b), 360.0);
+    return d > 180.0 ? 360.0 - d : d;
+  };
+
+  struct Candidato {
+    std::size_t tramo;
+    double distancia;
+    double rumbo_tramo;  // rumbo del segmento más cercano, en el sentido del tramo
+  };
+  std::optional<Candidato> mejor;
+  std::vector<std::size_t> vistos;
+  for (std::int64_t dx = -1; dx <= 1; ++dx) {
+    for (std::int64_t dy = -1; dy <= 1; ++dy) {
+      const auto it = grilla_tramos_.find(clave_celda(cx + dx, cy + dy));
+      if (it == grilla_tramos_.end()) continue;
+      for (const std::size_t t : it->second) {
+        if (std::find(vistos.begin(), vistos.end(), t) != vistos.end()) continue;
+        vistos.push_back(t);
+        const auto& g = tramos_[t].geometria;
+        double d = std::numeric_limits<double>::infinity();
+        double rumbo_segmento = 0;
+        for (std::size_t k = 0; k + 1 < g.size(); ++k) {
+          const auto [x1, y1] = proyectar(g[k].lat, g[k].lon);
+          const auto [x2, y2] = proyectar(g[k + 1].lat, g[k + 1].lon);
+          const double vx = x2 - x1, vy = y2 - y1;
+          const double largo2 = vx * vx + vy * vy;
+          double u = largo2 > 0 ? ((px - x1) * vx + (py - y1) * vy) / largo2 : 0;
+          u = std::clamp(u, 0.0, 1.0);
+          const double dk = std::hypot(px - (x1 + u * vx), py - (y1 + u * vy));
+          if (dk < d) {
+            d = dk;
+            // x crece hacia el este e y hacia el norte: atan2(este, norte) es el rumbo desde el norte.
+            rumbo_segmento = std::fmod(std::atan2(vx, vy) * 180.0 / kPi + 360.0, 360.0);
+          }
+        }
+        if (d > radio_m) continue;
+        const Candidato c{t, d, rumbo_segmento};
+        if (!mejor) {
+          mejor = c;
+          continue;
+        }
+        // Los dos sentidos de una calle están a la misma distancia: decide el rumbo del vehículo.
+        const bool misma_distancia = std::fabs(d - mejor->distancia) < 1e-6;
+        if (d < mejor->distancia - 1e-6) {
+          mejor = c;
+        } else if (misma_distancia) {
+          if (rumbo) {
+            const double dc = diferencia(*rumbo, c.rumbo_tramo);
+            const double dm = diferencia(*rumbo, mejor->rumbo_tramo);
+            if (dc < dm - 1e-9 || (std::fabs(dc - dm) <= 1e-9 && t < mejor->tramo)) mejor = c;
+          } else if (t < mejor->tramo) {
+            mejor = c;
+          }
+        }
+      }
+    }
+  }
+  if (!mejor) return std::nullopt;
+  return TramoCercano{mejor->tramo, mejor->distancia};
+}
+
 std::shared_ptr<const RedVial> cargar_red_para_arranque(const std::filesystem::path& ruta, std::ostream& registro) {
   const auto inicio = std::chrono::steady_clock::now();
   try {

@@ -13,6 +13,7 @@
 #include "red_vial.hpp"
 #include "eventos.hpp"
 #include "ruta.hpp"
+#include "telemetria.hpp"
 #include "trafico.hpp"
 
 namespace churoviaje {
@@ -22,7 +23,7 @@ namespace codigo_error {
 inline constexpr const char* json_invalido = "JSON_INVALIDO";            // la línea no es JSON
 inline constexpr const char* peticion_invalida = "PETICION_INVALIDA";    // JSON válido, pero sin id u operacion correctos
 inline constexpr const char* operacion_desconocida = "OPERACION_DESCONOCIDA";
-inline constexpr const char* no_implementada = "NO_IMPLEMENTADA";        // operación del contrato que aún no llega
+inline constexpr const char* no_implementada = "NO_IMPLEMENTADA";        // ya no se usa: todo el contrato está implementado
 inline constexpr const char* red_no_cargada = "RED_NO_CARGADA";          // la operación necesita la red vial y no hay
 inline constexpr const char* error_interno = "ERROR_INTERNO";            // fallo inesperado; el núcleo sigue vivo
 }  // namespace codigo_error
@@ -53,7 +54,7 @@ class Nucleo {
 
   // Atiende una petición. Devuelve std::nullopt si la línea está en blanco (no se responde nada).
   // Nunca lanza: cualquier fallo se convierte en una respuesta "ok":false. No es const porque actualizar_trafico
-  // cambia los eventos vigentes.
+  // cambia los eventos vigentes y analizar_telemetria recuerda la última lectura de cada recorrido.
   std::optional<Respuesta> atender(std::string_view linea) noexcept;
 
   // Reloj con el que se decide si un evento ya venció (segundos desde 1970). Por omisión, el del sistema;
@@ -63,12 +64,18 @@ class Nucleo {
     eventos_.trafico(reloj_());
     return eventos_.cantidad();
   }
+  // Cuántos recorridos de telemetría recuerda el núcleo, después de olvidar los de más de 5 minutos (P-25).
+  std::size_t recorridos_en_memoria() {
+    telemetria_.olvidar_viejos(reloj_());
+    return telemetria_.recorridos();
+  }
 
  private:
   EstadoRed estado_;
   std::shared_ptr<const RedVial> red_;
   Algoritmo algoritmo_ = Algoritmo::a_estrella;
   TablaEventos eventos_;  // eventos vigentes y el tráfico que producen en cada tramo
+  AnalizadorTelemetria telemetria_;  // última lectura de cada recorrido (RN-04.12)
   std::function<std::int64_t()> reloj_;
 };
 

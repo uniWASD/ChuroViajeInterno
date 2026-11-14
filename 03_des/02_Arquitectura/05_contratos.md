@@ -216,6 +216,19 @@ Un aviso de tráfico y su respuesta:
 - Cuenta cualquier evento vigente, de cualquier tipo y origen, que afecte a un tramo que falta. Si hay varios nuevos, se toma el primero en el orden de la ruta.
 - La alternativa sale de la intersección más cercana a la posición y pasa por las paradas que faltan, en orden ([RN-04.15](04_reglas/CU-04_RecalcularRuta.md)). El costo de seguir se mide desde esa misma intersección.
 
+### Analizar la telemetría (`analizar_telemetria`)
+
+```json
+{"id":32,"operacion":"analizar_telemetria","recorridos":[{"recorrido":"3f9a1c","simulado":false,"lecturas":[{"posicion":[-21.5400,-64.7354],"precision_m":8,"momento":"2026-11-14T10:02:03-04:00"}]}]}
+{"id":32,"ok":true,"congestiones":[{"tramo":"osm:7101:2:ida","punto":[-21.5400,-64.7354],"nivel":"MUY_CONGESTIONADO","simulado":false}],"lecturas_validas":1,"lecturas_descartadas":0}
+```
+
+- `recorridos` agrupa las lecturas por `recorrido`, el identificador temporal que arma el backend; nunca viaja nada del conductor ([RN-04.12](04_reglas/CU-04_RecalcularRuta.md)). `simulado` puede faltar y vale `false`.
+- Cada lectura trae `posicion` `[latitud, longitud]`, `precision_m` y `momento` en ISO 8601 con zona horaria. Una lectura mal formada hace que toda la petición responda `PETICION_INVALIDA`; una lectura imprecisa, repetida o imposible no es un error y solo se cuenta en `lecturas_descartadas` ([RN-04.6](04_reglas/CU-04_RecalcularRuta.md)).
+- `congestiones` trae, por cada tramo donde un recorrido lleva 2 minutos seguidos lento, el `tramo`, un `punto`, el `nivel` (`CONGESTIONADO` o `MUY_CONGESTIONADO`) y si salió de recorridos simulados ([RN-04.9](04_reglas/CU-04_RecalcularRuta.md), [RN-04.10](04_reglas/CU-04_RecalcularRuta.md), [RN-04.20](04_reglas/CU-04_RecalcularRuta.md)). Mientras siga lento, el núcleo la vuelve a informar en cada mensaje. La lista vacía es la respuesta normal.
+- El backend crea o extiende con eso el `EventoVial` de congestión y lo avisa con `actualizar_trafico`, con el mismo `tramo` y el `nivel`, para que afecte solo ese sentido ([D-18](08_decisiones_parametros.md)).
+- El núcleo guarda de cada recorrido solo la última lectura y la racha lenta en curso, y lo olvida a los 5 minutos sin lecturas nuevas ([P-25](08_decisiones_parametros.md)).
+
 ### Arranque, demoras y caídas
 
 - **Arranque.** Cada vez que el wrapper arranca el núcleo, espera a que cargue la red vial (mensaje `consultar_estado`) y le envía todos los eventos vigentes con `actualizar_trafico`. Recién entonces atiende rutas. Así el núcleo nunca empieza con el tráfico en blanco y nunca necesita llamar al backend.

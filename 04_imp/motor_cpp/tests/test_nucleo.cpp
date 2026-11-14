@@ -65,20 +65,23 @@ TEST(Nucleo, IgnoraCamposDeMas) {
   EXPECT_EQ(j.at("ok"), true);
 }
 
-// Las operaciones del contrato que todavía no llegan responden «no implementada» hasta que lleguen sus issues.
-class OperacionPendiente : public ::testing::TestWithParam<std::string> {};
+// Todas las operaciones del contrato están implementadas (#76 y #73 fueron las últimas): ninguna responde
+// «no implementada» ni «desconocida», aunque la petición venga vacía.
+class OperacionDelContrato : public ::testing::TestWithParam<std::string> {};
 
-TEST_P(OperacionPendiente, RespondeNoImplementada) {
+TEST_P(OperacionDelContrato, EstaImplementada) {
   Nucleo nucleo;
   const json j = responder(nucleo, R"({"id":5,"operacion":")" + GetParam() + R"("})");
   EXPECT_EQ(j.at("id"), 5);
-  EXPECT_EQ(j.at("ok"), false);
-  EXPECT_EQ(j.at("error").at("codigo"), codigo::no_implementada);
-  EXPECT_NE(j.at("error").at("descripcion").get<std::string>().find(GetParam()), std::string::npos);
+  if (j.at("ok") == false) {
+    EXPECT_NE(j.at("error").at("codigo"), codigo::no_implementada);
+    EXPECT_NE(j.at("error").at("codigo"), codigo::operacion_desconocida);
+  }
 }
 
-INSTANTIATE_TEST_SUITE_P(Contrato, OperacionPendiente,
-                         ::testing::Values("analizar_telemetria"));
+INSTANTIATE_TEST_SUITE_P(Contrato, OperacionDelContrato,
+                         ::testing::Values("consultar_estado", "calcular_ruta", "revisar_ruta", "actualizar_trafico",
+                                           "analizar_telemetria"));
 
 TEST(Nucleo, OperacionDesconocida) {
   Nucleo nucleo;

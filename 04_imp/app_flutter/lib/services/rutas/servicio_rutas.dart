@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 
 import '../../models/coordenada.dart';
+import '../../models/revision_ruta.dart';
 import '../../models/ruta.dart';
 import '../api/api_client.dart';
 
@@ -18,6 +19,9 @@ abstract class ServicioRutas {
     Coordenada destino,
     List<Coordenada> paradas,
   );
+
+  /// `POST /rutas/revision` (CU-04). Lanza [ApiException] si falla (sin red, 503); la app sigue con su ruta.
+  Future<RevisionRuta> revisar(PedidoRevision pedido);
 }
 
 class ServicioRutasApi implements ServicioRutas {
@@ -58,6 +62,28 @@ class ServicioRutasApi implements ServicioRutas {
     }
   }
 
+  @override
+  Future<RevisionRuta> revisar(PedidoRevision pedido) async {
+    final respuesta = await _api.post(
+      '/rutas/revision',
+      body: {
+        'posicion': _json(pedido.posicion),
+        'tramos': pedido.tramos,
+        'destino': _json(pedido.destino),
+        'paradas': [for (final p in pedido.paradas) _json(p)],
+        'eventosAvisados': pedido.eventosAvisados,
+      },
+    );
+    try {
+      return RevisionRuta.fromJson(respuesta as Map<String, dynamic>);
+    } on Object {
+      throw const ApiException(
+        codigo: 'RESPUESTA_INVALIDA',
+        mensaje: 'El servidor devolvió una respuesta inválida.',
+      );
+    }
+  }
+
   static Map<String, double> _json(Coordenada c) => {
     'latitud': c.latitud,
     'longitud': c.longitud,
@@ -87,4 +113,9 @@ class ServicioRutasDeEjemplo implements ServicioRutas {
     final texto = await _bundle.loadString(archivo);
     return RutaCalculada.fromJson(jsonDecode(texto) as Map<String, dynamic>);
   }
+
+  /// La ruta de ejemplo no tiene tráfico: nunca hay nada que avisar.
+  @override
+  Future<RevisionRuta> revisar(PedidoRevision pedido) async =>
+      const RevisionRuta(estado: EstadoRevision.sinCambios);
 }

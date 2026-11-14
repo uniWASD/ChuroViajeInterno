@@ -1,48 +1,25 @@
 package com.churoviaje.backend.dominio;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
 /**
  * Sesion de un conductor: lo que respalda a su token de renovacion (RN-08.5, RN-08.12).
- * Solo guarda la huella del token; el token en si solo lo conoce la app.
+ * Solo guarda la huella del token; el token en si solo lo conoce la app. La guarda y la recupera un
+ * {@link SesionRepository} (D-41).
  */
-@Entity
-@Table(name = "sesion")
 public class Sesion {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    /** Vacio mientras la sesion no se guardo: el identificador lo da la base. */
+    private final Long id;
+    private final Conductor conductor;
+    private final String tokenRenovacionHash;
+    private final Instant emitidaEn;
+    private final Instant expiraEn;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "conductor_id", nullable = false, updatable = false)
-    private Conductor conductor;
-
-    @Column(name = "token_renovacion_hash", nullable = false, updatable = false, length = 64)
-    private String tokenRenovacionHash;
-
-    @Column(name = "emitida_en", nullable = false, updatable = false)
-    private Instant emitidaEn;
-
-    @Column(name = "expira_en", nullable = false, updatable = false)
-    private Instant expiraEn;
-
-    protected Sesion() {
-        // JPA
-    }
-
-    private Sesion(Conductor conductor, String tokenRenovacionHash, Instant emitidaEn, Instant expiraEn) {
+    private Sesion(Long id, Conductor conductor, String tokenRenovacionHash, Instant emitidaEn, Instant expiraEn) {
+        this.id = id;
         this.conductor = Objects.requireNonNull(conductor, "conductor");
         this.tokenRenovacionHash = Objects.requireNonNull(tokenRenovacionHash, "tokenRenovacionHash");
         this.emitidaEn = emitidaEn;
@@ -56,7 +33,13 @@ public class Sesion {
         if (duracion.isZero() || duracion.isNegative()) {
             throw new IllegalArgumentException("La duracion de la sesion debe ser positiva");
         }
-        return new Sesion(conductor, tokenRenovacionHash, ahora, ahora.plus(duracion));
+        return new Sesion(null, conductor, tokenRenovacionHash, ahora, ahora.plus(duracion));
+    }
+
+    /** Reconstruye una sesion guardada. */
+    public static Sesion desdeRegistro(long id, Conductor conductor, String tokenRenovacionHash, Instant emitidaEn,
+            Instant expiraEn) {
+        return new Sesion(id, conductor, tokenRenovacionHash, emitidaEn, expiraEn);
     }
 
     /** Pasado el plazo, el conductor inicia sesion de nuevo con Google (RN-08.12). */

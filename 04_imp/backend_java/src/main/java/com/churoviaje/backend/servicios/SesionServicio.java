@@ -2,17 +2,16 @@ package com.churoviaje.backend.servicios;
 
 import com.churoviaje.backend.config.PropiedadesSeguridad;
 import com.churoviaje.backend.dominio.Conductor;
+import com.churoviaje.backend.dominio.ConductorRepository;
 import com.churoviaje.backend.dominio.Sesion;
+import com.churoviaje.backend.dominio.SesionRepository;
 import com.churoviaje.backend.errores.ExcepcionRechazo;
-import com.churoviaje.backend.repositorios.ConductorRepositorio;
-import com.churoviaje.backend.repositorios.SesionRepositorio;
 import com.churoviaje.backend.seguridad.JwtServicio;
 import com.churoviaje.backend.seguridad.TokensRenovacion;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -29,16 +28,16 @@ public class SesionServicio {
     public record JwtRenovado(String jwt, OffsetDateTime expiraEn) {}
 
     private final ValidadorTokenGoogle validadorGoogle;
-    private final ConductorRepositorio conductores;
-    private final SesionRepositorio sesiones;
+    private final ConductorRepository conductores;
+    private final SesionRepository sesiones;
     private final JwtServicio jwtServicio;
     private final TokensRenovacion tokensRenovacion;
     private final PropiedadesSeguridad propiedades;
     private final Clock reloj;
     private final TransactionTemplate transaccion;
 
-    public SesionServicio(ValidadorTokenGoogle validadorGoogle, ConductorRepositorio conductores,
-            SesionRepositorio sesiones, JwtServicio jwtServicio, TokensRenovacion tokensRenovacion,
+    public SesionServicio(ValidadorTokenGoogle validadorGoogle, ConductorRepository conductores,
+            SesionRepository sesiones, JwtServicio jwtServicio, TokensRenovacion tokensRenovacion,
             PropiedadesSeguridad propiedades, Clock reloj, PlatformTransactionManager gestorTransacciones) {
         this.validadorGoogle = validadorGoogle;
         this.conductores = conductores;
@@ -64,16 +63,16 @@ public class SesionServicio {
 
         Instant ahora = reloj.instant();
         String tokenRenovacionNuevo = tokensRenovacion.generar();
-        Long conductorId = obtenerOCrearConductor(googleId, ahora);
+        Conductor conductor = obtenerOCrearConductor(googleId, ahora);
 
-        transaccion.executeWithoutResult(estado -> sesiones.save(Sesion.iniciar(
-                conductores.getReferenceById(conductorId),
+        transaccion.executeWithoutResult(estado -> sesiones.guardar(Sesion.iniciar(
+                conductor,
                 tokensRenovacion.huella(tokenRenovacionNuevo),
                 ahora,
                 propiedades.renovacion().duracion())));
 
         return new SesionIniciada(
-                jwtServicio.emitir(conductorId, ahora),
+                jwtServicio.emitir(conductor.getId(), ahora),
                 aFecha(jwtServicio.vencimientoDesde(ahora)),
                 tokenRenovacionNuevo);
     }
@@ -82,7 +81,7 @@ public class SesionServicio {
     public JwtRenovado renovar(String tokenRenovacion) {
         Instant ahora = reloj.instant();
         Long conductorId = transaccion.execute(estado ->
-                sesiones.buscarPorHash(tokensRenovacion.huella(tokenRenovacion))
+                sesiones.buscarPorHuellaDeToken(tokensRenovacion.huella(tokenRenovacion))
                         .filter(sesion -> sesion.estaVigente(ahora))
                         .map(sesion -> sesion.getConductor().getId())
                         .orElse(null));
@@ -95,23 +94,17 @@ public class SesionServicio {
 
     /** RN-08.14: el token de renovacion deja de valer. Cerrar una sesion que ya no existe no es un error. */
     public void cerrar(String tokenRenovacion) {
-        transaccion.executeWithoutResult(estado -> sesiones.borrarPorHash(tokensRenovacion.huella(tokenRenovacion)));
+        transaccion.executeWithoutResult(
+                estado -> sesiones.borrarPorHuellaDeToken(tokensRenovacion.huella(tokenRenovacion)));
     }
 
     /**
      * RN-08.4: en el primer ingreso se crea el conductor; en los siguientes se usa el mismo. Si dos
-     * primeros ingresos llegan a la vez, la base rechaza el segundo y se lee el que ya existe.
+     * primeros ingresos llegan a la vez, el repositorio no crea un segundo conductor y devuelve el que ya existe.
      */
-    private Long obtenerOCrearConductor(String googleId, Instant ahora) {
-        try {
-            return transaccion.execute(estado -> conductores.findByGoogleId(googleId)
-                    .orElseGet(() -> conductores.saveAndFlush(Conductor.deGoogle(googleId, ahora)))
-                    .getId());
-        } catch (DataIntegrityViolationException carrera) {
-            return transaccion.execute(estado -> conductores.findByGoogleId(googleId)
-                    .orElseThrow(() -> carrera)
-                    .getId());
-        }
+    private Conductor obtenerOCrearConductor(String googleId, Instant ahora) {
+        return transaccion.execute(estado -> conductores.buscarPorGoogleId(googleId)
+                .orElseGet(() -> conductores.guardarNuevo(Conductor.deGoogle(googleId, ahora))));
     }
 
     private static OffsetDateTime aFecha(Instant instante) {

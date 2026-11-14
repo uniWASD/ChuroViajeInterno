@@ -225,6 +225,8 @@ public class MotorDeRutas {
             peticion.respuesta.complete(respuesta);
         } catch (FalloDelNucleo e) {
             LOG.warn("El nucleo fallo en «{}»: {}. Se reinicia.", peticion.operacion, e.getMessage());
+            // Antes de avisar a quien espera: desde ese momento nadie debe ver al nucleo como listo.
+            listo = false;
             peticion.respuesta.completeExceptionally(new MotorNoDisponibleException());
             reiniciar(true);
         }

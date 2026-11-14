@@ -1,10 +1,8 @@
 package com.churoviaje.backend.servicios;
 
-import com.churoviaje.backend.dominio.EventoVial;
-import com.churoviaje.backend.dto.EventoVialRespuesta;
-import com.churoviaje.backend.dto.EventosRespuesta;
+import com.churoviaje.backend.dominio.EventoRepository;
+import com.churoviaje.backend.dominio.EventosRespuesta;
 import com.churoviaje.backend.errores.ExcepcionRechazo;
-import com.churoviaje.backend.repositorios.EventoVialRepositorio;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -24,16 +22,17 @@ public class ConsultaEventosServicio {
      */
     static final Duration SOLAPAMIENTO = Duration.ofSeconds(2);
 
-    private final EventoVialRepositorio eventos;
+    private final EventoRepository eventos;
     private final Clock reloj;
 
-    public ConsultaEventosServicio(EventoVialRepositorio eventos, Clock reloj) {
+    public ConsultaEventosServicio(EventoRepository eventos, Clock reloj) {
         this.eventos = eventos;
         this.reloj = reloj;
     }
 
     /**
-     * RN-02.2 a RN-02.6. La vigencia se calcula en cada consulta, sin esperar a la tarea periodica (RN-02.4).
+     * RN-02.2 a RN-02.6. La vigencia se calcula en cada consulta, sin esperar a la tarea periodica (RN-02.4). El
+     * repositorio entrega los eventos ya como DTO, sin datos de conductores (RN-02.5, D-42).
      *
      * @param marca la que devolvio la consulta anterior, o {@code null} para recibir todos los vigentes
      */
@@ -42,16 +41,11 @@ public class ConsultaEventosServicio {
         Instant ahora = reloj.instant();
         String marcaNueva = ahora.minus(SOLAPAMIENTO).toString();
         if (marca == null || marca.isBlank()) {
-            return new EventosRespuesta(marcaNueva, true, aRespuesta(eventos.vigentes(ahora), ahora), List.of());
+            return new EventosRespuesta(marcaNueva, true, eventos.vigentesParaMostrar(ahora), List.of());
         }
         Instant desde = leerMarca(marca);
-        return new EventosRespuesta(marcaNueva, false,
-                aRespuesta(eventos.vigentesCambiadosDesde(desde, ahora), ahora), eventos.quitadosEntre(desde, ahora));
-    }
-
-    /** Cada evento responde si sigue vigente; la respuesta no lleva datos de conductores (RN-02.5). */
-    private static List<EventoVialRespuesta> aRespuesta(List<EventoVial> encontrados, Instant ahora) {
-        return encontrados.stream().filter(e -> e.estaVigente(ahora)).map(EventoVialRespuesta::de).toList();
+        return new EventosRespuesta(marcaNueva, false, eventos.vigentesCambiadosDesdeParaMostrar(desde, ahora),
+                eventos.quitadosEntre(desde, ahora));
     }
 
     private static Instant leerMarca(String marca) {

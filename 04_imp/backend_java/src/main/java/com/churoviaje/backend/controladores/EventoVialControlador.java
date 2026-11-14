@@ -1,9 +1,9 @@
 package com.churoviaje.backend.controladores;
 
+import com.churoviaje.backend.dominio.EventoVialRespuesta;
+import com.churoviaje.backend.dominio.EventosRespuesta;
 import com.churoviaje.backend.dominio.Ubicacion;
 import com.churoviaje.backend.dominio.ValorVoto;
-import com.churoviaje.backend.dto.EventoVialRespuesta;
-import com.churoviaje.backend.dto.EventosRespuesta;
 import com.churoviaje.backend.dto.VotoRespuesta;
 import com.churoviaje.backend.seguridad.ConductorAutenticado;
 import com.churoviaje.backend.servicios.ConsultaEventosServicio;

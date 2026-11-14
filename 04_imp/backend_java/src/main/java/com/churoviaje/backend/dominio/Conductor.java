@@ -1,47 +1,30 @@
 package com.churoviaje.backend.dominio;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import org.springframework.http.HttpStatus;
 import com.churoviaje.backend.errores.ExcepcionRechazo;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
+import org.springframework.http.HttpStatus;
 
 /**
  * Persona que usa la app. Se identifica solo por su cuenta de Google (RN-08.1, RN-08.4):
- * se guarda el identificador de la cuenta y nada mas (RN-08.6).
+ * se guarda el identificador de la cuenta y nada mas (RN-08.6). Lo guarda y lo recupera un
+ * {@link ConductorRepository}; el conductor no sabe de la base de datos (D-41).
  */
-@Entity
-@Table(name = "conductor")
 public class Conductor {
 
     /** RN-01.9 y P-04: un conductor puede enviar hasta 5 reportes cada 10 minutos, sean del tipo que sean. */
     public static final int MAXIMO_REPORTES = 5;
     public static final Duration VENTANA_REPORTES = Duration.ofMinutes(10);
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    /** Vacio mientras el conductor no se guardo: el identificador lo da la base. */
+    private final Long id;
+    private final String googleId;
+    private final Instant fechaAlta;
+    private final boolean simulado;
 
-    @Column(name = "google_id", nullable = false, updatable = false)
-    private String googleId;
-
-    @Column(name = "fecha_alta", nullable = false, updatable = false)
-    private Instant fechaAlta;
-
-    @Column(nullable = false, updatable = false)
-    private boolean simulado;
-
-    protected Conductor() {
-        // JPA
-    }
-
-    private Conductor(String googleId, Instant fechaAlta, boolean simulado) {
+    private Conductor(Long id, String googleId, Instant fechaAlta, boolean simulado) {
+        this.id = id;
         this.googleId = Objects.requireNonNull(googleId, "googleId");
         this.fechaAlta = Objects.requireNonNull(fechaAlta, "fechaAlta");
         this.simulado = simulado;
@@ -52,7 +35,12 @@ public class Conductor {
 
     /** Conductor real que entra por primera vez con su cuenta de Google. */
     public static Conductor deGoogle(String googleId, Instant ahora) {
-        return new Conductor(googleId, ahora, false);
+        return new Conductor(null, googleId, ahora, false);
+    }
+
+    /** Reconstruye un conductor guardado. */
+    public static Conductor desdeRegistro(long id, String googleId, Instant fechaAlta, boolean simulado) {
+        return new Conductor(id, googleId, fechaAlta, simulado);
     }
 
     /**

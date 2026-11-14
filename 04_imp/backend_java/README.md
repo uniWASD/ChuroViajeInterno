@@ -6,12 +6,14 @@ Backend de ChuroViaje con Java 21, Spring Boot y Maven Wrapper.
 
 El proyecto usa un solo MVC (D-01):
 
-- `config`: configuración de la aplicación y seguridad.
-- `controladores`: endpoints REST, DTO y validación de entrada. Para una consulta responden el DTO directamente; al crear algo o al rechazar, un `ResponseEntity` con el código HTTP del contrato. Nunca devuelven un objeto de dominio ([D-43](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
-- `servicios`: un servicio por caso de uso, que recibe sus repositorios por el constructor y coordina el dominio y los repositorios.
-- `dominio`: objetos y valores que contienen las reglas de negocio. Con cada historia se incorporan sus objetos, los DTO de consulta (`record` de solo lectura) y la interfaz de su repositorio ([D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-42](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Nada aquí accede a la base de datos.
-- `infraestructura/pg`: implementaciones de los repositorios para PostgreSQL, con JDBC y sentencias preparadas ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Se crea junto con el primer repositorio.
+- `config`: configuración de la aplicación, de la seguridad y de las conexiones de los repositorios (`ConfiguracionAccesoDatos`).
+- `controladores`: endpoints REST y validación de entrada. Para una consulta responden el DTO directamente; al crear algo o al rechazar, un `ResponseEntity` con el código HTTP del contrato. Nunca devuelven un objeto de dominio ([D-43](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+- `dto`: DTO de las peticiones y respuestas que no salen de una consulta de un repositorio: `POST /rutas` y la respuesta del voto.
+- `servicios`: un servicio por caso de uso, que recibe por el constructor las interfaces de sus repositorios y coordina el dominio y los repositorios.
+- `dominio`: objetos y valores que contienen las reglas de negocio, las interfaces de los repositorios (`EventoRepository`, `VotoRepository`, `ConductorRepository`, `SesionRepository` y, en `dominio/catalogo`, `CatalogoRepository`) y los DTO de consulta (`record` de solo lectura) junto a su repositorio: `EventoVialRespuesta`, `EventosRespuesta` y `CatalogosRespuesta` ([D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-42](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Nada aquí accede a la base de datos.
+- `infraestructura/pg`: implementaciones de los repositorios para PostgreSQL (`PgEventoRepository`, `PgVotoRepository`, `PgConductorRepository`, `PgSesionRepository` y `PgCatalogoRepository`), con JDBC y sentencias preparadas ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
 - `motor`: comunicación con el núcleo C++ mediante `MotorDeRutas` y pipe (D-15).
+- `seguridad`: el JWT del conductor, los tokens de renovación y el filtro que los comprueba (CU-08).
 - `errores`: traducción de errores al formato de rechazo del contrato.
 
 ## Requisitos
@@ -23,6 +25,8 @@ El proyecto usa un solo MVC (D-01):
 ## Perfiles y configuración
 
 Ejecuta los comandos desde `04_imp/backend_java`. No guardes credenciales en archivos versionados.
+
+Los archivos `application*.yml` versionados solo traen marcadores `${...}` y valores de ejemplo, sin credenciales. [D-40](../../03_des/02_Arquitectura/08_decisiones_parametros.md) pide dejar en el repositorio únicamente `application-example.yml` y poner el archivo real en `.gitignore`; las pruebas y el CI leen hoy los perfiles versionados, así que ese cambio queda pendiente.
 
 ### Desarrollo
 
@@ -63,12 +67,15 @@ Define `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD` y `CHUR
 
 ## Acceso a datos
 
-El backend accede a PostgreSQL con JDBC y `PreparedStatement`, sin JPA ni `JdbcTemplate` ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Cada operación pide la conexión, la usa y la cierra con `try-with-resources`; la conexión sale de un pool HikariCP, que viene con Spring Boot ([D-39](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). El driver es la dependencia `org.postgresql:postgresql` de Maven, sin `.jar` en una carpeta `lib` ([D-38](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). La dirección, el usuario y la contraseña salen de `DB_URL`, `DB_USER` y `DB_PASSWORD` ([D-40](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+El backend accede a PostgreSQL con JDBC (`java.sql`) y `PreparedStatement`, sin JPA ni `JdbcTemplate` ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Los valores van siempre como parámetros `?`; el SQL nunca se arma con un valor. Cada operación pide la conexión, la usa y la cierra con `try-with-resources`; la conexión sale de un pool HikariCP, que trae `spring-boot-starter-jdbc` ([D-39](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). El driver es la dependencia `org.postgresql:postgresql` de Maven, sin `.jar` en una carpeta `lib` ([D-38](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). La dirección, el usuario y la contraseña salen de `DB_URL`, `DB_USER` y `DB_PASSWORD` ([D-40](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
 
-Qué falta para llegar ahí:
+Cómo está armado:
 
-- El `pom.xml` todavía declara `spring-boot-starter-data-jpa` y `application.yml` y `application-prod.yml` tienen la sección `spring.jpa`; ninguna clase de producción los usa. Para tener HikariCP sin JPA se usa `spring-boot-starter-jdbc`.
-- Los archivos `application*.yml` versionados solo traen marcadores `${...}` y valores de ejemplo, sin credenciales. [D-40](../../03_des/02_Arquitectura/08_decisiones_parametros.md) pide dejar en el repositorio únicamente `application-example.yml` y poner el archivo real en `.gitignore`; las pruebas y el CI leen hoy los perfiles versionados, así que ese cambio queda pendiente.
+- Un servicio solo conoce la interfaz del repositorio, que está en `dominio`; Spring le pasa por el constructor la implementación de `infraestructura/pg` ([D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+- Las consultas para mostrar tienen un nombre que dice qué buscan (por ejemplo `vigentesParaMostrar`) y devuelven DTO; las búsquedas para operar con las reglas (por ejemplo `buscarParaVotar`) devuelven el objeto de dominio ([D-42](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+- Las implementaciones no reciben el pool directamente, sino el `DataSource` `conexionesDeLaTransaccion` de `ConfiguracionAccesoDatos`: un `TransactionAwareDataSourceProxy` sobre el pool. Dentro de un `@Transactional`, cada `getConnection()` entrega la conexión de la transacción, y cerrarla no la suelta antes de tiempo. Así el bloqueo del conductor al reportar y el del evento al votar duran hasta el final de la transacción, y si algo falla no queda nada guardado. Fuera de una transacción, cada operación toma una conexión del pool y la devuelve al cerrarla. Lo prueba `ConexionDeLaTransaccionIntegracionTest` (CP-170).
+- Las altas que pueden repetirse se escriben con `INSERT ... ON CONFLICT`: el conductor de una cuenta de Google que entra dos veces a la vez y el voto repetido.
+- Un error de la base que no es una regla de negocio sale como `ErrorDeBaseDeDatos`: deshace la transacción y la petición responde 500.
 
 ## Endpoints de utilidad
 
@@ -77,7 +84,7 @@ Qué falta para llegar ahí:
 
 ## Base de datos
 
-Todos los perfiles usan PostgreSQL/PostGIS, las migraciones de Flyway y `ddl-auto: validate`. `POST /eventos` (HU-01) guarda el evento en `evento_vial` (V4), con la ubicación como punto PostGIS. Una base que ya ejecutó una versión anterior de V2 puede tener un checksum distinto; no borres sus datos ni ejecutes `repair` automáticamente.
+Todos los perfiles usan PostgreSQL/PostGIS y las migraciones de Flyway, que crean el esquema y comprueban al arrancar que las migraciones ya aplicadas no cambiaron (`validate-on-migrate`). La aplicación no crea tablas. `POST /eventos` (HU-01) guarda el evento en `evento_vial` (V4), con la ubicación como punto PostGIS. Una base que ya ejecutó una versión anterior de V2 puede tener un checksum distinto; no borres sus datos ni ejecutes `repair` automáticamente.
 
 ### Catálogos
 

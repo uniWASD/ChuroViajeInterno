@@ -33,7 +33,7 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | `conductor` | Identificador, identificador de Google, fecha de alta, simulado | Conductor |
 | `sesion` | Conductor, SHA-256 del token de renovación (único), emisión, expiración | Sesión |
 | `tipo_evento` | Código, nombre, color, vigencia en minutos, reportable | TipoEvento |
-| `evento_vial` | Identificador, tipo, ubicación, momento en que ocurrió, momento de registro, reportante, origen, nivel (solo congestión), estado, votos «real», votos «falso», simulado | EventoVial, Ubicación |
+| `evento_vial` | Identificador, tipo, ubicación, momento en que ocurrió, momento de registro, reportante, origen, nivel (solo congestión), estado, votos «real», votos «falso», simulado, `tramo_id` (solo en la congestión de telemetría) | EventoVial, Ubicación |
 | `voto` | Evento, conductor, valor, fecha, simulado | Voto |
 | `surtidor` | Identificador, nombre, ubicación, `anh_id` (el identificador de la estación en ANH; único y opcional) | Surtidor |
 | `surtidor_alias` | Surtidor, alias | Surtidor |
@@ -41,13 +41,13 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | `estado_combustible` | Surtidor, tipo, origen (WhatsApp, Conductores o ANH), disponible, fila, fecha del dato, `litros` (no negativo y opcional), `estado_anh` (alto, medio o bajo; opcional) y `consultado_en` (cuándo lo leyó el backend; solo en ANH) | EstadoCombustible |
 | `confirmacion_recarga` | Conductor, surtidor, tipo, fecha | ConfirmaciónRecarga |
 
-En un evento de origen Telemetría, la columna del reportante queda vacía. `RedVial`, `Tramo`, `Ruta`, `Parada` y `LecturaTelemetría` no tienen tabla: viven en el motor core. `MensajePendiente` vive en el almacenamiento del servicio de WhatsApp/LLM. `ReporteANH` tampoco tiene tabla: es lo que llega de ANH en cada consulta, y de él solo se guarda lo que dice `estado_combustible`.
+En un evento de origen Telemetría, la columna del reportante queda vacía y `tramo_id` guarda el tramo donde el motor midió la congestión. Al extenderla, su momento pasa a la última medición, que puede ser posterior al registro ([RN-04.11](04_reglas/CU-04_RecalcularRuta.md)). `RedVial`, `Tramo`, `Ruta`, `Parada` y `LecturaTelemetría` no tienen tabla: viven en el motor core. `MensajePendiente` vive en el almacenamiento del servicio de WhatsApp/LLM. `ReporteANH` tampoco tiene tabla: es lo que llega de ANH en cada consulta, y de él solo se guarda lo que dice `estado_combustible`.
 
 Las columnas `litros`, `estado_anh` y `consultado_en` solo se llenan cuando el origen es ANH. La fecha del dato de ANH es su `updated_at`, la que informa la estación, y no el momento en que el backend la leyó: ese momento va en `consultado_en`, y de él se cuenta la vigencia ([RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md)). El estado de ANH se guarda como llega y no cambia el campo `disponible`, que sale solo de los litros ([RN-09.11](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.12](04_reglas/CU-09_ConsultarEstadoANH.md)).
 
 ## Lo que la base de datos asegura por su cuenta
 
-Las reglas las aplican los objetos de dominio. La base de datos repite siete de ellas como segunda barrera, por si dos peticiones llegan a la vez:
+Las reglas las aplican los objetos de dominio. La base de datos repite ocho de ellas como segunda barrera, por si dos peticiones llegan a la vez:
 
 - Un solo conductor por cuenta de Google ([RN-08.4](04_reglas/CU-08_IniciarSesion.md)).
 - Un token de renovación pertenece a una sola sesión, y al borrar un conductor se borran sus sesiones ([RN-08.14](04_reglas/CU-08_IniciarSesion.md)).
@@ -56,6 +56,7 @@ Las reglas las aplican los objetos de dominio. La base de datos repite siete de 
 - Todo evento, voto y estado apunta a un tipo, un surtidor o un conductor que existe.
 - Un identificador de ANH pertenece a un solo surtidor ([RN-09.10](04_reglas/CU-09_ConsultarEstadoANH.md)).
 - Los litros de ANH no pueden ser negativos ([RN-09.7](04_reglas/CU-09_ConsultarEstadoANH.md)).
+- Una sola congestión vigente por tramo, aparte las simuladas ([RN-04.11](04_reglas/CU-04_RecalcularRuta.md), [RN-04.20](04_reglas/CU-04_RecalcularRuta.md)).
 
 ## Cómo accede el backend a los datos
 

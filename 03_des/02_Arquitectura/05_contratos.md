@@ -173,6 +173,26 @@ La primera consulta va sin parámetros y trae todos los eventos vigentes. Las si
 - La vigencia se calcula en cada consulta: un evento que venció hace segundos ya llega entre los quitados, aunque la tarea periódica todavía no lo haya marcado ([RN-02.4](04_reglas/CU-02_VisualizarEventosViales.md)).
 - La marca queda 2 segundos antes de la consulta, para no perder un evento que se estaba guardando en ese momento; por eso algún cambio puede llegar dos veces. Una marca que no es una fecha responde 400 `PETICION_INVALIDA`.
 
+### Telemetría (`POST /telemetria`)
+
+Mientras navega, la app manda sus lecturas en grupos ([D-07](08_decisiones_parametros.md)):
+
+```json
+{"lecturas":[
+  {"ubicacion":{"latitud":-21.5400,"longitud":-64.7380},"precisionM":8,"momento":"2026-11-14T10:00:00-04:00"},
+  {"ubicacion":{"latitud":-21.5400,"longitud":-64.73794},"precisionM":6.5,"momento":"2026-11-14T10:00:03-04:00"}]}
+```
+
+Responde 202 sin esperar al motor:
+
+```json
+{"estado":"RECIBIDO","lecturas":2}
+```
+
+- Un grupo trae de 1 a 100 lecturas, cada una con `ubicacion`, `precisionM` (en metros, no negativa) y `momento`. Si falta algo, 400 `PETICION_INVALIDA`. Pide JWT de un conductor que sigue existiendo; si no, 401 ([RN-04.4](04_reglas/CU-04_RecalcularRuta.md)).
+- El backend no guarda las lecturas ([RN-04.12](04_reglas/CU-04_RecalcularRuta.md)). Se las pasa al motor con `analizar_telemetria` en un hilo aparte, con un identificador de recorrido en lugar del conductor: un HMAC del conductor con una clave que vive solo en memoria y cambia cada día, así el motor reconoce el mismo recorrido aunque se renueve el JWT, pero no sabe de quién es. Si el motor no está, ese grupo se pierde y la app no se entera: la telemetría no se repite.
+- Cuando el motor informa una congestión, el backend crea un evento Congestión con origen Telemetría, el nivel y el tramo, sin reportante ([RN-04.10](04_reglas/CU-04_RecalcularRuta.md)). Si ese tramo ya tiene una congestión vigente, no crea otra: mueve su momento y su nivel ([RN-04.11](04_reglas/CU-04_RecalcularRuta.md)). En los dos casos se lo avisa al motor con `actualizar_trafico` y la congestión aparece en `GET /eventos` como cualquier evento.
+
 ### Votos (`POST /eventos/{id}/votos`)
 
 ```json

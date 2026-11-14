@@ -239,9 +239,9 @@ class SesionIntegracionTest extends PruebaIntegracionPostgis {
         mvc.perform(get("/monitoreo/surtidores").header("Authorization", "Bearer " + jwt))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.codigo").value("ACCESO_DENEGADO"));
-        // La ruta todavia no existe (otro issue): con la credencial correcta se pasa la seguridad y llega al 404.
+        // Con la credencial correcta se pasa la seguridad y llega al catalogo (#57).
         mvc.perform(get("/monitoreo/surtidores").header("Authorization", "Bearer " + CREDENCIAL_SERVICIO))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
     }
 
     @Test

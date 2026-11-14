@@ -17,6 +17,9 @@ public interface CatalogoRepository {
     /** Para mostrar: todos los tipos de evento (D-42). */
     List<TipoEventoDto> tiposDeEventoParaMostrar();
 
+    /** Para operar: todos los tipos de combustible, «Desconocido» incluido (RN-06.8). */
+    List<TipoCombustible> tiposDeCombustible();
+
     /** Para mostrar: todos los tipos de combustible, con si el conductor puede elegirlo (RN-05.9, D-42). */
     List<TipoCombustibleDto> tiposDeCombustibleParaMostrar();
 }

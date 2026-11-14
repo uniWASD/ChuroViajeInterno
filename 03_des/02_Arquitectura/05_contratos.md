@@ -113,6 +113,37 @@ Si hay ruta, responde 200 con:
 - Sin origen o sin destino, o con más de 10 paradas, responde 400 con `PETICION_INVALIDA`. Si el motor no responde a tiempo, se está reiniciando o está apagado, responde 503 con `MOTOR_NO_DISPONIBLE` y la app puede reintentar ([RN-03.15](04_reglas/CU-03_CalcularRutaOptima.md)).
 - La ruta pide JWT y el servidor no la guarda ([RN-03.1](04_reglas/CU-03_CalcularRutaOptima.md), [D-05](08_decisiones_parametros.md)).
 
+### Revisión de la ruta activa (`POST /rutas/revision`)
+
+Mientras la ruta está Activa, la app manda lo que le falta ([D-12](08_decisiones_parametros.md)):
+
+```json
+{
+  "posicion": {"latitud": -21.5355, "longitud": -64.7296},
+  "tramos": ["osm:5001:1:ida", "osm:5002:1:ida", "osm:5003:1:ida"],
+  "destino": {"latitud": -21.5290, "longitud": -64.7220},
+  "paradas": [],
+  "eventosAvisados": [150]
+}
+```
+
+Responde siempre 200, con uno de cuatro estados:
+
+```json
+{"estado": "SIN_CAMBIOS"}
+{"estado": "SIN_ALTERNATIVA", "eventoId": 154}
+{"estado": "ALTERNATIVA", "eventoId": 153, "costo": 1700, "costoActual": 3244, "distanciaM": 1700, "tiempoS": 306,
+ "trazado": [{"latitud": -21.5355, "longitud": -64.7296}, {"latitud": -21.533, "longitud": -64.731}],
+ "tramos": [{"id": "osm:6001:1:ida", "calle": "Av. Circunvalación"}]}
+{"estado": "RUTA_DESACTUALIZADA"}
+```
+
+- `tramos` son los `id` de los tramos que faltan, en el orden en que llegaron en la ruta. `paradas` (las que faltan) y `eventosAvisados` (los `id` de los eventos que ya provocaron un aviso en esta ruta) son opcionales ([RN-04.19](04_reglas/CU-04_RecalcularRuta.md)).
+- `SIN_ALTERNATIVA` y `ALTERNATIVA` traen el `eventoId` que las provocó, el mismo `id` de `GET /eventos`; la app lo agrega a sus avisados para no volver a avisar ([RN-04.16](04_reglas/CU-04_RecalcularRuta.md), [RN-04.19](04_reglas/CU-04_RecalcularRuta.md)).
+- `ALTERNATIVA` trae los mismos campos que una ruta de `POST /rutas`, más `costo` y `costoActual`: el de la alternativa y el de seguir, en metros ponderados por el tráfico. Si un bloqueo corta lo que falta, no viene `costoActual`. La alternativa parte de la posición actual y pasa por las paradas que faltan ([RN-04.15](04_reglas/CU-04_RecalcularRuta.md)).
+- `RUTA_DESACTUALIZADA` quiere decir que algún tramo ya no existe porque se recargó la red vial: la app pide la ruta de nuevo con `POST /rutas`, desde su posición y con el mismo destino y las paradas que faltan.
+- Sin `posicion`, `tramos` o `destino` responde 400 con `PETICION_INVALIDA`. Si el motor no responde a tiempo, se está reiniciando o está apagado, 503 con `MOTOR_NO_DISPONIBLE`: la app sigue con su ruta y vuelve a intentar en el siguiente ciclo. Pide JWT y el servidor no guarda nada ([D-05](08_decisiones_parametros.md)).
+
 ### Reporte de evento (`POST /eventos`)
 
 ```json

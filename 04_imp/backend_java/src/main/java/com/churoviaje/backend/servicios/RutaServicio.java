@@ -6,15 +6,11 @@ import com.churoviaje.backend.dominio.ValidadorPuntosRuta;
 import com.churoviaje.backend.dominio.cobertura.CoberturaManchaUrbana;
 import com.churoviaje.backend.dto.RutaPeticion;
 import com.churoviaje.backend.dto.RutaRespuesta;
-import com.churoviaje.backend.dto.RutaRespuesta.Punto;
-import com.churoviaje.backend.dto.RutaRespuesta.TramoRuta;
 import com.churoviaje.backend.motor.MotorDeRutas;
-import com.churoviaje.backend.motor.MotorNoDisponibleException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.util.ArrayList;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,29 +43,18 @@ public class RutaServicio {
         }
 
         ObjectNode mensaje = json.createObjectNode();
-        mensaje.set("origen", punto(peticion.origen()));
-        mensaje.set("destino", punto(peticion.destino()));
+        mensaje.set("origen", RespuestasDelMotor.punto(json, peticion.origen()));
+        mensaje.set("destino", RespuestasDelMotor.punto(json, peticion.destino()));
         ArrayNode lista = mensaje.putArray("paradas");
-        paradas.forEach(p -> lista.add(punto(p)));
+        paradas.forEach(p -> lista.add(RespuestasDelMotor.punto(json, p)));
 
         // Si el núcleo no responde a tiempo, se reinicia o está apagado, el wrapper lanza
         // MotorNoDisponibleException y la respuesta es 503 (RN-03.15).
         return traducir(motor.calcularRuta(mensaje));
     }
 
-    private ArrayNode punto(Ubicacion u) {
-        return json.createArrayNode().add(u.latitud()).add(u.longitud());
-    }
-
     private RutaRespuesta traducir(JsonNode r) {
-        if (!r.path("ok").asBoolean(false)) {
-            String codigo = r.path("error").path("codigo").asText("");
-            if ("RED_NO_CARGADA".equals(codigo)) {
-                throw new MotorNoDisponibleException();
-            }
-            LOG.error("El núcleo rechazó la petición de ruta: {}", r);
-            throw new IllegalStateException("El núcleo rechazó la petición de ruta: " + codigo);
-        }
+        RespuestasDelMotor.exigirOk(r, "calcular_ruta");
         String estado = r.path("estado").asText("");
         switch (estado) {
             case RutaRespuesta.SIN_RUTA:
@@ -83,14 +68,7 @@ public class RutaServicio {
                 LOG.error("Respuesta de ruta sin un estado conocido: {}", r);
                 throw new IllegalStateException("Respuesta de ruta sin un estado conocido: " + estado);
         }
-        List<Punto> trazado = new ArrayList<>();
-        for (JsonNode p : r.path("trazado")) {
-            trazado.add(new Punto(p.path(0).asDouble(), p.path(1).asDouble()));
-        }
-        List<TramoRuta> tramos = new ArrayList<>();
-        for (JsonNode t : r.path("tramos")) {
-            tramos.add(new TramoRuta(t.path("id").asText(), t.path("calle").asText()));
-        }
-        return RutaRespuesta.encontrada(r.path("distancia_m").asLong(), r.path("tiempo_s").asLong(), trazado, tramos);
+        return RutaRespuesta.encontrada(r.path("distancia_m").asLong(), r.path("tiempo_s").asLong(),
+                RespuestasDelMotor.trazado(r), RespuestasDelMotor.tramos(r));
     }
 }

@@ -7,4 +7,10 @@ public interface SurtidorRepository {
 
     /** Todos los surtidores con sus alias, ordenados por nombre. */
     List<Surtidor> todos();
+
+    /** Un surtidor con su distancia en metros a un punto. */
+    record Cercano(Surtidor surtidor, double distanciaM) {}
+
+    /** RN-05.2: todos los surtidores, del más cercano al más lejano de {@code punto}, medido en PostGIS. */
+    List<Cercano> porCercania(Ubicacion punto);
 }

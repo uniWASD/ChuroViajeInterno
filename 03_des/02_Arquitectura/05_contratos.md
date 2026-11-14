@@ -208,6 +208,27 @@ Responde 201 con el estado del evento después del voto, sin datos de quién vot
 - `valor` es `real` o `falso`, sin importar mayúsculas. Con 3 votos `falso`, un evento Activo pasa a Retirado; con 3 `real`, pasa a Confirmado y ya no se retira por votos ([RN-02.13](04_reglas/CU-02_VisualizarEventosViales.md), [RN-02.14](04_reglas/CU-02_VisualizarEventosViales.md)).
 - Rechazos: 400 `PETICION_INVALIDA` si el voto falta o no es `real` ni `falso`; 404 `EVENTO_NO_ENCONTRADO`; 409 `VOTO_REPETIDO` si el conductor ya votó ese evento; 422 `VOTO_NO_PERMITIDO` para la congestión que detecta el sistema ([D-20](08_decisiones_parametros.md)), `EVENTO_NO_VIGENTE` si ya está retirado o vencido y `VOTO_PROPIO` si lo reportó el mismo conductor ([RN-02.10](04_reglas/CU-02_VisualizarEventosViales.md) a [RN-02.12](04_reglas/CU-02_VisualizarEventosViales.md)).
 
+### Surtidores (`GET /surtidores`)
+
+La app manda su ubicación actual: `GET /surtidores?latitud=-21.5355&longitud=-64.7296`. Responde los surtidores del catálogo, del más cercano al más lejano ([RN-05.2](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)):
+
+```json
+{"surtidores":[
+  {"id":7,"nombre":"Ex Terminal","ubicacion":{"latitud":-21.54194,"longitud":-64.72413},"distanciaM":913,
+   "informacionReciente":true,
+   "combustibles":[
+     {"tipo":"DIESEL","nombre":"Diesel","disponible":true,"origen":"ANH","fecha":"2026-11-14T08:00:00-04:00",
+      "litros":1250.5,"estadoAnh":"ALTO","consultadoEn":"2026-11-14T16:30:00-04:00"},
+     {"tipo":"GASOLINA","nombre":"Gasolina","disponible":true,"origen":"CONDUCTORES","fecha":"2026-11-14T10:30:00-04:00"}]},
+  {"id":2,"nombre":"Don Daniel","ubicacion":{"latitud":-21.5133312,"longitud":-64.7382423},"distanciaM":2623,
+   "informacionReciente":false,"combustibles":[]}]}
+```
+
+- La distancia se mide en PostGIS, en metros. Hay un dato por tipo de combustible: el vigente más reciente de WhatsApp, Conductores o ANH ([RN-05.3](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Con la misma fecha gana ANH, después WhatsApp y al final Conductores, porque una confirmación se ve solo si es más reciente que las otras dos fuentes ([RN-05.15](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
+- Un dato vale 6 horas: desde su `fecha` en WhatsApp y Conductores, y desde `consultadoEn` en ANH ([RN-05.5](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md)). Un surtidor sin datos vigentes trae `informacionReciente` falso y la lista vacía: la app muestra «sin información reciente».
+- `fila` sale solo si se conoce. `litros`, `estadoAnh` y `consultadoEn` salen solo en los datos de ANH ([RN-05.4](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Un dato de WhatsApp sin tipo sale como `DESCONOCIDO` ([RN-05.6](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Nunca sale quién aportó el dato ([RN-05.7](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
+- Pide JWT de conductor. Sin `latitud` o `longitud`, o con valores fuera de rango, responde 400 `PETICION_INVALIDA`.
+
 ## Backend con el motor core
 
 El backend nunca habla directo con el programa en C++. Llama a métodos del wrapper `MotorDeRutas`, que es Java y vive dentro del backend, y el wrapper traduce cada llamada a un mensaje para el núcleo C++ ([D-15](08_decisiones_parametros.md)). Los nombres de métodos y mensajes son una propuesta, igual que las rutas de la API.

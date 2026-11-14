@@ -1,6 +1,7 @@
 package com.churoviaje.backend.dominio;
 
 import java.time.Instant;
+import java.util.List;
 
 /** Los estados de combustible (V8). La implementación para PostgreSQL vive en {@code infraestructura.pg} (D-41). */
 public interface EstadoCombustibleRepository {
@@ -12,4 +13,7 @@ public interface EstadoCombustibleRepository {
      * @return verdadero si el dato quedó guardado
      */
     boolean guardarSiEsMasReciente(EstadoCombustible estado, Instant ahora);
+
+    /** Todos los datos guardados, de todos los orígenes; la consulta elige cuál mostrar (RN-05.3). */
+    List<EstadoCombustible> todos();
 }

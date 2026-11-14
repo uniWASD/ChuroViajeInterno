@@ -4,6 +4,11 @@ import com.churoviaje.backend.dominio.catalogo.ValorFila;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -60,5 +65,31 @@ public record EstadoCombustible(long surtidorId, String tipoCodigo, OrigenCombus
 
     public boolean estaVigente(Instant ahora) {
         return ahora.isBefore(vigenteDesde().plus(VIGENCIA));
+    }
+
+    /**
+     * Con la misma fecha, gana ANH y después WhatsApp: una confirmación se ve solo si es más reciente que las otras
+     * dos fuentes (RN-05.15).
+     */
+    private static final Comparator<EstadoCombustible> PARA_MOSTRAR = Comparator
+            .comparing(EstadoCombustible::fecha)
+            .thenComparing(e -> switch (e.origen()) {
+                case ANH -> 2;
+                case WHATSAPP -> 1;
+                case CONDUCTORES -> 0;
+            });
+
+    /**
+     * RN-05.3 y RN-05.5: de los datos de un surtidor, uno por tipo de combustible, el más reciente de los vigentes,
+     * venga del origen que venga. Un tipo sin datos vigentes no sale.
+     */
+    public static List<EstadoCombustible> paraMostrar(List<EstadoCombustible> deUnSurtidor, Instant ahora) {
+        Map<String, EstadoCombustible> elegidos = new LinkedHashMap<>();
+        for (EstadoCombustible e : deUnSurtidor) {
+            if (e.estaVigente(ahora)) {
+                elegidos.merge(e.tipoCodigo(), e, (a, b) -> PARA_MOSTRAR.compare(b, a) > 0 ? b : a);
+            }
+        }
+        return new ArrayList<>(elegidos.values());
     }
 }

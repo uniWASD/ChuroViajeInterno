@@ -6,7 +6,7 @@ import '../models/evento_vial.dart';
 import '../models/reporte_evento.dart';
 import '../services/api/api_client.dart';
 import '../services/eventos/servicio_eventos.dart';
-import 'cola_controller.dart';
+
 import 'map_controller.dart';
 import 'sesion_controller.dart';
 
@@ -25,8 +25,8 @@ enum EstadoReporte {
   /// No hay red y no hay cola: se conserva lo elegido.
   sinRed,
 
-  /// No hay red: el reporte quedó en la cola y se enviará solo (HU-02, RN-01.13).
-  guardadoEnCola,
+
+
 
   /// La sesión venció y no se pudo renovar: al volver a iniciar sesión, el reporte se envía solo (RN-01.16).
   esperandoSesion,
@@ -43,7 +43,7 @@ class ReporteController extends ChangeNotifier {
   final ServicioEventos _servicio;
   final SesionController _sesion;
   final MapController _mapa;
-  final ColaController? _cola;
+
   final DateTime Function() _ahora;
 
   EstadoReporte _estado = EstadoReporte.eligiendo;
@@ -60,7 +60,7 @@ class ReporteController extends ChangeNotifier {
     this._servicio,
     this._sesion,
     this._mapa, {
-    this._cola,
+
     DateTime Function()? reloj,
   }) : _ahora = reloj ?? DateTime.now {
     _sesion.addListener(_alCambiarSesion);
@@ -156,56 +156,19 @@ class ReporteController extends ChangeNotifier {
 
   /// Decide qué hacer cuando el envío falla.
   Future<void> _alFallarEnvio(ReporteEvento reporte, ApiException error) async {
-    if (error.codigo == 'SESION_VENCIDA' && _cola != null) {
-      if (await _guardarEnCola(reporte)) {
-        _estado = EstadoReporte.esperandoSesion;
-        _mensaje = mensajeEsperandoSesion;
-      }
-    } else if (error.codigo == 'SESION_VENCIDA') {
-      _pendienteTrasSesion = reporte; // RN-01.16: se conserva y se envía al volver a iniciar sesión
+    if (error.codigo == 'SESION_VENCIDA') {
+      _pendienteTrasSesion = reporte;
       _estado = EstadoReporte.esperandoSesion;
       _mensaje = mensajeEsperandoSesion;
-    } else if (esErrorTemporal(error) && _cola != null) {
-      if (await _guardarEnCola(reporte)) {
-        _estado = EstadoReporte.guardadoEnCola;
-        // Un 429 o un 5xx no significa que el teléfono esté sin conexión.
-        _mensaje = error.statusCode == 429 || error.codigo == 'LIMITE_DE_REPORTES'
-            ? 'El servidor limitó temporalmente los reportes. Tu reporte quedó guardado para reintentar.'
-            : error.statusCode != null && error.statusCode! >= 500
-                ? 'El servidor no está disponible. Tu reporte quedó guardado para reintentar.'
-                : ColaController.mensajeGuardado;
-      }
-    } else if (esErrorTemporal(error)) {
+    } else if (error.codigo == 'ERROR_RED' || error.codigo == 'TIEMPO_ESPERA') {
       _estado = EstadoReporte.sinRed;
       _mensaje = error.mensaje;
     } else {
+      // Los rechazos del backend se muestran sin encolarlos en HU-01.
       _estado = EstadoReporte.rechazado;
       _mensaje = error.mensaje;
     }
   }
-
-  /// Un servidor que responde 5xx también es indisponibilidad temporal (CP-83).
-  static bool esErrorTemporal(ApiException e) =>
-      e.codigo == 'ERROR_RED' ||
-      e.codigo == 'TIEMPO_ESPERA' ||
-      e.codigo == 'LIMITE_DE_REPORTES' ||
-      e.statusCode == 429 ||
-      (e.statusCode != null && e.statusCode! >= 500);
-
-  /// Si SQLite falla, no se cierra la pantalla ni se afirma que el reporte quedó guardado.
-  Future<bool> _guardarEnCola(ReporteEvento reporte) async {
-    try {
-      await _cola!.guardar(reporte);
-      return true;
-    } on Object catch (e) {
-      debugPrint('No se pudo guardar el reporte pendiente: $e');
-      _estado = EstadoReporte.sinRed;
-      _mensaje = 'No se pudo guardar el reporte en el teléfono. '
-          'Mantén esta pantalla abierta e inténtalo de nuevo.';
-      return false;
-    }
-  }
-
   void _alCambiarSesion() {
     if (!_sesion.conSesion || _estado != EstadoReporte.esperandoSesion) return;
     final pendiente = _pendienteTrasSesion;

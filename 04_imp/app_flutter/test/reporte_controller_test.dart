@@ -201,8 +201,8 @@ void main() {
 
   testWidgets('CP-57: desde el mapa, el reporte se completa en 3 toques: «Reportar evento», el tipo y «Confirmar»', (tester) async {
     final enviados = <Map<String, dynamic>>[];
-    final api = ApiClient(client: MockClient(sinEventos((pedido) async {
-      if (pedido.url.path == '/eventos') {
+    final api = ApiClient(client: MockClient((pedido) async {
+      if (pedido.method == 'POST' && pedido.url.path == '/eventos') {
         enviados.add(jsonDecode(pedido.body) as Map<String, dynamic>);
         return http.Response.bytes(utf8.encode(jsonEncode({'id': 1, 'tipo': 'CONTROL_POLICIAL',
             'ubicacion': {'latitud': -21.5355, 'longitud': -64.7296},
@@ -210,7 +210,7 @@ void main() {
             'origen': 'CONDUCTOR'})), 201);
       }
       return http.Response('{}', 200);
-    })));
+    }));
     final almacenWidget = AlmacenFalso.conSesionVigente()..datos[ServicioCatalogos.clave] = catalogosJson;
     final ubicacionWidget = UbicacionFalsa();
     await tester.pumpWidget(MultiProvider(
@@ -220,8 +220,8 @@ void main() {
         constructorMapa: MapaFalso().construir,
         almacen: almacenWidget,
         google: GoogleFalso(),
-        cola: ColaFalsa(),
-        conectividad: ConectividadFalsa(),
+
+
       ),
       child: const MaterialApp(
         locale: Locale('es'),
@@ -263,7 +263,7 @@ void main() {
         iniciadaEn: ahora,
       ).toJson())
       ..datos[ServicioCatalogos.clave] = catalogosJson;
-    final cola = ColaFalsa();
+
     final ubicacionWidget = UbicacionFalsa();
     await tester.pumpWidget(MultiProvider(
       providers: createAppProviders(
@@ -272,8 +272,8 @@ void main() {
         constructorMapa: MapaFalso().construir,
         almacen: almacenWidget,
         google: GoogleFalso(),
-        cola: cola,
-        conectividad: ConectividadFalsa(),
+
+
         reloj: () => ahora,
       ),
       child: const MaterialApp(
@@ -295,10 +295,13 @@ void main() {
     await tester.tap(find.text('Control policial'));
     await tester.pump();
 
-    // Mientras el conductor elige, vence el JWT y la renovación ya no vale: la consulta de eventos pierde la sesión.
+    // Mientras el conductor elige, vence el JWT y la renovación ya no vale: se comprueba la renovacion de la sesion directamente.
     ahora = ahora.add(const Duration(hours: 2));
     backend.estadoRenovar = 401;
-    await tester.pump(const Duration(seconds: 6));
+    final vistaContext = tester.element(find.byKey(const Key('confirmar-reporte')));
+    final sesionEnVista = vistaContext.read<SesionController>();
+    final reporteEnVista = vistaContext.read<ReporteController>();
+    expect(await sesionEnVista.asegurarTokenVigente(), isFalse);
     await tester.pump();
     expect(tester.element(find.byKey(const Key('confirmar-reporte'))).read<SesionController>().estado,
         EstadoSesion.sinSesion);
@@ -306,7 +309,8 @@ void main() {
 
     await tester.tap(find.byKey(const Key('confirmar-reporte')));
     await tester.pumpAndSettle();
-    expect(cola.filas.single.reporte.tipo, 'CONTROL_POLICIAL', reason: 'quedó guardado para enviarse después');
+    expect(reporteEnVista.estado, EstadoReporte.esperandoSesion);
+    expect(reporteEnVista.tipo, 'CONTROL_POLICIAL');
     expect(find.text('Iniciar sesión con Google'), findsOneWidget);
 
     backend.estadoRenovar = 200;
@@ -315,7 +319,7 @@ void main() {
     final enviados = backend.pedidos.where((p) => p.method == 'POST' && p.url.path == '/eventos').toList();
     expect(enviados, hasLength(1), reason: 'se envió con la sesión nueva, sin volver a llenarlo');
     expect(enviados.single.headers['Authorization'], isNot('Bearer jwt-0'));
-    expect(cola.filas, isEmpty);
+
 
     await tester.tap(find.text('Reportar evento'));
     await tester.pumpAndSettle();

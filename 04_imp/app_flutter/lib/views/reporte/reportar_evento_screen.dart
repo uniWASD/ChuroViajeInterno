@@ -36,7 +36,7 @@ class _ReportarEventoScreenState extends State<ReportarEventoScreen> {
   void _alCambiar() {
     final estado = _controller.estado;
     if ((estado == EstadoReporte.enviado ||
-            estado == EstadoReporte.guardadoEnCola ||
+
             estado == EstadoReporte.esperandoSesion) &&
         mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

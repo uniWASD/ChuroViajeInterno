@@ -29,13 +29,18 @@ class _ReportarEventoScreenState extends State<ReportarEventoScreen> {
   @override
   void dispose() {
     _controller.removeListener(_alCambiar);
+    _controller.cerrar();
     super.dispose();
   }
 
   void _alCambiar() {
-    if (_controller.estado == EstadoReporte.enviado && mounted) {
+    final estado = _controller.estado;
+    if ((estado == EstadoReporte.enviado ||
+            estado == EstadoReporte.guardadoEnCola ||
+            estado == EstadoReporte.esperandoSesion) &&
+        mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text(ReporteController.mensajeEnviado)),
+        SnackBar(content: Text(_controller.mensaje ?? ReporteController.mensajeEnviado)),
       );
       Navigator.of(context).pop();
     }

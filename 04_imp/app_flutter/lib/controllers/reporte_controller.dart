@@ -168,7 +168,9 @@ class ReporteController extends ChangeNotifier {
     } else if (esErrorTemporal(error) && _cola != null) {
       if (await _guardarEnCola(reporte)) {
         _estado = EstadoReporte.guardadoEnCola;
-        _mensaje = ColaController.mensajeGuardado;
+        _mensaje = error.statusCode == 429 || error.codigo == 'LIMITE_DE_REPORTES'
+              ? 'El servidor limitó temporalmente los reportes. Tu reporte quedó guardado para reintentar.'
+              : ColaController.mensajeGuardado;
       }
     } else if (esErrorTemporal(error)) {
       _estado = EstadoReporte.sinRed;
@@ -183,6 +185,8 @@ class ReporteController extends ChangeNotifier {
   static bool esErrorTemporal(ApiException e) =>
       e.codigo == 'ERROR_RED' ||
       e.codigo == 'TIEMPO_ESPERA' ||
+      e.codigo == 'LIMITE_DE_REPORTES' ||
+      e.statusCode == 429 ||
       (e.statusCode != null && e.statusCode! >= 500);
 
   /// Si SQLite falla, no se cierra la pantalla ni se afirma que el reporte quedó guardado.

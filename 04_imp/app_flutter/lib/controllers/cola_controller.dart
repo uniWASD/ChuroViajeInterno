@@ -148,6 +148,7 @@ class ColaController extends ChangeNotifier {
       e.codigo == 'ERROR_RED' ||
       e.codigo == 'TIEMPO_ESPERA' ||
       e.codigo == 'LIMITE_DE_REPORTES' ||
+      e.statusCode == 429 ||
       (e.statusCode != null && e.statusCode! >= 500);
 
   static String _nombre(TipoEventoCatalogo? tipo, ReporteEvento reporte) =>

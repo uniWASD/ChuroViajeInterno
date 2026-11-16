@@ -23,7 +23,7 @@ import 'sesion_controller_test.dart' show catalogosJson;
 /// `POST /eventos` falso: sin red, caído (503), rechazando o aceptando.
 class BackendCola {
   final List<Map<String, dynamic>> recibidos = [];
-  String modo = 'acepta'; // acepta | sinRed | caido | duplicado | sesionVencida
+  String modo = 'acepta'; // acepta | sinRed | caido | limite | duplicado | sesionVencida
   int jwt = 0;
 
   http.Client get cliente => MockClient((pedido) async {
@@ -48,6 +48,8 @@ class BackendCola {
         throw const SocketException('modo avión');
       case 'caido':
         return http.Response('{"codigo":"ERROR_INTERNO","mensaje":"Falló."}', 503);
+      case 'limite':
+        return http.Response('{"codigo":"LIMITE_DE_REPORTES","mensaje":"Espera antes de enviar de nuevo."}', 429);
       case 'duplicado':
         return http.Response.bytes(
             utf8.encode('{"codigo":"REPORTE_DUPLICADO","mensaje":"Ya reportaste este evento hace poco."}'), 409);
@@ -177,6 +179,32 @@ void main() {
     await reportes.confirmar();
     expect(reportes.estado, EstadoReporte.guardadoEnCola);
     expect(cola.pendientes, hasLength(1), reason: '503 no es rechazo definitivo');
+
+    backend.modo = 'acepta';
+    await cola.reenviar();
+    expect(backend.recibidos.single['tipo'], 'ACCIDENTE');
+    expect(cola.pendientes, isEmpty);
+    reportes.dispose();
+    mapa.dispose();
+  });
+
+  test('RN-01.15: HTTP 429 en la confirmación inicial se guarda y reintenta más tarde', () async {
+    await preparar();
+    final ubicacion = UbicacionFalsa();
+    final mapa = MapController(ubicacion);
+    await mapa.activarUbicacion();
+    ubicacion.emitir(const Coordenada(-21.5355, -64.7296));
+    await Future<void>.delayed(Duration.zero);
+    final reportes = ReporteController(servicio, sesion, mapa, cola: cola, reloj: () => ahora)
+      ..empezar()
+      ..elegirTipo('ACCIDENTE');
+
+    backend.modo = 'limite';
+    await reportes.confirmar();
+    expect(reportes.estado, EstadoReporte.guardadoEnCola);
+    expect(reportes.mensaje, contains('limitó temporalmente'));
+    expect(cola.pendientes, hasLength(1));
+    expect(backend.recibidos, isEmpty);
 
     backend.modo = 'acepta';
     await cola.reenviar();

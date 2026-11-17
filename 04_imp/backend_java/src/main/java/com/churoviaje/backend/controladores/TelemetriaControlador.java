@@ -5,6 +5,8 @@ import com.churoviaje.backend.dto.TelemetriaRecibida;
 import com.churoviaje.backend.seguridad.ConductorAutenticado;
 import com.churoviaje.backend.servicios.TelemetriaServicio;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -21,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/telemetria")
 public class TelemetriaControlador {
 
+    private static final Logger LOG = LoggerFactory.getLogger(TelemetriaControlador.class);
+
     private final TelemetriaServicio telemetria;
 
     public TelemetriaControlador(TelemetriaServicio telemetria) {
@@ -31,6 +35,8 @@ public class TelemetriaControlador {
     public ResponseEntity<TelemetriaRecibida> recibir(@AuthenticationPrincipal ConductorAutenticado conductor,
             @Valid @RequestBody TelemetriaPeticion peticion) {
         int lecturas = telemetria.recibir(conductor.id(), peticion);
+        // Evidencia CP-122: solamente cantidad; no registrar posiciones, JWT ni conductor.
+        LOG.info("CP122_TELEMETRIA_HTTP_ACEPTADA lecturas={}", lecturas);
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(TelemetriaRecibida.de(lecturas));
     }
 }

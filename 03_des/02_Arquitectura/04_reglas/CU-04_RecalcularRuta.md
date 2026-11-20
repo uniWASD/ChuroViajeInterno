@@ -2,7 +2,7 @@
 
 [Índice de reglas](README.md) · [Índice de la arquitectura](../README.md)
 
-Cubre HU-06 y HU-13, y los requisitos RF-06, RF-14 y RNF-13. Las reglas RN-04.1 a RN-04.12 son de la telemetría que detecta la congestión; de RN-04.13 a RN-04.19 y RN-04.21, del recálculo. RN-04.20 cubre los datos del simulador.
+Cubre HU-06 y HU-13, y los requisitos RF-06, RF-14 y RNF-13. Las reglas RN-04.1 a RN-04.12 y RN-04.22 a RN-04.25 son de la telemetría que detecta la congestión; de RN-04.13 a RN-04.19 y RN-04.21, del recálculo. RN-04.20 cubre los datos del simulador.
 
 ## Reglas
 
@@ -17,7 +17,7 @@ Cubre HU-06 y HU-13, y los requisitos RF-06, RF-14 y RNF-13. Las reglas RN-04.1 
 | RN-04.7 | Una lectura lenta, de 25 km/h o menos, con un cambio de dirección mayor a 40 grados se toma como un giro y no cuenta como congestión. | LecturaTelemetría | `05_pro/CalculoVelocidad`, issue #3 |
 | RN-04.8 | Cada lectura válida se asigna al tramo vehicular donde está el vehículo; en una calle de doble sentido, al del sentido en que avanza. Fuera de una vía vehicular, la lectura se ignora. | RedVial, Tramo | Visión 1.2.2, [D-18](../08_decisiones_parametros.md) |
 | RN-04.9 | Un tramo se clasifica como congestionado cuando se circula por debajo de la mitad de la velocidad esperada de su tipo de vía, y como muy congestionado por debajo de la cuarta parte. | Tramo | Prototipo `Analisis_Trafico.java`, [P-02](../08_decisiones_parametros.md) |
-| RN-04.10 | Hay congestión cuando un vehículo sigue detenido o lento en un tramo durante 2 minutos seguidos. Entonces el backend registra un `EventoVial` de tipo Congestión, con origen Telemetría, ubicado en ese tramo. | EventoVial, Tramo | HU-13 c.3, Visión 1.2.2, [D-04](../08_decisiones_parametros.md), [P-02](../08_decisiones_parametros.md) |
+| RN-04.10 | Hay congestión cuando un vehículo sigue lento durante 2 minutos seguidos en un tramo, o en las cuadras seguidas de la misma calle (RN-04.24), y además cumple RN-04.22 y RN-04.23. Entonces el backend registra un `EventoVial` de tipo Congestión, con origen Telemetría, ubicado en ese tramo. | EventoVial, Tramo | HU-13 c.3, Visión 1.2.2, [D-04](../08_decisiones_parametros.md), [P-02](../08_decisiones_parametros.md) |
 | RN-04.11 | Si ese tramo ya tiene una congestión vigente, no se crea otra: se actualiza el momento de la existente, que así dura mientras siga la lentitud. | EventoVial | Propuesta |
 | RN-04.12 | Las lecturas no se conservan después de analizarse y nunca se muestran a otro usuario. El evento de congestión no indica qué conductor lo originó. | LecturaTelemetría | Visión 6.3, HU-13 privacidad, RNF-10 |
 | RN-04.13 | El recálculo solo aplica a una ruta Activa. | Ruta | CU-04 precondición |
@@ -29,8 +29,16 @@ Cubre HU-06 y HU-13, y los requisitos RF-06, RF-14 y RNF-13. Las reglas RN-04.1 
 | RN-04.19 | Un mismo evento produce una sola propuesta por ruta. No se repite, la acepte o la rechace el conductor. | Ruta | CU-04 sección 7, HU-06 seguridad |
 | RN-04.20 | La telemetría de un usuario fantasma produce congestión marcada como simulada. | EventoVial | CU-07 sección 8, RNF-12 |
 | RN-04.21 | Si el conductor no responde al aviso de ruta alternativa en 15 segundos, el aviso se cierra solo, sigue la ruta original y el evento cuenta como ya avisado (RN-04.19). | Ruta | CU-04 ext. 4a, HU-06 c.4, [D-19](../08_decisiones_parametros.md), [P-26](../08_decisiones_parametros.md) |
+| RN-04.22 | **Venía manejando.** Un recorrido solo produce congestión si, en los últimos 10 minutos, estuvo al menos 15 segundos seguidos por encima de 15 km/h. Así no cuenta quien camina o abrió la app sin moverse. | LecturaTelemetría | Issue #172, [P-36](../08_decisiones_parametros.md) |
+| RN-04.23 | **Tiene que avanzar.** Durante la racha lenta, el recorrido tiene que alejarse al menos 25 m en línea recta del punto donde empezó la racha. Una fila que avanza a tirones cuenta; un teléfono quieto, aunque el GPS tiemble, no. Se mide de punta a punta y no sumando pasos, para que el temblor no se acumule. | LecturaTelemetría | Issue #172, [P-37](../08_decisiones_parametros.md) |
+| RN-04.24 | La racha lenta sigue cuando el recorrido pasa a la cuadra siguiente de la misma calle: el tramo que empieza donde terminó el anterior, con el mismo nombre y con menos de 40 grados de cambio de dirección. Doblar a otra calle corta la racha. Al cumplir los 2 minutos se informan como congestionadas todas las cuadras de la racha. | Tramo, RedVial | Issue #172, [D-44](../08_decisiones_parametros.md), [P-38](../08_decisiones_parametros.md) |
+| RN-04.25 | Cada congestión que informa el motor trae el trazado de su tramo. El backend lo guarda al crear la congestión y la app la dibuja como una línea sobre la calle, con el color de su nivel. Una congestión sin trazado se sigue mostrando como un punto. | EventoVial, Tramo | Issue #172, [D-45](../08_decisiones_parametros.md) |
 
 El prototipo usa umbrales fijos de 25 y 10 km/h. Aquí dependen del tipo de vía, porque en una zona residencial lo normal ya es ir a 15 o 25 km/h. El cambio se confirmó el 06/10/2026 y está registrado como [P-02](../08_decisiones_parametros.md).
+
+**Gente quieta que marcaba tráfico (Sprint 5.5, #172).** Al probar la app, un teléfono quieto 2 minutos junto a una avenida producía congestión. RN-04.22 y RN-04.23 lo corrigen. La idea sale de cómo trabaja Waze: detecta un atasco cuando la velocidad de los usuarios que van por un segmento queda por debajo de lo normal, y mide esa velocidad con el tiempo que tardan en recorrerlo; en su comunidad se reconoce que un usuario detenido (cargando combustible o tomando un café) puede crear un atasco que no existe. Fuentes: [Waze Data Feed](https://support.google.com/waze/partners/answer/10618035), [Waze · Traffic data](https://wazeopedia.waze.com/wiki/USA/Traffic_data), [Waze · Detect parking vs slow traffic](https://www.waze.com/discuss/t/suggestions-detect-parking-vs-slow-traffic/101531), [Waze · Does Waze use regular traffic info](https://www.waze.com/discuss/t/does-waze-use-regular-traffic-info/85018). Waze no publica sus umbrales; los de P-36 y P-37 son nuestros.
+
+**Cuadras cortas.** En la red de Tarija un tramo mide en promedio 82 m en avenidas y 91 m en zonas residenciales (`04_imp/motor_cpp/preparacion/VERIFICACION.md`). Para quedarse 2 minutos en una sola cuadra había que promediar menos de 2,5 km/h, y con RN-04.23 solo habría contado quien fuera entre 0,75 y 2,5 km/h. Por eso se adelantó RN-04.24 ([D-44](../08_decisiones_parametros.md)). Sigue pendiente exigir dos recorridos distintos en el mismo tramo.
 
 ## Recorrido por Vista, Controlador y Modelo
 

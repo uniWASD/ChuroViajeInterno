@@ -6,7 +6,7 @@ import '../../services/eventos/servicio_eventos.dart';
 import '../tema/tema.dart';
 
 /// El detalle de un evento (#172, diseño «07 · Detalle de evento»): su tipo, hace cuánto ocurrió, los botones para
-/// votar si es real o falso (HU-11) y cuántos conductores votaron cada cosa (D-46). Se abre al tocar un evento en la
+/// votar si es real o falso (HU-11) y cuántos conductores votaron cada cosa (D-46). Ocupa solo lo que necesita. Se abre al tocar un evento en la
 /// lista o en el mapa. Las congestiones que detecta el tráfico no se votan (D-20).
 class DetalleEvento extends StatelessWidget {
   final EventoVial evento;
@@ -61,42 +61,24 @@ class DetalleEvento extends StatelessWidget {
             ],
           ],
         ),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: const Color(0xFFD6D6D6)),
-            borderRadius: BorderRadius.circular(12),
+        const SizedBox(height: 12),
+        if (evento.votable)
+          _Votos(evento: evento, eventos: eventos)
+        else
+          // D-20: la congestión del tráfico no se vota; se dice su nivel.
+          Text(
+            [
+              if (evento.nivel != null) nombreNivel(evento.nivel!),
+              'Detectado por el tráfico',
+            ].join(' · '),
+            style: const TextStyle(
+              fontSize: 13,
+              color: ColoresChuro.textoSecundario,
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(_descripcion(evento), style: const TextStyle(fontSize: 16)),
-              const SizedBox(height: 12),
-              if (evento.votable)
-                _Votos(evento: evento, eventos: eventos)
-              else
-                const Text(
-                  'La congestión que detecta el tráfico no se vota.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: ColoresChuro.textoSecundario,
-                  ),
-                ),
-            ],
-          ),
-        ),
       ],
     );
   }
-
-  static String _descripcion(EventoVial e) => [
-    e.haceCuanto(DateTime.now()),
-    if (e.nivel != null) nombreNivel(e.nivel!),
-    e.votable ? 'Reportado por un conductor' : 'Detectado por el tráfico',
-    if (e.confirmado) 'Confirmado por otros conductores',
-  ].join(' · ');
 }
 
 /// «Muy congestionado» o «Congestionado».
@@ -137,7 +119,8 @@ class MarcaVerificado extends StatelessWidget {
   );
 }
 
-/// Los botones «Real» y «Falso», y al lado cuántos votaron cada cosa sobre los 3 que confirman o retiran el evento.
+/// Los botones «Real» y «Falso», centrados, y a la derecha la marca de verificación con cuántos votaron cada cosa:
+/// el número de «real» en verde y el de «falso» en rojo (D-46), por ejemplo «3/2».
 class _Votos extends StatelessWidget {
   final EventoVial evento;
   final EventosController eventos;
@@ -147,9 +130,10 @@ class _Votos extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final puede = eventos.puedeVotar(evento);
+    const numero = TextStyle(fontSize: 15, fontWeight: FontWeight.w600);
     return Row(
       children: [
-        const Spacer(),
+        const Expanded(child: SizedBox()),
         _BotonVoto(
           clave: Key('real-${evento.id}'),
           texto: 'Real',
@@ -169,36 +153,46 @@ class _Votos extends StatelessWidget {
               ? () => eventos.votar(evento.id, ValorVoto.falso)
               : null,
         ),
-        const Spacer(),
-        // D-46: cuántos votaron «real» y cuántos «falso», sobre los 3 que deciden (P-01, P-11).
-        MarcaVerificado(confirmado: evento.confirmado, tamano: 20),
-        Text(
-          '${evento.votosReal}/3',
-          key: Key('votos-real-${evento.id}'),
-          style: const TextStyle(
-            fontSize: 13,
-            color: ColoresChuro.textoSecundario,
-          ),
-        ),
-        const SizedBox(width: 8),
-        const Icon(
-          Icons.cancel,
-          size: 20,
-          color: ColoresChuro.rojoSuave,
-          semanticLabel: 'Votos falso',
-        ),
-        Text(
-          '${evento.votosFalso}/3',
-          key: Key('votos-falso-${evento.id}'),
-          style: const TextStyle(
-            fontSize: 13,
-            color: ColoresChuro.textoSecundario,
+        Expanded(
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                MarcaVerificado(confirmado: evento.confirmado, tamano: 20),
+                const SizedBox(width: 3),
+                Text(
+                  '${evento.votosReal}',
+                  key: Key('votos-real-${evento.id}'),
+                  semanticsLabel: '${evento.votosReal} votos real',
+                  style: numero.copyWith(color: colorVotoReal),
+                ),
+                const Text(
+                  '/',
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: ColoresChuro.textoSecundario,
+                  ),
+                ),
+                Text(
+                  '${evento.votosFalso}',
+                  key: Key('votos-falso-${evento.id}'),
+                  semanticsLabel: '${evento.votosFalso} votos falso',
+                  style: numero.copyWith(color: colorVotoFalso),
+                ),
+              ],
+            ),
           ),
         ),
       ],
     );
   }
 }
+
+/// Los colores de los números del conteo, de la paleta de la app: el verde de los chips elegidos y el rojo de los
+/// marcadores, un poco más oscuros que los fondos para que se lean sobre blanco.
+const Color colorVotoReal = ColoresChuro.bordeVerde;
+const Color colorVotoFalso = ColoresChuro.rojo;
 
 class _BotonVoto extends StatelessWidget {
   final Key clave;

@@ -98,7 +98,7 @@ void main() {
     await tester.pump();
     expect(find.byKey(const Key('ficha-evento')), findsOneWidget);
     expect(find.text('Control policial'), findsOneWidget);
-    expect(find.textContaining('Hace 5 minutos'), findsOneWidget);
+    expect(find.text('5 min'), findsOneWidget);
 
     await tester.tap(find.byTooltip('Cerrar'));
     await tester.pump();

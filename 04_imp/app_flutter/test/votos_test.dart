@@ -116,7 +116,7 @@ void main() {
     await abrirEventos(tester);
     expect(find.byKey(const Key('lista-eventos')), findsOneWidget);
     expect(find.text('Control policial'), findsOneWidget);
-    expect(find.text('· 5 min'), findsNWidgets(2));
+    expect(find.text('· 5 min'), findsOneWidget);
     expect(find.text('Accidente'), findsOneWidget);
     expect(find.text('· 12 min'), findsOneWidget);
     // #172: verde si otros lo confirmaron (RN-02.14), gris si todavía no.
@@ -154,14 +154,28 @@ void main() {
     await abrirDetalle(tester, 1);
     expect(distanciaM(mapa.ultimo!.foco!, const Coordenada(-21.531, -64.73)), lessThan(0.01),
         reason: 'la cámara va hasta el evento');
-    expect(mapa.ultimo!.tapadoAbajo, 0.5, reason: 'y lo deja en la mitad que no tapa la hoja');
+    expect(mapa.ultimo!.tapadoAbajo, 0.3, reason: 'y lo deja por encima del detalle');
     expect(find.byKey(const Key('ficha-evento')), findsOneWidget);
     expect(find.byKey(const Key('lista-eventos')), findsNothing);
     expect(find.text('Real'), findsOneWidget);
     expect(find.text('Falso'), findsOneWidget);
-    // D-46: cuántos votaron cada cosa, sobre los 3 que deciden.
-    expect(tester.widget<Text>(find.byKey(const Key('votos-real-1'))).data, '1/3');
-    expect(tester.widget<Text>(find.byKey(const Key('votos-falso-1'))).data, '1/3');
+    // D-46: una sola marca con los dos números, «real» en verde y «falso» en rojo.
+    final real = tester.widget<Text>(find.byKey(const Key('votos-real-1')));
+    final falso = tester.widget<Text>(find.byKey(const Key('votos-falso-1')));
+    expect(real.data, '1');
+    expect(falso.data, '1');
+    expect(real.style!.color, colorVotoReal);
+    expect(falso.style!.color, colorVotoFalso);
+    expect(find.byIcon(Icons.cancel), findsNothing, reason: 'sin la X de los votos falsos');
+    // Sin el cuadro de texto: solo el encabezado y los votos.
+    expect(find.textContaining('Reportado por un conductor'), findsNothing);
+    // Los dos botones quedan centrados en la hoja.
+    final centro = tester.getCenter(find.byKey(const Key('hoja-detalle'))).dx;
+    final entre = (tester.getTopLeft(find.byKey(const Key('real-1'))).dx +
+            tester.getTopRight(find.byKey(const Key('falso-1'))).dx) / 2;
+    expect((entre - centro).abs(), lessThan(1));
+    // Y la hoja ocupa solo lo que necesita.
+    expect(tester.getSize(find.byKey(const Key('hoja-detalle'))).height, lessThan(160));
 
     // La flecha vuelve a la lista.
     await tester.tap(find.byTooltip('Volver a la lista'));
@@ -174,7 +188,8 @@ void main() {
     await tester.tap(find.byKey(const Key('info-2')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('ficha-evento')), findsOneWidget);
-    expect(tester.widget<Text>(find.byKey(const Key('votos-real-2'))).data, '3/3');
+    expect(tester.widget<Text>(find.byKey(const Key('votos-real-2'))).data, '3');
+    expect(tester.widget<Text>(find.byKey(const Key('votos-falso-2'))).data, '0');
   });
 
   testWidgets('Tocar un evento en el mapa, con la hoja de Eventos abierta, abre su detalle en la hoja', (tester) async {
@@ -185,14 +200,21 @@ void main() {
     expect(find.byTooltip('Volver a la lista'), findsOneWidget);
   });
 
-  testWidgets('D-20: la congestión de la telemetría aparece sin botones de voto', (tester) async {
+  testWidgets('La congestión del tráfico no va en la lista de Eventos, pero sigue en el mapa', (tester) async {
     await abrirEventos(tester);
+    expect(find.text('Congestión'), findsNothing);
+    expect(find.byKey(const Key('evento-3')), findsNothing);
+    expect(mapa.ultimo!.eventos.map((e) => e.id), contains(3));
+  });
+
+  testWidgets('D-20: al tocar una congestión en el mapa, su detalle no tiene botones de voto', (tester) async {
+    await abrirEventos(tester);
+    mapa.ultimo!.alTocarEvento!(3);
+    await tester.pumpAndSettle();
     expect(find.text('Congestión'), findsOneWidget);
-    await abrirDetalle(tester, 3);
-    expect(find.text('Hace 5 minutos · Muy congestionado · Detectado por el tráfico'), findsOneWidget);
+    expect(find.text('Muy congestionado · Detectado por el tráfico'), findsOneWidget);
     expect(find.byKey(const Key('real-3')), findsNothing);
     expect(find.byKey(const Key('falso-3')), findsNothing);
-    expect(find.text('La congestión que detecta el tráfico no se vota.'), findsOneWidget);
   });
 
   testWidgets('Votar toma un solo toque, actualiza el conteo y deja desactivados los botones de ese evento',
@@ -204,7 +226,7 @@ void main() {
     expect(backend.votos, [(1, 'falso')]);
     expect(habilitado(tester, 'real-1'), isFalse);
     expect(habilitado(tester, 'falso-1'), isFalse);
-    expect(tester.widget<Text>(find.byKey(const Key('votos-falso-1'))).data, '2/3', reason: 'D-46: el conteo nuevo');
+    expect(tester.widget<Text>(find.byKey(const Key('votos-falso-1'))).data, '2', reason: 'D-46: el conteo nuevo');
     expect(find.text('Gracias: votaste que es falso.'), findsOneWidget);
     await tester.tap(find.byTooltip('Volver a la lista'));
     await tester.pumpAndSettle();
@@ -275,7 +297,7 @@ void main() {
     await abrirDetalle(tester, 1);
     await tester.tap(find.byKey(const Key('real-1')));
     await tester.pumpAndSettle();
-    expect(tester.widget<Text>(find.byKey(const Key('votos-real-1'))).data, '3/3');
+    expect(tester.widget<Text>(find.byKey(const Key('votos-real-1'))).data, '3');
     final marca = tester.widget<Icon>(find.byWidgetPredicate((w) => w is Icon && w.semanticLabel == 'Confirmado'));
     expect(marca.color, ColoresChuro.verde);
   });

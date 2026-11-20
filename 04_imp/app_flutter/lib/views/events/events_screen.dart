@@ -3,12 +3,12 @@ import 'package:provider/provider.dart';
 
 import '../../controllers/eventos_controller.dart';
 import '../../models/evento_vial.dart';
-import '../map/mapa_base.dart';
 import '../tema/tema.dart';
 import 'detalle_evento.dart';
 
-/// Pestaña Eventos (CU-02, HU-11, #172): una hoja sobre el mapa con los eventos vigentes, su tipo, hace cuánto
-/// ocurrieron y si otros conductores los confirmaron. Abre a media pantalla; se desliza hacia arriba para ver más y
+/// Pestaña Eventos (CU-02, HU-11, #172): una hoja sobre el mapa con los eventos que reportaron los conductores, su
+/// tipo, hace cuánto ocurrieron y si otros conductores los confirmaron. La congestión del tráfico no va en la lista:
+/// se ve en el mapa. Abre a media pantalla; se desliza hacia arriba para ver más y
 /// hacia abajo para despejar el mapa (queda solo el asa, para volver a subirla). Al tocar un evento la cámara va
 /// hasta él y la hoja muestra su detalle, donde se vota si es real o falso.
 class EventsScreen extends StatefulWidget {
@@ -25,7 +25,6 @@ class EventsScreen extends StatefulWidget {
 
 class _EventsScreenState extends State<EventsScreen> {
   final DraggableScrollableController _hoja = DraggableScrollableController();
-  int? _abierto;
 
   @override
   void dispose() {
@@ -33,29 +32,29 @@ class _EventsScreenState extends State<EventsScreen> {
     super.dispose();
   }
 
-  /// Al abrir un evento, la hoja vuelve a media pantalla para que se vean el detalle y el evento en el mapa.
-  void _acomodar(int? seleccionado) {
-    if (seleccionado == _abierto) return;
-    _abierto = seleccionado;
-    if (seleccionado == null) return;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_hoja.isAttached) return;
-      if ((_hoja.size - EventsScreen.media).abs() < 0.01) return;
-      _hoja.animateTo(
-        EventsScreen.media,
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOut,
-      );
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final eventos = context.watch<EventosController>();
     final seleccionado = eventos.seleccionado;
-    _acomodar(seleccionado?.id);
-    final lista = eventos.eventos
-      ..sort((a, b) => b.momentoOcurrencia.compareTo(a.momentoOcurrencia));
+    // El detalle de un evento ocupa solo lo que necesita, abajo, sin tapar el mapa.
+    if (seleccionado != null) {
+      return Align(
+        alignment: Alignment.bottomCenter,
+        child: HojaInferior(
+          key: const Key('hoja-detalle'),
+          child: DetalleEvento(
+            evento: seleccionado,
+            eventos: eventos,
+            conVolver: true,
+          ),
+        ),
+      );
+    }
+    // La congestión que detecta el tráfico no va en la lista: se ve en el mapa, sobre la calle.
+    final lista = [
+      for (final e in eventos.eventos)
+        if (e.votable) e,
+    ]..sort((a, b) => b.momentoOcurrencia.compareTo(a.momentoOcurrencia));
     return DraggableScrollableSheet(
       key: const Key('hoja-eventos'),
       controller: _hoja,
@@ -96,18 +95,7 @@ class _EventsScreenState extends State<EventsScreen> {
                 ],
               ),
             ),
-            if (seleccionado != null)
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(8, 4, 8, 16),
-                sliver: SliverToBoxAdapter(
-                  child: DetalleEvento(
-                    evento: seleccionado,
-                    eventos: eventos,
-                    conVolver: true,
-                  ),
-                ),
-              )
-            else if (lista.isEmpty)
+            if (lista.isEmpty)
               const SliverToBoxAdapter(child: _SinEventos())
             else
               SliverPadding(
@@ -212,19 +200,10 @@ class _FilaEvento extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          // RN-02.14: verde si está confirmado. La congestión del tráfico no se vota (D-20): lleva su nivel.
+          // RN-02.14: verde si está confirmado, gris si todavía no.
           SizedBox(
             width: 26,
-            child: evento.votable
-                ? MarcaVerificado(confirmado: evento.confirmado)
-                : Tooltip(
-                    message: nombreNivel(evento.nivel ?? ''),
-                    child: Icon(
-                      Icons.traffic,
-                      size: 22,
-                      color: colorDeNivel(evento.nivel),
-                    ),
-                  ),
+            child: MarcaVerificado(confirmado: evento.confirmado),
           ),
           IconButton(
             key: Key('info-${evento.id}'),

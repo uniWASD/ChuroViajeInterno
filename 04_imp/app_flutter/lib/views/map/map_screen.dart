@@ -8,7 +8,6 @@ import '../../controllers/navigation_controller.dart';
 import '../../controllers/reporte_controller.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
 import '../events/detalle_evento.dart';
-import '../events/events_screen.dart';
 import '../reporte/reportar_evento_screen.dart';
 import '../ruta/como_llegar_screen.dart';
 import '../tema/tema.dart';
@@ -86,9 +85,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     puntoSeleccionado: controller.puntoSeleccionado,
                     eventos: marcasDeEventos(eventos),
                     alTocarEvento: eventos.seleccionar,
-                    // #172: al abrir un evento la cámara va hasta él, en la parte que no tapa la hoja.
+                    // #172: al abrir un evento la cámara va hasta él, por encima del detalle.
                     foco: eventos.seleccionado?.ubicacion,
-                    tapadoAbajo: enElMapa ? 0.35 : EventsScreen.media,
+                    tapadoAbajo: 0.3,
                     alTocar: controller.seleccionarPunto,
                     alFallar: controller.informarErrorMapa,
                   ),

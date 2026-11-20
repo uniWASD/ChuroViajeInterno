@@ -1,11 +1,13 @@
-// Pruebas de analizar_telemetria (#73, CU-04) con recorridos fabricados. Usa tests/datos/red_telemetria.json: la
+// Pruebas de analizar_telemetria (#73, #172, CU-04) con recorridos fabricados. Usa tests/datos/red_telemetria.json: la
 // Av. La Banda (avenida principal, 40 km/h esperados) va de oeste a este por la latitud -21.54 y la cruza, en la
 // longitud -64.73, la Calle Sucre (zona residencial, 20 km/h), que sube hacia el norte.
 #include <gtest/gtest.h>
 
 #include <cmath>
 #include <cstdint>
+#include <fstream>
 #include <memory>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -71,13 +73,19 @@ void avanzar(std::vector<Lectura>& lecturas, double kmh, double rumbo, int segun
   }
 }
 
+json red_de_prueba() {
+  std::ifstream archivo(RED_TELEMETRIA);
+  return json::parse(archivo);
+}
+
 struct Prueba {
-  std::shared_ptr<const RedVial> red = std::make_shared<const RedVial>(RedVial::cargar_archivo(RED_TELEMETRIA));
-  Nucleo nucleo{red};
+  std::shared_ptr<const RedVial> red;
+  Nucleo nucleo;
   std::int64_t ahora = kInicio;
   int siguiente_id = 1;
 
-  Prueba() {
+  explicit Prueba(const json& documento = red_de_prueba())
+      : red(std::make_shared<const RedVial>(RedVial::desde_json(documento))), nucleo(red) {
     nucleo.usar_reloj([this] { return ahora; });
   }
 
@@ -115,8 +123,30 @@ struct Prueba {
 
 std::vector<Lectura> desde(double lat, double lon) { return {{lat, lon, kInicio}}; }
 
-// 200 m al este del extremo oeste de la avenida, bien lejos del cruce.
+// 200 m al este del extremo oeste de la avenida, bien lejos del cruce. Empieza ahí, sin haber manejado antes.
 std::vector<Lectura> en_la_avenida() { return desde(kLatAvenida, -64.738); }
+
+// RN-04.22: llega manejando a (lat, lon) con el rumbo dado: 15 segundos a 40 km/h, que terminan en ese punto.
+std::vector<Lectura> llega_manejando(double lat, double lon, double rumbo, int segundos = 15) {
+  const double metros = 40 / 3.6 * segundos;
+  auto lecturas = desde(lat - metros * std::cos(rumbo * kPi / 180.0) * grados_lat_por_metro(),
+                        lon - metros * std::sin(rumbo * kPi / 180.0) * grados_lon_por_metro());
+  avanzar(lecturas, 40, rumbo, segundos);
+  return lecturas;
+}
+
+// El caso de siempre: llega manejando hacia el este por la avenida, a 200 m del extremo oeste.
+std::vector<Lectura> llega_por_la_avenida() { return llega_manejando(kLatAvenida, -64.738, 90); }
+
+// Un teléfono quieto: el GPS tiembla unos metros de un lado a otro, durante `segundos`, una lectura cada 3 s.
+void quieto(std::vector<Lectura>& lecturas, int segundos) {
+  const Lectura centro = lecturas.back();
+  for (int t = 3; t <= segundos; t += 3) {
+    const double norte = (t / 3 % 2 == 0 ? 3.0 : -3.0) * grados_lat_por_metro();
+    const double este = (t / 3 % 4 < 2 ? 4.0 : -4.0) * grados_lon_por_metro();
+    lecturas.push_back({centro.lat + norte, centro.lon + este, centro.momento + t});
+  }
+}
 
 }  // namespace
 
@@ -130,7 +160,7 @@ TEST(Telemetria, RumboYDiferenciaDeRumbo) {
 
 TEST(Telemetria, CP114_A8KmhDosMinutosEnUnaAvenidaHayCongestion) {
   Prueba p;
-  auto lecturas = en_la_avenida();
+  auto lecturas = llega_por_la_avenida();
   avanzar(lecturas, 8, 90, 120);
 
   const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
@@ -146,14 +176,14 @@ TEST(Telemetria, CP114_A8KmhDosMinutosEnUnaAvenidaHayCongestion) {
 
 TEST(Telemetria, CP114_UnMinutoLentoNoEsCongestion) {
   Prueba p;
-  auto lecturas = en_la_avenida();
+  auto lecturas = llega_por_la_avenida();
   avanzar(lecturas, 8, 90, 60);
   EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
 }
 
 TEST(Telemetria, ElNivelDependeDeLaVelocidadEsperadaDeLaVia) {
   Prueba p;
-  auto lecturas = en_la_avenida();
+  auto lecturas = llega_por_la_avenida();
   avanzar(lecturas, 15, 90, 126);  // entre la cuarta parte (10) y la mitad (20) de 40 km/h
   const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
   ASSERT_FALSE(congestiones.empty());
@@ -162,18 +192,18 @@ TEST(Telemetria, ElNivelDependeDeLaVelocidadEsperadaDeLaVia) {
 
 TEST(Telemetria, AVelocidadNormalNoHayCongestion) {
   Prueba p;
-  auto lecturas = en_la_avenida();
+  auto lecturas = llega_por_la_avenida();
   avanzar(lecturas, 30, 90, 90);  // más de la mitad de 40: fluido
   EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
 }
 
-TEST(Telemetria, DetenidoDosMinutosTambienEsCongestion) {
+TEST(Telemetria, DetenidoDosMinutosNoEsCongestion) {
+  // Antes (Sprint 5) esto era congestión. Con RN-04.23 ya no: en 2 minutos a 0,3 km/h avanza 10 m, menos de los
+  // 25 m de P-37. Puede ser alguien que estacionó junto a la avenida con la app abierta.
   Prueba p;
-  auto lecturas = en_la_avenida();
-  avanzar(lecturas, 0.3, 90, 126);  // el GPS apenas se mueve: está detenido en la fila
-  const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
-  ASSERT_FALSE(congestiones.empty());
-  EXPECT_EQ(congestiones.back().at("nivel"), "MUY_CONGESTIONADO");
+  auto lecturas = llega_por_la_avenida();
+  avanzar(lecturas, 0.3, 90, 126);
+  EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
 }
 
 TEST(Telemetria, CP115_FrenarParaDoblarLaEsquinaNoEsCongestion) {
@@ -191,14 +221,14 @@ TEST(Telemetria, CP115_ElGiroCortaLaRachaLentaAunqueSigaCercaDeLaAvenida) {
   Prueba p;
   // 110 s lento en la avenida y después dobla hacia el sur, por una entrada que no está en la red. Las primeras
   // lecturas del giro siguen a menos de 30 m de la avenida: sin RN-04.7 completarían los 2 minutos.
-  auto lecturas = en_la_avenida();
+  auto lecturas = llega_por_la_avenida();
   avanzar(lecturas, 8, 90, 110);
   avanzar(lecturas, 8, 180, 15);
   EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
 
   // La misma lentitud, sin doblar, sí completa los 2 minutos.
   Prueba sin_giro;
-  auto recta = en_la_avenida();
+  auto recta = llega_por_la_avenida();
   avanzar(recta, 8, 90, 125);
   EXPECT_FALSE(sin_giro.enviar_en_grupos("recorrido-1", false, recta).empty());
 }
@@ -216,9 +246,9 @@ TEST(Telemetria, CP116_UnaLecturaConPrecisionDe80MetrosSeDescarta) {
 
   // Y no rompe la racha: con una lectura imprecisa cada 15 segundos, 2 minutos lentos siguen siendo congestión.
   Prueba q;
-  auto lentas = en_la_avenida();
+  auto lentas = llega_por_la_avenida();
   avanzar(lentas, 8, 90, 126);
-  for (std::size_t i = 3; i < lentas.size(); i += 5) {
+  for (std::size_t i = 8; i < lentas.size(); i += 5) {
     lentas[i].precision = 80;
     lentas[i].lat += 0.003;
   }
@@ -237,7 +267,7 @@ TEST(Telemetria, UnaLecturaAMasDe150KmhSeDescarta) {
 
 TEST(Telemetria, CP117_EnUnaCalleDeDobleSentidoSoloSeCongestionaElSentidoMedido) {
   Prueba p;
-  auto lecturas = desde(kLatAvenida, -64.7320);
+  auto lecturas = llega_manejando(kLatAvenida, -64.7320, 270);
   avanzar(lecturas, 8, 270, 126);  // hacia el oeste
   const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
   ASSERT_FALSE(congestiones.empty());
@@ -248,7 +278,7 @@ TEST(Telemetria, CP117_EnUnaCalleDeDobleSentidoSoloSeCongestionaElSentidoMedido)
 
 TEST(Telemetria, CP118_UnRecorridoSimuladoLentoDaUnaCongestionSimulada) {
   Prueba p;
-  auto lecturas = en_la_avenida();
+  auto lecturas = llega_por_la_avenida();
   avanzar(lecturas, 8, 90, 126);
   const json congestiones = p.enviar_en_grupos("fantasma-1", true, lecturas);
   ASSERT_FALSE(congestiones.empty());
@@ -257,18 +287,19 @@ TEST(Telemetria, CP118_UnRecorridoSimuladoLentoDaUnaCongestionSimulada) {
 
 TEST(Telemetria, LosRecorridosSimuladosYRealesNoSeMezclan) {
   Prueba p;
-  // El mismo identificador, la mitad del tiempo como real y la otra mitad como simulado: ninguno llega a 2 minutos.
-  auto lecturas = en_la_avenida();
+  // El mismo identificador: llega manejando y va lento 66 s como real, y sigue lento 60 s más como simulado. Si se
+  // mezclaran, el simulado heredaría el manejo y la racha, y llegaría a 2 minutos.
+  auto lecturas = llega_por_la_avenida();
   avanzar(lecturas, 8, 90, 126);
-  const std::vector<Lectura> primera(lecturas.begin(), lecturas.begin() + 21);
-  const std::vector<Lectura> segunda(lecturas.begin() + 21, lecturas.end());
+  const std::vector<Lectura> primera(lecturas.begin(), lecturas.begin() + 6 + 22);
+  const std::vector<Lectura> segunda(lecturas.begin() + 6 + 22, lecturas.end());
   EXPECT_TRUE(p.enviar_en_grupos("mismo-id", false, primera).empty());
   EXPECT_TRUE(p.enviar_en_grupos("mismo-id", true, segunda).empty());
 }
 
 TEST(Telemetria, LejosDeTodaCalleLaLecturaSeIgnora) {
   Prueba p;
-  auto lecturas = desde(kLatAvenida + 50 * grados_lat_por_metro(), -64.738);  // 50 m al norte de la avenida
+  auto lecturas = llega_manejando(kLatAvenida + 50 * grados_lat_por_metro(), -64.738, 90);  // 50 m al norte
   avanzar(lecturas, 8, 90, 126);
   EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
 }
@@ -287,20 +318,24 @@ TEST(Telemetria, ElNucleoOlvidaUnRecorridoSinLecturasNuevasEn5Minutos) {
 
 TEST(Telemetria, LaRespuestaNoTraeElRecorridoNiDatosDelConductor) {
   Prueba p;
-  auto lecturas = en_la_avenida();
+  auto lecturas = llega_por_la_avenida();
   avanzar(lecturas, 8, 90, 126);
   const json congestiones = p.enviar_en_grupos("recorrido-secreto", false, lecturas);
   ASSERT_FALSE(congestiones.empty());
   for (const json& c : congestiones) {
-    EXPECT_EQ(c.size(), 4u) << c.dump();  // tramo, punto, nivel y simulado
+    // Exactamente estos campos: si alguien agrega uno nuevo, la prueba obliga a revisar que no identifique al
+    // recorrido (RN-04.4). El trazado es el del tramo, que es público, no el de las lecturas.
+    std::set<std::string> campos;
+    for (const auto& [campo, valor] : c.items()) campos.insert(campo);
+    EXPECT_EQ(campos, (std::set<std::string>{"tramo", "punto", "nivel", "simulado", "trazado"})) << c.dump();
     EXPECT_EQ(c.dump().find("recorrido-secreto"), std::string::npos);
   }
 }
 
 TEST(Telemetria, VariosRecorridosEnUnMensajeDanUnaCongestionPorTramo) {
   Prueba p;
-  auto a = en_la_avenida();
-  auto b = desde(kLatAvenida, -64.7381);
+  auto a = llega_por_la_avenida();
+  auto b = llega_manejando(kLatAvenida, -64.7381, 90);
   avanzar(a, 8, 90, 126);
   avanzar(b, 15, 90, 126);
   json mensaje = p.mensaje("a", false, a);
@@ -329,4 +364,113 @@ TEST(Telemetria, SinRedVialRespondeRedNoCargada) {
   const auto r = sin_red.atender(R"({"id":1,"operacion":"analizar_telemetria","recorridos":[]})");
   ASSERT_TRUE(r.has_value());
   EXPECT_EQ(json::parse(r->linea).at("error").at("codigo"), codigo::red_no_cargada);
+}
+
+// --- #172: «venía manejando», «tiene que avanzar» y la cuadra siguiente (RN-04.22 a RN-04.25) -------------------
+
+TEST(Telemetria, CP171_ManejoYDespuesQuedoQuietoJuntoALaAvenidaNoEsCongestion) {
+  Prueba p;
+  auto lecturas = llega_por_la_avenida();
+  quieto(lecturas, 150);  // estacionó: el GPS tiembla 3 a 4 m de un lado a otro durante 2 minutos y medio
+  // Sumando cada paso, el temblor daría más de 200 m «recorridos»; de punta a punta no llega a 25 m.
+  EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
+}
+
+TEST(Telemetria, CP172_SinHaberManejadoAntesNoEsCongestion) {
+  // Lento 2 minutos desde que se abrió la app: puede ser alguien que camina o trota por la vereda.
+  Prueba p;
+  auto lecturas = en_la_avenida();
+  avanzar(lecturas, 8, 90, 126);
+  EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
+
+  // Lo mismo, pero antes manejó 15 segundos a 40 km/h: sí es congestión.
+  Prueba q;
+  auto manejo = llega_por_la_avenida();
+  avanzar(manejo, 8, 90, 126);
+  EXPECT_FALSE(q.enviar_en_grupos("recorrido-1", false, manejo).empty());
+}
+
+TEST(Telemetria, CP172_ManejarMenosDe15SegundosNoAlcanza) {
+  // Un tirón de 9 segundos puede ser un salto del GPS o una bicicleta en bajada: no cuenta como manejar.
+  Prueba p;
+  auto lecturas = llega_manejando(kLatAvenida, -64.738, 90, 9);
+  avanzar(lecturas, 8, 90, 126);
+  EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
+}
+
+TEST(Telemetria, CP172_DiezMinutosDespuesDeManejarDejaDeContar) {
+  // Llega manejando y después avanza a 2 km/h durante 11 minutos. Hay congestión desde los 2 minutos, pero a los
+  // 10 minutos de la última vez que manejó deja de informarla (P-36).
+  Prueba p;
+  auto lecturas = llega_por_la_avenida();
+  const std::int64_t manejo = lecturas.back().momento;
+  avanzar(lecturas, 2, 90, 11 * 60);
+  bool antes = false, despues = false;
+  for (std::size_t i = 0; i < lecturas.size(); i += 5) {
+    const std::vector<Lectura> grupo(lecturas.begin() + static_cast<std::ptrdiff_t>(i),
+                                     lecturas.begin() + static_cast<std::ptrdiff_t>(std::min(i + 5, lecturas.size())));
+    p.ahora = grupo.back().momento;
+    const json r = p.enviar(p.mensaje("recorrido-1", false, grupo));
+    if (r.at("congestiones").empty()) continue;
+    if (grupo.back().momento - manejo <= 10 * 60) antes = true;
+    if (grupo.front().momento - manejo > 10 * 60) despues = true;
+  }
+  EXPECT_TRUE(antes);
+  EXPECT_FALSE(despues);
+}
+
+TEST(Telemetria, CP173_UnaFilaQueAvanzaATironesEsCongestion) {
+  // Después de manejar: 30 s detenido y 6 s a 10 km/h (unos 17 m), varias veces. En 2 minutos avanza unos 55 m.
+  Prueba p;
+  auto lecturas = llega_por_la_avenida();
+  for (int i = 0; i < 4; ++i) {
+    avanzar(lecturas, 0, 90, 30);
+    avanzar(lecturas, 10, 90, 6);
+  }
+  const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
+  ASSERT_FALSE(congestiones.empty());
+  EXPECT_EQ(congestiones.back().at("tramo"), "avenida:ida");
+  EXPECT_EQ(congestiones.back().at("nivel"), "MUY_CONGESTIONADO");
+}
+
+TEST(Telemetria, CP174_LaRachaSigueEnLaCuadraSiguienteDeLaMismaCalle) {
+  // Lento hacia el este, 100 m antes del cruce con la Calle Sucre: pasa de avenida:ida a avenida2:ida, la cuadra
+  // siguiente de la Av. La Banda. Ninguna de las dos cuadras sola tiene 2 minutos, pero la racha sí.
+  Prueba p;
+  auto lecturas = llega_manejando(kLatAvenida, -64.7310, 90);
+  avanzar(lecturas, 8, 90, 126);
+  ASSERT_GT(lecturas.back().lon, -64.73);  // terminó pasado el cruce
+  const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
+  std::set<std::string> tramos;
+  for (const json& c : congestiones) tramos.insert(c.at("tramo"));
+  EXPECT_EQ(tramos, (std::set<std::string>{"avenida:ida", "avenida2:ida"}));
+  // La cuadra que ya dejó atrás se informa una sola vez y con el punto en la mitad de su trazado.
+  int atras = 0;
+  for (const json& c : congestiones) {
+    if (c.at("tramo") != "avenida:ida") continue;
+    ++atras;
+    EXPECT_NEAR(c.at("punto")[1].get<double>(), -64.735, 1e-6);
+  }
+  EXPECT_EQ(atras, 1);
+}
+
+TEST(Telemetria, CP174_OtraCalleNoContinuaLaRacha) {
+  // La misma red, pero la cuadra que sigue al cruce se llama distinto: es otra calle y la racha empieza de nuevo.
+  json red = red_de_prueba();
+  for (json& t : red["tramos"]) {
+    if (t["id"] == "avenida2:ida" || t["id"] == "avenida2:vuelta") t["nombre"] = "Av. Otra";
+  }
+  Prueba p(red);
+  auto lecturas = llega_manejando(kLatAvenida, -64.7310, 90);
+  avanzar(lecturas, 8, 90, 126);
+  EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
+}
+
+TEST(Telemetria, CP175_CadaCongestionTraeElTrazadoDeSuTramo) {
+  Prueba p;
+  auto lecturas = llega_por_la_avenida();
+  avanzar(lecturas, 8, 90, 126);
+  const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
+  ASSERT_FALSE(congestiones.empty());
+  EXPECT_EQ(congestiones.back().at("trazado"), json::parse("[[-21.54,-64.74],[-21.54,-64.73]]"));
 }

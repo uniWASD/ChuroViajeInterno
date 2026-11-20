@@ -292,7 +292,8 @@ const char* texto_nivel(NivelTrafico nivel) {
 }
 
 // analizar_telemetria (#73): lecturas agrupadas por recorrido, con la marca de simulado y sin datos del conductor.
-// Responde las congestiones que se cumplen: tramo, punto, nivel y si salen de recorridos simulados (RN-04.10).
+// Responde las congestiones que se cumplen: tramo, punto, nivel, si salen de recorridos simulados (RN-04.10) y el
+// trazado del tramo, para dibujarla a lo largo de la calle (RN-04.25).
 Respuesta responder_telemetria(const json& id, const json& peticion, const RedVial* red,
                                AnalizadorTelemetria& telemetria, std::int64_t ahora) {
   struct Grupo {
@@ -364,10 +365,14 @@ Respuesta responder_telemetria(const json& id, const json& peticion, const RedVi
   }
   json lista = json::array();
   for (const CongestionDetectada& c : congestiones) {
-    lista.push_back({{"tramo", red->tramos()[c.tramo].id},
+    const Tramo& tramo = red->tramos()[c.tramo];
+    json trazado = json::array();
+    for (const Punto& p : tramo.geometria) trazado.push_back({redondear(p.lat), redondear(p.lon)});
+    lista.push_back({{"tramo", tramo.id},
                      {"punto", {redondear(c.punto.lat), redondear(c.punto.lon)}},
                      {"nivel", texto_nivel(c.nivel)},
-                     {"simulado", c.simulado}});
+                     {"simulado", c.simulado},
+                     {"trazado", std::move(trazado)}});
   }
   return respuesta_ok({{"id", id},
                        {"ok", true},

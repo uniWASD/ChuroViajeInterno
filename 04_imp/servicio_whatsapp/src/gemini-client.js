@@ -7,7 +7,7 @@ export const GEMINI_URL = 'https://generativelanguage.googleapis.com';
  * respuesta: el servicio deja los mensajes pendientes para el ciclo siguiente (RN-06.10).
  */
 export class GeminiClient {
-  constructor({apiKey, model, baseUrl = GEMINI_URL}, {fetchImpl = globalThis.fetch, timeoutMs = 60000} = {}) {
+  constructor({apiKey, model, baseUrl = GEMINI_URL}, {fetchImpl = globalThis.fetch, timeoutMs = 45000} = {}) {
     if (typeof apiKey !== 'string' || !apiKey) throw new TypeError('Se requiere la clave del LLM.');
     if (typeof fetchImpl !== 'function') throw new TypeError('Se requiere fetch.');
     this.apiKey = apiKey; this.model = model; this.baseUrl = baseUrl;

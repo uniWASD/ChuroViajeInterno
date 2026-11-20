@@ -80,7 +80,7 @@ export function loadConfig(env = process.env, {filePath} = {}) {
   }
   // RN-06.11: la revisión de vencidos corre cada minuto (además del aviso exacto de cada mensaje).
   const interval = Number(read('MAINTENANCE_INTERVAL_MS', 60000));
-  if (!Number.isSafeInteger(interval) || interval < 1000 || interval > 86400000) invalid('MAINTENANCE_INTERVAL_MS inválido.');
+  if (!Number.isSafeInteger(interval) || interval < 1000 || interval > 60000) invalid('MAINTENANCE_INTERVAL_MS inválido.');
   const sqlite = required(read('SQLITE_PATH', './data/pendientes.sqlite'), 'SQLITE_PATH');
   const llm = read('LLM_API_KEY', '');
   if (typeof llm !== 'string') invalid('LLM_API_KEY debe ser una cadena.');
@@ -90,7 +90,7 @@ export function loadConfig(env = process.env, {filePath} = {}) {
   const llmBaseUrl = llmUrl(read('LLM_BASE_URL', 'https://generativelanguage.googleapis.com'));
   // RN-06.5: el análisis corre cada 5 minutos.
   const analysis = Number(read('ANALYSIS_INTERVAL_MS', 300000));
-  if (!Number.isSafeInteger(analysis) || analysis < 1000 || analysis > 86400000) invalid('ANALYSIS_INTERVAL_MS inválido.');
+  if (!Number.isSafeInteger(analysis) || analysis < 1000 || analysis > 300000) invalid('ANALYSIS_INTERVAL_MS inválido.');
   const serviceToken = required(read('SERVICE_TOKEN'), 'SERVICE_TOKEN');
   if (/[\r\n]/.test(serviceToken)) invalid('SERVICE_TOKEN inválido.');
   const enabledRaw = read('WHATSAPP_ENABLED', 'false');

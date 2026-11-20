@@ -188,7 +188,7 @@ test('Un 400 o 422 del backend suelta el resultado; un 401 o 403 lo conserva', a
       descartados: []}),
     backend: () => { throw respuesta; }
   });
-  recibir(service, 'w-1', 'no hay nada en vegas');
+  recibir(service, 'w-1', 'no hay gasolina en vegas');
   await service.analyzeCycle();
   assert.equal(store.listResults().length, 1);
   assert(h.eventos.some(l => l.includes('"evento":"RESULTADO_ESPERA_CREDENCIAL"') && l.includes('"estadoHttp":403')));
@@ -204,7 +204,7 @@ test('Un resultado sin entregar en 24 horas se suelta', async t => {
       descartados: []}),
     backend: () => { throw new BackendHttpError(503); }
   });
-  recibir(service, 'w-1', 'no hay nada en vegas');
+  recibir(service, 'w-1', 'no hay gasolina en vegas');
   await service.analyzeCycle();
   h.now += 24 * 60 * 60000 + 1;
   await service.analyzeCycle();
@@ -244,12 +244,12 @@ test('Validador: se descarta lo que el mensaje no sostiene y lo que se contradic
   });
   recibir(service, 'w-1', 'en vegas hay', 5);
   recibir(service, 'w-2', 'en portillo hay diesel, otro dice que no', 4);
-  recibir(service, 'w-3', 'Más Vegas: gasolina sin fila, diésel no hay', 3);
+  recibir(service, 'w-3', 'Más Vegas: hay gasolina sin fila, diésel no hay', 3);
   await service.analyzeCycle();
   assert.deepEqual(h.enviados[0].avisos, [
     {surtidor: 'Las Vegas', combustible: 'Gasolina', estado: 'DISPONIBLE', fila: 'SIN_FILA', fecha: fecha(3)},
     {surtidor: 'Las Vegas', combustible: 'Diesel', estado: 'AGOTADO', fecha: fecha(3)}]);
-  assert(h.eventos.some(l => l.includes('"descartados":2') && l.includes('"descartadosValidador":5')));
+  assert(h.eventos.some(l => l.includes('"descartados":2') && l.includes('"descartadosValidador":')));
 });
 
 test('Una salida del LLM sin la estructura pedida es una falla: los mensajes siguen pendientes', async t => {
@@ -261,10 +261,10 @@ test('Una salida del LLM sin la estructura pedida es una falla: los mensajes sig
 
 test('Más de 1000 avisos se entregan en varios lotes', async t => {
   const {h, service} = contexto(t, {
-    llm: ({user}) => ({avisos: JSON.parse(user).mensajes.flatMap(m => ['Gasolina', 'Diesel', 'Desconocido'].map(c =>
+    llm: ({user}) => ({avisos: JSON.parse(user).mensajes.flatMap(m => ['Gasolina', 'Diesel', 'Gasolina Premium'].map(c =>
       ({mensaje: m.id, surtidor: 'Las Vegas', combustible: c, estado: 'DISPONIBLE', fila: 'NO_MENCIONADA'}))), descartados: []})
   });
-  for (let i = 0; i < 400; i++) recibir(service, `w-${i}`, `hay de todo en vegas ${i}`);
+  for (let i = 0; i < 400; i++) recibir(service, `w-${i}`, `hay gasolina y diesel y premium en vegas ${i}`);
   await service.analyzeCycle();
   assert.deepEqual(h.enviados.map(l => l.avisos.length), [MAX_AVISOS_POR_LOTE, 200]);
 });

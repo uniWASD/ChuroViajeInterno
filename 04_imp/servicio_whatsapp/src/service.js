@@ -9,8 +9,8 @@ import {interpretOutput} from './analysis.js';
 
 /** El contrato acepta hasta 1000 avisos por lote; un análisis más grande se entrega en varios. */
 export const MAX_AVISOS_POR_LOTE = 1000;
-/** Mensajes por llamada al LLM. Con los volúmenes medidos en el issue #10 un ciclo nunca llega a esto. */
-export const MAX_MENSAJES_POR_LOTE = 500;
+/** Procesar también backlogs de 501+ en una única llamada. SQLite impone el tope técnico documentado. */
+export const MAX_MENSAJES_POR_LOTE = 10000;
 
 const TARIJA_MS = -4 * 60 * 60 * 1000;
 /** La fecha del lote en la hora de Bolivia, como en el contrato. */
@@ -94,40 +94,49 @@ export class WhatsappService {
     return this.running;
   }
   async #cycle() {
-    // RN-06.11: primero se descarta lo vencido, para no mandarlo al LLM.
+    // RN-06.11: eliminar textos vencidos antes del análisis.
     this.#maintenance();
-    // RN-06.19: lo que no llegó en un ciclo anterior se reenvía antes de analizar más.
-    if (!(await this.#sendSaved())) return;
-    const pending = this.store.listPending(MAX_MENSAJES_POR_LOTE);
-    if (pending.length === 0) return; // RN-06.5: sin pendientes no se llama al LLM
-    const catalog = await this.#catalog();
-    if (!catalog || this.closed) return;
-    let output;
+    // Guardar la identidad de los resultados PREVIOS. Se reintentarán al final,
+    // después de dar prioridad al resultado nuevo (RNF-04: < 6 minutos).
+    const anteriores = new Set(this.store.listResults().map(r => r.id));
     try {
-      output = await this.llm.analyze({system: systemPrompt(catalog), user: userContent(pending), schema: outputSchema(catalog)});
-    } catch (error) {
-      // RN-06.10: los mensajes siguen pendientes y se reintentan en el ciclo siguiente.
-      this.logger.event('LLM_FALLO', {codigo: error?.code, mensajes: pending.length});
-      return;
+      const pending = this.store.listPending(MAX_MENSAJES_POR_LOTE);
+      if (pending.length === 0) return; // RN-06.5: sin pendientes, ninguna llamada al LLM
+      const catalog = await this.#catalog();
+      if (!catalog || this.closed) return;
+      let output;
+      try {
+        output = await this.llm.analyze({system: systemPrompt(catalog), user: userContent(pending), schema: outputSchema(catalog, pending.length)});
+      } catch (error) {
+        this.logger.event('LLM_FALLO', {codigo: error?.code, mensajes: pending.length});
+        return; // RN-06.10: conservar pendientes para el siguiente ciclo
+      }
+      // Si el análisis tardó demasiado, no publicar resultados de mensajes caducados.
+      this.#maintenance();
+      const vigentes = new Set(this.store.listPending(MAX_MENSAJES_POR_LOTE).map(m => m.id));
+      let result;
+      try { result = interpretOutput(output, pending, catalog, {vigentes}); }
+      catch (error) {
+        this.logger.event('LLM_FALLO', {codigo: error?.code, mensajes: pending.length});
+        return;
+      }
+      if (this.closed) return;
+      const lote = horaTarija(this.clock());
+      const lotes = [];
+      for (let i = 0; i < result.avisos.length; i += MAX_AVISOS_POR_LOTE) {
+        lotes.push({lote, avisos: result.avisos.slice(i, i + MAX_AVISOS_POR_LOTE)});
+      }
+      // Transacción: procesados sin texto + cola de resultados sin texto (RN-06.12, RN-06.19).
+      const nuevos = this.store.finishBatch(pending.filter(m => vigentes.has(m.id)).map(m => m.id), lotes);
+      this.logger.event('LOTE_ANALIZADO', {mensajes: pending.length, avisos: result.avisos.length,
+        descartados: result.descartados, descartadosValidador: result.porValidador});
+      // RN-06.18: entrega inmediata incluso si Java tiene pendiente un lote ANTERIOR.
+      if (nuevos.length) await this.#sendSaved(new Set(nuevos));
+    } finally {
+      // RN-06.19: reintento al ciclo siguiente. Cada resultado antiguo se intenta
+      // máximo una vez por ciclo y un fallo no paraliza el procesamiento de nuevos.
+      if (!this.closed && anteriores.size) await this.#sendSaved(anteriores);
     }
-    let result;
-    try { result = interpretOutput(output, pending, catalog); }
-    catch (error) {
-      this.logger.event('LLM_FALLO', {codigo: error?.code, mensajes: pending.length});
-      return;
-    }
-    if (this.closed) return;
-    const lote = horaTarija(this.clock());
-    const lotes = [];
-    for (let i = 0; i < result.avisos.length; i += MAX_AVISOS_POR_LOTE) {
-      lotes.push({lote, avisos: result.avisos.slice(i, i + MAX_AVISOS_POR_LOTE)});
-    }
-    // RN-06.12 y RN-06.19: los mensajes quedan sin texto y el resultado queda guardado, en la misma transacción.
-    this.store.finishBatch(pending.map(m => m.id), lotes);
-    this.logger.event('LOTE_ANALIZADO', {mensajes: pending.length, avisos: result.avisos.length,
-      descartados: result.descartados, descartadosValidador: result.porValidador});
-    // RN-06.18: se entrega apenas termina el análisis.
-    await this.#sendSaved();
   }
   async #catalog() {
     try {
@@ -138,11 +147,12 @@ export class WhatsappService {
     }
     return this.catalog;
   }
-  /** Envía los resultados guardados, del más viejo al más nuevo. Devuelve falso si el backend no los está recibiendo. */
-  async #sendSaved() {
+  /** Envía resultados guardados o solo los IDs recién creados; limita un fallo por intento. */
+  async #sendSaved(ids = null) {
     const vencidos = this.store.purgeOldResults();
     if (vencidos > 0) this.logger.event('RESULTADO_VENCIDO', {resultados: vencidos});
     for (const saved of this.store.listResults()) {
+      if (ids && !ids.has(saved.id)) continue;
       if (this.closed) return false;
       try {
         const answer = await this.backend.postResultados({lote: saved.lote, avisos: saved.avisos});

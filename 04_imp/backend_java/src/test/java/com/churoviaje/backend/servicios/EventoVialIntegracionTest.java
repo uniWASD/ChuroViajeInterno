@@ -126,7 +126,9 @@ class EventoVialIntegracionTest extends PruebaIntegracionPostgis {
         JsonNode cuerpo = json.readTree(respuesta);
         List<String> campos = new ArrayList<>();
         cuerpo.fieldNames().forEachRemaining(campos::add);
-        assertEquals(List.of("id", "tipo", "ubicacion", "momentoOcurrencia", "estado", "confirmado", "origen"), campos);
+        // D-46: el conteo de votos es un total; no dice quien voto.
+        assertEquals(List.of("id", "tipo", "ubicacion", "momentoOcurrencia", "estado", "confirmado", "origen",
+                "votosReal", "votosFalso"), campos);
         assertFalse(respuesta.contains("reportante") || respuesta.contains("conductor") || respuesta.contains("google"));
     }
 

@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import '../../config/app_config.dart';
 import '../../models/coordenada.dart';
+import 'estilo_mapa.dart';
 import 'mapa_base.dart';
+import 'marcadores.dart';
 
 /// El [ConstructorMapa] de la app: el mapa base de Mapbox (D-08: Mapbox solo da el mapa, las rutas las calcula
 /// el motor).
@@ -23,9 +27,13 @@ class MapaMapbox extends StatefulWidget {
 class _MapaMapboxState extends State<MapaMapbox> {
   MapboxMap? _mapa;
   CircleAnnotationManager? _marcas;
-  CircleAnnotationManager? _eventos;
+  PointAnnotationManager? _eventos;
+  final Marcadores _dibujos = Marcadores();
   PolylineAnnotationManager? _lineas;
+  PolylineAnnotationManager? _congestiones;
+  PolylineAnnotation? _ruta;
   Cancelable? _toquesEventos;
+  Cancelable? _toquesCongestiones;
 
   @override
   void initState() {
@@ -55,56 +63,111 @@ class _MapaMapboxState extends State<MapaMapbox> {
     if (!listEquals(anterior.datos.eventos, widget.datos.eventos)) {
       _dibujarEventos();
     }
+    final foco = widget.datos.foco;
+    if (foco != null && foco != anterior.datos.foco) {
+      _irAlFoco(foco);
+    }
+  }
+
+  /// #172: al abrir un evento, la cámara va hasta él y lo deja en la parte del mapa que no tapa la hoja.
+  Future<void> _irAlFoco(Coordenada foco) async {
+    final mapa = _mapa;
+    if (mapa == null || _siguiendo) return;
+    final alto = MediaQuery.sizeOf(context).height;
+    final camara = await mapa.getCameraState();
+    if (!mounted) return;
+    await mapa.flyTo(
+      CameraOptions(
+        center: _punto(foco),
+        zoom: camara.zoom < 16 ? 16 : camara.zoom,
+        padding: MbxEdgeInsets(top: 0, left: 0, bottom: alto * widget.datos.tapadoAbajo, right: 0),
+      ),
+      MapAnimationOptions(duration: 600),
+    );
   }
 
   @override
   void dispose() {
     _toquesEventos?.cancel();
+    _toquesCongestiones?.cancel();
     super.dispose();
   }
 
   Future<void> _alCrear(MapboxMap mapa) async {
     _mapa = mapa;
+    // Por si el estilo terminó de cargar antes de que el mapa avisara que está creado.
+    unawaited(_aplicarEstilo());
     // RNF-19: el logo y la atribución (© Mapbox © OpenStreetMap) quedan visibles.
     await mapa.logo.updateSettings(LogoSettings(enabled: true));
     await mapa.attribution.updateSettings(
       AttributionSettings(enabled: true, clickable: true),
     );
+    // D-47: la brújula, que aparece al girar el mapa, va debajo de la barra de búsqueda.
+    if (mounted) {
+      final arriba = MediaQuery.paddingOf(context).top + 72;
+      await mapa.compass.updateSettings(CompassSettings(marginTop: arriba, marginRight: 12));
+    }
     mapa.addInteraction(
       TapInteraction.onMap((contexto) {
         final c = contexto.point.coordinates;
         widget.datos.alTocar(Coordenada(c.lat.toDouble(), c.lng.toDouble()));
       }),
     );
-    // Primero la línea, para que las marcas queden encima.
+    // Primero la ruta, después las congestiones sobre la calle y al final los puntos, para que queden encima.
     _lineas = await mapa.annotations.createPolylineAnnotationManager();
-    _eventos = await mapa.annotations.createCircleAnnotationManager();
+    _congestiones = await mapa.annotations.createPolylineAnnotationManager();
+    _eventos = await mapa.annotations.createPointAnnotationManager();
     _marcas = await mapa.annotations.createCircleAnnotationManager();
-    _toquesEventos = _eventos!.tapEvents(onTap: (anotacion) {
-      final id = anotacion.customData?['evento'];
-      if (id is num) widget.datos.alTocarEvento?.call(id.toInt());
-    });
+    _toquesEventos = _eventos!.tapEvents(onTap: (anotacion) => _tocarEvento(anotacion.customData));
+    // Al tocar la línea de una congestión se abre su ficha, igual que con un punto.
+    _toquesCongestiones = _congestiones!.tapEvents(onTap: (anotacion) => _tocarEvento(anotacion.customData));
     await _actualizarUbicacion();
     await _dibujarTrazado();
     await _dibujarEventos();
     await _marcarPunto();
   }
 
-  /// RN-02.7 y RN-02.14: cada evento con el color de su tipo; los confirmados, con un borde grueso oscuro.
+  void _tocarEvento(Map<String, Object?>? datos) {
+    final id = datos?['evento'];
+    if (id is num) widget.datos.alTocarEvento?.call(id.toInt());
+  }
+
+  /// RN-02.7 y RN-02.14: cada evento con el color de su tipo; los confirmados, con un borde grueso oscuro. Una
+  /// congestión con trazado se dibuja a lo largo de su calle (RN-04.25, D-45).
   Future<void> _dibujarEventos() async {
     final capa = _eventos;
-    if (capa == null) return;
+    final lineas = _congestiones;
+    if (capa == null || lineas == null) return;
+    // La imagen de los marcadores se dibuja con la densidad de la pantalla: el SDK la muestra en píxeles físicos.
+    _dibujos.usarEscala(MediaQuery.devicePixelRatioOf(context));
     await capa.deleteAll();
+    await lineas.deleteAll();
     final eventos = widget.datos.eventos;
-    if (eventos.isEmpty) return;
+    final enLinea = [for (final e in eventos) if (e.esLinea) e];
+    final enPunto = [for (final e in eventos) if (!e.esLinea) e];
+    if (enLinea.isNotEmpty) {
+      await lineas.createMulti([
+        for (final e in enLinea)
+          PolylineAnnotationOptions(
+            geometry: LineString(coordinates: [for (final c in e.trazado) _punto(c).coordinates]),
+            lineColor: colorDeNivel(e.nivel).toARGB32(),
+            lineWidth: 6,
+            // El trazado va en el sentido del tramo: corrida a su derecha, cada sentido de una calle de doble
+            // sentido se ve aparte (D-18), como el tráfico de Google Maps.
+            lineOffset: 4,
+            lineJoin: LineJoin.ROUND,
+            customData: {'evento': e.id},
+          ),
+      ]);
+    }
+    if (enPunto.isEmpty) return;
+    // #172: cada evento con el ícono de su tipo, en una gota del color del tipo.
     await capa.createMulti([
-      for (final e in eventos)
-        CircleAnnotationOptions(
+      for (final e in enPunto)
+        PointAnnotationOptions(
           geometry: _punto(e.coordenada),
-          circleRadius: 9,
-          circleColor: e.color.toARGB32(),
-          circleStrokeWidth: e.confirmado ? 4 : 2,
-          circleStrokeColor: (e.confirmado ? const Color(0xFF1B1B1B) : Colors.white).toARGB32(),
+          image: await _dibujos.de(tipo: e.tipo, color: e.color, confirmado: e.confirmado),
+          iconAnchor: IconAnchor.BOTTOM,
           customData: {'evento': e.id},
         ),
     ]);
@@ -151,17 +214,30 @@ class _MapaMapboxState extends State<MapaMapbox> {
     final lineas = _lineas;
     final mapa = _mapa;
     if (lineas == null || mapa == null) return;
-    await lineas.deleteAll();
     final trazado = widget.datos.trazado;
-    if (trazado.length < 2) return;
+    if (trazado.length < 2) {
+      _ruta = null;
+      await lineas.deleteAll();
+      return;
+    }
     final puntos = [for (final c in trazado) _punto(c)];
-    await lineas.create(
+    final linea = LineString(coordinates: [for (final p in puntos) p.coordinates]);
+    final ruta = _ruta;
+    if (ruta != null && _siguiendo) {
+      // #172: en la Navegación activa la línea se acorta a cada posición; se mueve la misma, sin parpadear.
+      ruta.geometry = linea;
+      await lineas.update(ruta);
+      return;
+    }
+    await lineas.deleteAll();
+    _ruta = await lineas.create(
       PolylineAnnotationOptions(
-        geometry: LineString(
-          coordinates: [for (final p in puntos) p.coordinates],
-        ),
-        lineColor: const Color(0xFF1565C0).toARGB32(),
-        lineWidth: 5,
+        geometry: linea,
+        lineColor: colorRuta.toARGB32(),
+        lineBorderColor: colorBordeRuta.toARGB32(),
+        lineBorderWidth: 1.5,
+        lineWidth: 7,
+        lineJoin: LineJoin.ROUND,
       ),
     );
     // En la Navegación activa la cámara sigue al conductor: no se encuadra la ruta.
@@ -174,6 +250,20 @@ class _MapaMapboxState extends State<MapaMapbox> {
       null,
     );
     await mapa.flyTo(camara, MapAnimationOptions(duration: 600));
+  }
+
+  /// El azul de la ruta y su borde, como en Google Maps.
+  static const Color colorRuta = Color(0xFF1A73E8);
+  static const Color colorBordeRuta = Color(0xFF1557B0);
+
+  /// #172: colores, fuente y capas parecidos a Google Maps. Si el SDK no acepta alguna opción, el mapa sigue con
+  /// el estilo Standard sin cambios: no es motivo para dejarlo sin cargar.
+  Future<void> _aplicarEstilo() async {
+    try {
+      await _mapa?.setStyleImportConfigProperties(importacionBasemap, configuracionEstiloGoogle);
+    } catch (e) {
+      debugPrint('No se pudo aplicar el estilo parecido a Google Maps: $e');
+    }
   }
 
   bool get _siguiendo => widget.datos.seguirUbicacion && widget.datos.mostrarUbicacion;
@@ -195,6 +285,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
               zoom: 13.5,
             ),
       onMapCreated: _alCrear,
+      onStyleLoadedListener: (_) => _aplicarEstilo(),
       onMapLoadErrorListener: (error) {
         // Solo el estilo deja el mapa sin cargar; un mosaico que falla se vuelve a pedir solo.
         if (error.type == MapLoadErrorType.STYLE) {

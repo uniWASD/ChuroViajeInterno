@@ -30,6 +30,9 @@ churoviaje:
   cobertura:
     ruta: ${CHUROVIAJE_GEOJSON_PATH:../datos/mancha_urbana_tarija.geojson}
     permitir-provisional: false
+  lugares:
+    # D-47: JSON de preparar_lugares.py, fuera del repositorio. Vacio: la busqueda solo encuentra surtidores.
+    ruta: ${LUGARES_PATH:}
   seguridad:
     # Secretos solo por variables de entorno; sin valor por defecto en el repositorio (D-13).
     # Si falta alguno, el backend no arranca (PropiedadesSeguridad).

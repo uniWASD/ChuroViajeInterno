@@ -560,6 +560,57 @@ Un issue está terminado cuando cumple las tres condiciones:
 | **CP-122** con la app abierta 1 minuto llegan 4 envíos al backend; con la app minimizada, ninguno | Video corto de la pantalla y registro del backend con los envíos recibidos |  |
 | **CP-123** al revocar el permiso de ubicación, la telemetría se detiene y el mapa sigue funcionando | Video corto de la pantalla |  |
 
+## Sprint 5.5 (19/11 – 21/11)
+
+1 issue. Corrige lo que salió al probar la app y acerca su aspecto al diseño de pantallas.
+
+| Issue | Responsable | Casos de prueba |
+| --- | --- | --- |
+| [T-123][Sprint 5.5] Ajustes de mapa, navegación y tráfico ([#172](https://github.com/uniWASD/ChuroViajeInterno/issues/172)) | Marcelo | CP-171 a CP-191 |
+
+### [T-123][Sprint 5.5] Ajustes de mapa, navegación y tráfico · [#172](https://github.com/uniWASD/ChuroViajeInterno/issues/172)
+
+**Responsable:** Marcelo · **Fechas:** 19/11 – 21/11
+
+**Reglas y decisiones**
+
+- RN-04.22 a RN-04.25, D-44, D-45, P-36 a P-38 ([CU-04](../../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md)); RN-02.17 y D-46 ([CU-02](../../03_des/02_Arquitectura/04_reglas/CU-02_VisualizarEventosViales.md)); RN-03.19, RN-03.20, D-47 y P-19 ([CU-03](../../03_des/02_Arquitectura/04_reglas/CU-03_CalcularRutaOptima.md)).
+
+**Criterios de aceptación**
+
+- Un teléfono quieto o alguien que no venía manejando no marca congestión
+- La racha lenta sigue en la cuadra siguiente de la misma calle
+- La congestión se ve a lo largo de la calle, con el color de su nivel
+- Al navegar desaparece lo ya recorrido
+- El gesto de atrás no saca de la app de golpe
+- El mapa se parece a Google Maps y las pantallas siguen el diseño
+- Eventos es una hoja a media pantalla sobre el mapa; al tocar un evento el mapa va hasta él y el detalle muestra «Real», «Falso» y cuántos votaron cada cosa
+- Arriba del mapa hay una barra de búsqueda en lugar del encabezado, sin micrófono: encuentra calles, lugares conocidos y surtidores, y el lugar elegido queda listo para «Cómo llegar»
+
+| Caso de prueba | Evidencia esperada | Validación |
+| --- | --- | --- |
+| **CP-171** un teléfono que manejó y después queda quieto 2 minutos junto a la avenida no produce congestión | Prueba automatizada y su salida en la CI |  |
+| **CP-172** un recorrido lento que nunca superó 15 km/h no produce congestión; si antes manejó 15 s a 40 km/h, sí | Prueba automatizada y su salida en la CI |  |
+| **CP-173** después de manejar, una fila que avanza a tirones durante 2 minutos produce congestión | Prueba automatizada y su salida en la CI |  |
+| **CP-174** una racha lenta que cruza a la cuadra siguiente de la misma calle congestiona las dos cuadras; si dobla, se corta | Prueba automatizada y su salida en la CI |  |
+| **CP-175** cada congestión trae exactamente tramo, punto, nivel, simulado y trazado | Prueba automatizada y su salida en la CI |  |
+| **CP-176** la congestión con trazado se guarda con él y `GET /eventos` lo devuelve; sin trazado sale como antes | Prueba automatizada y su salida en la CI |  |
+| **CP-177** la congestión con trazado se ve como línea naranja o roja y al tocarla se abre la ficha | Prueba de widget y captura o video en el teléfono |  |
+| **CP-178** al avanzar por la ruta desaparece lo ya recorrido, también después de recalcular o aceptar una alternativa | Pruebas de la función de recorte y video en el teléfono |  |
+| **CP-179** el gesto de atrás cierra la hoja abierta, vuelve a Mapa y solo sale si se repite en 2 segundos | Pruebas de widget y video en un teléfono con Android 14 o superior |  |
+| **CP-180** el mapa se parece a Google Maps en colores, calles, etiquetas y lugares | Capturas de antes y después |  |
+| **CP-182** `GET /eventos` y la respuesta del voto traen cuántos votos «real» y «falso» lleva cada evento de conductores; la congestión no los trae | Prueba automatizada y su salida en la CI |  |
+| **CP-183** Eventos abre a media pantalla sobre el mapa y se desliza hacia abajo hasta dejar solo el asa | Prueba de widget y video en el teléfono |  |
+| **CP-184** al tocar un evento el mapa va hasta él y se abre el detalle con «Real», «Falso» y el conteo de votos | Prueba de widget y video en el teléfono |  |
+| **CP-181** las pantallas que ya existen (Mapa con la ficha, Eventos, Reportar evento, Cómo llegar y Navegación) siguen el aspecto del diseño | Capturas junto al frame del Figma |  |
+| **CP-185** `preparar_lugares.py` pone cada lugar de OSM en su categoría y deja fuera las estaciones de servicio | Prueba automatizada (unittest) |  |
+| **CP-186** las calles salen una vez por calle, recortadas a la mancha urbana, y los lugares repetidos se juntan; del extracto sale el JSON | Prueba automatizada (unittest) |  |
+| **CP-187** el backend carga los lugares una vez por extracto, descarta los que están fuera o mal formados y, si el archivo no sirve, conserva los de antes | Prueba automatizada y su salida en la CI |  |
+| **CP-188** `GET /lugares` encuentra sin tildes, por comienzo de palabra y con abreviaturas, incluye surtidores y ordena por coincidencia y cercanía | Prueba automatizada y su salida en la CI |  |
+| **CP-189** `GET /lugares` pide sesión, al menos 2 letras y la ubicación completa | Prueba automatizada y su salida en la CI |  |
+| **CP-190** la app espera a que el conductor termine de escribir, busca una vez y descarta las respuestas que llegan tarde | Prueba unitaria |  |
+| **CP-191** la barra reemplaza al encabezado; al elegir un resultado el mapa va hasta él con su nombre, y el gesto de atrás cierra primero la lista | Prueba de widget, capturas y video en el teléfono |  |
+
 ## Sprint 6 (19/11 – 25/11)
 
 10 issues · 29 puntos.

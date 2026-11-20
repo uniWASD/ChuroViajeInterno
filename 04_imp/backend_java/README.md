@@ -107,6 +107,7 @@ La raíz y cada entidad deben tener metadata de aprobación. Producción rechaza
 | `MOTOR_HABILITADO` | `true` para que el backend arranque el núcleo. Por defecto `false`: las operaciones del motor responden 503. |
 | `MOTOR_PATH` | Ruta del ejecutable del núcleo. |
 | `RED_VIAL_PATH` | Ruta del archivo de la red vial; se le pasa al núcleo con `--red <ruta>`. |
+| `LUGARES_PATH` | Ruta del JSON de `preparar_lugares.py` para la búsqueda de destinos (D-47). Al arrancar se carga en la tabla `lugar` si cambió la fecha del extracto. Sin esta variable, `GET /lugares` solo encuentra surtidores. |
 
 Los tiempos (`motor.tiempo-maximo` 3 s, `motor.espera-arranque`, `motor.espera-reinicio`) están en `application.yml`. Cada vez que un evento nace, se retira o vence, `TraficoDelMotor` le avisa al núcleo con `actualizar_trafico` después de guardar el cambio; si el núcleo no está disponible, el aviso queda pendiente y se reintenta cada 5 segundos. Al arrancar o reiniciar el núcleo, el wrapper le envía todos los eventos vigentes (T-099). Con `MOTOR_PATH` y `RED_VIAL_PATH` apuntando a `04_imp/motor_cpp/tests/datos/red_irregular.json`, `TraficoConNucleoRealTest` prueba CP-99 con el núcleo real. Las pruebas usan un núcleo falso en `src/test/resources/nucleo_falso/NucleoFalso.java` y no necesitan Docker ni el ejecutable de C++.
 

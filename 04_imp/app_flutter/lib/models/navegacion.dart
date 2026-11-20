@@ -110,6 +110,21 @@ class Trazado {
   }
 }
 
+/// Lo que falta de la ruta (#172): el trazado desde el punto donde está el conductor, proyectado sobre la ruta,
+/// hasta el final. Lo ya recorrido desaparece del mapa, como en Google Maps. Con [recorridoM] en 0 o menos queda la
+/// ruta entera; al final, queda vacío.
+List<Coordenada> recortarRecorrido(Trazado trazado, double recorridoM) {
+  final puntos = trazado.puntos;
+  if (puntos.length < 2) return puntos;
+  if (recorridoM <= 0) return puntos;
+  if (recorridoM >= trazado.longitudM) return const [];
+  var i = 1;
+  while (i < puntos.length - 1 && trazado.recorridoHasta(i) <= recorridoM) {
+    i++;
+  }
+  return List.unmodifiable([trazado.puntoEn(recorridoM), ...puntos.skip(i)]);
+}
+
 enum Giro { izquierda, derecha, recto }
 
 /// Un cambio de calle: dónde está sobre el trazado, a qué calle se entra y hacia qué lado.

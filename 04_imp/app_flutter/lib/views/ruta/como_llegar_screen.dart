@@ -9,6 +9,7 @@ import '../../services/rutas/servicio_rutas.dart';
 import '../map/map_screen.dart';
 import '../map/mapa_base.dart';
 import '../navegacion/navegacion_activa_screen.dart';
+import '../tema/tema.dart';
 
 /// Vista Cómo llegar (CU-03): origen, destino y paradas; la ruta con su tiempo y su distancia; el botón para
 /// iniciar. No hay buscador de lugares: los puntos se eligen tocando el mapa (P-19, D-24).
@@ -75,13 +76,16 @@ class ComoLlegarScreen extends StatelessWidget {
             constraints: BoxConstraints(
               maxHeight: MediaQuery.sizeOf(context).height * 0.5,
             ),
-            child: Material(
-              elevation: 8,
-              child: SafeArea(
-                top: false,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                  child: _Panel(ruta: ruta, posicion: mapa.posicion),
+            // #172: el panel es una hoja inferior con asa, como «Destino seleccionado» y «Ruta calculada».
+            child: HojaInferior(
+              padding: EdgeInsets.zero,
+              child: Flexible(
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    child: _Panel(ruta: ruta, posicion: mapa.posicion),
+                  ),
                 ),
               ),
             ),

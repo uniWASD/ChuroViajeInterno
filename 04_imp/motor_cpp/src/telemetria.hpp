@@ -1,5 +1,6 @@
-// Análisis de la telemetría (#73, CU-04): velocidad, filtros, tramo de cada lectura y congestión (RN-04.5 a
-// RN-04.10, RN-04.12, RN-04.20, P-02, P-24, P-25, D-18). Lleva a C++ las fórmulas de 05_pro/CalculoVelocidad.
+// Análisis de la telemetría (#73, #172, CU-04): velocidad, filtros, tramo de cada lectura y congestión (RN-04.5 a
+// RN-04.10, RN-04.12, RN-04.20, RN-04.22 a RN-04.24, P-02, P-24, P-25, P-36 a P-38, D-18, D-44). Lleva a C++ las
+// fórmulas de 05_pro/CalculoVelocidad.
 #pragma once
 
 #include <cstddef>
@@ -22,7 +23,8 @@ struct LecturaTelemetria {
   std::int64_t momento = 0;  // segundos desde 1970
 };
 
-// Una congestión que el núcleo informa al backend (RN-04.10): el tramo, un punto y el nivel.
+// Una congestión que el núcleo informa al backend (RN-04.10): el tramo, un punto y el nivel. La respuesta le agrega
+// el trazado del tramo (RN-04.25).
 struct CongestionDetectada {
   std::size_t tramo = 0;  // posición en RedVial::tramos()
   Punto punto;
@@ -50,6 +52,18 @@ class AnalizadorTelemetria {
   static constexpr double kDistanciaTramoM = 30;           // RN-04.8, P-24
   static constexpr std::int64_t kTiempoCongestionS = 120;  // RN-04.10, P-02: 2 minutos seguidos
   static constexpr std::int64_t kOlvidoS = 5 * 60;         // RN-04.12, P-25
+  // RN-04.22, P-36: «venía manejando». Solo cuenta un recorrido que, en los últimos 10 minutos, estuvo al menos
+  // 15 segundos seguidos por encima de 15 km/h. Deja fuera a quien camina o abrió la app sin moverse.
+  static constexpr double kVelocidadManejoKmh = 15;
+  static constexpr std::int64_t kTiempoManejoS = 15;
+  static constexpr std::int64_t kVentanaManejoS = 10 * 60;
+  // RN-04.23, P-37: «tiene que avanzar». En la racha lenta, el recorrido se movió al menos 25 m en línea recta
+  // desde donde empezó la racha. Se mide de punta a punta y no sumando pasos, para que el temblor del GPS de un
+  // teléfono quieto no se acumule.
+  static constexpr double kAvanceMinimoM = 25;
+  // RN-04.24, P-38, D-44: la racha sigue en la cuadra siguiente de la misma calle si esta cambia menos de 40 grados
+  // de dirección (el mismo ángulo que RN-04.7 toma como giro).
+  static constexpr double kCambioMaximoMismaCalleGrados = 40;
   // Por debajo de este desplazamiento el GPS solo tiembla: no se calcula el rumbo (un auto detenido no gira).
   static constexpr double kDesplazamientoParaRumboM = 3;
 
@@ -67,12 +81,17 @@ class AnalizadorTelemetria {
   void olvidar_viejos(std::int64_t ahora);
 
  private:
-  // Lo único que se guarda de un recorrido: su última lectura y la racha lenta en curso (RN-04.12).
+  // Lo único que se guarda de un recorrido: su última lectura, desde cuándo maneja y la racha lenta en curso
+  // (RN-04.12). Nada de esto sale del núcleo.
   struct Estado {
     bool con_lectura = false;  // si `ultima` es una lectura de verdad
     LecturaTelemetria ultima;
-    std::optional<double> rumbo;             // el de las dos últimas lecturas que se movieron
-    std::optional<std::size_t> tramo_lento;  // tramo donde va lento, si va lento
+    std::optional<double> rumbo;                 // el de las dos últimas lecturas que se movieron
+    std::optional<std::int64_t> rapido_desde;    // desde cuándo va por encima de kVelocidadManejoKmh, sin cortar
+    std::optional<std::int64_t> manejando_hasta;  // la última vez que completó kTiempoManejoS por encima
+    std::vector<std::size_t> tramos_lentos;      // cuadras de la racha lenta, en orden; vacío si no va lento
+    std::vector<std::size_t> informados;         // cuadras de la racha ya informadas como congestión
+    Punto inicio_lento;                          // dónde empezó la racha
     std::int64_t lento_desde = 0;
     double metros_lentos = 0;
     double segundos_lentos = 0;

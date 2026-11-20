@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'app_providers.dart';
 import 'config/app_config.dart';
 import 'views/inicio.dart';
+import 'views/tema/tema.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,10 +38,7 @@ class ChuroViajeApp extends StatelessWidget {
       ],
       title: 'ChuroViaje',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF087E8B)),
-        useMaterial3: true,
-      ),
+      theme: temaChuroViaje(), // #172: el aspecto del diseño de pantallas
       home: const Inicio(),
     );
   }

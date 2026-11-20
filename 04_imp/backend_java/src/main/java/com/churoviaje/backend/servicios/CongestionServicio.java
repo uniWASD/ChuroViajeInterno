@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Registra las congestiones que el motor detecta con la telemetría (CU-04, HU-13): crea el {@code EventoVial} de
  * tipo Congestión con origen Telemetría (RN-04.10, D-04) o extiende el que ya tiene ese tramo (RN-04.11), y se lo
- * avisa al motor para que pese en las rutas con su nivel (D-14, P-12).
+ * avisa al motor para que pese en las rutas con su nivel (D-14, P-12). La congestión nueva guarda el trazado de su
+ * tramo, que la app dibuja a lo largo de la calle (RN-04.25, D-45).
  */
 @Service
 public class CongestionServicio {
@@ -66,14 +69,30 @@ public class CongestionServicio {
             }
             Ubicacion ubicacion = new Ubicacion(BigDecimal.valueOf(punto.path(0).asDouble()),
                     BigDecimal.valueOf(punto.path(1).asDouble()));
-            registrar(tipo, tramo, ubicacion, nivel, simulado, ahora);
+            registrar(tipo, tramo, ubicacion, trazado(c.path("trazado")), nivel, simulado, ahora);
             registradas++;
         }
         return registradas;
     }
 
-    private void registrar(TipoEvento tipo, String tramo, Ubicacion ubicacion, String nivel, boolean simulado,
-            Instant ahora) {
+    /** RN-04.25: los puntos {@code [lat, lon]} del trazado; si falta o algún punto no sirve, la congestión va sin él. */
+    static List<Ubicacion> trazado(JsonNode trazado) {
+        if (!trazado.isArray() || trazado.size() < 2) {
+            return List.of();
+        }
+        List<Ubicacion> puntos = new ArrayList<>();
+        for (JsonNode p : trazado) {
+            if (!p.isArray() || p.size() != 2 || !p.path(0).isNumber() || !p.path(1).isNumber()) {
+                LOG.warn("El motor informó un trazado con un punto inválido; la congestión va sin trazado: {}", trazado);
+                return List.of();
+            }
+            puntos.add(new Ubicacion(p.path(0).decimalValue(), p.path(1).decimalValue()));
+        }
+        return List.copyOf(puntos);
+    }
+
+    private void registrar(TipoEvento tipo, String tramo, Ubicacion ubicacion, List<Ubicacion> trazado, String nivel,
+            boolean simulado, Instant ahora) {
         Optional<EventoVial> activa = eventos.buscarCongestionActivaEnTramo(tramo, simulado);
         if (activa.isPresent() && activa.get().estaVigente(ahora)) {
             // RN-04.11: no se crea otra; se mueve el momento de la que ya está, y su nivel si cambió.
@@ -87,7 +106,7 @@ public class CongestionServicio {
             eventos.marcarVencido(activa.get().getId(), ahora);
             avisos.publishEvent(AvisoTrafico.vence(activa.get().getId()));
         }
-        EventoVial nueva = EventoVial.detectarCongestion(tipo, ubicacion, tramo, nivel, simulado, ahora);
+        EventoVial nueva = EventoVial.detectarCongestion(tipo, ubicacion, tramo, trazado, nivel, simulado, ahora);
         EventoVial guardada = nueva.conId(eventos.guardarNuevo(nueva));
         avisos.publishEvent(AvisoTrafico.nace(guardada));
     }

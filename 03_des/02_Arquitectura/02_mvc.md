@@ -68,7 +68,7 @@ Controlador  ->  Servicio  ->  Repositorio (interfaz)  ->  Implementación para 
 | Vista | Proceso | Qué muestra y qué permite |
 | --- | --- | --- |
 | Inicio de sesión | CU-08 | El botón «Iniciar sesión con Google» y el enlace a la política de privacidad. Es la única vista disponible sin sesión |
-| Mapa principal | CU-02, CU-05, CU-08 | El mapa con los eventos vigentes por color y los surtidores como marcadores, que se actualizan cada 60 segundos ([D-25](08_decisiones_parametros.md)), el menú de la cuenta con «Cerrar sesión» y la barra inferior (Mapa, Eventos, Surtidores). No hay buscador de lugares mientras no se decida P-19 ([D-24](08_decisiones_parametros.md)) |
+| Mapa principal | CU-02, CU-05, CU-08 | El mapa con los eventos vigentes por color y los surtidores como marcadores, que se actualizan cada 60 segundos ([D-25](08_decisiones_parametros.md)), la barra de búsqueda de destinos arriba, con el menú de la cuenta («Cerrar sesión») a la derecha, y la barra inferior (Mapa, Eventos, Surtidores). Al elegir un resultado, el mapa va hasta él y queda listo para «Cómo llegar» ([D-47](08_decisiones_parametros.md)) |
 | Reportar evento | CU-01 | Tipo de evento y hace cuánto ocurrió, con «Hace 5 minutos» marcado; ajuste manual del punto si falla el GPS |
 | Lista y detalle de eventos | CU-02 | Tipo y antigüedad de cada evento, los botones para votar real o falso y la marca de confirmado |
 | Cómo llegar | CU-03 | Origen, destino y paradas; la ruta con su tiempo y su distancia; el botón para iniciar |

@@ -198,13 +198,41 @@ class VotoIntegracionTest extends PruebaIntegracionPostgis {
     }
 
     @Test
-    @DisplayName("La respuesta trae solo el estado del evento, sin datos de quien voto")
+    @DisplayName("La respuesta trae el estado del evento y cuantos votos lleva, sin datos de quien voto (D-46)")
     void laRespuestaNoDiceQuienVoto() throws Exception {
         String respuesta = votar(votantes.get(0), accidente(), "real").andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         List<String> campos = new ArrayList<>();
         json.readTree(respuesta).fieldNames().forEachRemaining(campos::add);
-        assertEquals(List.of("eventoId", "estado", "confirmado"), campos);
+        assertEquals(List.of("eventoId", "estado", "confirmado", "votosReal", "votosFalso"), campos);
+    }
+
+    @Test
+    @DisplayName("CP-182: GET /eventos y la respuesta del voto traen cuantos votos «real» y «falso» lleva cada evento de conductor; la congestion no los trae")
+    void cp182ConteoDeVotos() throws Exception {
+        long evento = accidente();
+        long congestion = evento("CONGESTION", 5, "TELEMETRIA", "ACTIVO");
+        votar(votantes.get(0), evento, "real").andExpect(jsonPath("$.votosReal").value(1))
+                .andExpect(jsonPath("$.votosFalso").value(0));
+        votar(votantes.get(1), evento, "real");
+        votar(votantes.get(2), evento, "falso").andExpect(jsonPath("$.votosReal").value(2))
+                .andExpect(jsonPath("$.votosFalso").value(1));
+
+        JsonNode lista = consultar(null).path("eventos");
+        JsonNode delConductor = null;
+        JsonNode delTrafico = null;
+        for (JsonNode e : lista) {
+            if (e.path("id").asLong() == evento) {
+                delConductor = e;
+            } else if (e.path("id").asLong() == congestion) {
+                delTrafico = e;
+            }
+        }
+        assertEquals(2, delConductor.path("votosReal").asInt());
+        assertEquals(1, delConductor.path("votosFalso").asInt());
+        assertEquals(false, delTrafico.has("votosReal"), "D-20: la congestion de telemetria no se vota");
+        assertEquals(false, delTrafico.has("votosFalso"));
+        assertEquals(false, lista.toString().contains("google-votante"), "RNF-10: nunca dice quien voto");
     }
 
     @Test

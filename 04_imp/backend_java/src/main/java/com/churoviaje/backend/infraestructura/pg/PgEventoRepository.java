@@ -30,7 +30,8 @@ import org.springframework.stereotype.Repository;
 
 /**
  * {@link EventoRepository} con JDBC y sentencias preparadas (D-37) sobre la tabla {@code evento_vial} (V4, V5). La
- * ubicacion se guarda como punto PostGIS: {@code ST_MakePoint} recibe primero la longitud y despues la latitud.
+ * ubicacion se guarda como punto PostGIS: {@code ST_MakePoint} recibe primero la longitud y despues la latitud. El
+ * trazado de una congestion (V9, RN-04.25) va y viene como texto WKT, que tambien escribe la longitud primero.
  */
 @Repository
 public class PgEventoRepository implements EventoRepository {
@@ -40,6 +41,7 @@ public class PgEventoRepository implements EventoRepository {
             select e.id, e.ocurrio_en, e.registrado_en, e.reportante_id, e.origen, e.nivel, e.estado,
                    e.votos_real, e.votos_falso, e.simulado, e.tramo_id,
                    ST_Y(e.ubicacion::geometry) as latitud, ST_X(e.ubicacion::geometry) as longitud,
+                   ST_AsText(e.trazado::geometry) as trazado,
                    t.codigo, t.nombre, t.color, t.vigencia_minutos, t.reportable
             from evento_vial e join tipo_evento t on t.codigo = e.tipo_codigo
             """;
@@ -92,8 +94,9 @@ public class PgEventoRepository implements EventoRepository {
         List<Long> id = listar("guardar el evento", """
                 insert into evento_vial (tipo_codigo, ubicacion, ocurrio_en, registrado_en, actualizado_en,
                                          reportante_id, origen, nivel, estado, votos_real, votos_falso, simulado,
-                                         tramo_id)
-                values (?, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                         tramo_id, trazado)
+                values (?, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        ST_GeomFromText(?, 4326)::geography)
                 returning id
                 """,
                 sentencia -> {
@@ -111,6 +114,7 @@ public class PgEventoRepository implements EventoRepository {
                     sentencia.setInt(12, evento.getVotosFalso());
                     sentencia.setBoolean(13, evento.isSimulado());
                     sentencia.setString(14, evento.getTramoId());
+                    sentencia.setString(15, wkt(evento.getTrazado()));
                 },
                 fila -> fila.getLong("id"));
         if (id.isEmpty()) {
@@ -283,6 +287,33 @@ public class PgEventoRepository implements EventoRepository {
                 leerInstante(fila, "registrado_en"), leerLongONulo(fila, "reportante_id"),
                 OrigenEvento.valueOf(fila.getString("origen")), fila.getString("nivel"),
                 EstadoEvento.valueOf(fila.getString("estado")), fila.getInt("votos_real"), fila.getInt("votos_falso"),
-                fila.getBoolean("simulado"), fila.getString("tramo_id"));
+                fila.getBoolean("simulado"), fila.getString("tramo_id"), trazado(fila.getString("trazado")));
+    }
+
+    /** El trazado como {@code LINESTRING(lon lat, ...)}; sin trazado (o con menos de dos puntos), {@code null}. */
+    static String wkt(List<Ubicacion> trazado) {
+        if (trazado.size() < 2) {
+            return null;
+        }
+        StringBuilder texto = new StringBuilder("LINESTRING(");
+        for (int i = 0; i < trazado.size(); i++) {
+            Ubicacion p = trazado.get(i);
+            texto.append(i == 0 ? "" : ",").append(p.longitud().toPlainString()).append(' ')
+                    .append(p.latitud().toPlainString());
+        }
+        return texto.append(')').toString();
+    }
+
+    /** Lee el {@code LINESTRING(lon lat, ...)} que devuelve {@code ST_AsText}. */
+    static List<Ubicacion> trazado(String wkt) {
+        if (wkt == null || !wkt.startsWith("LINESTRING(") || !wkt.endsWith(")")) {
+            return List.of();
+        }
+        List<Ubicacion> puntos = new ArrayList<>();
+        for (String par : wkt.substring("LINESTRING(".length(), wkt.length() - 1).split(",")) {
+            String[] lonLat = par.trim().split("\\s+");
+            puntos.add(new Ubicacion(new BigDecimal(lonLat[1]), new BigDecimal(lonLat[0])));
+        }
+        return List.copyOf(puntos);
     }
 }

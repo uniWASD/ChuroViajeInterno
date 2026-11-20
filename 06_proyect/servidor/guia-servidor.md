@@ -317,6 +317,7 @@ SERVICE_CREDENTIAL=$(openssl rand -hex 32)
 MOTOR_HABILITADO=true
 MOTOR_PATH=/opt/churoviaje/actual/motor_nucleo
 RED_VIAL_PATH=/opt/churoviaje/datos/red_vial_tarija.json
+LUGARES_PATH=/opt/churoviaje/datos/lugares_tarija.json
 EOF
 unset GCID DBPASS
 ```
@@ -324,6 +325,7 @@ unset GCID DBPASS
 - Si se cambia la contraseña de `churoviaje_app` (`sudo -u postgres psql -c "\password churoviaje_app"`), hay que cambiarla también aquí. Conviene que no tenga comillas ni barras invertidas, porque systemd las interpreta.
 - `SERVICE_CREDENTIAL` es el mismo valor que el servicio de WhatsApp usa como `SERVICE_TOKEN` (D-13). Se copia desde este archivo cuando se despliegue ese servicio (T-100).
 - Para cambiar un valor: `sudo nano /etc/churoviaje/backend.env` y `sudo systemctl restart churoviaje-backend`.
+- `LUGARES_PATH` es el JSON de la búsqueda de destinos ([D-47](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Se genera con `preparar_lugares.py`, del mismo extracto que la red vial, y se deja en `/opt/churoviaje/datos` con dueño `churoviaje`. Al reiniciar, el backend lo carga solo si cambió la fecha del extracto.
 
 **Servicio.** El archivo está en [systemd/churoviaje-backend.service](systemd/churoviaje-backend.service). Arranca con la máquina, se reinicia a los 5 segundos si el backend se cae, y está endurecido: solo lee `/opt/churoviaje`, escribe en su `/tmp` privado y no puede ganar privilegios.
 

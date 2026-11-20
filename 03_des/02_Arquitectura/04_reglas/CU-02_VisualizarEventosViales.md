@@ -24,6 +24,7 @@ Cubre HU-03, HU-04 y HU-11, y los requisitos RF-03, RF-04, RF-12, RNF-01, RNF-09
 | RN-02.14 | Al llegar a 3 votos «real», el evento pasa a Confirmado y se muestra con su marca. Un evento confirmado ya no se retira por votos: solo vence. | EventoVial | CU-02 ext. 5a, HU-11 c.4, [P-11](../08_decisiones_parametros.md) |
 | RN-02.15 | Un evento retirado o vencido deja de pesar en el cálculo de rutas desde ese momento. | EventoVial, Tramo | [D-14](../08_decisiones_parametros.md) |
 | RN-02.16 | Un voto de un usuario fantasma queda marcado como simulado. | Voto | Propuesta, por analogía con CU-07 sección 8; RNF-12 |
+| RN-02.17 | La lista de la pestaña Eventos muestra solo los eventos de conductores; la congestión del tráfico se ve en el mapa. Cada evento de la lista lleva una marca verde si está confirmado y gris si todavía no. Al tocar un evento en la lista o en el mapa, la cámara va hasta él y se abre su detalle con los botones «Real» y «Falso» y, junto a la marca, cuántos votaron cada cosa: el número de «real» en verde y el de «falso» en rojo (por ejemplo 3/2). Nunca se muestra quién votó. | EventoVial, Voto | Issue #172, [D-46](../08_decisiones_parametros.md), RNF-10 |
 
 ## Recorrido por Vista, Controlador y Modelo
 

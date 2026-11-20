@@ -61,6 +61,23 @@ Invoke-WebRequest 'https://download.geofabrik.de/south-america/bolivia-latest.os
 
 Si el extracto no trae fecha, agregue a la preparación `--fecha-extracto AAAA-MM-DD` **con la fecha real del extracto**, no la fecha de ejecución. El script valida un archivo temporal antes de reemplazar la salida: ante un error, conserva el archivo anterior.
 
+## Lugares para la búsqueda (D-47, #172)
+
+`preparar_lugares.py` toma el mismo extracto y la misma cobertura y deja los destinos que se pueden buscar en la app: una entrada por calle con nombre (los tramos de una calle que quedan a menos de 300 m forman una sola) y los lugares conocidos por categoría (plazas, parques, salud, educación, mercados, instituciones, transporte, turismo, hospedaje, bancos, comida, deporte, templos y comercios). Las estaciones de servicio de OSM se descartan: los surtidores vienen del catálogo del backend. El filtro por nombre corre dentro de pyosmium, así que toda Bolivia se lee en menos de un minuto.
+
+```bash
+python 04_imp/motor_cpp/preparacion/preparar_lugares.py \
+  --osm "$HOME/ChuroViajeDatos/bolivia-latest.osm.pbf" \
+  --cobertura 04_imp/datos/mancha_urbana_tarija.geojson \
+  --salida "$HOME/ChuroViajeDatos/lugares_tarija.json"
+```
+
+```powershell
+& $python .\04_imp\motor_cpp\preparacion\preparar_lugares.py --osm $osm --cobertura .\04_imp\datos\mancha_urbana_tarija.geojson --salida (Join-Path $datos 'lugares_tarija.json')
+```
+
+Con el extracto del 19/11/2026 salen 2229 lugares (1140 calles), unos 270 KB. El JSON va fuera del repositorio y el backend lo lee de `LUGARES_PATH` al arrancar; solo lo vuelve a cargar si cambió `fecha_extracto`. Sus pruebas están en `tests/test_preparar_lugares.py` (CP-185 y CP-186).
+
 ## Clasificación `highway` → `tipo_via`
 
 | Tipo exportado | Etiquetas OSM | Banda de velocidad de referencia del diseño (no exportada) |

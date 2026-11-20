@@ -19,6 +19,8 @@ class MapController extends ChangeNotifier {
   bool _pidiendoPermiso = false;
 
   Coordenada? _puntoSeleccionado;
+  String? _nombrePunto;
+  Coordenada? _foco;
   String? _errorMapa;
   int _intentoMapa = 0;
   bool _disposed = false;
@@ -35,6 +37,12 @@ class MapController extends ChangeNotifier {
   bool get siguiendoUbicacion => _suscripcion != null;
 
   Coordenada? get puntoSeleccionado => _puntoSeleccionado;
+
+  /// El nombre del punto si vino de la búsqueda (D-47); null si el conductor lo tocó en el mapa.
+  String? get nombrePunto => _nombrePunto;
+
+  /// Adónde debe ir la cámara: el lugar elegido en la búsqueda. Tocar el mapa no mueve la cámara.
+  Coordenada? get foco => _foco;
 
   /// Mensaje para el conductor si el mapa base no cargó (RN-03.18).
   String? get errorMapa => _errorMapa;
@@ -89,12 +97,25 @@ class MapController extends ChangeNotifier {
   /// El conductor tocó un punto del mapa (para el ajuste del reporte o para elegir un destino).
   void seleccionarPunto(Coordenada punto) {
     _puntoSeleccionado = punto;
+    _nombrePunto = null;
+    _foco = null;
+    notifyListeners();
+  }
+
+  /// El conductor eligió un resultado de la búsqueda (D-47): queda marcado con su nombre y la cámara va hasta él.
+  /// Desde ahí puede pedir «Cómo llegar», igual que con un punto tocado.
+  void elegirLugar(Coordenada punto, String nombre) {
+    _puntoSeleccionado = punto;
+    _nombrePunto = nombre;
+    _foco = punto;
     notifyListeners();
   }
 
   void limpiarPunto() {
     if (_puntoSeleccionado == null) return;
     _puntoSeleccionado = null;
+    _nombrePunto = null;
+    _foco = null;
     notifyListeners();
   }
 

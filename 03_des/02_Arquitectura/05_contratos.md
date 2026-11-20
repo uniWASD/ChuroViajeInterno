@@ -172,6 +172,8 @@ La primera consulta va sin parámetros y trae todos los eventos vigentes. Las si
 - Con marca, `eventos` trae los nuevos y los que cambiaron (por ejemplo, los que se confirmaron) y `quitados` los identificadores de los que dejaron de mostrarse por vencidos o retirados. La app reemplaza los que ya tenía con el mismo `id` y borra los quitados ([RN-02.6](04_reglas/CU-02_VisualizarEventosViales.md)).
 - La vigencia se calcula en cada consulta: un evento que venció hace segundos ya llega entre los quitados, aunque la tarea periódica todavía no lo haya marcado ([RN-02.4](04_reglas/CU-02_VisualizarEventosViales.md)).
 - La marca queda 2 segundos antes de la consulta, para no perder un evento que se estaba guardando en ese momento; por eso algún cambio puede llegar dos veces. Una marca que no es una fecha responde 400 `PETICION_INVALIDA`.
+- Un evento de conductores trae `votosReal` y `votosFalso`: cuántos conductores votaron cada cosa, sin decir quiénes ([D-46](08_decisiones_parametros.md), [RN-02.17](04_reglas/CU-02_VisualizarEventosViales.md)). La congestión de la telemetría no los trae porque no se vota.
+- Una congestión de la telemetría trae además `nivel` y, si se detectó desde la V9, `trazado`: los puntos del tramo, en el sentido del tramo, con el mismo formato que el trazado de `POST /rutas` ([RN-04.25](04_reglas/CU-04_RecalcularRuta.md)). La app la dibuja como una línea; sin `trazado`, como un punto. Por ejemplo: `{"id":171,"tipo":"CONGESTION","ubicacion":{"latitud":-21.54,"longitud":-64.7354},…,"origen":"TELEMETRIA","nivel":"MUY_CONGESTIONADO","trazado":[{"latitud":-21.54,"longitud":-64.74},{"latitud":-21.54,"longitud":-64.73}]}`.
 
 ### Telemetría (`POST /telemetria`)
 
@@ -191,7 +193,7 @@ Responde 202 sin esperar al motor:
 
 - Un grupo trae de 1 a 100 lecturas, cada una con `ubicacion`, `precisionM` (en metros, no negativa) y `momento`. Si falta algo, 400 `PETICION_INVALIDA`. Pide JWT de un conductor que sigue existiendo; si no, 401 ([RN-04.4](04_reglas/CU-04_RecalcularRuta.md)).
 - El backend no guarda las lecturas ([RN-04.12](04_reglas/CU-04_RecalcularRuta.md)). Se las pasa al motor con `analizar_telemetria` en un hilo aparte, con un identificador de recorrido en lugar del conductor: un HMAC del conductor con una clave que vive solo en memoria y cambia cada día, así el motor reconoce el mismo recorrido aunque se renueve el JWT, pero no sabe de quién es. Si el motor no está, ese grupo se pierde y la app no se entera: la telemetría no se repite.
-- Cuando el motor informa una congestión, el backend crea un evento Congestión con origen Telemetría, el nivel y el tramo, sin reportante ([RN-04.10](04_reglas/CU-04_RecalcularRuta.md)). Si ese tramo ya tiene una congestión vigente, no crea otra: mueve su momento y su nivel ([RN-04.11](04_reglas/CU-04_RecalcularRuta.md)). En los dos casos se lo avisa al motor con `actualizar_trafico` y la congestión aparece en `GET /eventos` como cualquier evento.
+- Cuando el motor informa una congestión, el backend crea un evento Congestión con origen Telemetría, el nivel, el tramo y su trazado, sin reportante ([RN-04.10](04_reglas/CU-04_RecalcularRuta.md)). Si ese tramo ya tiene una congestión vigente, no crea otra: mueve su momento y su nivel ([RN-04.11](04_reglas/CU-04_RecalcularRuta.md)). En los dos casos se lo avisa al motor con `actualizar_trafico` y la congestión aparece en `GET /eventos` como cualquier evento.
 
 ### Votos (`POST /eventos/{id}/votos`)
 
@@ -199,10 +201,10 @@ Responde 202 sin esperar al motor:
 {"valor":"real"}
 ```
 
-Responde 201 con el estado del evento después del voto, sin datos de quién votó:
+Responde 201 con el estado del evento después del voto y cuántos votos lleva ([D-46](08_decisiones_parametros.md)), sin datos de quién votó:
 
 ```json
-{"eventoId":153,"estado":"CONFIRMADO","confirmado":true}
+{"eventoId":153,"estado":"CONFIRMADO","confirmado":true,"votosReal":3,"votosFalso":1}
 ```
 
 - `valor` es `real` o `falso`, sin importar mayúsculas. Con 3 votos `falso`, un evento Activo pasa a Retirado; con 3 `real`, pasa a Confirmado y ya no se retira por votos ([RN-02.13](04_reglas/CU-02_VisualizarEventosViales.md), [RN-02.14](04_reglas/CU-02_VisualizarEventosViales.md)).
@@ -229,6 +231,21 @@ La app manda su ubicación actual: `GET /surtidores?latitud=-21.5355&longitud=-6
 - `fila` sale solo si se conoce. `litros`, `estadoAnh` y `consultadoEn` salen solo en los datos de ANH ([RN-05.4](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Un dato de WhatsApp sin tipo sale como `DESCONOCIDO` ([RN-05.6](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Nunca sale quién aportó el dato ([RN-05.7](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
 - Pide JWT de conductor. Sin `latitud` o `longitud`, o con valores fuera de rango, responde 400 `PETICION_INVALIDA`.
 
+### Búsqueda de destinos (`GET /lugares`)
+
+La app manda lo que escribió el conductor y, si la tiene, su posición: `GET /lugares?texto=san%20juan&latitud=-21.5355&longitud=-64.7296` ([D-47](08_decisiones_parametros.md)). Responde hasta 10 lugares ([RN-03.19, RN-03.20](04_reglas/CU-03_CalcularRutaOptima.md)):
+
+```json
+{"lugares":[
+  {"nombre":"Capilla San Juan de Dios","categoria":"RELIGION","ubicacion":{"latitud":-21.538,"longitud":-64.733},"distanciaM":446},
+  {"nombre":"Calle San Juan","categoria":"CALLE","ubicacion":{"latitud":-21.544,"longitud":-64.728},"distanciaM":1041}]}
+```
+
+- `categoria` es una de `CALLE`, `PLAZA`, `PARQUE`, `SALUD`, `EDUCACION`, `MERCADO`, `GOBIERNO`, `TRANSPORTE`, `TURISMO`, `HOTEL`, `BANCO`, `COMIDA`, `DEPORTE`, `RELIGION`, `COMERCIO` o `SURTIDOR`. Los surtidores salen del catálogo (V2); lo demás, de la tabla `lugar` (V10).
+- Una calle es un punto sobre ella, cerca de su centro. Dos calles con el mismo nombre en lugares distintos de la ciudad salen por separado.
+- `distanciaM` sale solo si vino la posición. Si no encuentra nada, responde 200 con `lugares` vacía.
+- Pide JWT de conductor. Con menos de 2 letras o números, con más de 100 caracteres, sin `texto`, con solo una de `latitud` y `longitud` o con valores fuera de rango, responde 400 `PETICION_INVALIDA`.
+
 ## Backend con el motor core
 
 El backend nunca habla directo con el programa en C++. Llama a métodos del wrapper `MotorDeRutas`, que es Java y vive dentro del backend, y el wrapper traduce cada llamada a un mensaje para el núcleo C++ ([D-15](08_decisiones_parametros.md)). Los nombres de métodos y mensajes son una propuesta, igual que las rutas de la API.
@@ -240,7 +257,7 @@ El backend nunca habla directo con el programa en C++. Llama a métodos del wrap
 | Calcular ruta | `calcularRuta` | `calcular_ruta` | Origen, destino y paradas | Ruta con tramos, distancia y tiempo; «sin ruta» o «punto inválido» | [RN-03.4](04_reglas/CU-03_CalcularRutaOptima.md) a [RN-03.14](04_reglas/CU-03_CalcularRutaOptima.md) |
 | Revisar ruta | `revisarRuta` | `revisar_ruta` | Posición, tramos que faltan, destino, paradas que faltan y eventos ya avisados | Sin cambios; sin alternativa; o ruta alternativa con su costo. Las dos últimas traen el evento que las provocó. Si los tramos ya no existen, «ruta desactualizada» | [RN-04.14](04_reglas/CU-04_RecalcularRuta.md) a [RN-04.16](04_reglas/CU-04_RecalcularRuta.md) |
 | Actualizar tráfico | `actualizarTrafico` | `actualizar_trafico` | Evento que nace, cambia su vencimiento, se retira o vence: identificador, tipo, nivel si es congestión, ubicación y vencimiento | Tramos afectados; los dos sentidos de la calle salvo en la congestión ([D-18](08_decisiones_parametros.md)) | [RN-03.9](04_reglas/CU-03_CalcularRutaOptima.md), [D-14](08_decisiones_parametros.md) |
-| Analizar telemetría | `analizarTelemetria` | `analizar_telemetria` | Lecturas con un identificador temporal de recorrido y la marca de simulado, sin datos del conductor | Congestiones detectadas: tramo, punto, nivel y si salen de recorridos simulados | [RN-04.5](04_reglas/CU-04_RecalcularRuta.md) a [RN-04.10](04_reglas/CU-04_RecalcularRuta.md) |
+| Analizar telemetría | `analizarTelemetria` | `analizar_telemetria` | Lecturas con un identificador temporal de recorrido y la marca de simulado, sin datos del conductor | Congestiones detectadas: tramo, punto, nivel, si salen de recorridos simulados y el trazado del tramo | [RN-04.5](04_reglas/CU-04_RecalcularRuta.md) a [RN-04.10](04_reglas/CU-04_RecalcularRuta.md), [RN-04.22](04_reglas/CU-04_RecalcularRuta.md) a [RN-04.25](04_reglas/CU-04_RecalcularRuta.md) |
 | Consultar estado | `consultarEstado` | `consultar_estado` | Nada | Si la red vial está cargada, la fecha del extracto y cuántos nodos y tramos tiene | [D-08](08_decisiones_parametros.md) |
 
 ### Cómo viajan los mensajes por el pipe
@@ -292,14 +309,15 @@ Un aviso de tráfico y su respuesta:
 
 ```json
 {"id":32,"operacion":"analizar_telemetria","recorridos":[{"recorrido":"3f9a1c","simulado":false,"lecturas":[{"posicion":[-21.5400,-64.7354],"precision_m":8,"momento":"2026-11-14T10:02:03-04:00"}]}]}
-{"id":32,"ok":true,"congestiones":[{"tramo":"osm:7101:2:ida","punto":[-21.5400,-64.7354],"nivel":"MUY_CONGESTIONADO","simulado":false}],"lecturas_validas":1,"lecturas_descartadas":0}
+{"id":32,"ok":true,"congestiones":[{"tramo":"osm:7101:2:ida","punto":[-21.5400,-64.7354],"nivel":"MUY_CONGESTIONADO","simulado":false,"trazado":[[-21.5400,-64.7380],[-21.5400,-64.7340]]}],"lecturas_validas":1,"lecturas_descartadas":0}
 ```
 
 - `recorridos` agrupa las lecturas por `recorrido`, el identificador temporal que arma el backend; nunca viaja nada del conductor ([RN-04.12](04_reglas/CU-04_RecalcularRuta.md)). `simulado` puede faltar y vale `false`.
 - Cada lectura trae `posicion` `[latitud, longitud]`, `precision_m` y `momento` en ISO 8601 con zona horaria. Una lectura mal formada hace que toda la petición responda `PETICION_INVALIDA`; una lectura imprecisa, repetida o imposible no es un error y solo se cuenta en `lecturas_descartadas` ([RN-04.6](04_reglas/CU-04_RecalcularRuta.md)).
-- `congestiones` trae, por cada tramo donde un recorrido lleva 2 minutos seguidos lento, el `tramo`, un `punto`, el `nivel` (`CONGESTIONADO` o `MUY_CONGESTIONADO`) y si salió de recorridos simulados ([RN-04.9](04_reglas/CU-04_RecalcularRuta.md), [RN-04.10](04_reglas/CU-04_RecalcularRuta.md), [RN-04.20](04_reglas/CU-04_RecalcularRuta.md)). Mientras siga lento, el núcleo la vuelve a informar en cada mensaje. La lista vacía es la respuesta normal.
+- `congestiones` trae, por cada tramo donde un recorrido lleva 2 minutos seguidos lento, el `tramo`, un `punto`, el `nivel` (`CONGESTIONADO` o `MUY_CONGESTIONADO`), si salió de recorridos simulados y el `trazado` del tramo, `[[latitud, longitud], …]` en el sentido del tramo ([RN-04.9](04_reglas/CU-04_RecalcularRuta.md), [RN-04.10](04_reglas/CU-04_RecalcularRuta.md), [RN-04.20](04_reglas/CU-04_RecalcularRuta.md), [RN-04.25](04_reglas/CU-04_RecalcularRuta.md)). Son exactamente esos cinco campos: ninguno identifica al recorrido. Mientras siga lento, el núcleo la vuelve a informar en cada mensaje. La lista vacía es la respuesta normal.
+- Solo cuenta un recorrido que venía manejando y que avanzó durante la racha ([RN-04.22](04_reglas/CU-04_RecalcularRuta.md), [RN-04.23](04_reglas/CU-04_RecalcularRuta.md)). La racha sigue en la cuadra siguiente de la misma calle; al cumplir los 2 minutos se informan todas sus cuadras: la de ahora con el punto de la última lectura y las anteriores, una sola vez, con el punto en la mitad de su trazado ([RN-04.24](04_reglas/CU-04_RecalcularRuta.md)).
 - El backend crea o extiende con eso el `EventoVial` de congestión y lo avisa con `actualizar_trafico`, con el mismo `tramo` y el `nivel`, para que afecte solo ese sentido ([D-18](08_decisiones_parametros.md)).
-- El núcleo guarda de cada recorrido solo la última lectura y la racha lenta en curso, y lo olvida a los 5 minutos sin lecturas nuevas ([P-25](08_decisiones_parametros.md)).
+- El núcleo guarda de cada recorrido solo la última lectura, desde cuándo maneja y la racha lenta en curso, y lo olvida a los 5 minutos sin lecturas nuevas ([P-25](08_decisiones_parametros.md)).
 
 ### Arranque, demoras y caídas
 

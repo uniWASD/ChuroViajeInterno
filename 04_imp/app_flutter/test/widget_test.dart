@@ -50,7 +50,12 @@ void main() {
   testWidgets('Muestra las tres pestañas principales', (tester) async {
     await tester.pumpWidget(createTestApp());
 
-    expect(find.text('ChuroViaje'), findsOneWidget);
+    // D-47: arriba va la barra de búsqueda, sin el encabezado «ChuroViaje» y sin micrófono.
+    expect(find.text('ChuroViaje'), findsNothing);
+    expect(find.byKey(const Key('barra-busqueda')), findsOneWidget);
+    expect(find.byIcon(Icons.mic), findsNothing);
+    expect(find.byIcon(Icons.mic_none), findsNothing);
+    expect(find.byKey(const Key('menu-cuenta')), findsOneWidget);
     expect(find.text('Mapa'), findsWidgets);
     expect(find.text('Eventos'), findsWidgets);
     expect(find.text('Surtidores'), findsWidgets);

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../controllers/reporte_controller.dart';
 import '../map/mapa_base.dart';
+import '../tema/tema.dart';
 
 /// Vista Reportar evento (CU-01). Desde el mapa son tres toques: «Reportar evento», el tipo y «Confirmar»
 /// (RNF-06). «Hace 5 minutos» viene marcado.
@@ -78,18 +79,14 @@ class _ReportarEventoScreenState extends State<ReportarEventoScreen> {
             if (controller.tipos.isEmpty)
               const Text('Cargando los tipos de evento…')
             else
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 8,
-                crossAxisSpacing: 8,
-                childAspectRatio: 2.6,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   for (final tipo in controller.tipos)
                     _BotonTipo(
                       nombre: tipo.nombre,
-                      color: tipo.colorFlutter,
+                      codigo: tipo.codigo,
                       elegido: controller.tipo == tipo.codigo,
                       alTocar: () => controller.elegirTipo(tipo.codigo),
                     ),
@@ -127,29 +124,27 @@ class _ReportarEventoScreenState extends State<ReportarEventoScreen> {
   }
 }
 
+/// #172: el tipo de evento como chip del diseño, con su ícono; el elegido, en verde.
 class _BotonTipo extends StatelessWidget {
   final String nombre;
-  final Color color;
+  final String codigo;
   final bool elegido;
   final VoidCallback alTocar;
 
   const _BotonTipo({
     required this.nombre,
-    required this.color,
+    required this.codigo,
     required this.elegido,
     required this.alTocar,
   });
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      onPressed: alTocar,
-      style: OutlinedButton.styleFrom(
-        backgroundColor: elegido ? color.withValues(alpha: 0.18) : null,
-        side: BorderSide(color: color, width: elegido ? 3 : 1),
-      ),
-      icon: Icon(Icons.circle, color: color, size: 16),
+    return ChoiceChip(
+      avatar: Icon(iconoDeEvento(codigo), color: elegido ? Colors.white : ColoresChuro.textoChip),
       label: Text(nombre),
+      selected: elegido,
+      onSelected: (_) => alTocar(),
     );
   }
 }

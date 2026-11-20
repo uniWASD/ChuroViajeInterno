@@ -127,6 +127,13 @@ class NavegacionController extends ChangeNotifier {
   /// Metros recorridos sobre el trazado.
   double get recorridoM => _recorridoM;
 
+  /// Lo que falta de la ruta, para dibujarla sin el tramo ya recorrido (#172). Al recalcular o aceptar una
+  /// alternativa sale de la ruta nueva, desde donde está el conductor sobre ella.
+  List<Coordenada> get trazadoQueFalta {
+    final t = _trazado;
+    return t == null ? const [] : recortarRecorrido(t, _recorridoM);
+  }
+
   /// Las paradas que el conductor todavía no pasó, en orden (para revisar la ruta, D-12).
   List<Coordenada> get paradasQueFaltan => List.unmodifiable(_paradas);
 

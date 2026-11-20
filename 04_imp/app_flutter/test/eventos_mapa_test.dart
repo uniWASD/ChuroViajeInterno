@@ -13,6 +13,7 @@ import 'package:app_flutter/controllers/eventos_controller.dart';
 import 'package:app_flutter/services/api/api_client.dart';
 import 'package:app_flutter/services/catalogos/servicio_catalogos.dart';
 import 'package:app_flutter/views/main/main_screen.dart';
+import 'package:app_flutter/views/map/mapa_base.dart';
 
 import 'dobles/dobles_mapa.dart';
 import 'dobles/dobles_sesion.dart';
@@ -21,6 +22,7 @@ import 'sesion_controller_test.dart' show catalogosJson;
 void main() {
   late MapaFalso mapa;
   late bool backendCaido;
+  late bool conCongestiones;
 
   Widget app() {
     mapa = MapaFalso();
@@ -35,6 +37,16 @@ void main() {
            'momentoOcurrencia': hace5, 'estado': 'ACTIVO', 'confirmado': false, 'origen': 'CONDUCTOR'},
           {'id': 2, 'tipo': 'ACCIDENTE', 'ubicacion': {'latitud': -21.54, 'longitud': -64.72},
            'momentoOcurrencia': hace5, 'estado': 'CONFIRMADO', 'confirmado': true, 'origen': 'CONDUCTOR'},
+          if (conCongestiones) ...[
+            {'id': 3, 'tipo': 'CONGESTION', 'ubicacion': {'latitud': -21.54, 'longitud': -64.735},
+             'momentoOcurrencia': hace5, 'estado': 'ACTIVO', 'confirmado': false, 'origen': 'TELEMETRIA',
+             'nivel': 'MUY_CONGESTIONADO',
+             'trazado': [{'latitud': -21.54, 'longitud': -64.74}, {'latitud': -21.54, 'longitud': -64.73}]},
+            // Guardada antes de V9: sin trazado.
+            {'id': 4, 'tipo': 'CONGESTION', 'ubicacion': {'latitud': -21.53, 'longitud': -64.72},
+             'momentoOcurrencia': hace5, 'estado': 'ACTIVO', 'confirmado': false, 'origen': 'TELEMETRIA',
+             'nivel': 'CONGESTIONADO'},
+          ],
         ],
       })), 200);
     }));
@@ -61,7 +73,10 @@ void main() {
     );
   }
 
-  setUp(() => backendCaido = false);
+  setUp(() {
+    backendCaido = false;
+    conCongestiones = false;
+  });
 
   testWidgets('RN-02.7 y RN-02.14: cada evento se dibuja con el color de su tipo y el confirmado lleva su marca', (tester) async {
     await tester.pumpWidget(app());
@@ -100,5 +115,25 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text(EventosController.mensajeSinActualizar), findsOneWidget);
     expect(mapa.ultimo!.eventos, hasLength(2));
+  });
+
+  testWidgets('CP-177: la congestión con trazado se dibuja como línea con el color de su nivel; sin trazado, como punto', (tester) async {
+    conCongestiones = true;
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+
+    final marcas = {for (final m in mapa.ultimo!.eventos) m.id: m};
+    expect(marcas[3]!.esLinea, isTrue);
+    expect(marcas[3]!.trazado, hasLength(2));
+    expect(colorDeNivel(marcas[3]!.nivel), colorMuyCongestionado, reason: 'muy congestionado: rojo');
+    expect(colorDeNivel('CONGESTIONADO'), colorCongestionado, reason: 'congestionado: naranja');
+    expect(marcas[4]!.esLinea, isFalse, reason: 'una congestión vieja, sin trazado, sigue siendo un punto');
+    expect(marcas[1]!.esLinea, isFalse, reason: 'los eventos de conductores siguen siendo puntos');
+
+    // Al tocar la línea se abre la ficha, igual que con un punto.
+    mapa.ultimo!.alTocarEvento!(3);
+    await tester.pump();
+    expect(find.byKey(const Key('ficha-evento')), findsOneWidget);
+    expect(find.text('Congestión'), findsOneWidget);
   });
 }

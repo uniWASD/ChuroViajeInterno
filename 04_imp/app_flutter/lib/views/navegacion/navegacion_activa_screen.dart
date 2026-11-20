@@ -68,17 +68,10 @@ class NavegacionActivaScreen extends StatelessWidget {
                       for (final p in nav.paradasQueFaltan) MarcaMapa(p, TipoMarca.parada),
                       MarcaMapa(nav.destino, TipoMarca.destino),
                     ],
-                    trazado: nav.ruta?.trazado ?? const [],
+                    // #172: lo ya recorrido desaparece, como en Google Maps.
+                    trazado: nav.trazadoQueFalta,
                     // RN-04.18: el evento queda a la vista, se acepte o se rechace la alternativa.
-                    eventos: [
-                      for (final e in eventos.eventos)
-                        MarcaEvento(
-                          id: e.id,
-                          coordenada: e.ubicacion,
-                          color: eventos.catalogos?.tipo(e.tipo)?.colorFlutter ?? Colors.grey,
-                          confirmado: e.confirmado,
-                        ),
-                    ],
+                    eventos: marcasDeEventos(eventos),
                     alTocar: (_) {},
                     alFallar: mapa.informarErrorMapa,
                   ),

@@ -76,7 +76,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   DatosMapa(
                     mostrarUbicacion: controller.siguiendoUbicacion,
                     puntoSeleccionado: controller.puntoSeleccionado,
-                    eventos: _marcas(eventos),
+                    eventos: marcasDeEventos(eventos),
                     alTocarEvento: eventos.seleccionar,
                     alTocar: controller.seleccionarPunto,
                     alFallar: controller.informarErrorMapa,
@@ -172,8 +172,9 @@ class _ReportesPendientes extends StatelessWidget {
   }
 }
 
-/// Los eventos vigentes con el color de su tipo, tomado de los catálogos guardados (RN-02.7).
-List<MarcaEvento> _marcas(EventosController eventos) {
+/// Los eventos vigentes con el color de su tipo, tomado de los catálogos guardados (RN-02.7). Las congestiones con
+/// trazado llevan su nivel y su trazado, para dibujarse como línea (RN-04.25).
+List<MarcaEvento> marcasDeEventos(EventosController eventos) {
   final catalogos = eventos.catalogos;
   return [
     for (final e in eventos.eventos)
@@ -182,6 +183,9 @@ List<MarcaEvento> _marcas(EventosController eventos) {
         coordenada: e.ubicacion,
         color: catalogos?.tipo(e.tipo)?.colorFlutter ?? Colors.grey,
         confirmado: e.confirmado,
+        tipo: e.tipo,
+        nivel: e.nivel,
+        trazado: e.trazado,
       ),
   ];
 }

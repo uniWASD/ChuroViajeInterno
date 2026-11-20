@@ -14,6 +14,10 @@ class EventoVial {
   /// Solo la congestión trae nivel.
   final String? nivel;
 
+  /// RN-04.25: el trazado del tramo de una congestión de la telemetría, para dibujarla a lo largo de la calle. Los
+  /// demás eventos, y las congestiones guardadas antes de V9, no lo traen: se dibujan como un punto.
+  final List<Coordenada> trazado;
+
   const EventoVial({
     required this.id,
     required this.tipo,
@@ -23,6 +27,7 @@ class EventoVial {
     required this.confirmado,
     required this.origen,
     this.nivel,
+    this.trazado = const [],
   });
 
   factory EventoVial.fromJson(Map<String, dynamic> json) {
@@ -39,7 +44,18 @@ class EventoVial {
       confirmado: json['confirmado'] as bool? ?? false,
       origen: json['origen'] as String? ?? 'CONDUCTOR',
       nivel: json['nivel'] as String?,
+      trazado: _leerTrazado(json['trazado']),
     );
+  }
+
+  static List<Coordenada> _leerTrazado(Object? valor) {
+    if (valor is! List || valor.length < 2) return const [];
+    final puntos = <Coordenada>[];
+    for (final p in valor) {
+      if (p is! Map || p['latitud'] is! num || p['longitud'] is! num) return const [];
+      puntos.add(Coordenada((p['latitud'] as num).toDouble(), (p['longitud'] as num).toDouble()));
+    }
+    return List.unmodifiable(puntos);
   }
 
   /// D-20: la congestión que detecta el sistema con la telemetría no se vota.
@@ -54,6 +70,7 @@ class EventoVial {
     confirmado: confirmado,
     origen: origen,
     nivel: nivel,
+    trazado: trazado,
   );
 
   /// Texto de «hace cuánto ocurrió» para la ficha del evento (RN-02.7).

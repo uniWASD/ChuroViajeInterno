@@ -25,7 +25,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
   CircleAnnotationManager? _marcas;
   CircleAnnotationManager? _eventos;
   PolylineAnnotationManager? _lineas;
+  PolylineAnnotationManager? _congestiones;
+  PolylineAnnotation? _ruta;
   Cancelable? _toquesEventos;
+  Cancelable? _toquesCongestiones;
 
   @override
   void initState() {
@@ -60,6 +63,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
   @override
   void dispose() {
     _toquesEventos?.cancel();
+    _toquesCongestiones?.cancel();
     super.dispose();
   }
 
@@ -76,29 +80,54 @@ class _MapaMapboxState extends State<MapaMapbox> {
         widget.datos.alTocar(Coordenada(c.lat.toDouble(), c.lng.toDouble()));
       }),
     );
-    // Primero la línea, para que las marcas queden encima.
+    // Primero la ruta, después las congestiones sobre la calle y al final los puntos, para que queden encima.
     _lineas = await mapa.annotations.createPolylineAnnotationManager();
+    _congestiones = await mapa.annotations.createPolylineAnnotationManager();
     _eventos = await mapa.annotations.createCircleAnnotationManager();
     _marcas = await mapa.annotations.createCircleAnnotationManager();
-    _toquesEventos = _eventos!.tapEvents(onTap: (anotacion) {
-      final id = anotacion.customData?['evento'];
-      if (id is num) widget.datos.alTocarEvento?.call(id.toInt());
-    });
+    _toquesEventos = _eventos!.tapEvents(onTap: (anotacion) => _tocarEvento(anotacion.customData));
+    // Al tocar la línea de una congestión se abre su ficha, igual que con un punto.
+    _toquesCongestiones = _congestiones!.tapEvents(onTap: (anotacion) => _tocarEvento(anotacion.customData));
     await _actualizarUbicacion();
     await _dibujarTrazado();
     await _dibujarEventos();
     await _marcarPunto();
   }
 
-  /// RN-02.7 y RN-02.14: cada evento con el color de su tipo; los confirmados, con un borde grueso oscuro.
+  void _tocarEvento(Map<String, Object?>? datos) {
+    final id = datos?['evento'];
+    if (id is num) widget.datos.alTocarEvento?.call(id.toInt());
+  }
+
+  /// RN-02.7 y RN-02.14: cada evento con el color de su tipo; los confirmados, con un borde grueso oscuro. Una
+  /// congestión con trazado se dibuja a lo largo de su calle (RN-04.25, D-45).
   Future<void> _dibujarEventos() async {
     final capa = _eventos;
-    if (capa == null) return;
+    final lineas = _congestiones;
+    if (capa == null || lineas == null) return;
     await capa.deleteAll();
+    await lineas.deleteAll();
     final eventos = widget.datos.eventos;
-    if (eventos.isEmpty) return;
+    final enLinea = [for (final e in eventos) if (e.esLinea) e];
+    final enPunto = [for (final e in eventos) if (!e.esLinea) e];
+    if (enLinea.isNotEmpty) {
+      await lineas.createMulti([
+        for (final e in enLinea)
+          PolylineAnnotationOptions(
+            geometry: LineString(coordinates: [for (final c in e.trazado) _punto(c).coordinates]),
+            lineColor: colorDeNivel(e.nivel).toARGB32(),
+            lineWidth: 6,
+            // El trazado va en el sentido del tramo: corrida a su derecha, cada sentido de una calle de doble
+            // sentido se ve aparte (D-18), como el tráfico de Google Maps.
+            lineOffset: 4,
+            lineJoin: LineJoin.ROUND,
+            customData: {'evento': e.id},
+          ),
+      ]);
+    }
+    if (enPunto.isEmpty) return;
     await capa.createMulti([
-      for (final e in eventos)
+      for (final e in enPunto)
         CircleAnnotationOptions(
           geometry: _punto(e.coordenada),
           circleRadius: 9,
@@ -151,17 +180,30 @@ class _MapaMapboxState extends State<MapaMapbox> {
     final lineas = _lineas;
     final mapa = _mapa;
     if (lineas == null || mapa == null) return;
-    await lineas.deleteAll();
     final trazado = widget.datos.trazado;
-    if (trazado.length < 2) return;
+    if (trazado.length < 2) {
+      _ruta = null;
+      await lineas.deleteAll();
+      return;
+    }
     final puntos = [for (final c in trazado) _punto(c)];
-    await lineas.create(
+    final linea = LineString(coordinates: [for (final p in puntos) p.coordinates]);
+    final ruta = _ruta;
+    if (ruta != null && _siguiendo) {
+      // #172: en la Navegación activa la línea se acorta a cada posición; se mueve la misma, sin parpadear.
+      ruta.geometry = linea;
+      await lineas.update(ruta);
+      return;
+    }
+    await lineas.deleteAll();
+    _ruta = await lineas.create(
       PolylineAnnotationOptions(
-        geometry: LineString(
-          coordinates: [for (final p in puntos) p.coordinates],
-        ),
-        lineColor: const Color(0xFF1565C0).toARGB32(),
-        lineWidth: 5,
+        geometry: linea,
+        lineColor: colorRuta.toARGB32(),
+        lineBorderColor: colorBordeRuta.toARGB32(),
+        lineBorderWidth: 1.5,
+        lineWidth: 7,
+        lineJoin: LineJoin.ROUND,
       ),
     );
     // En la Navegación activa la cámara sigue al conductor: no se encuadra la ruta.
@@ -175,6 +217,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
     );
     await mapa.flyTo(camara, MapAnimationOptions(duration: 600));
   }
+
+  /// El azul de la ruta y su borde, como en Google Maps.
+  static const Color colorRuta = Color(0xFF1A73E8);
+  static const Color colorBordeRuta = Color(0xFF1557B0);
 
   bool get _siguiendo => widget.datos.seguirUbicacion && widget.datos.mostrarUbicacion;
 

@@ -1,0 +1,23 @@
+﻿CHUROVIAJE - EVIDENCIA TECNICA ISSUE 59
+===================================
+CP-77 - Integracion real
+Hora inicial registrada: 2026-11-19T23:49:11.6166461-04:00
+Hora de persistencia: 2026-11-20T03:50:37.6250650+00:00
+Duracion: 86.01 segundos
+Limite: menos de 360 segundos
+CP-77 tiempo: True
+
+RESULTADO SQL:
+ surtidor  | combustible | disponible | fila  |  origen  |       fecha_dato       |        actualizado_en
+-----------+-------------+------------+-------+----------+------------------------+-------------------------------
+ Las Vegas | GASOLINA    | t          | CORTA | WHATSAPP | 2026-11-20 03:49:14+00 | 2026-11-20 03:50:37.625065+00
+(1 row)
+
+
+CP-75 - Descarte de preguntas
+Evidencia observada: mensajes=2, avisos=0, descartados=2
+La fila de Las Vegas permanecio sin cambios tras la prueba.
+
+CP-76, CP-78 y RN-06.19
+Pruebas automatizadas seleccionadas: 13 aprobadas, 0 fallidas.
+Recuperacion con caida real de Java: pendiente.

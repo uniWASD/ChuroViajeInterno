@@ -157,6 +157,58 @@ class TelemetriaIntegracionTest extends PruebaIntegracionPostgis {
         assertThat(aviso.path("vence").asText()).isEqualTo("2026-11-14T10:30:00-04:00"); // 30 minutos de vigencia
     }
 
+    private static String congestionConTrazado(String tramo, String nivel) {
+        return "{\"tramo\":\"" + tramo + "\",\"punto\":[-21.54,-64.73794],\"nivel\":\"" + nivel
+                + "\",\"simulado\":false,\"trazado\":[[-21.54,-64.74],[-21.54,-64.735],[-21.5401,-64.73]]}";
+    }
+
+    @Test
+    @DisplayName("CP-176: la congestión que llega con trazado se guarda con él y GET /eventos lo devuelve; sin trazado sale como antes")
+    void cp176TrazadoDeLaCongestion() throws Exception {
+        motorDetecta(congestionConTrazado("osm:7101:2:ida", "CONGESTIONADO"), congestion("osm:7200:1:ida", "CONGESTIONADO", false));
+        enviarYEsperar(conductor);
+
+        JsonNode lista = eventos();
+        assertThat(lista).hasSize(2);
+        JsonNode con = null;
+        JsonNode sin = null;
+        for (JsonNode e : lista) {
+            if (e.has("trazado")) {
+                con = e;
+            } else {
+                sin = e;
+            }
+        }
+        assertThat(con).as("la congestión con trazado").isNotNull();
+        assertThat(sin).as("la congestión sin trazado sale sin el campo, como un punto").isNotNull();
+        JsonNode trazado = con.path("trazado");
+        assertThat(trazado).hasSize(3);
+        assertThat(trazado.get(0).path("latitud").asDouble()).isEqualTo(-21.54);
+        assertThat(trazado.get(0).path("longitud").asDouble()).isEqualTo(-64.74);
+        assertThat(trazado.get(2).path("latitud").asDouble()).isEqualTo(-21.5401);
+        assertThat(trazado.get(2).path("longitud").asDouble()).isEqualTo(-64.73);
+        assertThat(jdbc.queryForObject("select ST_NPoints(trazado::geometry) from evento_vial where tramo_id = ?",
+                Integer.class, "osm:7101:2:ida")).isEqualTo(3);
+
+        // RN-04.11: al extenderla, el trazado no cambia aunque el motor no lo mande.
+        reloj.avanzar(Duration.ofMinutes(5));
+        motorDetecta(congestion("osm:7101:2:ida", "MUY_CONGESTIONADO", false));
+        enviarYEsperar(conductor);
+        assertThat(jdbc.queryForObject("select ST_NPoints(trazado::geometry) from evento_vial where tramo_id = ?",
+                Integer.class, "osm:7101:2:ida")).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("Un trazado con un punto inválido no impide registrar la congestión: va sin trazado")
+    void trazadoInvalidoSeIgnora() throws Exception {
+        motorDetecta("{\"tramo\":\"osm:7101:2:ida\",\"punto\":[-21.54,-64.73794],\"nivel\":\"CONGESTIONADO\","
+                + "\"simulado\":false,\"trazado\":[[-21.54,-64.74],[\"x\"]]}");
+        enviarYEsperar(conductor);
+        assertThat(eventos()).hasSize(1);
+        assertThat(eventos().get(0).has("trazado")).isFalse();
+        assertThat(jdbc.queryForObject("select trazado is null from evento_vial", Boolean.class)).isTrue();
+    }
+
     @Test
     @DisplayName("CP-120: una segunda congestión en el mismo tramo no crea otro evento; mueve el momento del existente")
     void cp120SegundaCongestionMueveElMomento() throws Exception {

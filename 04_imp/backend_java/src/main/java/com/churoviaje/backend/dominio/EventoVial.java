@@ -6,6 +6,7 @@ import com.churoviaje.backend.errores.ExcepcionRechazo;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 import org.springframework.http.HttpStatus;
 
@@ -43,10 +44,12 @@ public class EventoVial {
     private final boolean simulado;
     /** Solo en la congestión: el tramo donde la midió el motor, para que afecte solo ese sentido (D-18). */
     private final String tramoId;
+    /** RN-04.25: el trazado del tramo de una congestión de telemetría; vacío en los demás eventos. */
+    private final List<Ubicacion> trazado;
 
     private EventoVial(Long id, TipoEvento tipo, Ubicacion ubicacion, Instant ocurrioEn, Instant registradoEn,
             Long reportanteId, OrigenEvento origen, String nivel, EstadoEvento estado, int votosReal,
-            int votosFalso, boolean simulado, String tramoId) {
+            int votosFalso, boolean simulado, String tramoId, List<Ubicacion> trazado) {
         this.id = id;
         this.tipo = Objects.requireNonNull(tipo, "tipo");
         this.ubicacion = Objects.requireNonNull(ubicacion, "ubicacion");
@@ -60,6 +63,7 @@ public class EventoVial {
         this.votosFalso = votosFalso;
         this.simulado = simulado;
         this.tramoId = tramoId;
+        this.trazado = trazado == null ? List.of() : List.copyOf(trazado);
     }
 
     /**
@@ -84,7 +88,7 @@ public class EventoVial {
             ocurrio = ahora; // RN-01.4: un reloj del telefono adelantado no deja el evento en el futuro
         }
         EventoVial evento = new EventoVial(null, tipo, ubicacion, ocurrio, ahora, reportanteId,
-                OrigenEvento.CONDUCTOR, null, EstadoEvento.ACTIVO, 0, 0, simulado, null);
+                OrigenEvento.CONDUCTOR, null, EstadoEvento.ACTIVO, 0, 0, simulado, null, List.of());
         if (!evento.estaVigente(ahora)) {
             throw new ExcepcionRechazo(HttpStatus.UNPROCESSABLE_ENTITY, "EVENTO_VENCIDO",
                     "Este evento ya no está vigente: pasaron más de " + tipo.vigenciaMinutos()
@@ -100,12 +104,18 @@ public class EventoVial {
      */
     public static EventoVial detectarCongestion(TipoEvento congestion, Ubicacion punto, String tramoId, String nivel,
             boolean simulado, Instant ahora) {
+        return detectarCongestion(congestion, punto, tramoId, List.of(), nivel, simulado, ahora);
+    }
+
+    /** RN-04.25: la congestión nace con el trazado de su tramo, tal como lo informa el motor. */
+    public static EventoVial detectarCongestion(TipoEvento congestion, Ubicacion punto, String tramoId,
+            List<Ubicacion> trazado, String nivel, boolean simulado, Instant ahora) {
         Objects.requireNonNull(tramoId, "tramoId");
         if (!TIPO_CONGESTION.equals(congestion.codigo())) {
             throw new IllegalArgumentException("La telemetría solo registra congestión, no " + congestion.codigo());
         }
         return new EventoVial(null, congestion, punto, ahora, ahora, null, OrigenEvento.TELEMETRIA,
-                nivelValido(nivel), EstadoEvento.ACTIVO, 0, 0, simulado, tramoId);
+                nivelValido(nivel), EstadoEvento.ACTIVO, 0, 0, simulado, tramoId, trazado);
     }
 
     /**
@@ -117,7 +127,8 @@ public class EventoVial {
             throw new IllegalStateException("Solo se extiende una congestión de telemetría");
         }
         return new EventoVial(id, tipo, ubicacion, ahora.isAfter(ocurrioEn) ? ahora : ocurrioEn, registradoEn,
-                reportanteId, origen, nivelValido(nuevoNivel), estado, votosReal, votosFalso, simulado, tramoId);
+                reportanteId, origen, nivelValido(nuevoNivel), estado, votosReal, votosFalso, simulado, tramoId,
+                trazado);
     }
 
     private static String nivelValido(String nivel) {
@@ -139,8 +150,15 @@ public class EventoVial {
     public static EventoVial desdeRegistro(long id, TipoEvento tipo, Ubicacion ubicacion, Instant ocurrioEn,
             Instant registradoEn, Long reportanteId, OrigenEvento origen, String nivel, EstadoEvento estado,
             int votosReal, int votosFalso, boolean simulado, String tramoId) {
+        return desdeRegistro(id, tipo, ubicacion, ocurrioEn, registradoEn, reportanteId, origen, nivel, estado,
+                votosReal, votosFalso, simulado, tramoId, List.of());
+    }
+
+    public static EventoVial desdeRegistro(long id, TipoEvento tipo, Ubicacion ubicacion, Instant ocurrioEn,
+            Instant registradoEn, Long reportanteId, OrigenEvento origen, String nivel, EstadoEvento estado,
+            int votosReal, int votosFalso, boolean simulado, String tramoId, List<Ubicacion> trazado) {
         return new EventoVial(id, tipo, ubicacion, ocurrioEn, registradoEn, reportanteId, origen, nivel, estado,
-                votosReal, votosFalso, simulado, tramoId);
+                votosReal, votosFalso, simulado, tramoId, trazado);
     }
 
     public static ExcepcionRechazo tipoNoReportable() {
@@ -189,13 +207,13 @@ public class EventoVial {
             nuevoEstado = EstadoEvento.RETIRADO;
         }
         return new EventoVial(id, tipo, ubicacion, ocurrioEn, registradoEn, reportanteId, origen, nivel, nuevoEstado,
-                real, falso, simulado, tramoId);
+                real, falso, simulado, tramoId, trazado);
     }
 
     /** Devuelve el mismo evento con el identificador que le dio la base. */
     public EventoVial conId(long nuevoId) {
         return new EventoVial(nuevoId, tipo, ubicacion, ocurrioEn, registradoEn, reportanteId, origen, nivel, estado,
-                votosReal, votosFalso, simulado, tramoId);
+                votosReal, votosFalso, simulado, tramoId, trazado);
     }
 
     public Long getId() { return id; }
@@ -211,4 +229,6 @@ public class EventoVial {
     public int getVotosFalso() { return votosFalso; }
     public boolean isSimulado() { return simulado; }
     public String getTramoId() { return tramoId; }
+
+    public List<Ubicacion> getTrazado() { return trazado; }
 }

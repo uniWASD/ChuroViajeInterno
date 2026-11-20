@@ -3,75 +3,125 @@ import 'package:provider/provider.dart';
 
 import '../../controllers/eventos_controller.dart';
 import '../../models/evento_vial.dart';
-import '../../services/eventos/servicio_eventos.dart';
+import '../map/mapa_base.dart';
 import '../tema/tema.dart';
+import 'detalle_evento.dart';
 
-/// Vista Lista de eventos (CU-02, HU-11): los eventos vigentes con su tipo y hace cuánto ocurrieron, con los mismos
-/// datos que el mapa (comparten el controlador de eventos). Cada uno se vota «real» o «falso» con un toque; las
-/// congestiones de la telemetría no se votan (D-20).
+/// Pestaña Eventos (CU-02, HU-11, #172): una hoja sobre el mapa con los eventos vigentes, su tipo, hace cuánto
+/// ocurrieron y si otros conductores los confirmaron. Abre a media pantalla; se desliza hacia arriba para ver más y
+/// hacia abajo para despejar el mapa (queda solo el asa, para volver a subirla). Al tocar un evento la cámara va
+/// hasta él y la hoja muestra su detalle, donde se vota si es real o falso.
 class EventsScreen extends StatefulWidget {
   const EventsScreen({super.key});
+
+  /// Las alturas donde se acomoda la hoja, como parte de la pantalla: abajo (solo el asa), media y casi entera.
+  static const double abajo = 0.045;
+  static const double media = 0.5;
+  static const double arriba = 0.92;
 
   @override
   State<EventsScreen> createState() => _EventsScreenState();
 }
 
 class _EventsScreenState extends State<EventsScreen> {
-  EventosController? _eventos;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final eventos = context.read<EventosController>();
-    if (!identical(eventos, _eventos)) {
-      _eventos?.removeListener(_mostrarMensajes);
-      _eventos = eventos..addListener(_mostrarMensajes);
-    }
-  }
+  final DraggableScrollableController _hoja = DraggableScrollableController();
+  int? _abierto;
 
   @override
   void dispose() {
-    _eventos?.removeListener(_mostrarMensajes);
+    _hoja.dispose();
     super.dispose();
   }
 
-  /// RN-02.11 y RN-02.12: el resultado del voto, o el mensaje del backend si lo rechazó.
-  void _mostrarMensajes() {
-    if (!mounted) return;
-    final mensajero = ScaffoldMessenger.maybeOf(context);
-    if (mensajero == null) return;
-    for (var m = _eventos!.tomarMensaje(); m != null; m = _eventos!.tomarMensaje()) {
-      mensajero.showSnackBar(SnackBar(content: Text(m)));
-    }
+  /// Al abrir un evento, la hoja vuelve a media pantalla para que se vean el detalle y el evento en el mapa.
+  void _acomodar(int? seleccionado) {
+    if (seleccionado == _abierto) return;
+    _abierto = seleccionado;
+    if (seleccionado == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_hoja.isAttached) return;
+      if ((_hoja.size - EventsScreen.media).abs() < 0.01) return;
+      _hoja.animateTo(
+        EventsScreen.media,
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOut,
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final eventos = context.watch<EventosController>();
-    final lista = eventos.eventos..sort((a, b) => b.momentoOcurrencia.compareTo(a.momentoOcurrencia));
-    return Column(
-      children: [
-        if (eventos.sinActualizar)
-          Material(
-            color: Theme.of(context).colorScheme.errorContainer,
-            child: const ListTile(
-              dense: true,
-              leading: Icon(Icons.sync_problem),
-              title: Text(EventosController.mensajeSinActualizar),
+    final seleccionado = eventos.seleccionado;
+    _acomodar(seleccionado?.id);
+    final lista = eventos.eventos
+      ..sort((a, b) => b.momentoOcurrencia.compareTo(a.momentoOcurrencia));
+    return DraggableScrollableSheet(
+      key: const Key('hoja-eventos'),
+      controller: _hoja,
+      initialChildSize: EventsScreen.media,
+      minChildSize: EventsScreen.abajo,
+      maxChildSize: EventsScreen.arriba,
+      snap: true,
+      snapSizes: const [EventsScreen.media],
+      builder: (context, desplazamiento) => DecoratedBox(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x1F000000),
+              blurRadius: 14,
+              offset: Offset(0, -2),
             ),
-          ),
-        Expanded(
-          child: lista.isEmpty
-              ? const _SinEventos()
-              : ListView.separated(
-                  key: const Key('lista-eventos'),
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: lista.length,
-                  separatorBuilder: (_, _) => const SizedBox.shrink(),
-                  itemBuilder: (_, i) => _FilaEvento(evento: lista[i], eventos: eventos),
-                ),
+          ],
         ),
-      ],
+        child: CustomScrollView(
+          controller: desplazamiento,
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Center(child: AsaHoja()),
+                  if (eventos.sinActualizar)
+                    Material(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      child: const ListTile(
+                        dense: true,
+                        leading: Icon(Icons.sync_problem),
+                        title: Text(EventosController.mensajeSinActualizar),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (seleccionado != null)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(8, 4, 8, 16),
+                sliver: SliverToBoxAdapter(
+                  child: DetalleEvento(
+                    evento: seleccionado,
+                    eventos: eventos,
+                    conVolver: true,
+                  ),
+                ),
+              )
+            else if (lista.isEmpty)
+              const SliverToBoxAdapter(child: _SinEventos())
+            else
+              SliverPadding(
+                padding: const EdgeInsets.only(bottom: 16),
+                sliver: SliverList.builder(
+                  key: const Key('lista-eventos'),
+                  itemCount: lista.length,
+                  itemBuilder: (_, i) =>
+                      _FilaEvento(evento: lista[i], eventos: eventos),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -81,22 +131,26 @@ class _SinEventos extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.event_available, size: 64),
-            SizedBox(height: 12),
-            Text('No hay eventos vigentes por ahora.', textAlign: TextAlign.center),
-          ],
-        ),
+    return const Padding(
+      padding: EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.event_available, size: 64),
+          SizedBox(height: 12),
+          Text(
+            'No hay eventos vigentes por ahora.',
+            textAlign: TextAlign.center,
+          ),
+        ],
       ),
     );
   }
 }
 
+/// Una fila como la del diseño: el ícono y el nombre del tipo con hace cuánto ocurrió, la marca de verificación
+/// (verde si otros conductores lo confirmaron, gris si no) y el botón de información. Tocar la fila o la «i» abre el
+/// detalle y lleva el mapa hasta el evento.
 class _FilaEvento extends StatelessWidget {
   final EventoVial evento;
   final EventosController eventos;
@@ -106,67 +160,81 @@ class _FilaEvento extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tipo = eventos.catalogos?.tipo(evento.tipo);
-    final detalle = [
-      evento.haceCuanto(DateTime.now()),
-      if (evento.nivel != null) _nivel(evento.nivel!),
-      if (!evento.votable) 'Detectado por el tráfico',
-    ].join(' · ');
-    final puede = eventos.puedeVotar(evento);
-    // #172: cada evento en una tarjeta como la del diseño, con el ícono de su tipo.
-    final fila = ListTile(
-      key: Key('evento-${evento.id}'),
-      leading: Icon(iconoDeEvento(evento.tipo), color: tipo?.colorFlutter ?? Colors.grey, size: 28),
-      title: Row(
+    void abrir() => eventos.seleccionar(evento.id);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 3, 4, 3),
+      child: Row(
         children: [
-          Flexible(child: Text(tipo?.nombre ?? evento.tipo, style: const TextStyle(fontSize: 18))),
-          if (evento.confirmado) ...[
-            const SizedBox(width: 6),
-            // RN-02.14: la marca de confirmado.
-            const Icon(Icons.verified, size: 18, color: Colors.green, semanticLabel: 'Confirmado'),
-          ],
+          Expanded(
+            child: Material(
+              color: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+                side: const BorderSide(color: Color(0xFFE4E4E4)),
+              ),
+              elevation: 2,
+              shadowColor: const Color(0x55000000),
+              child: InkWell(
+                key: Key('evento-${evento.id}'),
+                borderRadius: BorderRadius.circular(10),
+                onTap: abrir,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        iconoDeEvento(evento.tipo),
+                        color: tipo?.colorFlutter ?? Colors.grey,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          tipo?.nombre ?? evento.tipo,
+                          style: const TextStyle(fontSize: 18),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Text(
+                        '· ${haceCuantoCorto(evento, DateTime.now())}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: ColoresChuro.textoSecundario,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          // RN-02.14: verde si está confirmado. La congestión del tráfico no se vota (D-20): lleva su nivel.
+          SizedBox(
+            width: 26,
+            child: evento.votable
+                ? MarcaVerificado(confirmado: evento.confirmado)
+                : Tooltip(
+                    message: nombreNivel(evento.nivel ?? ''),
+                    child: Icon(
+                      Icons.traffic,
+                      size: 22,
+                      color: colorDeNivel(evento.nivel),
+                    ),
+                  ),
+          ),
+          IconButton(
+            key: Key('info-${evento.id}'),
+            tooltip: 'Ver el detalle',
+            visualDensity: VisualDensity.compact,
+            icon: const Icon(Icons.info_outline, color: Color(0xFF64A8F0)),
+            onPressed: abrir,
+          ),
         ],
       ),
-      subtitle: Text(
-        evento.confirmado ? '$detalle · Confirmado por otros conductores' : detalle,
-        style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario),
-      ),
-      // D-20: la congestión de la telemetría aparece sin botones.
-      trailing: !evento.votable
-          ? null
-          : Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  key: Key('real-${evento.id}'),
-                  tooltip: 'Es real',
-                  icon: const Icon(Icons.thumb_up_alt_outlined),
-                  onPressed: puede ? () => eventos.votar(evento.id, ValorVoto.real) : null,
-                ),
-                IconButton(
-                  key: Key('falso-${evento.id}'),
-                  tooltip: 'Es falso',
-                  icon: const Icon(Icons.thumb_down_alt_outlined),
-                  color: ColoresChuro.rojoSuave,
-                  onPressed: puede ? () => eventos.votar(evento.id, ValorVoto.falso) : null,
-                ),
-              ],
-            ),
-    );
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE4E4E4)),
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: const [BoxShadow(color: Color(0x1A000000), blurRadius: 6, offset: Offset(0, 2))],
-      ),
-      child: fila,
     );
   }
-
-  static String _nivel(String nivel) => switch (nivel) {
-    'MUY_CONGESTIONADO' => 'Muy congestionado',
-    'CONGESTIONADO' => 'Congestionado',
-    _ => nivel,
-  };
 }

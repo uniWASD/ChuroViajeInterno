@@ -33,18 +33,29 @@ class RespuestaEventos {
 /// El voto de un conductor sobre un evento (CU-02).
 enum ValorVoto { real, falso }
 
-/// Respuesta de `POST /eventos/{id}/votos`: el estado del evento después del voto, sin datos de quién votó.
+/// Respuesta de `POST /eventos/{id}/votos`: el estado del evento después del voto y cuántos votos lleva (D-46),
+/// sin datos de quién votó.
 class ResultadoVoto {
   final int eventoId;
   final String estado;
   final bool confirmado;
+  final int? votosReal;
+  final int? votosFalso;
 
-  const ResultadoVoto({required this.eventoId, required this.estado, required this.confirmado});
+  const ResultadoVoto({
+    required this.eventoId,
+    required this.estado,
+    required this.confirmado,
+    this.votosReal,
+    this.votosFalso,
+  });
 
   factory ResultadoVoto.fromJson(Map<String, dynamic> json) => ResultadoVoto(
     eventoId: (json['eventoId'] as num).toInt(),
     estado: json['estado'] as String,
     confirmado: json['confirmado'] as bool? ?? false,
+    votosReal: (json['votosReal'] as num?)?.toInt(),
+    votosFalso: (json['votosFalso'] as num?)?.toInt(),
   );
 }
 

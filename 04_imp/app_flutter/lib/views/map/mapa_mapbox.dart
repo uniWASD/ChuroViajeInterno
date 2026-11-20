@@ -63,6 +63,27 @@ class _MapaMapboxState extends State<MapaMapbox> {
     if (!listEquals(anterior.datos.eventos, widget.datos.eventos)) {
       _dibujarEventos();
     }
+    final foco = widget.datos.foco;
+    if (foco != null && foco != anterior.datos.foco) {
+      _irAlFoco(foco);
+    }
+  }
+
+  /// #172: al abrir un evento, la cámara va hasta él y lo deja en la parte del mapa que no tapa la hoja.
+  Future<void> _irAlFoco(Coordenada foco) async {
+    final mapa = _mapa;
+    if (mapa == null || _siguiendo) return;
+    final alto = MediaQuery.sizeOf(context).height;
+    final camara = await mapa.getCameraState();
+    if (!mounted) return;
+    await mapa.flyTo(
+      CameraOptions(
+        center: _punto(foco),
+        zoom: camara.zoom < 16 ? 16 : camara.zoom,
+        padding: MbxEdgeInsets(top: 0, left: 0, bottom: alto * widget.datos.tapadoAbajo, right: 0),
+      ),
+      MapAnimationOptions(duration: 600),
+    );
   }
 
   @override

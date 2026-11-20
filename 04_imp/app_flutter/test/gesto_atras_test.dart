@@ -126,6 +126,22 @@ void main() {
     expect(salidas, 0);
   });
 
+  testWidgets('en Eventos, con el detalle de un evento abierto, el gesto vuelve a la lista', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Eventos').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('evento-1')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('ficha-evento')), findsOneWidget);
+
+    await atras(tester);
+    expect(find.byKey(const Key('ficha-evento')), findsNothing);
+    expect(find.byKey(const Key('lista-eventos')), findsOneWidget);
+    expect(pestanas(tester).selectedIndex, AppTab.events.index, reason: 'sigue en Eventos');
+    expect(salidas, 0);
+  });
+
   testWidgets('en el Mapa avisa «Presiona atrás otra vez para salir» y sale si se repite en 2 segundos', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();

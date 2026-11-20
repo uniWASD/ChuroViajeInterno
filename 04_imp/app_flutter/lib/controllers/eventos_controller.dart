@@ -128,7 +128,8 @@ class EventosController extends ChangeNotifier {
       if (r.estado == 'RETIRADO' || r.estado == 'VENCIDO') {
         _eventos.remove(id); // RN-02.13: con el tercer «falso» deja de mostrarse
       } else if (actual != null) {
-        _eventos[id] = actual.conEstado(r.estado, r.confirmado); // RN-02.14
+        // RN-02.14 y D-46: el estado y el conteo que dejó el voto.
+        _eventos[id] = actual.conEstado(r.estado, r.confirmado, votosReal: r.votosReal, votosFalso: r.votosFalso);
       }
       _mensajes.add(valor == ValorVoto.real ? 'Gracias: votaste que es real.' : 'Gracias: votaste que es falso.');
     } on ApiException catch (e) {

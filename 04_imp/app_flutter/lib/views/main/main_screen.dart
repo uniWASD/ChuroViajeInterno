@@ -27,20 +27,41 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  static const List<Widget> _screens = [
-    MapScreen(),
-    EventsScreen(),
-    StationsScreen(),
-  ];
-
   /// Durante [MainScreen.ventanaParaSalir] después del primer gesto en el Mapa, el siguiente cierra la app.
   bool _puedeSalir = false;
   Timer? _ventana;
+  EventosController? _eventos;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final eventos = context.read<EventosController>();
+    if (!identical(eventos, _eventos)) {
+      _eventos?.removeListener(_mostrarMensajes);
+      _eventos = eventos..addListener(_mostrarMensajes);
+    }
+  }
 
   @override
   void dispose() {
     _ventana?.cancel();
+    _eventos?.removeListener(_mostrarMensajes);
     super.dispose();
+  }
+
+  /// RN-02.11 y RN-02.12: el resultado del voto, o el mensaje del backend si lo rechazó. Se vota desde el detalle,
+  /// en el Mapa o en Eventos, así que los mensajes se muestran aquí.
+  void _mostrarMensajes() {
+    if (!mounted) return;
+    final mensajero = ScaffoldMessenger.maybeOf(context);
+    if (mensajero == null) return;
+    for (
+      var m = _eventos!.tomarMensaje();
+      m != null;
+      m = _eventos!.tomarMensaje()
+    ) {
+      mensajero.showSnackBar(SnackBar(content: Text(m)));
+    }
   }
 
   /// Si en el Mapa hay algo abierto que el gesto debe cerrar primero.
@@ -52,8 +73,8 @@ class _MainScreenState extends State<MainScreen> {
     final pestanas = context.read<NavigationController>();
     final eventos = context.read<EventosController>();
     final mapa = context.read<MapController>();
-    // 1. Una ficha o un punto abierto se cierra.
-    if (pestanas.selectedIndex == AppTab.map.index &&
+    // 1. El detalle de un evento (en el Mapa o en Eventos) o un punto abierto se cierra.
+    if (pestanas.selectedIndex != AppTab.stations.index &&
         eventos.seleccionado != null) {
       eventos.cerrarFicha();
       return;
@@ -102,10 +123,21 @@ class _MainScreenState extends State<MainScreen> {
               centerTitle: true,
               actions: const [_MenuCuenta()],
             ),
+            // #172: el mapa queda siempre detrás; Eventos es una hoja sobre él y Surtidores lo tapa.
             body: _AvisosCola(
-              child: IndexedStack(
-                index: controller.selectedIndex,
-                children: _screens,
+              child: Stack(
+                children: [
+                  const Positioned.fill(child: MapScreen()),
+                  if (controller.selectedIndex == AppTab.events.index)
+                    const EventsScreen(),
+                  if (controller.selectedIndex == AppTab.stations.index)
+                    const Positioned.fill(
+                      child: ColoredBox(
+                        color: Colors.white,
+                        child: StationsScreen(),
+                      ),
+                    ),
+                ],
               ),
             ),
             // #172: la barra inferior del diseño, gris con las esquinas de arriba redondeadas.

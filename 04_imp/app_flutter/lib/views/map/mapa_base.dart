@@ -100,6 +100,12 @@ class DatosMapa {
   /// El conductor tocó un evento: se abre su ficha.
   final ValueChanged<int>? alTocarEvento;
 
+  /// #172: el evento abierto. Cuando cambia, la cámara va hasta él.
+  final Coordenada? foco;
+
+  /// Qué parte de abajo del mapa tapa una hoja (de 0 a 1): la cámara deja el [foco] en la parte que se ve.
+  final double tapadoAbajo;
+
   /// El conductor tocó el mapa en esa coordenada.
   final ValueChanged<Coordenada> alTocar;
 
@@ -115,6 +121,8 @@ class DatosMapa {
     this.trazado = const [],
     this.eventos = const [],
     this.alTocarEvento,
+    this.foco,
+    this.tapadoAbajo = 0,
     required this.alTocar,
     required this.alFallar,
   });

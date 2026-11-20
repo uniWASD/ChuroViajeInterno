@@ -4,9 +4,11 @@ import 'package:provider/provider.dart';
 import '../../controllers/cola_controller.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
+import '../../controllers/navigation_controller.dart';
 import '../../controllers/reporte_controller.dart';
-import '../../models/evento_vial.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
+import '../events/detalle_evento.dart';
+import '../events/events_screen.dart';
 import '../reporte/reportar_evento_screen.dart';
 import '../ruta/como_llegar_screen.dart';
 import '../tema/tema.dart';
@@ -28,7 +30,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       context.read<MapController>().activarUbicacion();
-      context.read<EventosController>().activar(); // RN-02.6: consulta cada 5 segundos
+      context
+          .read<EventosController>()
+          .activar(); // RN-02.6: consulta cada 5 segundos
     });
   }
 
@@ -65,6 +69,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     final construirMapa = context.read<ConstructorMapa>();
+    // #172: el mapa también se ve detrás de la hoja de Eventos; sus botones y su ficha, solo en la pestaña Mapa.
+    final enElMapa =
+        context.watch<NavigationController>().selectedIndex == AppTab.map.index;
     return Consumer2<MapController, EventosController>(
       builder: (context, controller, eventos, child) {
         return Stack(
@@ -79,6 +86,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     puntoSeleccionado: controller.puntoSeleccionado,
                     eventos: marcasDeEventos(eventos),
                     alTocarEvento: eventos.seleccionar,
+                    // #172: al abrir un evento la cámara va hasta él, en la parte que no tapa la hoja.
+                    foco: eventos.seleccionado?.ubicacion,
+                    tapadoAbajo: enElMapa ? 0.35 : EventsScreen.media,
                     alTocar: controller.seleccionarPunto,
                     alFallar: controller.informarErrorMapa,
                   ),
@@ -87,71 +97,83 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ),
             if (controller.errorMapa != null)
               Positioned.fill(child: AvisoErrorMapa(controller: controller)),
-            if (eventos.sinActualizar)
+            if (enElMapa && eventos.sinActualizar)
               const Positioned(
                 top: 8,
                 left: 8,
                 right: 8,
                 child: _AvisoSinActualizar(),
               ),
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: FloatingActionButton.extended(
-                            heroTag: 'reportar-evento',
-                            // #172: «Notificar» va en el rojo suave del diseño.
-                            backgroundColor: ColoresChuro.rojoSuave,
-                            onPressed: () {
-                              context.read<ReporteController>().empezar();
-                              Navigator.of(context).push(ReportarEventoScreen.ruta());
-                            },
-                            icon: const Icon(Icons.notifications_active_outlined),
-                            label: const Text('Reportar evento'),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: FloatingActionButton.extended(
-                            heroTag: 'como-llegar',
-                            onPressed: () => Navigator.of(context).push(
-                              ComoLlegarScreen.ruta(
-                                context,
-                                destinoInicial: controller.puntoSeleccionado,
+            if (enElMapa)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FloatingActionButton.extended(
+                              heroTag: 'reportar-evento',
+                              // #172: «Notificar» va en el rojo suave del diseño.
+                              backgroundColor: ColoresChuro.rojoSuave,
+                              onPressed: () {
+                                context.read<ReporteController>().empezar();
+                                Navigator.of(context)
+                                    .push(ReportarEventoScreen.ruta());
+                              },
+                              icon: const Icon(
+                                Icons.notifications_active_outlined,
                               ),
+                              label: const Text('Reportar evento'),
                             ),
-                            icon: const Icon(Icons.directions),
-                            label: const Text('Cómo llegar'),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        const _ReportesPendientes(),
-                        if (controller.permiso != null && !controller.tienePermiso)
-                          _SinUbicacion(controller: controller),
-                      ],
+                          const SizedBox(height: 8),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: FloatingActionButton.extended(
+                              heroTag: 'como-llegar',
+                              onPressed: () => Navigator.of(context).push(
+                                ComoLlegarScreen.ruta(
+                                  context,
+                                  destinoInicial: controller.puntoSeleccionado,
+                                ),
+                              ),
+                              icon: const Icon(Icons.directions),
+                              label: const Text('Cómo llegar'),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const _ReportesPendientes(),
+                          if (controller.permiso != null &&
+                              !controller.tienePermiso)
+                            _SinUbicacion(controller: controller),
+                        ],
+                      ),
                     ),
-                  ),
-                  // #172: lo que se abre sobre el mapa va en una hoja inferior con asa, como en el diseño.
-                  if (eventos.seleccionado != null)
-                    HojaInferior(child: FichaEvento(evento: eventos.seleccionado!, controller: eventos))
-                  else if (controller.puntoSeleccionado != null)
-                    HojaInferior(child: _PuntoElegido(controller: controller)),
-                ],
+                    // #172: lo que se abre sobre el mapa va en una hoja inferior con asa, como en el diseño.
+                    if (eventos.seleccionado != null)
+                      HojaInferior(
+                        child: DetalleEvento(
+                          evento: eventos.seleccionado!,
+                          eventos: eventos,
+                        ),
+                      )
+                    else if (controller.puntoSeleccionado != null)
+                      HojaInferior(
+                        child: _PuntoElegido(controller: controller),
+                      ),
+                  ],
+                ),
               ),
-            ),
           ],
         );
       },
@@ -173,13 +195,20 @@ class _ReportesPendientes extends StatelessWidget {
       key: const Key('reportes-pendientes'),
       child: ListTile(
         leading: const Icon(Icons.cloud_upload_outlined),
-        title: Text(cantidad == 1
-            ? '1 reporte pendiente de envío'
-            : '$cantidad reportes pendientes de envío'),
-        subtitle: Text(atascados > 0
-            ? 'No se pudo enviar después de varios intentos. Se seguirá intentando.'
-            : 'Se enviará solo cuando vuelva la red.'),
-        trailing: TextButton(onPressed: cola.reenviar, child: const Text('Reintentar')),
+        title: Text(
+          cantidad == 1
+              ? '1 reporte pendiente de envío'
+              : '$cantidad reportes pendientes de envío',
+        ),
+        subtitle: Text(
+          atascados > 0
+              ? 'No se pudo enviar después de varios intentos. Se seguirá intentando.'
+              : 'Se enviará solo cuando vuelva la red.',
+        ),
+        trailing: TextButton(
+          onPressed: cola.reenviar,
+          child: const Text('Reintentar'),
+        ),
       ),
     );
   }
@@ -216,66 +245,6 @@ class _AvisoSinActualizar extends StatelessWidget {
         leading: Icon(Icons.sync_problem),
         title: Text(EventosController.mensajeSinActualizar),
       ),
-    );
-  }
-}
-
-/// Ficha de un evento: su tipo y hace cuánto ocurrió (RN-02.7); si está confirmado, lo dice (RN-02.14).
-class FichaEvento extends StatelessWidget {
-  final EventoVial evento;
-  final EventosController controller;
-
-  const FichaEvento({super.key, required this.evento, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final tipo = controller.catalogos?.tipo(evento.tipo);
-    return Column(
-      key: const Key('ficha-evento'),
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Icon(iconoDeEvento(evento.tipo), color: tipo?.colorFlutter ?? Colors.grey, size: 24),
-            const SizedBox(width: 8),
-            Expanded(child: Text(tipo?.nombre ?? evento.tipo, style: const TextStyle(fontSize: 20))),
-            _BotonCerrar(alTocar: controller.cerrarFicha),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          [
-            evento.haceCuanto(DateTime.now()),
-            if (evento.confirmado) 'Confirmado por otros conductores',
-          ].join(' · '),
-          style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario),
-        ),
-      ],
-    );
-  }
-}
-
-/// El botón de cerrar del diseño: un círculo rojo suave con una X blanca.
-class _BotonCerrar extends StatelessWidget {
-  final VoidCallback alTocar;
-  final String tooltip;
-
-  const _BotonCerrar({required this.alTocar, this.tooltip = 'Cerrar'});
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton.filled(
-      tooltip: tooltip,
-      style: IconButton.styleFrom(
-        backgroundColor: ColoresChuro.rojoSuave,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(29, 29),
-        fixedSize: const Size(32, 32),
-        padding: EdgeInsets.zero,
-      ),
-      icon: const Icon(Icons.close, size: 18),
-      onPressed: alTocar,
     );
   }
 }
@@ -332,12 +301,18 @@ class _PuntoElegido extends StatelessWidget {
               const Text('Punto elegido', style: TextStyle(fontSize: 20)),
               Text(
                 '${punto.latitud.toStringAsFixed(6)}, ${punto.longitud.toStringAsFixed(6)}',
-                style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: ColoresChuro.textoSecundario,
+                ),
               ),
             ],
           ),
         ),
-        _BotonCerrar(alTocar: controller.limpiarPunto, tooltip: 'Quitar el punto'),
+        BotonCerrarHoja(
+          alTocar: controller.limpiarPunto,
+          tooltip: 'Quitar el punto',
+        ),
       ],
     );
   }

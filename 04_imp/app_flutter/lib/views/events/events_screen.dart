@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../models/evento_vial.dart';
 import '../../services/eventos/servicio_eventos.dart';
+import '../tema/tema.dart';
 
 /// Vista Lista de eventos (CU-02, HU-11): los eventos vigentes con su tipo y hace cuánto ocurrieron, con los mismos
 /// datos que el mapa (comparten el controlador de eventos). Cada uno se vota «real» o «falso» con un toque; las
@@ -66,7 +67,7 @@ class _EventsScreenState extends State<EventsScreen> {
                   key: const Key('lista-eventos'),
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   itemCount: lista.length,
-                  separatorBuilder: (_, _) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const SizedBox.shrink(),
                   itemBuilder: (_, i) => _FilaEvento(evento: lista[i], eventos: eventos),
                 ),
         ),
@@ -111,12 +112,13 @@ class _FilaEvento extends StatelessWidget {
       if (!evento.votable) 'Detectado por el tráfico',
     ].join(' · ');
     final puede = eventos.puedeVotar(evento);
-    return ListTile(
+    // #172: cada evento en una tarjeta como la del diseño, con el ícono de su tipo.
+    final fila = ListTile(
       key: Key('evento-${evento.id}'),
-      leading: Icon(Icons.warning_amber_rounded, color: tipo?.colorFlutter ?? Colors.grey, size: 32),
+      leading: Icon(iconoDeEvento(evento.tipo), color: tipo?.colorFlutter ?? Colors.grey, size: 28),
       title: Row(
         children: [
-          Flexible(child: Text(tipo?.nombre ?? evento.tipo)),
+          Flexible(child: Text(tipo?.nombre ?? evento.tipo, style: const TextStyle(fontSize: 18))),
           if (evento.confirmado) ...[
             const SizedBox(width: 6),
             // RN-02.14: la marca de confirmado.
@@ -124,7 +126,10 @@ class _FilaEvento extends StatelessWidget {
           ],
         ],
       ),
-      subtitle: Text(evento.confirmado ? '$detalle · Confirmado por otros conductores' : detalle),
+      subtitle: Text(
+        evento.confirmado ? '$detalle · Confirmado por otros conductores' : detalle,
+        style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario),
+      ),
       // D-20: la congestión de la telemetría aparece sin botones.
       trailing: !evento.votable
           ? null
@@ -141,10 +146,21 @@ class _FilaEvento extends StatelessWidget {
                   key: Key('falso-${evento.id}'),
                   tooltip: 'Es falso',
                   icon: const Icon(Icons.thumb_down_alt_outlined),
+                  color: ColoresChuro.rojoSuave,
                   onPressed: puede ? () => eventos.votar(evento.id, ValorVoto.falso) : null,
                 ),
               ],
             ),
+    );
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE4E4E4)),
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: const [BoxShadow(color: Color(0x1A000000), blurRadius: 6, offset: Offset(0, 2))],
+      ),
+      child: fila,
     );
   }
 

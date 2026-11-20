@@ -10,6 +10,7 @@ import '../../models/ruta.dart';
 import '../../services/rutas/servicio_rutas.dart';
 import '../map/map_screen.dart';
 import '../map/mapa_base.dart';
+import '../tema/tema.dart';
 
 /// Vista Navegación activa (CU-03): sigue la posición del conductor y muestra la calle que sigue con el sentido del
 /// giro, y la distancia y el tiempo que faltan (RN-03.17, D-22). Se abre al tocar «Iniciar» en Cómo llegar.
@@ -85,22 +86,26 @@ class NavegacionActivaScreen extends StatelessWidget {
               right: 8,
               child: nav.activa ? _Indicacion(nav: nav) : const SizedBox.shrink(),
             ),
+            // #172: el resumen va en una hoja inferior con asa, como en el diseño.
             Positioned(
-              left: 8,
-              right: 8,
-              bottom: 8,
-              child: SafeArea(
-                top: false,
-                child: nav.activa
-                    ? Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (nav.aviso != null) _Aviso(nav: nav, aviso: nav.aviso!, eventos: eventos),
-                          _Resumen(nav: nav, sinUbicacion: mapa.posicion == null),
-                        ],
-                      )
-                    : _Fin(nav: nav),
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: HojaInferior(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                child: SafeArea(
+                  top: false,
+                  child: nav.activa
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (nav.aviso != null) _Aviso(nav: nav, aviso: nav.aviso!, eventos: eventos),
+                            _Resumen(nav: nav, sinUbicacion: mapa.posicion == null),
+                          ],
+                        )
+                      : _Fin(nav: nav),
+                ),
               ),
             ),
           ],

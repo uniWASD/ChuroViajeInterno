@@ -53,11 +53,13 @@ class _MainScreenState extends State<MainScreen> {
     final eventos = context.read<EventosController>();
     final mapa = context.read<MapController>();
     // 1. Una ficha o un punto abierto se cierra.
-    if (pestanas.selectedIndex == AppTab.map.index && eventos.seleccionado != null) {
+    if (pestanas.selectedIndex == AppTab.map.index &&
+        eventos.seleccionado != null) {
       eventos.cerrarFicha();
       return;
     }
-    if (pestanas.selectedIndex == AppTab.map.index && mapa.puntoSeleccionado != null) {
+    if (pestanas.selectedIndex == AppTab.map.index &&
+        mapa.puntoSeleccionado != null) {
       mapa.limpiarPunto();
       return;
     }
@@ -70,10 +72,12 @@ class _MainScreenState extends State<MainScreen> {
     setState(() => _puedeSalir = true);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
-      ..showSnackBar(const SnackBar(
-        content: Text(MainScreen.avisoSalir),
-        duration: MainScreen.ventanaParaSalir,
-      ));
+      ..showSnackBar(
+        const SnackBar(
+          content: Text(MainScreen.avisoSalir),
+          duration: MainScreen.ventanaParaSalir,
+        ),
+      );
     _ventana?.cancel();
     _ventana = Timer(MainScreen.ventanaParaSalir, () {
       if (mounted) setState(() => _puedeSalir = false);
@@ -104,26 +108,32 @@ class _MainScreenState extends State<MainScreen> {
                 children: _screens,
               ),
             ),
-            bottomNavigationBar: NavigationBar(
-              selectedIndex: controller.selectedIndex,
-              onDestinationSelected: controller.selectTab,
-              destinations: const [
-                NavigationDestination(
-                  icon: Icon(Icons.map_outlined),
-                  selectedIcon: Icon(Icons.map),
-                  label: 'Mapa',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.event_note_outlined),
-                  selectedIcon: Icon(Icons.event_note),
-                  label: 'Eventos',
-                ),
-                NavigationDestination(
-                  icon: Icon(Icons.local_gas_station_outlined),
-                  selectedIcon: Icon(Icons.local_gas_station),
-                  label: 'Surtidores',
-                ),
-              ],
+            // #172: la barra inferior del diseño, gris con las esquinas de arriba redondeadas.
+            bottomNavigationBar: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
+              child: NavigationBar(
+                selectedIndex: controller.selectedIndex,
+                onDestinationSelected: controller.selectTab,
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.map_outlined),
+                    selectedIcon: Icon(Icons.map),
+                    label: 'Mapa',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.event_note_outlined),
+                    selectedIcon: Icon(Icons.event_note),
+                    label: 'Eventos',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.local_gas_station_outlined),
+                    selectedIcon: Icon(Icons.local_gas_station),
+                    label: 'Surtidores',
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -192,7 +202,11 @@ class _AvisosColaState extends State<_AvisosCola> {
   void _mostrar() {
     if (!mounted) return;
     final mensajero = ScaffoldMessenger.of(context);
-    for (var aviso = _cola!.tomarAviso(); aviso != null; aviso = _cola!.tomarAviso()) {
+    for (
+      var aviso = _cola!.tomarAviso();
+      aviso != null;
+      aviso = _cola!.tomarAviso()
+    ) {
       mensajero.showSnackBar(SnackBar(content: Text(aviso)));
     }
   }

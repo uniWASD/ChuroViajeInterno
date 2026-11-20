@@ -9,6 +9,7 @@ import '../../models/evento_vial.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
 import '../reporte/reportar_evento_screen.dart';
 import '../ruta/como_llegar_screen.dart';
+import '../tema/tema.dart';
 import 'mapa_base.dart';
 
 /// Vista Mapa principal: el mapa base de Tarija, la posición del conductor y el punto que toca.
@@ -94,48 +95,60 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                 child: _AvisoSinActualizar(),
               ),
             Positioned(
-              left: 8,
-              right: 8,
-              bottom: 8,
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FloatingActionButton.extended(
-                      heroTag: 'reportar-evento',
-                      onPressed: () {
-                        context.read<ReporteController>().empezar();
-                        Navigator.of(context).push(ReportarEventoScreen.ruta());
-                      },
-                      icon: const Icon(Icons.add_alert_outlined),
-                      label: const Text('Reportar evento'),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: FloatingActionButton.extended(
-                      heroTag: 'como-llegar',
-                      onPressed: () => Navigator.of(context).push(
-                        ComoLlegarScreen.ruta(
-                          context,
-                          destinoInicial: controller.puntoSeleccionado,
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FloatingActionButton.extended(
+                            heroTag: 'reportar-evento',
+                            // #172: «Notificar» va en el rojo suave del diseño.
+                            backgroundColor: ColoresChuro.rojoSuave,
+                            onPressed: () {
+                              context.read<ReporteController>().empezar();
+                              Navigator.of(context).push(ReportarEventoScreen.ruta());
+                            },
+                            icon: const Icon(Icons.notifications_active_outlined),
+                            label: const Text('Reportar evento'),
+                          ),
                         ),
-                      ),
-                      icon: const Icon(Icons.directions),
-                      label: const Text('Cómo llegar'),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: FloatingActionButton.extended(
+                            heroTag: 'como-llegar',
+                            onPressed: () => Navigator.of(context).push(
+                              ComoLlegarScreen.ruta(
+                                context,
+                                destinoInicial: controller.puntoSeleccionado,
+                              ),
+                            ),
+                            icon: const Icon(Icons.directions),
+                            label: const Text('Cómo llegar'),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const _ReportesPendientes(),
+                        if (controller.permiso != null && !controller.tienePermiso)
+                          _SinUbicacion(controller: controller),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const _ReportesPendientes(),
+                  // #172: lo que se abre sobre el mapa va en una hoja inferior con asa, como en el diseño.
                   if (eventos.seleccionado != null)
-                    FichaEvento(evento: eventos.seleccionado!, controller: eventos),
-                  if (controller.puntoSeleccionado != null)
-                    _PuntoElegido(controller: controller),
-                  if (controller.permiso != null && !controller.tienePermiso)
-                    _SinUbicacion(controller: controller),
+                    HojaInferior(child: FichaEvento(evento: eventos.seleccionado!, controller: eventos))
+                  else if (controller.puntoSeleccionado != null)
+                    HojaInferior(child: _PuntoElegido(controller: controller)),
                 ],
               ),
             ),
@@ -217,23 +230,52 @@ class FichaEvento extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tipo = controller.catalogos?.tipo(evento.tipo);
-    return Card(
+    return Column(
       key: const Key('ficha-evento'),
-      child: ListTile(
-        leading: Icon(Icons.warning_amber_rounded, color: tipo?.colorFlutter ?? Colors.grey),
-        title: Text(tipo?.nombre ?? evento.tipo),
-        subtitle: Text(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Icon(iconoDeEvento(evento.tipo), color: tipo?.colorFlutter ?? Colors.grey, size: 24),
+            const SizedBox(width: 8),
+            Expanded(child: Text(tipo?.nombre ?? evento.tipo, style: const TextStyle(fontSize: 20))),
+            _BotonCerrar(alTocar: controller.cerrarFicha),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
           [
             evento.haceCuanto(DateTime.now()),
             if (evento.confirmado) 'Confirmado por otros conductores',
           ].join(' · '),
+          style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario),
         ),
-        trailing: IconButton(
-          tooltip: 'Cerrar',
-          icon: const Icon(Icons.close),
-          onPressed: controller.cerrarFicha,
-        ),
+      ],
+    );
+  }
+}
+
+/// El botón de cerrar del diseño: un círculo rojo suave con una X blanca.
+class _BotonCerrar extends StatelessWidget {
+  final VoidCallback alTocar;
+  final String tooltip;
+
+  const _BotonCerrar({required this.alTocar, this.tooltip = 'Cerrar'});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filled(
+      tooltip: tooltip,
+      style: IconButton.styleFrom(
+        backgroundColor: ColoresChuro.rojoSuave,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(29, 29),
+        fixedSize: const Size(32, 32),
+        padding: EdgeInsets.zero,
       ),
+      icon: const Icon(Icons.close, size: 18),
+      onPressed: alTocar,
     );
   }
 }
@@ -279,19 +321,24 @@ class _PuntoElegido extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final punto = controller.puntoSeleccionado!;
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.place, color: Colors.red),
-        title: const Text('Punto elegido'),
-        subtitle: Text(
-          '${punto.latitud.toStringAsFixed(6)}, ${punto.longitud.toStringAsFixed(6)}',
+    return Row(
+      children: [
+        const Icon(Icons.place, color: ColoresChuro.rojo),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Punto elegido', style: TextStyle(fontSize: 20)),
+              Text(
+                '${punto.latitud.toStringAsFixed(6)}, ${punto.longitud.toStringAsFixed(6)}',
+                style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario),
+              ),
+            ],
+          ),
         ),
-        trailing: IconButton(
-          tooltip: 'Quitar el punto',
-          icon: const Icon(Icons.close),
-          onPressed: controller.limpiarPunto,
-        ),
-      ),
+        _BotonCerrar(alTocar: controller.limpiarPunto, tooltip: 'Quitar el punto'),
+      ],
     );
   }
 }

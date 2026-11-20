@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import '../../config/app_config.dart';
 import '../../models/coordenada.dart';
+import 'estilo_mapa.dart';
 import 'mapa_base.dart';
+import 'marcadores.dart';
 
 /// El [ConstructorMapa] de la app: el mapa base de Mapbox (D-08: Mapbox solo da el mapa, las rutas las calcula
 /// el motor).
@@ -23,7 +27,8 @@ class MapaMapbox extends StatefulWidget {
 class _MapaMapboxState extends State<MapaMapbox> {
   MapboxMap? _mapa;
   CircleAnnotationManager? _marcas;
-  CircleAnnotationManager? _eventos;
+  PointAnnotationManager? _eventos;
+  final Marcadores _dibujos = Marcadores();
   PolylineAnnotationManager? _lineas;
   PolylineAnnotationManager? _congestiones;
   PolylineAnnotation? _ruta;
@@ -69,6 +74,8 @@ class _MapaMapboxState extends State<MapaMapbox> {
 
   Future<void> _alCrear(MapboxMap mapa) async {
     _mapa = mapa;
+    // Por si el estilo terminó de cargar antes de que el mapa avisara que está creado.
+    unawaited(_aplicarEstilo());
     // RNF-19: el logo y la atribución (© Mapbox © OpenStreetMap) quedan visibles.
     await mapa.logo.updateSettings(LogoSettings(enabled: true));
     await mapa.attribution.updateSettings(
@@ -83,7 +90,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
     // Primero la ruta, después las congestiones sobre la calle y al final los puntos, para que queden encima.
     _lineas = await mapa.annotations.createPolylineAnnotationManager();
     _congestiones = await mapa.annotations.createPolylineAnnotationManager();
-    _eventos = await mapa.annotations.createCircleAnnotationManager();
+    _eventos = await mapa.annotations.createPointAnnotationManager();
     _marcas = await mapa.annotations.createCircleAnnotationManager();
     _toquesEventos = _eventos!.tapEvents(onTap: (anotacion) => _tocarEvento(anotacion.customData));
     // Al tocar la línea de una congestión se abre su ficha, igual que con un punto.
@@ -126,14 +133,15 @@ class _MapaMapboxState extends State<MapaMapbox> {
       ]);
     }
     if (enPunto.isEmpty) return;
+    // #172: cada evento con el ícono de su tipo, en una gota del color del tipo. La imagen se dibuja con la
+    // densidad de la pantalla: el SDK la muestra en píxeles físicos.
+    _dibujos.usarEscala(MediaQuery.devicePixelRatioOf(context));
     await capa.createMulti([
       for (final e in enPunto)
-        CircleAnnotationOptions(
+        PointAnnotationOptions(
           geometry: _punto(e.coordenada),
-          circleRadius: 9,
-          circleColor: e.color.toARGB32(),
-          circleStrokeWidth: e.confirmado ? 4 : 2,
-          circleStrokeColor: (e.confirmado ? const Color(0xFF1B1B1B) : Colors.white).toARGB32(),
+          image: await _dibujos.de(tipo: e.tipo, color: e.color, confirmado: e.confirmado),
+          iconAnchor: IconAnchor.BOTTOM,
           customData: {'evento': e.id},
         ),
     ]);
@@ -222,6 +230,16 @@ class _MapaMapboxState extends State<MapaMapbox> {
   static const Color colorRuta = Color(0xFF1A73E8);
   static const Color colorBordeRuta = Color(0xFF1557B0);
 
+  /// #172: colores, fuente y capas parecidos a Google Maps. Si el SDK no acepta alguna opción, el mapa sigue con
+  /// el estilo Standard sin cambios: no es motivo para dejarlo sin cargar.
+  Future<void> _aplicarEstilo() async {
+    try {
+      await _mapa?.setStyleImportConfigProperties(importacionBasemap, configuracionEstiloGoogle);
+    } catch (e) {
+      debugPrint('No se pudo aplicar el estilo parecido a Google Maps: $e');
+    }
+  }
+
   bool get _siguiendo => widget.datos.seguirUbicacion && widget.datos.mostrarUbicacion;
 
   static Point _punto(Coordenada c) =>
@@ -241,6 +259,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
               zoom: 13.5,
             ),
       onMapCreated: _alCrear,
+      onStyleLoadedListener: (_) => _aplicarEstilo(),
       onMapLoadErrorListener: (error) {
         // Solo el estilo deja el mapa sin cargar; un mosaico que falla se vuelve a pedir solo.
         if (error.type == MapLoadErrorType.STYLE) {

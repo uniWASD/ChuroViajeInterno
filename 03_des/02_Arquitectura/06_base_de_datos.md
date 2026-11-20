@@ -40,10 +40,14 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | `tipo_combustible` | Código, nombre | TipoCombustible |
 | `estado_combustible` | Surtidor, tipo, origen (WhatsApp, Conductores o ANH), disponible, fila, fecha del dato, `litros` (no negativo y opcional), `estado_anh` (alto, medio o bajo; opcional) y `consultado_en` (cuándo lo leyó el backend; solo en ANH) | EstadoCombustible |
 | `confirmacion_recarga` | Conductor, surtidor, tipo, fecha | ConfirmaciónRecarga |
+| `lugar` | Clave de OSM (única), nombre, nombre para buscar (minúsculas, sin tildes, con las abreviaturas completas), categoría, ubicación | Lugar (V10) |
+| `lugar_extracto` | Una sola fila: fecha del extracto cargado, cantidad de lugares y cuándo se cargó | Lugar (V10) |
 
 En un evento de origen Telemetría, la columna del reportante queda vacía y `tramo_id` guarda el tramo donde el motor midió la congestión. Desde la migración V9, `trazado` (`geography(LineString, 4326)`) guarda el trazado de ese tramo para que la app la dibuje a lo largo de la calle; se guarda al nacer y no cambia al extenderla, y una restricción solo lo permite si hay `tramo_id` ([RN-04.25](04_reglas/CU-04_RecalcularRuta.md), [D-45](08_decisiones_parametros.md)). Las congestiones anteriores a V9 quedan sin trazado. Al extenderla, su momento pasa a la última medición, que puede ser posterior al registro ([RN-04.11](04_reglas/CU-04_RecalcularRuta.md)). `RedVial`, `Tramo`, `Ruta`, `Parada` y `LecturaTelemetría` no tienen tabla: viven en el motor core. `MensajePendiente` vive en el almacenamiento del servicio de WhatsApp/LLM. `ReporteANH` tampoco tiene tabla: es lo que llega de ANH en cada consulta, y de él solo se guarda lo que dice `estado_combustible`.
 
 Las columnas `litros`, `estado_anh` y `consultado_en` solo se llenan cuando el origen es ANH. La fecha del dato de ANH es su `updated_at`, la que informa la estación, y no el momento en que el backend la leyó: ese momento va en `consultado_en`, y de él se cuenta la vigencia ([RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md)). El estado de ANH se guarda como llega y no cambia el campo `disponible`, que sale solo de los litros ([RN-09.11](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.12](04_reglas/CU-09_ConsultarEstadoANH.md)).
+
+Las tablas `lugar` y `lugar_extracto` (V10) no llevan datos en la migración. Las llena el backend al arrancar con el JSON de `preparar_lugares.py` (variable `LUGARES_PATH`), y solo si la fecha del extracto cambió; el reemplazo va en una transacción, así que si el archivo trae algo mal quedan los lugares de antes. Un lugar fuera de la mancha urbana, sin nombre o con una categoría desconocida se descarta ([D-47](08_decisiones_parametros.md)).
 
 ## Lo que la base de datos asegura por su cuenta
 

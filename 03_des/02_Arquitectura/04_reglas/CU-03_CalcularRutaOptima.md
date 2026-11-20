@@ -26,12 +26,14 @@ Cubre HU-05 y los requisitos RF-05, RNF-02 y RNF-10.
 | RN-03.16 | El cálculo no usa ni devuelve rutas o posiciones de otros conductores. | Ruta | CU-03 sección 7, RNF-10 |
 | RN-03.17 | Al confirmar, la ruta pasa a Activa y la app empieza a seguirla. El servidor no la guarda. | Ruta | CU-03 paso 5, [D-05](../08_decisiones_parametros.md) |
 | RN-03.18 | Si el mapa base de Mapbox no carga, la app informa un error de servicio externo y sugiere reintentar. El cálculo de la ruta no depende de Mapbox. | Controlador de ruta de la app | CU-03 ext. 4a, HU-05 c.3, [D-08](../08_decisiones_parametros.md) |
+| RN-03.19 | El destino también se puede buscar por nombre: calles y lugares conocidos de Tarija (OpenStreetMap) y surtidores del catálogo. Se busca con al menos 2 letras, sin importar tildes ni mayúsculas, y cada palabra escrita debe ser el comienzo de una palabra del nombre («hosp san» encuentra «Hospital San Juan de Dios»). «Av.», «Pje.» y «Pza.» valen como «avenida», «pasaje» y «plaza». | Servicio de búsqueda | [D-47](../08_decisiones_parametros.md), P-19 |
+| RN-03.20 | Llegan como mucho 10 resultados: primero los que empiezan con lo escrito, después los más cercanos al conductor si la app manda su posición, con la distancia. La búsqueda no guarda lo que escribe el conductor. | Servicio de búsqueda | [D-47](../08_decisiones_parametros.md), RNF-10 |
 
 El factor de cada tipo de evento sobre un tramo (RN-03.9) está en [P-12](../08_decisiones_parametros.md).
 
 ## Recorrido por Vista, Controlador y Modelo
 
-1. **Vista Cómo llegar.** El conductor indica origen, destino y, si quiere, paradas. Toca «Calcular ruta».
+1. **Vista Cómo llegar.** El conductor indica origen, destino y, si quiere, paradas. Toca «Calcular ruta». El destino puede venir de la barra de búsqueda del Mapa principal: el lugar elegido queda marcado y «Cómo llegar» lo toma (RN-03.19).
 2. **Controlador de ruta (app).** Comprueba que haya origen y destino, y envía la solicitud al backend con el JWT.
 3. **Controlador REST de rutas (backend).** Comprueba el JWT (RN-03.1) y el formato. Llama al servicio del modelo que calcula rutas.
 4. **Modelo (backend).** Valida los puntos (RN-03.2, RN-03.3) y pasa la solicitud a `MotorDeRutas`, el wrapper Java del motor core.

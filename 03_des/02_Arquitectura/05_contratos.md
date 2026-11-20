@@ -231,6 +231,21 @@ La app manda su ubicación actual: `GET /surtidores?latitud=-21.5355&longitud=-6
 - `fila` sale solo si se conoce. `litros`, `estadoAnh` y `consultadoEn` salen solo en los datos de ANH ([RN-05.4](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Un dato de WhatsApp sin tipo sale como `DESCONOCIDO` ([RN-05.6](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Nunca sale quién aportó el dato ([RN-05.7](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
 - Pide JWT de conductor. Sin `latitud` o `longitud`, o con valores fuera de rango, responde 400 `PETICION_INVALIDA`.
 
+### Búsqueda de destinos (`GET /lugares`)
+
+La app manda lo que escribió el conductor y, si la tiene, su posición: `GET /lugares?texto=san%20juan&latitud=-21.5355&longitud=-64.7296` ([D-47](08_decisiones_parametros.md)). Responde hasta 10 lugares ([RN-03.19, RN-03.20](04_reglas/CU-03_CalcularRutaOptima.md)):
+
+```json
+{"lugares":[
+  {"nombre":"Capilla San Juan de Dios","categoria":"RELIGION","ubicacion":{"latitud":-21.538,"longitud":-64.733},"distanciaM":446},
+  {"nombre":"Calle San Juan","categoria":"CALLE","ubicacion":{"latitud":-21.544,"longitud":-64.728},"distanciaM":1041}]}
+```
+
+- `categoria` es una de `CALLE`, `PLAZA`, `PARQUE`, `SALUD`, `EDUCACION`, `MERCADO`, `GOBIERNO`, `TRANSPORTE`, `TURISMO`, `HOTEL`, `BANCO`, `COMIDA`, `DEPORTE`, `RELIGION`, `COMERCIO` o `SURTIDOR`. Los surtidores salen del catálogo (V2); lo demás, de la tabla `lugar` (V10).
+- Una calle es un punto sobre ella, cerca de su centro. Dos calles con el mismo nombre en lugares distintos de la ciudad salen por separado.
+- `distanciaM` sale solo si vino la posición. Si no encuentra nada, responde 200 con `lugares` vacía.
+- Pide JWT de conductor. Con menos de 2 letras o números, con más de 100 caracteres, sin `texto`, con solo una de `latitud` y `longitud` o con valores fuera de rango, responde 400 `PETICION_INVALIDA`.
+
 ## Backend con el motor core
 
 El backend nunca habla directo con el programa en C++. Llama a métodos del wrapper `MotorDeRutas`, que es Java y vive dentro del backend, y el wrapper traduce cada llamada a un mensaje para el núcleo C++ ([D-15](08_decisiones_parametros.md)). Los nombres de métodos y mensajes son una propuesta, igual que las rutas de la API.

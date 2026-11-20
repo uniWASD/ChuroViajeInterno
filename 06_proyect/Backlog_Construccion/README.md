@@ -29,7 +29,7 @@ La Construcción va del 2 de octubre al 30 de noviembre de 2026. Del 2 al 14 de 
 | Sprint 3 | 29/10 – 04/11 | Reportar y ver eventos, A*, análisis con LLM, primer despliegue y vínculo de las estaciones de ANH con los surtidores |
 | Sprint 4 | 05/11 – 11/11 | Votos, ruta en el backend, tráfico en el motor, modos sin conexión y consulta a ANH |
 | Sprint 5 | 12/11 – 18/11 | Ruta en la app, telemetría, congestión y surtidores |
-| Sprint 5.5 | 19/11 – 21/11 | Un solo issue (#172): gente quieta que marcaba tráfico, congestión en el tramo entero, borrar lo recorrido, gesto de atrás, mapa parecido a Google Maps y aspecto del diseño |
+| Sprint 5.5 | 19/11 – 21/11 | Un solo issue (#172): gente quieta que marcaba tráfico, congestión en el tramo entero, borrar lo recorrido, gesto de atrás, mapa parecido a Google Maps, aspecto del diseño y búsqueda de destinos (D-47) |
 | Sprint 6 | 19/11 – 25/11 | Recálculo de ruta, pregunta de recarga, simulador y política de privacidad |
 | Sprint 7 | 26/11 – 30/11 | Pruebas de carga, pruebas de punta a punta, despliegue final y correcciones |
 

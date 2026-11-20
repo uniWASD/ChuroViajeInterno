@@ -112,6 +112,8 @@ class _MapaMapboxState extends State<MapaMapbox> {
     final capa = _eventos;
     final lineas = _congestiones;
     if (capa == null || lineas == null) return;
+    // La imagen de los marcadores se dibuja con la densidad de la pantalla: el SDK la muestra en píxeles físicos.
+    _dibujos.usarEscala(MediaQuery.devicePixelRatioOf(context));
     await capa.deleteAll();
     await lineas.deleteAll();
     final eventos = widget.datos.eventos;
@@ -133,9 +135,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
       ]);
     }
     if (enPunto.isEmpty) return;
-    // #172: cada evento con el ícono de su tipo, en una gota del color del tipo. La imagen se dibuja con la
-    // densidad de la pantalla: el SDK la muestra en píxeles físicos.
-    _dibujos.usarEscala(MediaQuery.devicePixelRatioOf(context));
+    // #172: cada evento con el ícono de su tipo, en una gota del color del tipo.
     await capa.createMulti([
       for (final e in enPunto)
         PointAnnotationOptions(

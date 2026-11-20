@@ -597,7 +597,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | **CP-178** al avanzar por la ruta desaparece lo ya recorrido, también después de recalcular o aceptar una alternativa | Pruebas de la función de recorte y video en el teléfono |  |
 | **CP-179** el gesto de atrás cierra la hoja abierta, vuelve a Mapa y solo sale si se repite en 2 segundos | Pruebas de widget y video en un teléfono con Android 14 o superior |  |
 | **CP-180** el mapa se parece a Google Maps en colores, calles, etiquetas y lugares | Capturas de antes y después |  |
-| **CP-181** las pantallas existentes siguen el aspecto del diseño | Capturas junto al frame del Figma |  |
+| **CP-181** las pantallas que ya existen (Mapa con la ficha, Eventos, Reportar evento, Cómo llegar y Navegación) siguen el aspecto del diseño | Capturas junto al frame del Figma |  |
 
 ## Sprint 6 (19/11 – 25/11)
 

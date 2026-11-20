@@ -204,8 +204,11 @@ class ConsultaEventosIntegracionTest extends PruebaIntegracionPostgis {
         JsonNode evento = json.readTree(respuesta).get("eventos").get(0);
         List<String> campos = new ArrayList<>();
         evento.fieldNames().forEachRemaining(campos::add);
-        assertEquals(List.of("id", "tipo", "ubicacion", "momentoOcurrencia", "estado", "confirmado", "origen"), campos);
-        assertFalse(respuesta.contains("reportante") || respuesta.contains("conductor") || respuesta.contains("voto"));
+        // D-46: el conteo de votos es un total; no dice quien voto.
+        assertEquals(List.of("id", "tipo", "ubicacion", "momentoOcurrencia", "estado", "confirmado", "origen",
+                "votosReal", "votosFalso"), campos);
+        assertFalse(respuesta.contains("reportante") || respuesta.contains("conductor") || respuesta.contains("votante")
+                || respuesta.contains("\"voto\"") || respuesta.contains("\"votos\""));
     }
 
     @Test

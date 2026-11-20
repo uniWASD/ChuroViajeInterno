@@ -102,6 +102,11 @@ class _MapaMapboxState extends State<MapaMapbox> {
     await mapa.attribution.updateSettings(
       AttributionSettings(enabled: true, clickable: true),
     );
+    // D-47: la brújula, que aparece al girar el mapa, va debajo de la barra de búsqueda.
+    if (mounted) {
+      final arriba = MediaQuery.paddingOf(context).top + 72;
+      await mapa.compass.updateSettings(CompassSettings(marginTop: arriba, marginRight: 12));
+    }
     mapa.addInteraction(
       TapInteraction.onMap((contexto) {
         final c = contexto.point.coordinates;

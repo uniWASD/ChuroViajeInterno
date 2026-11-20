@@ -2,6 +2,7 @@ import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
 import 'config/app_config.dart';
+import 'controllers/busqueda_controller.dart';
 import 'controllers/cola_controller.dart';
 import 'controllers/eventos_controller.dart';
 import 'controllers/map_controller.dart';
@@ -10,6 +11,7 @@ import 'controllers/reporte_controller.dart';
 import 'controllers/sesion_controller.dart';
 import 'controllers/telemetria_controller.dart';
 import 'services/api/api_client.dart';
+import 'services/busqueda/servicio_busqueda.dart';
 import 'services/catalogos/servicio_catalogos.dart';
 import 'services/conectividad/conectividad.dart';
 import 'services/eventos/servicio_eventos.dart';
@@ -34,6 +36,7 @@ List<SingleChildWidget> createAppProviders({
   ServicioEventos? servicioEventos,
   ColaReportes? cola,
   Conectividad? conectividad,
+  ServicioBusqueda? servicioBusqueda,
 }) => [
   ChangeNotifierProvider(create: (_) => NavigationController()),
   Provider<ApiClient>(
@@ -105,6 +108,16 @@ List<SingleChildWidget> createAppProviders({
       cola: context.read<ColaController>(),
       reloj: reloj,
     ),
+  ),
+  // D-47: la barra de búsqueda del mapa; ordena por cercanía con la posición del conductor, si la hay.
+  ChangeNotifierProvider<BusquedaController>(
+    create: (context) {
+      final mapa = context.read<MapController>();
+      return BusquedaController(
+        servicioBusqueda ?? ServicioBusqueda(context.read<ApiClient>()),
+        posicion: () => mapa.posicion,
+      );
+    },
   ),
   ChangeNotifierProvider<EventosController>(
     create: (context) => EventosController(

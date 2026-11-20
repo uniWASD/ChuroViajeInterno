@@ -143,7 +143,7 @@ flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.xxxxx --dart-define=API_URL_DEV
 El botón «Cómo llegar» de la vista Mapa abre la vista del mismo nombre (CU-03). Si había un punto elegido en el mapa, pasa a ser el destino.
 
 * El origen es la posición actual; con «Marcar» se puede tocar otro punto. Si no hay ubicación ni origen marcado, la vista lo pide antes de llamar al backend.
-* El destino y las paradas se eligen tocando el mapa (no hay buscador, P-19 y D-24). Las paradas van en el orden en que se agregan y son 10 como máximo (RN-03.2).
+* El destino y las paradas se eligen tocando el mapa. El destino también puede venir de la barra de búsqueda del Mapa: el lugar elegido queda marcado y «Cómo llegar» lo toma (D-47). Las paradas van en el orden en que se agregan y son 10 como máximo (RN-03.2).
 * La app manda los puntos a `POST /rutas` y dibuja lo que vuelve, con su tiempo y su distancia (RN-03.13). Las reglas las aplica el backend.
 * «No se encontró una ruta válida» y «Origen o destino inválido» se muestran como respuesta, no como error. Si el backend no responde o responde 503, se muestra el fallo con «Reintentar» (RN-03.15).
 * «Iniciar» pone la ruta Activa y abre la vista Navegación activa en lugar de Cómo llegar (RN-03.17).

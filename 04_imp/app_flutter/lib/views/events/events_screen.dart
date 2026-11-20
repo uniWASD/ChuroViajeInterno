@@ -17,7 +17,8 @@ class EventsScreen extends StatefulWidget {
   /// Las alturas donde se acomoda la hoja, como parte de la pantalla: abajo (solo el asa), media y casi entera.
   static const double abajo = 0.045;
   static const double media = 0.5;
-  static const double arriba = 0.92;
+  /// Arriba se detiene debajo de la barra de búsqueda (D-47).
+  static const double arriba = 0.86;
 
   @override
   State<EventsScreen> createState() => _EventsScreenState();

@@ -7,6 +7,7 @@ import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
 import '../../controllers/reporte_controller.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
+import '../busqueda/barra_busqueda.dart';
 import '../events/detalle_evento.dart';
 import '../reporte/reportar_evento_screen.dart';
 import '../ruta/como_llegar_screen.dart';
@@ -85,8 +86,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     puntoSeleccionado: controller.puntoSeleccionado,
                     eventos: marcasDeEventos(eventos),
                     alTocarEvento: eventos.seleccionar,
-                    // #172: al abrir un evento la cámara va hasta él, por encima del detalle.
-                    foco: eventos.seleccionado?.ubicacion,
+                    // #172: al abrir un evento la cámara va hasta él, por encima del detalle. D-47: también va
+                    // hasta el lugar elegido en la búsqueda.
+                    foco: eventos.seleccionado?.ubicacion ?? controller.foco,
                     tapadoAbajo: 0.3,
                     alTocar: controller.seleccionarPunto,
                     alFallar: controller.informarErrorMapa,
@@ -97,11 +99,12 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             if (controller.errorMapa != null)
               Positioned.fill(child: AvisoErrorMapa(controller: controller)),
             if (enElMapa && eventos.sinActualizar)
-              const Positioned(
-                top: 8,
+              // Debajo de la barra de búsqueda (D-47).
+              Positioned(
+                top: MediaQuery.paddingOf(context).top + BarraBusqueda.espacio,
                 left: 8,
                 right: 8,
-                child: _AvisoSinActualizar(),
+                child: const _AvisoSinActualizar(),
               ),
             if (enElMapa)
               Positioned(
@@ -297,7 +300,13 @@ class _PuntoElegido extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Punto elegido', style: TextStyle(fontSize: 20)),
+              // D-47: si vino de la búsqueda, su nombre.
+              Text(
+                controller.nombrePunto ?? 'Punto elegido',
+                style: const TextStyle(fontSize: 20),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
               Text(
                 '${punto.latitud.toStringAsFixed(6)}, ${punto.longitud.toStringAsFixed(6)}',
                 style: const TextStyle(

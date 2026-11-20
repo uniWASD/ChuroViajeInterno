@@ -566,7 +566,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 | Issue | Responsable | Casos de prueba |
 | --- | --- | --- |
-| [T-123][Sprint 5.5] Ajustes de mapa, navegación y tráfico ([#172](https://github.com/uniWASD/ChuroViajeInterno/issues/172)) | Marcelo | CP-171 a CP-181 |
+| [T-123][Sprint 5.5] Ajustes de mapa, navegación y tráfico ([#172](https://github.com/uniWASD/ChuroViajeInterno/issues/172)) | Marcelo | CP-171 a CP-184 |
 
 ### [T-123][Sprint 5.5] Ajustes de mapa, navegación y tráfico · [#172](https://github.com/uniWASD/ChuroViajeInterno/issues/172)
 
@@ -574,7 +574,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 **Reglas y decisiones**
 
-- RN-04.22 a RN-04.25, D-44, D-45, P-36 a P-38 ([CU-04](../../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md)).
+- RN-04.22 a RN-04.25, D-44, D-45, P-36 a P-38 ([CU-04](../../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md)); RN-02.17 y D-46 ([CU-02](../../03_des/02_Arquitectura/04_reglas/CU-02_VisualizarEventosViales.md)).
 
 **Criterios de aceptación**
 
@@ -584,6 +584,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 - Al navegar desaparece lo ya recorrido
 - El gesto de atrás no saca de la app de golpe
 - El mapa se parece a Google Maps y las pantallas siguen el diseño
+- Eventos es una hoja a media pantalla sobre el mapa; al tocar un evento el mapa va hasta él y el detalle muestra «Real», «Falso» y cuántos votaron cada cosa
 
 | Caso de prueba | Evidencia esperada | Validación |
 | --- | --- | --- |
@@ -597,6 +598,9 @@ Un issue está terminado cuando cumple las tres condiciones:
 | **CP-178** al avanzar por la ruta desaparece lo ya recorrido, también después de recalcular o aceptar una alternativa | Pruebas de la función de recorte y video en el teléfono |  |
 | **CP-179** el gesto de atrás cierra la hoja abierta, vuelve a Mapa y solo sale si se repite en 2 segundos | Pruebas de widget y video en un teléfono con Android 14 o superior |  |
 | **CP-180** el mapa se parece a Google Maps en colores, calles, etiquetas y lugares | Capturas de antes y después |  |
+| **CP-182** `GET /eventos` y la respuesta del voto traen cuántos votos «real» y «falso» lleva cada evento de conductores; la congestión no los trae | Prueba automatizada y su salida en la CI |  |
+| **CP-183** Eventos abre a media pantalla sobre el mapa y se desliza hacia abajo hasta dejar solo el asa | Prueba de widget y video en el teléfono |  |
+| **CP-184** al tocar un evento el mapa va hasta él y se abre el detalle con «Real», «Falso» y el conteo de votos | Prueba de widget y video en el teléfono |  |
 | **CP-181** las pantallas que ya existen (Mapa con la ficha, Eventos, Reportar evento, Cómo llegar y Navegación) siguen el aspecto del diseño | Capturas junto al frame del Figma |  |
 
 ## Sprint 6 (19/11 – 25/11)

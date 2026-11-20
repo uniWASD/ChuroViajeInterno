@@ -172,6 +172,7 @@ La primera consulta va sin parámetros y trae todos los eventos vigentes. Las si
 - Con marca, `eventos` trae los nuevos y los que cambiaron (por ejemplo, los que se confirmaron) y `quitados` los identificadores de los que dejaron de mostrarse por vencidos o retirados. La app reemplaza los que ya tenía con el mismo `id` y borra los quitados ([RN-02.6](04_reglas/CU-02_VisualizarEventosViales.md)).
 - La vigencia se calcula en cada consulta: un evento que venció hace segundos ya llega entre los quitados, aunque la tarea periódica todavía no lo haya marcado ([RN-02.4](04_reglas/CU-02_VisualizarEventosViales.md)).
 - La marca queda 2 segundos antes de la consulta, para no perder un evento que se estaba guardando en ese momento; por eso algún cambio puede llegar dos veces. Una marca que no es una fecha responde 400 `PETICION_INVALIDA`.
+- Un evento de conductores trae `votosReal` y `votosFalso`: cuántos conductores votaron cada cosa, sin decir quiénes ([D-46](08_decisiones_parametros.md), [RN-02.17](04_reglas/CU-02_VisualizarEventosViales.md)). La congestión de la telemetría no los trae porque no se vota.
 - Una congestión de la telemetría trae además `nivel` y, si se detectó desde la V9, `trazado`: los puntos del tramo, en el sentido del tramo, con el mismo formato que el trazado de `POST /rutas` ([RN-04.25](04_reglas/CU-04_RecalcularRuta.md)). La app la dibuja como una línea; sin `trazado`, como un punto. Por ejemplo: `{"id":171,"tipo":"CONGESTION","ubicacion":{"latitud":-21.54,"longitud":-64.7354},…,"origen":"TELEMETRIA","nivel":"MUY_CONGESTIONADO","trazado":[{"latitud":-21.54,"longitud":-64.74},{"latitud":-21.54,"longitud":-64.73}]}`.
 
 ### Telemetría (`POST /telemetria`)
@@ -200,10 +201,10 @@ Responde 202 sin esperar al motor:
 {"valor":"real"}
 ```
 
-Responde 201 con el estado del evento después del voto, sin datos de quién votó:
+Responde 201 con el estado del evento después del voto y cuántos votos lleva ([D-46](08_decisiones_parametros.md)), sin datos de quién votó:
 
 ```json
-{"eventoId":153,"estado":"CONFIRMADO","confirmado":true}
+{"eventoId":153,"estado":"CONFIRMADO","confirmado":true,"votosReal":3,"votosFalso":1}
 ```
 
 - `valor` es `real` o `falso`, sin importar mayúsculas. Con 3 votos `falso`, un evento Activo pasa a Retirado; con 3 `real`, pasa a Confirmado y ya no se retira por votos ([RN-02.13](04_reglas/CU-02_VisualizarEventosViales.md), [RN-02.14](04_reglas/CU-02_VisualizarEventosViales.md)).

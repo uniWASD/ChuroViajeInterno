@@ -38,6 +38,7 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los i
 | CP-80 (al matar el núcleo, el backend lo vuelve a arrancar) | Hecho el 12/11/2026 |
 | Ambiente de pruebas del simulador (T-106, #86) | Preparado en el repositorio: sección 11. Falta correrlo en el servidor y CP-145 |
 | Respaldos diarios y registros de 14 días (T-103, #79) | Preparado en el repositorio: sección 12. Faltan el bucket y la política en la consola, correrlo en el servidor y CP-129 |
+| Servicio de WhatsApp/LLM (T-100, #68) | Preparado en el repositorio: sección 13. Falta rotar la credencial de servicio, desplegarlo, vincular el número y CP-101 |
 
 ## Datos del servidor
 
@@ -501,6 +502,63 @@ sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/configurar-
 
 `--borrar-registros-viejos` borra los registros de Nginx que ya estaban escritos, porque tienen la consulta con la ubicación. Si `nginx -t` falla, el script deja Nginx como estaba.
 
+### 13. Servicio de WhatsApp/LLM
+
+T-100 (#68). El servicio de `04_imp/servicio_whatsapp` lee los grupos autorizados con el número dedicado, analiza los mensajes cada 5 minutos con Gemini y entrega el resultado al backend ([CU-06](../../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [D-13](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-17](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-36](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+
+| Ruta | Qué hay | Dueño |
+|---|---|---|
+| `/opt/churoviaje-whatsapp/releases/<fecha>-<commit>/` | Una versión: `src`, `package.json`, `package-lock.json` y `node_modules`. Se guardan las 3 más recientes | `deploy`, grupo `churoviaje-wa` (carpeta con setgid) |
+| `/opt/churoviaje-whatsapp/actual` | Enlace a la versión que corre | `deploy` |
+| `/etc/churoviaje/whatsapp.env` | Credencial de servicio (`SERVICE_TOKEN`, la misma que `SERVICE_CREDENTIAL` del backend), clave de Gemini, número, grupos y rutas | `churoviaje-wa`, `600` |
+| `/etc/churoviaje/whatsapp/autorizaciones.json` | El registro de la autorización de cada administrador de grupo ([RN-06.1](../../03_des/02_Arquitectura/04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md)) | `churoviaje-wa`, carpeta `700`, archivo `600` |
+| `/var/lib/churoviaje-whatsapp/` | La sesión del número (`sesion/session.sqlite`) y los mensajes pendientes (`pendientes.sqlite`) | `churoviaje-wa`, `700` |
+
+- **Servicio.** [systemd/churoviaje-whatsapp.service](systemd/churoviaje-whatsapp.service): arranca con la máquina después del backend, se reinicia a los 15 segundos si se cae, usa como mucho 512 MB, solo lee su versión y solo escribe en `/var/lib/churoviaje-whatsapp`.
+- **Dentro de la máquina.** Habla con el backend por `http://127.0.0.1:8080`, sin pasar por internet ni por Nginx.
+- **Sin puertos.** El servicio no escucha nada: solo abre conexiones de salida hacia WhatsApp y Gemini.
+- **Registro.** En journald. El servicio solo registra eventos de una lista fija, sin textos, números ni grupos, y journald los borra a los 14 días (sección 12).
+
+**Puesta en marcha, en este orden.** Todo como `ubuntu`, salvo el despliegue:
+
+1. **Rotar la credencial de servicio.** Se publicó en el PR #173, así que antes de que el servicio la use se cambia. El script genera una nueva, la escribe en `backend.env` (y en `whatsapp.env` si ya existe) y reinicia el backend; nunca la muestra:
+
+   ```bash
+   sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/rotar-credencial-servicio.sh
+   ```
+
+2. **Usuario, entorno y servicio.** Pide la clave de Gemini (sin mostrarla), el número dedicado y los IDs de los grupos; la credencial la copia del backend:
+
+   ```bash
+   sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/crear-servicio-whatsapp.sh
+   sudo install -m 600 -o churoviaje-wa -g churoviaje-wa /dev/null /etc/churoviaje/whatsapp/autorizaciones.json
+   sudo nano /etc/churoviaje/whatsapp/autorizaciones.json
+   ```
+
+   El formato del registro de autorizaciones está en [04_imp/servicio_whatsapp/README.md](../../04_imp/servicio_whatsapp/README.md#configuración-de-la-cuenta-y-autorizaciones). Un grupo sin su registro no se lee.
+
+3. **Desplegar**, como `deploy`:
+
+   ```bash
+   bash ~/ChuroViajeInterno/06_proyect/servidor/scripts/desplegar-whatsapp.sh
+   ```
+
+   Copia el servicio sin las pruebas ni las demostraciones, instala las dependencias con `npm ci` (las versiones de `package-lock.json`), cambia el enlace y lo reinicia. Si en 30 segundos no sigue activo, vuelve a la versión anterior.
+
+4. **Vincular el número**, con el teléfono del número dedicado en la mano:
+
+   ```bash
+   sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/vincular-whatsapp.sh
+   ```
+
+   Detiene el servicio y lo corre en la terminal, como `churoviaje-wa` y con el mismo entorno, para mostrar el QR. En el teléfono: **WhatsApp → Dispositivos vinculados → Vincular un dispositivo**. Cuando aparezca `{"evento":"WHATSAPP_CONECTADO"}`, Ctrl+C: el script vuelve a encender el servicio con la sesión guardada.
+
+5. **Que arranque con la máquina:** `sudo systemctl enable --now churoviaje-whatsapp`.
+
+**Si se pierde la sesión** (el registro muestra `WHATSAPP_SESION_CERRADA`, o se desvinculó desde el teléfono): repetir el paso 4. Si la sesión quedó dañada o se cambió de número, `sudo bash .../vincular-whatsapp.sh --borrar-sesion`, y si cambió el número, también `WHATSAPP_PHONE_NUMBER` en `whatsapp.env`. Mientras tanto el backend sigue funcionando: los surtidores muestran el último dato hasta que vence (6 horas).
+
+**Cambiar la clave de Gemini:** `sudo nano /etc/churoviaje/whatsapp.env` (`LLM_API_KEY`) y `sudo systemctl restart churoviaje-whatsapp`. **Cambiar la credencial de servicio:** el script del paso 1, que cambia las dos a la vez.
+
 ## Salida hacia la API de ANH
 
 Antes de que el backend dependa de ANH, el 29 de octubre de 2026 se comprobó desde la instancia que las consultas llegan y que el certificado se verifica. Cubre el issue T-119 (#111) y el caso de prueba CP-156. El informe técnico de ANH y el cliente de prueba están en `05_pro/PruebaApiANH`.
@@ -579,6 +637,14 @@ sudo -u deploy cat /etc/churoviaje/backend.env
 ```
 
 CP-79: después de `sudo reboot`, los mismos comandos deben dar lo mismo sin tocar nada.
+
+CP-101: se manda un mensaje al grupo de prueba (por ejemplo «Las Vegas hay gasolina, fila corta»), se esperan 6 minutos y se corre el script. Muestra el estado del servicio, que no escucha ningún puerto, los permisos de sus secretos, sus últimos eventos y los datos de WhatsApp de la tabla `estado_combustible`, con la hora del mensaje, la hora en que se guardó y los minutos entre las dos, que deben ser menos de 6. No muestra secretos, IPs internas ni textos de mensajes:
+
+```bash
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/verificar-whatsapp.sh
+```
+
+La comprobación en la app se hace con la pestaña Surtidores (#71): el surtidor debe mostrar el dato con origen WhatsApp.
 
 CP-129: el respaldo de ayer se restaura en una base aparte y tiene los mismos eventos y surtidores (la salida no tiene IPs, llaves ni contraseñas):
 

@@ -1,0 +1,44 @@
+# Servicio de WhatsApp/LLM de ChuroViaje (T-100, #68; CU-06).
+# Copia de /etc/systemd/system/churoviaje-whatsapp.service en churoviaje-server.
+# Lee los grupos autorizados, analiza los mensajes por lotes con Gemini y entrega el resultado al backend
+# por 127.0.0.1:8080, sin pasar por internet. No abre ningún puerto: solo hace conexiones de salida.
+# Los secretos (credencial de servicio y clave del LLM) están en /etc/churoviaje/whatsapp.env; la sesión del
+# número y los mensajes pendientes, en /var/lib/churoviaje-whatsapp. Solo los lee churoviaje-wa.
+
+[Unit]
+Description=ChuroViaje servicio de WhatsApp/LLM (CU-06)
+After=network-online.target churoviaje-backend.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=churoviaje-wa
+Group=churoviaje-wa
+EnvironmentFile=/etc/churoviaje/whatsapp.env
+WorkingDirectory=/opt/churoviaje-whatsapp/actual
+ExecStart=/usr/bin/node src/main.js
+Restart=always
+RestartSec=15
+TimeoutStopSec=20
+
+# La sesión del número y el SQLite de pendientes, privados (0700): el servicio los rechaza si otros los leen.
+StateDirectory=churoviaje-whatsapp
+StateDirectoryMode=0700
+UMask=0077
+MemoryMax=512M
+
+# Endurecimiento: solo lee su versión y escribe en su carpeta de estado.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/churoviaje-whatsapp
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

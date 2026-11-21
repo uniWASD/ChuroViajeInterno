@@ -28,6 +28,8 @@ class _MapaMapboxState extends State<MapaMapbox> {
   MapboxMap? _mapa;
   CircleAnnotationManager? _marcas;
   PointAnnotationManager? _eventos;
+  PointAnnotationManager? _surtidores;
+  Cancelable? _toquesSurtidores;
   final Marcadores _dibujos = Marcadores();
   PolylineAnnotationManager? _lineas;
   PolylineAnnotationManager? _congestiones;
@@ -63,6 +65,9 @@ class _MapaMapboxState extends State<MapaMapbox> {
     if (!listEquals(anterior.datos.eventos, widget.datos.eventos)) {
       _dibujarEventos();
     }
+    if (!listEquals(anterior.datos.surtidores, widget.datos.surtidores)) {
+      _dibujarSurtidores();
+    }
     final foco = widget.datos.foco;
     if (foco != null && foco != anterior.datos.foco) {
       _irAlFoco(foco);
@@ -90,6 +95,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
   void dispose() {
     _toquesEventos?.cancel();
     _toquesCongestiones?.cancel();
+    _toquesSurtidores?.cancel();
     super.dispose();
   }
 
@@ -116,15 +122,41 @@ class _MapaMapboxState extends State<MapaMapbox> {
     // Primero la ruta, después las congestiones sobre la calle y al final los puntos, para que queden encima.
     _lineas = await mapa.annotations.createPolylineAnnotationManager();
     _congestiones = await mapa.annotations.createPolylineAnnotationManager();
+    _surtidores = await mapa.annotations.createPointAnnotationManager();
     _eventos = await mapa.annotations.createPointAnnotationManager();
     _marcas = await mapa.annotations.createCircleAnnotationManager();
+    _toquesSurtidores = _surtidores!.tapEvents(onTap: (anotacion) {
+      final id = anotacion.customData?['surtidor'];
+      if (id is num) widget.datos.alTocarSurtidor?.call(id.toInt());
+    });
     _toquesEventos = _eventos!.tapEvents(onTap: (anotacion) => _tocarEvento(anotacion.customData));
     // Al tocar la línea de una congestión se abre su ficha, igual que con un punto.
     _toquesCongestiones = _congestiones!.tapEvents(onTap: (anotacion) => _tocarEvento(anotacion.customData));
     await _actualizarUbicacion();
     await _dibujarTrazado();
     await _dibujarEventos();
+    await _dibujarSurtidores();
     await _marcarPunto();
+  }
+
+  /// D-25 y RN-05.17: cada surtidor con el ícono del surtidor, del color de su estado.
+  Future<void> _dibujarSurtidores() async {
+    final capa = _surtidores;
+    if (capa == null) return;
+    _dibujos.usarEscala(MediaQuery.devicePixelRatioOf(context));
+    await capa.deleteAll();
+    final surtidores = widget.datos.surtidores;
+    if (surtidores.isEmpty) return;
+    await capa.createMulti([
+      for (final s in surtidores)
+        PointAnnotationOptions(
+          geometry: _punto(s.coordenada),
+          image: await _dibujos.deSurtidor(s.color),
+          iconAnchor: IconAnchor.BOTTOM,
+          iconSize: 0.85,
+          customData: {'surtidor': s.id},
+        ),
+    ]);
   }
 
   void _tocarEvento(Map<String, Object?>? datos) {

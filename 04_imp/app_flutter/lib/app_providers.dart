@@ -3,6 +3,7 @@ import 'package:provider/single_child_widget.dart';
 
 import 'config/app_config.dart';
 import 'controllers/busqueda_controller.dart';
+import 'controllers/combustible_controller.dart';
 import 'controllers/cola_controller.dart';
 import 'controllers/eventos_controller.dart';
 import 'controllers/map_controller.dart';
@@ -19,6 +20,7 @@ import 'services/rutas/servicio_rutas.dart';
 import 'services/sesion/almacen_local.dart';
 import 'services/sesion/proveedor_google.dart';
 import 'services/sesion/servicio_sesion.dart';
+import 'services/surtidores/servicio_surtidores.dart';
 import 'services/telemetria/servicio_telemetria.dart';
 import 'services/ubicacion/servicio_ubicacion.dart';
 import 'storage/cola_reportes.dart';
@@ -37,6 +39,7 @@ List<SingleChildWidget> createAppProviders({
   ColaReportes? cola,
   Conectividad? conectividad,
   ServicioBusqueda? servicioBusqueda,
+  ServicioSurtidores? servicioSurtidores,
 }) => [
   ChangeNotifierProvider(create: (_) => NavigationController()),
   Provider<ApiClient>(
@@ -118,6 +121,14 @@ List<SingleChildWidget> createAppProviders({
         posicion: () => mapa.posicion,
       );
     },
+  ),
+  // CU-05: la lista y los marcadores de surtidores, cada 60 segundos con el mapa abierto (RN-05.17).
+  ChangeNotifierProvider<CombustibleController>(
+    create: (context) => CombustibleController(
+      servicioSurtidores ?? ServicioSurtidores(context.read<ApiClient>()),
+      context.read<SesionController>(),
+      context.read<MapController>(),
+    ),
   ),
   ChangeNotifierProvider<EventosController>(
     create: (context) => EventosController(

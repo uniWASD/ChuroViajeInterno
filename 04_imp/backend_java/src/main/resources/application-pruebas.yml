@@ -1,11 +1,21 @@
+# Perfil del ambiente de pruebas del servidor (T-106, #86): un segundo backend con su propia base,
+# para correr el simulador sin tocar produccion (RN-07.12). Las pruebas automaticas usan el perfil `test`.
 spring:
   datasource:
-    url: ${TEST_DATABASE_URL:jdbc:postgresql://127.0.0.1:5433/churoviaje_pruebas}
-    username: ${TEST_DB_USER:churoviaje}
-    password: ${TEST_DB_PASSWORD:}
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
 churoviaje:
   cobertura:
+    ruta: ${CHUROVIAJE_GEOJSON_PATH}
     permitir-provisional: false
-  # Las tareas periodicas no corren solas en las pruebas: cada prueba las llama cuando las necesita.
-  tareas:
-    habilitadas: false
+  # P-20: este ambiente acepta sesiones de prueba y muestra los datos simulados (RN-07.5, RN-07.13).
+  simulacion:
+    credencial: ${SIMULACION_CREDENCIAL:}
+    demostracion: true
+    registro: ${SIMULACION_REGISTRO_PATH:}

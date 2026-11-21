@@ -48,6 +48,8 @@ public class PgEventoRepository implements EventoRepository {
     /** Momento en que vence cada evento (RN-02.3): cuando ocurrio mas la vigencia de su tipo. */
     private static final String VENCE = "(e.ocurrio_en + make_interval(mins => t.vigencia_minutos))";
     private static final String SE_MUESTRA = "e.estado in ('ACTIVO', 'CONFIRMADO')";
+    /** RN-07.13: el parámetro dice si entran los simulados; sin él, solo los reales. */
+    private static final String SIMULADOS = "(? or e.simulado = false)";
 
     private final DataSource conexiones;
 
@@ -133,35 +135,47 @@ public class PgEventoRepository implements EventoRepository {
     }
 
     @Override
-    public List<EventoVialRespuesta> vigentesParaMostrar(Instant ahora) {
-        return paraMostrar(vigentes(ahora), ahora);
+    public List<EventoVialRespuesta> vigentesParaMostrar(Instant ahora, boolean incluirSimulados) {
+        List<EventoVial> vigentes = listar("buscar los eventos vigentes",
+                SELECCION + " where " + SE_MUESTRA + " and " + VENCE + " > ? and " + SIMULADOS + " order by e.id",
+                sentencia -> {
+                    ponerInstante(sentencia, 1, ahora);
+                    sentencia.setBoolean(2, incluirSimulados);
+                },
+                PgEventoRepository::evento);
+        return paraMostrar(vigentes, ahora);
     }
 
     @Override
-    public List<EventoVialRespuesta> vigentesCambiadosDesdeParaMostrar(Instant marca, Instant ahora) {
+    public List<EventoVialRespuesta> vigentesCambiadosDesdeParaMostrar(Instant marca, Instant ahora,
+            boolean incluirSimulados) {
         List<EventoVial> cambiados = listar("buscar los eventos que cambiaron",
-                SELECCION + " where " + SE_MUESTRA + " and " + VENCE + " > ? and e.actualizado_en > ? order by e.id",
+                SELECCION + " where " + SE_MUESTRA + " and " + VENCE + " > ? and e.actualizado_en > ? and "
+                        + SIMULADOS + " order by e.id",
                 sentencia -> {
                     ponerInstante(sentencia, 1, ahora);
                     ponerInstante(sentencia, 2, marca);
+                    sentencia.setBoolean(3, incluirSimulados);
                 },
                 PgEventoRepository::evento);
         return paraMostrar(cambiados, ahora);
     }
 
     @Override
-    public List<Long> quitadosEntre(Instant marca, Instant ahora) {
+    public List<Long> quitadosEntre(Instant marca, Instant ahora, boolean incluirSimulados) {
         return listar("buscar los eventos que dejaron de mostrarse", """
                 select e.id from evento_vial e join tipo_evento t on t.codigo = e.tipo_codigo
-                where (e.estado = 'RETIRADO' and e.actualizado_en > ? and e.actualizado_en <= ?)
-                   or (e.estado <> 'RETIRADO' and %s > ? and %s <= ?)
+                where ((e.estado = 'RETIRADO' and e.actualizado_en > ? and e.actualizado_en <= ?)
+                   or (e.estado <> 'RETIRADO' and %s > ? and %s <= ?))
+                  and %s
                 order by e.id
-                """.formatted(VENCE, VENCE),
+                """.formatted(VENCE, VENCE, SIMULADOS),
                 sentencia -> {
                     ponerInstante(sentencia, 1, marca);
                     ponerInstante(sentencia, 2, ahora);
                     ponerInstante(sentencia, 3, marca);
                     ponerInstante(sentencia, 4, ahora);
+                    sentencia.setBoolean(5, incluirSimulados);
                 },
                 fila -> fila.getLong("id"));
     }

@@ -43,8 +43,10 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/actuator/health").permitAll()
-                // /sesion/prueba (CU-07) se habilita con su propio issue.
-                .requestMatchers("/sesion/google", "/sesion/renovar", "/sesion/cerrar").permitAll()
+                // /sesion/prueba y /simulacion/borrar (CU-07) se autentican con la credencial de prueba del cuerpo, y
+                // responden 403 donde no esta habilitada (RN-07.5, RN-07.8).
+                .requestMatchers("/sesion/google", "/sesion/renovar", "/sesion/cerrar", "/sesion/prueba").permitAll()
+                .requestMatchers("/simulacion/borrar").permitAll()
                 .requestMatchers("/monitoreo/**").hasRole("SERVICIO")
                 .anyRequest().hasRole("CONDUCTOR")
             );

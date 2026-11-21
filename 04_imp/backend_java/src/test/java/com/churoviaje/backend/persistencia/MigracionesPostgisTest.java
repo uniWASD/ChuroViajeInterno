@@ -122,6 +122,11 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
                 + "WHERE conrelid='conductor'::regclass AND conname='uq_conductor_google_id' AND contype='u'"));
         assertEquals(1, contar(base, "SELECT count(*) FROM pg_constraint "
                 + "WHERE conrelid='sesion'::regclass AND conname='fk_sesion_conductor' AND confdeltype='c'"));
+        // HU-12 (V11): las confirmaciones mueren con su conductor y nunca son del tipo Desconocido (RN-05.9).
+        assertEquals(1, contar(base, "SELECT count(*) FROM pg_constraint WHERE conrelid='confirmacion_recarga'::regclass "
+                + "AND conname='fk_confirmacion_recarga_conductor' AND confdeltype='c'"));
+        assertEquals(1, contar(base, "SELECT count(*) FROM pg_constraint WHERE conrelid='confirmacion_recarga'::regclass "
+                + "AND conname='ck_confirmacion_recarga_tipo'"));
         assertEquals(0, contar(base, "SELECT count(*) FROM surtidor WHERE ST_SRID(ubicacion::geometry)<>4326 "
                 + "OR ST_GeometryType(ubicacion::geometry)<>'ST_Point'"));
     }

@@ -76,6 +76,8 @@ activar() {
   ln -sfn "$destino" "$base/actual.nuevo"
   mv -Tf "$base/actual.nuevo" "$base/actual"
   sudo /usr/bin/systemctl restart churoviaje-backend
+  # T-106: si el backend de pruebas está encendido, vuelve a la misma versión.
+  sudo -n /usr/bin/systemctl try-restart churoviaje-backend-pruebas 2> /dev/null || true
 }
 
 esperar_salud() {

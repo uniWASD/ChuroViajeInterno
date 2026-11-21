@@ -9,8 +9,13 @@ import {interpretOutput} from './analysis.js';
 
 /** El contrato acepta hasta 1000 avisos por lote; un análisis más grande se entrega en varios. */
 export const MAX_AVISOS_POR_LOTE = 1000;
-/** Procesar también backlogs de 501+ en una única llamada. SQLite impone el tope técnico documentado. */
-export const MAX_MENSAJES_POR_LOTE = 10000;
+/**
+ * Mensajes por llamada al LLM, como en la investigación del issue #10. Una llamada más grande puede pasarse de lo que
+ * el modelo acepta y fallar ciclo tras ciclo; con más pendientes, el mismo ciclo hace varias llamadas, en orden.
+ */
+export const MAX_MENSAJES_POR_LLAMADA = 500;
+/** Lo más que se toma en un ciclo (el tope de la consulta de SQLite). */
+export const MAX_MENSAJES_POR_CICLO = 10000;
 
 const TARIJA_MS = -4 * 60 * 60 * 1000;
 /** La fecha del lote en la hora de Bolivia, como en el contrato. */
@@ -100,36 +105,56 @@ export class WhatsappService {
     // después de dar prioridad al resultado nuevo (RNF-04: < 6 minutos).
     const anteriores = new Set(this.store.listResults().map(r => r.id));
     try {
-      const pending = this.store.listPending(MAX_MENSAJES_POR_LOTE);
+      const pending = this.store.listPending(MAX_MENSAJES_POR_CICLO);
       if (pending.length === 0) return; // RN-06.5: sin pendientes, ninguna llamada al LLM
       const catalog = await this.#catalog();
       if (!catalog || this.closed) return;
-      let output;
-      try {
-        output = await this.llm.analyze({system: systemPrompt(catalog), user: userContent(pending), schema: outputSchema(catalog, pending.length)});
-      } catch (error) {
-        this.logger.event('LLM_FALLO', {codigo: error?.code, mensajes: pending.length});
-        return; // RN-06.10: conservar pendientes para el siguiente ciclo
+      // Del más viejo al más nuevo, de a MAX_MENSAJES_POR_LLAMADA. Si una llamada falla, esa parte y las que siguen
+      // quedan pendientes para el ciclo siguiente (RN-06.10); lo ya analizado se entrega igual.
+      const analizadas = [];
+      for (let i = 0; i < pending.length; i += MAX_MENSAJES_POR_LLAMADA) {
+        const parte = pending.slice(i, i + MAX_MENSAJES_POR_LLAMADA);
+        try {
+          const output = await this.llm.analyze({system: systemPrompt(catalog), user: userContent(parte),
+            schema: outputSchema(catalog, parte.length)});
+          analizadas.push({parte, output});
+        } catch (error) {
+          this.logger.event('LLM_FALLO', {codigo: error?.code, mensajes: pending.length - i});
+          break;
+        }
+        if (this.closed) return;
       }
+      if (analizadas.length === 0) return;
       // Si el análisis tardó demasiado, no publicar resultados de mensajes caducados.
       this.#maintenance();
-      const vigentes = new Set(this.store.listPending(MAX_MENSAJES_POR_LOTE).map(m => m.id));
-      let result;
-      try { result = interpretOutput(output, pending, catalog, {vigentes}); }
-      catch (error) {
-        this.logger.event('LLM_FALLO', {codigo: error?.code, mensajes: pending.length});
-        return;
+      const vigentes = new Set(this.store.listPending(MAX_MENSAJES_POR_CICLO).map(m => m.id));
+      const result = {avisos: [], descartados: 0, porValidador: 0, filasQuitadas: 0};
+      const procesados = [];
+      for (const {parte, output} of analizadas) {
+        let r;
+        try { r = interpretOutput(output, parte, catalog, {vigentes}); }
+        catch (error) {
+          // Una respuesta con otro formato deja pendiente solo su parte.
+          this.logger.event('LLM_FALLO', {codigo: error?.code, mensajes: parte.length});
+          continue;
+        }
+        result.avisos.push(...r.avisos);
+        result.descartados += r.descartados;
+        result.porValidador += r.porValidador;
+        result.filasQuitadas += r.filasQuitadas;
+        procesados.push(...parte.filter(m => vigentes.has(m.id)).map(m => m.id));
       }
-      if (this.closed) return;
+      if (procesados.length === 0 || this.closed) return;
       const lote = horaTarija(this.clock());
       const lotes = [];
       for (let i = 0; i < result.avisos.length; i += MAX_AVISOS_POR_LOTE) {
         lotes.push({lote, avisos: result.avisos.slice(i, i + MAX_AVISOS_POR_LOTE)});
       }
       // Transacción: procesados sin texto + cola de resultados sin texto (RN-06.12, RN-06.19).
-      const nuevos = this.store.finishBatch(pending.filter(m => vigentes.has(m.id)).map(m => m.id), lotes);
-      this.logger.event('LOTE_ANALIZADO', {mensajes: pending.length, avisos: result.avisos.length,
-        descartados: result.descartados, descartadosValidador: result.porValidador});
+      const nuevos = this.store.finishBatch(procesados, lotes);
+      this.logger.event('LOTE_ANALIZADO', {mensajes: procesados.length, llamadas: analizadas.length,
+        avisos: result.avisos.length, descartados: result.descartados, descartadosValidador: result.porValidador,
+        filasQuitadas: result.filasQuitadas});
       // RN-06.18: entrega inmediata incluso si Java tiene pendiente un lote ANTERIOR.
       if (nuevos.length) await this.#sendSaved(new Set(nuevos));
     } finally {

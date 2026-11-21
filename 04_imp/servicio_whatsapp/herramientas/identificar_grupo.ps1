@@ -1,7 +1,7 @@
 ﻿#requires -Version 5.1
 $ErrorActionPreference = 'Stop'
-$Raiz = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
-$Servicio = Join-Path $Raiz '04_imp\servicio_whatsapp'
+# El script vive en 04_imp\servicio_whatsapp\herramientas; el servicio es la carpeta de arriba.
+$Servicio = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $Identificador = Join-Path $PSScriptRoot 'descubrir_jid_grupo.mjs'
 $Privado = Join-Path $env:LOCALAPPDATA 'ChuroViajeIssue59'
 New-Item -ItemType Directory -Path $Privado -Force | Out-Null
@@ -10,7 +10,7 @@ $UsuarioWindows = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
 if ($LASTEXITCODE -ne 0) { throw 'No se pudieron restringir los permisos de la sesion privada.' }
 $env:WHATSAPP_SESSION_PATH = Join-Path $Privado 'sesion.sqlite'
 if (-not (Test-Path (Join-Path $Servicio 'node_modules\@whiskeysockets\baileys'))) {
-    throw 'Antes ejecuta 01_PREPARAR_DEPENDENCIAS.ps1 para instalar Baileys.'
+    throw 'Antes ejecuta npm install en 04_imp\servicio_whatsapp para instalar Baileys.'
 }
 Write-Host 'Este auxiliar muestra el ID tecnico del grupo, NUNCA los mensajes.'
 Write-Host 'Abre WhatsApp > Dispositivos vinculados > Vincular dispositivo si aparece QR.'

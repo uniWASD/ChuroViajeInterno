@@ -163,7 +163,7 @@ Crear PR desde `feature/HU08-CU06-llm-analisis-lotes` **hacia** `develop`, enlaz
 
 | Criterio issue #59 | Prueba local | Estado sin credenciales reales |
 | --- | --- | --- |
-| RN-06.5: lote cronológico cada 5 minutos | Sí, timer y 501 mensajes en un lote | **Probado con simulación**; verificar capacidad y reloj reales |
+| RN-06.5: lote cronológico cada 5 minutos | Sí, timer y 501 mensajes en un ciclo (dos llamadas de 500 y 1) | **Probado con simulación**; verificar capacidad y reloj reales |
 | RN-06.11/12: caducidad y borrado | Sí, SQLite y caducidad durante LLM | **Probado con reloj simulado/SQLite real** |
 | RN-06.6, CP-78: privacidad telefónica | Sí, varias variantes; HTTP local | **Probado con texto sintético** |
 | RN-06.7/8/9: extracción y descarte | Sí, positivos y adversos con mock | **Probado con salida LLM simulada**; precisión live pendiente |

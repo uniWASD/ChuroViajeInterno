@@ -4,7 +4,8 @@
  * Evita ocultar fechas de uso común. No es una eliminación universal de datos personales.
  */
 export const MASCARA = '[número]';
-const TELEFONO_CANDIDATO = /(?<![\p{L}\p{N}])(?:\+?\d|\(\d)[\d \t().-]{5,34}\d(?!\d)/gu;
+// Solo se mira que no haya un dígito justo antes: un número pegado a letras («cel71234567») también se oculta.
+const TELEFONO_CANDIDATO = /(?<!\d)(?:\+?\d|\(\d)[\d \t().-]{5,34}\d(?!\d)/gu;
 const FECHA = /^(?:\d{4}[-.]\d{1,2}[-.]\d{1,2}|\d{1,2}[.]\d{1,2}[.]\d{4})$/;
 
 export function maskPhones(text) {

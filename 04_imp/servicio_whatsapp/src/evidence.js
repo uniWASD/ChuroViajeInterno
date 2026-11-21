@@ -29,8 +29,11 @@ const FILAS = Object.freeze({
   SIN_FILA: /\b(?:sin fila|no hay fila|cero fila|fila cero|sin cola|no hay cola)\b/,
   CORTA: /\b(?:fila corta|poca fila|fila pequena|fila chiquita|cola corta|poca cola)\b/,
   MEDIA: /\b(?:fila media|fila mediana|cola media|cola mediana)\b/,
-  LARGA: /\b(?:fila larga|mucha fila|bastante fila|filon|cola larga|mucha cola)\b/
+  LARGA: /\b(?:fila larga|mucha fila|bastante fila|filon|filota|harta fila|larguisima|cola larga|mucha cola|harta cola|bastante cola)\b/
 });
+// Lo que todavía no pasó no confirma que haya combustible («va a llegar gasolina a Vegas»).
+const FUTURO = /\b(?:va a|van a|llegara|llegaran|vendra|traeran|esperando|esperan|manana|cuando)\b/;
+const MENCIONA_FILA = /\b(?:fila|filas|filon|filota|cola|colas)\b/;
 
 function fuelMentions(segmento, catalog) {
   const set = new Set();
@@ -81,18 +84,26 @@ function ultimaResolucion(texto, estados) {
   return negativos ? 'AGOTADO' : 'DISPONIBLE';
 }
 
-export function avisoRespaldado(texto, a, catalog) {
-  if (typeof texto !== 'string' || !a || esConsulta(texto)) return false;
+/**
+ * Revisa si el texto respalda el aviso propuesto por el LLM. Devuelve {estado, fila}: {@code estado} dice si el texto
+ * respalda el surtidor, el combustible y el estado; {@code fila} es la fila que el texto menciona para ese aviso
+ * (NO_MENCIONADA si no dice nada, null si dice dos cosas distintas). La fila se revisa aparte para no perder un
+ * «hay gasolina» solo porque la fila está dicha de una forma que estas reglas no conocen.
+ */
+export function respaldo(texto, a, catalog) {
+  const sin = {estado: false, fila: null};
+  if (typeof texto !== 'string' || !a || esConsulta(texto)) return sin;
   const normal = clave(texto);
   // Las fuentes indirectas o meramente conjeturales no confirman estados.
-  if (INCERTIDUMBRE.test(normal)) return false;
+  if (INCERTIDUMBRE.test(normal)) return sin;
   const presentes = estacionesMencionadas(normal, catalog);
-  if (!presentes.has(a.surtidor)) return false;
+  if (!presentes.has(a.surtidor)) return sin;
   const allFuels = fuelMentions(normal, catalog);
-  if (a.combustible === DESCONOCIDO ? allFuels.size !== 0 : !allFuels.has(a.combustible)) return false;
+  if (a.combustible === DESCONOCIDO ? allFuels.size !== 0 : !allFuels.has(a.combustible)) return sin;
 
   const clausulas = dividir(texto);
   const declaraciones = [];
+  let implicitas = 0;
   const pistasFila = [];
   let estacionActual = presentes.size === 1 ? a.surtidor : null;
   let combustibleAnterior = null;
@@ -109,6 +120,11 @@ export function avisoRespaldado(texto, a, catalog) {
     if (estacionActual === a.surtidor && objetivo) {
       if (positivo) declaraciones.push('DISPONIBLE');
       if (negativo) declaraciones.push('AGOTADO');
+      // «Las Vegas con gasolina», «gasolina en vegas»: nombrar el surtidor y el combustible, sin negación, sin fila
+      // y sin futuro, también es decir que hay. Solo con el combustible escrito en la misma frase, y solo si el
+      // mensaje no dice nada más explícito (más abajo).
+      if (!positivo && !negativo && combustibles.has(a.combustible) && !MENCIONA_FILA.test(clausula) &&
+          !FUTURO.test(clausula)) implicitas++;
     }
     if (estacionActual === a.surtidor && (combustibles.has(a.combustible) ||
       (combustibles.size === 0 && (allFuels.size <= 1 || combustibleAnterior === a.combustible)))) {
@@ -118,9 +134,16 @@ export function avisoRespaldado(texto, a, catalog) {
     if (combustibles.size === 1) combustibleAnterior = [...combustibles][0];
     else if (combustibles.size > 1) combustibleAnterior = null;
   }
-  if (ultimaResolucion(normal, declaraciones) !== a.estado) return false;
+  if (declaraciones.length === 0 && implicitas > 0) declaraciones.push('DISPONIBLE');
+  if (ultimaResolucion(normal, declaraciones) !== a.estado) return sin;
   const filasUnicas = new Set(pistasFila);
-  if (filasUnicas.size > 1) return false; // fila contradictoria sin resolución de tiempo
-  const inferida = [...filasUnicas][0] ?? FILA_NO_MENCIONADA;
-  return (a.fila ?? FILA_NO_MENCIONADA) === inferida;
+  // Dos filas distintas sin resolución de tiempo: el estado vale, la fila no.
+  if (filasUnicas.size > 1) return {estado: true, fila: null};
+  return {estado: true, fila: [...filasUnicas][0] ?? FILA_NO_MENCIONADA};
+}
+
+/** El aviso completo (estado y fila) tiene respaldo en el texto. */
+export function avisoRespaldado(texto, a, catalog) {
+  const r = respaldo(texto, a, catalog);
+  return r.estado && (a?.fila ?? FILA_NO_MENCIONADA) === r.fila;
 }

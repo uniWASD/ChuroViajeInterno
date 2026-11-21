@@ -1,6 +1,6 @@
 // Diagnóstico manual: solo informa los JID de grupos que enviaron mensajes nuevos.
 // No imprime texto, remitentes, nombres ni números de teléfono.
-import {createBaileysAdapters} from '../04_imp/servicio_whatsapp/src/baileys-adapter.js';
+import {createBaileysAdapters} from '../src/baileys-adapter.js';
 import {resolve} from 'node:path';
 
 if (!process.env.WHATSAPP_SESSION_PATH) {

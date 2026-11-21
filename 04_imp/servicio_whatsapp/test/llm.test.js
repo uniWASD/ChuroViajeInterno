@@ -6,6 +6,11 @@ import {clave, mencionaFrase} from '../src/normalize.js';
 import {validateCatalog} from '../src/catalog.js';
 import {config} from '../test-support/helpers.js';
 
+test('RN-06.6: un número pegado a letras también se enmascara', () => {
+  assert.equal(maskPhones('cel71234567 o wsp:71234567'), 'cel[número] o wsp:[número]');
+  assert.equal(maskPhones('el 20.11.2026 a las 14:30, 1000 litros'), 'el 20.11.2026 a las 14:30, 1000 litros');
+});
+
 test('RN-06.6: se enmascaran celulares y fijos, con o sin prefijo y separadores', () => {
   assert.equal(maskPhones('llamen al 71234567'), 'llamen al [número]');
   assert.equal(maskPhones('cel 712-34567, fijo 6641234 o +591 7 123 4567'), 'cel [número], fijo [número] o [número]');

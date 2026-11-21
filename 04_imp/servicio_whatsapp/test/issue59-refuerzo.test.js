@@ -31,14 +31,11 @@ const adversos = [
     {combustible: 'Diesel', fila: 'CORTA'}, false],
   ['NEG-59-02: estado contrario a la evidencia', 'ya hay gasolina en Las Vegas',
     {estado: 'AGOTADO'}, false],
-  ['NEG-59-03: fila larga inventada', 'ya hay gasolina en Las Vegas, fila corta',
-    {fila: 'LARGA'}, false],
   ['NEG-59-04: creencia no confirmada', 'creo que hay gasolina en Las Vegas', {}, false],
   ['NEG-59-05: versiones contradictorias', 'hay gasolina en Las Vegas, pero otro dice que no hay', {}, false],
   ['NEG-59-06: surtidor distinto aunque exista', 'ya hay gasolina en Las Vegas',
     {surtidor: 'El Portillo'}, false],
   ['NEG-59-07: pregunta sin signos', 'alguien sabe si hay gasolina en Las Vegas', {}, false],
-  ['NEG-59-08: falta respaldo para fila omitida', 'ya hay gasolina en Las Vegas, fila corta', {}, false],
   ['NEG-59-09: no se infiere combustible genérico de premium', 'hay gasolina premium en Las Vegas', {}, false],
   ['NEG-59-10: no se infiere diesel genérico de ULS', 'hay diesel ULS en Las Vegas',
     {combustible: 'Diesel'}, false],
@@ -73,6 +70,44 @@ for (const [nombre, texto, aviso, acepta] of adversos) {
     const obtenido = pruebaTexto(texto, aviso);
     assert.equal(obtenido.length, acepta ? 1 : 0);
     if (acepta) assert.equal(obtenido[0].fecha, FECHA);
+  });
+}
+
+// La fila se revisa aparte: si el texto no la respalda, el aviso sale sin fila en vez de perderse.
+for (const [nombre, texto, aviso] of [
+  ['NEG-59-03: fila larga inventada sale sin fila', 'ya hay gasolina en Las Vegas, fila corta', {fila: 'LARGA'}],
+  ['NEG-59-08: el LLM no dio la fila: sale sin fila', 'ya hay gasolina en Las Vegas, fila corta', {}],
+  ['NEG-59-16: fila dicha de otra forma: sale sin fila', 'en Vegas hay gasolina, fila de unas 3 cuadras', {fila: 'LARGA'}],
+  ['NEG-59-17: dos filas distintas: sale sin fila', 'hay gasolina en Las Vegas, fila corta, no, fila larga', {fila: 'CORTA'}]
+]) {
+  test(nombre, () => {
+    const obtenido = pruebaTexto(texto, aviso);
+    assert.equal(obtenido.length, 1);
+    assert.equal(obtenido[0].estado, 'DISPONIBLE');
+    assert.equal('fila' in obtenido[0], false);
+  });
+}
+
+// Sin verbo también se dice que hay, si la frase nombra el surtidor y el combustible.
+const sinVerbo = [
+  ['POSITIVO-59-08: surtidor con combustible', 'Las Vegas con gasolina', {}, true],
+  ['POSITIVO-59-09: combustible en surtidor', 'gasolina en vegas', {}, true],
+  ['POSITIVO-59-10: con emoji', 'Vegas: gasolina ✅', {}, true],
+  ['POSITIVO-59-11: fila larga dicha como larguísima', 'en Vegas hay gasolina, fila larguísima', {fila: 'LARGA'}, true],
+  ['NEG-59-18: lo que va a llegar no es que haya', 'mañana gasolina en Vegas', {}, false],
+  ['NEG-59-19: esperando no es que haya', 'esperando gasolina en Vegas', {}, false],
+  ['NEG-59-20: fila sin verbo no confirma combustible', 'fila larga en Vegas para gasolina', {}, false],
+  ['NEG-59-21: sin verbo no sirve para un combustible no escrito', 'Las Vegas con gasolina', {combustible: 'Diesel'}, false],
+  ['NEG-59-22: sin verbo no vale como pregunta', 'gasolina en vegas?', {}, false],
+  ['NEG-59-23: lo explícito gana a lo que se nombra sin verbo', 'ya no hay en vegas, gasolina', {}, false],
+  ['POSITIVO-59-12: lo explícito gana a lo que se nombra sin verbo', 'ya no hay en vegas, gasolina',
+    {estado: 'AGOTADO'}, true]
+];
+for (const [nombre, texto, aviso, acepta] of sinVerbo) {
+  test(nombre, () => {
+    const obtenido = pruebaTexto(texto, aviso);
+    assert.equal(obtenido.length, acepta ? 1 : 0);
+    if (acepta && aviso.fila) assert.equal(obtenido[0].fila, aviso.fila);
   });
 }
 
@@ -155,18 +190,38 @@ test('Mensajes caducados mientras el LLM trabaja NO generan POST', async t => {
   assert.equal(h.post.length, 0);
 });
 
-test('501 mensajes pendientes entran en un único lote ordenado (sin tope previo de 500)', async t => {
+test('501 mensajes pendientes se analizan en el mismo ciclo, en dos llamadas de 500 y 1, en orden', async t => {
   const {h, store, service} = context(t, () => ({avisos: [], descartados: []}),
     () => {throw new Error('No debería llamar al backend.');});
   for (let i = 0; i < 501; i++) ingresar(service, `i-${i}`, `texto informativo ${i}`, horaTarija(NOW - i * 1000));
   await service.analyzeCycle();
-  assert.equal(h.invocaciones.length, 1);
-  const mensajes = JSON.parse(h.invocaciones[0].user).mensajes;
-  assert.equal(mensajes.length, 501);
-  assert.equal(mensajes[0].texto, 'texto informativo 500');
-  assert.equal(mensajes.at(-1).texto, 'texto informativo 0');
+  assert.equal(h.invocaciones.length, 2);
+  const primera = JSON.parse(h.invocaciones[0].user).mensajes;
+  const segunda = JSON.parse(h.invocaciones[1].user).mensajes;
+  assert.equal(primera.length, 500);
+  assert.equal(segunda.length, 1);
+  assert.equal(primera[0].texto, 'texto informativo 500');
+  assert.equal(segunda[0].texto, 'texto informativo 0');
+  // Cada llamada numera sus mensajes desde m1, y el esquema solo admite esos ids.
+  assert.equal(segunda[0].id, 'm1');
   assert.equal(store.countPending(), 0);
   assert.equal(h.post.length, 0);
+});
+
+test('Si falla la segunda llamada, lo de la primera se entrega y el resto queda pendiente', async t => {
+  let llamadas = 0;
+  const {h, store, service} = context(t, ({user}) => {
+    if (++llamadas === 2) throw new ErrorServicio('LLM_NO_DISPONIBLE', 'caído');
+    return {avisos: [], descartados: JSON.parse(user).mensajes.map(m => ({mensaje: m.id, motivo: 'SIN_SURTIDOR'}))};
+  }, () => {throw new Error('No debería llamar al backend.');});
+  for (let i = 0; i < 501; i++) ingresar(service, `f-${i}`, `texto informativo ${i}`, horaTarija(NOW - i * 1000));
+  await service.analyzeCycle();
+  assert.equal(h.invocaciones.length, 2);
+  assert.equal(store.countPending(), 1);
+  assert.equal(store.getById('f-0').estado, STATUS.PENDING);
+  assert(h.eventos.some(l => l.includes('"evento":"LLM_FALLO"') && l.includes('"mensajes":1')));
+  assert(h.eventos.some(l => l.includes('"evento":"LOTE_ANALIZADO"') && l.includes('"mensajes":500') &&
+    l.includes('"llamadas":1')));
 });
 
 test('Un 422 descarta el resultado inválido sin bloquear el siguiente', async t => {

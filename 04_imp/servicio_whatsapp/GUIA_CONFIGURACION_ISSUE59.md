@@ -139,11 +139,11 @@ $env:SPRING_APPLICATION_JSON = '{"spring":{"datasource":{"url":"jdbc:postgresql:
 
 Solo con **autorización auténtica del administrador e integrantes informados**. Usar una cuenta WhatsApp dedicada. La biblioteca Baileys **no es la API oficial de WhatsApp**; considerar riesgos de compatibilidad/cuenta. No usar conversaciones reales para la validación Free Tier.
 
-Los scripts auxiliares de la entrega están en `herramientas/`. El descubridor imprime el JID de **mensajes nuevos** (no su texto):
+Los scripts auxiliares están en `04_imp/servicio_whatsapp/herramientas/`. El descubridor imprime el JID de **mensajes nuevos** (no su texto):
 
 ```powershell
-# Desde la raíz del repositorio, con npm install ya ejecutado:
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\herramientas\03_IDENTIFICAR_GRUPO.ps1
+# Desde 04_imp\servicio_whatsapp, con npm install ya ejecutado:
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\herramientas\identificar_grupo.ps1
 # En el teléfono (cuenta dedicada): Dispositivos vinculados → Vincular dispositivo.
 # Un contacto autorizado envía un mensaje sintético nuevo al grupo.
 # Anotar el JID en almacenamiento privado y detener descubridor con Ctrl+C.

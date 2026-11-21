@@ -1,0 +1,14 @@
+DIAGNOSTICO ISS-59 - SIN TELEFONO, SIN JID, SIN CLAVES, SIN MENSAJES
+FechaLocal: 2026-11-20 00:06:37 -04:00
+Sistema: Win32NT
+Node: v22.18.0
+npm: 10.9.3
+Pruebas: 139
+Aprobadas: 138
+Fallidas: 0
+Omitidas: 1
+ExitCodeNpmTest: 0
+FuenteJavaDescargada: True
+WhatsAppReal: NO_VALIDADO_POR_ESTE_SCRIPT
+GeminiReal: NO_VALIDADO_POR_ESTE_SCRIPT
+CP77: REQUIERE_VERIFICACION_MANUAL_Y_SQL

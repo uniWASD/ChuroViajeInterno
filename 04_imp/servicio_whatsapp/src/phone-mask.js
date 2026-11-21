@@ -1,13 +1,18 @@
 /**
- * RN-06.6 y D-17: antes de enviar un texto al LLM se enmascaran los números de teléfono. Se toma como teléfono
- * cualquier secuencia de 7 a 15 dígitos, con o sin «+» y con espacios, puntos o guiones entre ellos: cubre los
- * celulares de Bolivia (71234567, 712-34567, +591 71234567) y los fijos (6641234). Una hora, una fecha con barras
- * o una cantidad corta («1000 litros») no llegan a 7 dígitos seguidos y quedan como están.
+ * RN-06.6: oculta teléfonos bolivianos/internacionales antes de cualquier petición al LLM.
+ * Admite prefijo +, separadores y paréntesis: +591 (712) 34567, (04) 6641234.
+ * Evita ocultar fechas de uso común. No es una eliminación universal de datos personales.
  */
 export const MASCARA = '[número]';
-const TELEFONO = /\+?\d(?:[ .-]?\d){6,14}(?!\d)/g;
+// Solo se mira que no haya un dígito justo antes: un número pegado a letras («cel71234567») también se oculta.
+const TELEFONO_CANDIDATO = /(?<!\d)(?:\+?\d|\(\d)[\d \t().-]{5,34}\d(?!\d)/gu;
+const FECHA = /^(?:\d{4}[-.]\d{1,2}[-.]\d{1,2}|\d{1,2}[.]\d{1,2}[.]\d{4})$/;
 
 export function maskPhones(text) {
   if (typeof text !== 'string') throw new TypeError('Se requiere texto.');
-  return text.replace(TELEFONO, MASCARA);
+  return text.replace(TELEFONO_CANDIDATO, candidate => {
+    const digits = candidate.replace(/\D/g, '');
+    if (digits.length < 7 || digits.length > 15 || FECHA.test(candidate.trim())) return candidate;
+    return MASCARA;
+  });
 }

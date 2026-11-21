@@ -7,7 +7,7 @@ const EVENTS = new Set(['SERVICIO_INICIADO','SERVICIO_DETENIDO','MANTENIMIENTO',
   'RESULTADO_ENVIADO','RESULTADO_GUARDADO','RESULTADO_RECHAZADO','RESULTADO_ESPERA_CREDENCIAL',
   'RESULTADO_VENCIDO','ERROR_ANALISIS']);
 const METRICS = new Set(['caducados','pendientes','depurados','mensajes','avisos','descartados','descartadosValidador',
-  'aceptados','descartadosBackend','estadoHttp','resultados']);
+  'aceptados','descartadosBackend','estadoHttp','resultados','llamadas','filasQuitadas']);
 const CODES = new Set(['CONFIG_INVALIDA','AUTORIZACION_INVALIDA','SESION_INVALIDA','ESQUEMA_NO_PERMITIDO','SERVICIO_CERRADO','ERR_SQLITE_ERROR','ERR_SQLITE_CANTOPEN',
   'LLM_NO_DISPONIBLE','LLM_CUOTA','LLM_FORMATO','BACKEND_CONEXION','BACKEND_HTTP','BACKEND_FORMATO','CATALOGO_INVALIDO','RESULTADO_INVALIDO']);
 const SYSTEM_CODE = /^E[A-Z0-9]+$/;

@@ -27,7 +27,7 @@ REGLAS:
 9. Si no dice qué combustible, usa "${DESCONOCIDO}". Gasolina especial, "clarita", "blanca", "blanquita", "limpia" o "especial" es Gasolina; "plus", "premium" o "amarilla" es Gasolina Premium; "ULS" o "ultra bajo azufre" es Diesel ULS; diésel o diesel sin más es Diesel.
 10. Un mensaje puede dar varios avisos (por ejemplo, de dos combustibles o dos surtidores). Usa un aviso por surtidor y combustible.
 11. La fila solo si el mensaje la menciona: sin fila o no hay fila es SIN_FILA; poca fila es CORTA; fila mediana es MEDIA; mucha fila, fila larga o filón es LARGA. Si no la menciona, ${FILA_NO_MENCIONADA}.
-12. Todo mensaje del lote aparece una vez: en avisos (uno o más) o en descartados.
+12. En el campo "mensaje" escribe EXCLUSIVAMENTE el "id" del mensaje recibido (m1, m2, m3, ...). NUNCA copies ni resumas el texto del mensaje ni su fecha en ese campo. Todo mensaje del lote aparece una vez: en avisos (uno o más) o en descartados.
 13. Responde exclusivamente con el JSON del esquema.
 
 SURTIDORES DEL CATÁLOGO Y SUS ALIAS:
@@ -38,8 +38,11 @@ FILAS: ${[...catalog.filas, FILA_NO_MENCIONADA].join(', ')}.`;
 }
 
 /** Salida estructurada que se le pide al LLM (JSON Schema). La fecha no la da el LLM: es la del mensaje (RN-06.16). */
-export function outputSchema(catalog) {
-  const ref = {type: 'string'};
+export function outputSchema(catalog, nMensajes = null) {
+  const ids = Number.isInteger(nMensajes) && nMensajes > 0 && nMensajes <= 200
+    ? {enum: Array.from({length: nMensajes}, (_, i) => `m${i + 1}`)}
+    : {};
+  const ref = {type: 'string', ...ids};
   return {
     type: 'object',
     properties: {

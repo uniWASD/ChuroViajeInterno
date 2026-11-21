@@ -1,0 +1,44 @@
+CHUROVIAJE - ISSUE 59
+EVIDENCIA DE RECUPERACION REAL RN-06.19
+=======================================
+
+TIPO DE PRUEBA:
+Caida controlada y recuperacion del backend Java real.
+
+EVIDENCIA OBSERVADA DURANTE LA CAIDA:
+Java desconectado: confirmado
+PostgreSQL activo: confirmado
+LOTE_ANALIZADO: 1 mensaje y 1 aviso
+RESULTADO_GUARDADO: BACKEND_CONEXION
+Resultados pendientes en SQLite: 1
+Avisos pendientes en SQLite: 1
+Textos en mensajes procesados: 0
+
+EVIDENCIA OBSERVADA TRAS LA RECUPERACION:
+Spring Boot: iniciado correctamente
+Flyway: esquema en version V8
+RESULTADO_ENVIADO: 1 aviso
+Aceptados por Java: 1
+Resultados pendientes actuales: 0
+Avisos pendientes actuales: 0
+Textos en mensajes procesados: 0
+Resultado sin columna de texto: True
+
+DATOS FINALES VERIFICADOS EN POSTGRESQL:
+Surtidor: El Portillo
+Combustible: GASOLINA
+Disponible: t
+Fila: CORTA
+Origen: WHATSAPP
+Fecha del dato: 2026-11-20 04:25:44+00
+Actualizado en: 2026-11-20 04:35:35.785116+00
+
+CONCLUSION:
+RN-06.19 APROBADO EN PRUEBA REAL.
+El aviso fue conservado durante la caida de Java
+y entregado despues de recuperar el backend.
+
+La evidencia de eventos procede de los registros
+de consola aportados durante la prueba.
+La cola SQLite y el registro PostgreSQL fueron
+comprobados nuevamente al generar este informe.

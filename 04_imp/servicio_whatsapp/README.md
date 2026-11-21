@@ -83,10 +83,12 @@ WHATSAPP_SERVICE_CONFIG_FILE=/etc/churoviaje/whatsapp.json npm start
 | `ALLOWED_GROUP_IDS` | Lista de grupos separados por comas, o arreglo en JSON | Obligatoria |
 | `WHATSAPP_SERVICE_CONFIG_FILE` | Ruta de archivo JSON fuera del servicio y de repositorios Git | Ninguno |
 | `SQLITE_PATH` | SQLite privado; una ruta relativa se interpreta desde el directorio de este servicio, independientemente del directorio de ejecución | `./data/pendientes.sqlite` |
-| `MAINTENANCE_INTERVAL_MS` | Mantenimiento de pendientes y depuración de filas (no ejecuta análisis LLM) | `300000` (5 minutos) |
+| `MAINTENANCE_INTERVAL_MS` | Revisión de vencidos; máximo 60000 ms | `60000` (1 minuto) |
 | `SERVICE_AUTH_HEADER` | Cabecera de autenticación provisional hasta acordar Java | `Authorization` |
 | `SERVICE_TOKEN_PREFIX` | Prefijo de la credencial; debe terminar en espacio, o ser vacío | `Bearer ` |
-| `LLM_API_KEY` | Reservada para una tarea posterior; actualmente no se usa | Cadena vacía |
+| `LLM_API_KEY` | Clave activa del proveedor Gemini; sin ella no se programa el análisis | Cadena vacía |
+| `LLM_MODEL` | Modelo de clasificación | `gemini-3.1-flash-lite` |
+| `ANALYSIS_INTERVAL_MS` | Lotes de clasificación; máximo 300000 ms | `300000` (5 minutos) |
 
 `POLL_INTERVAL_MS` ya no se admite: utilizar `MAINTENANCE_INTERVAL_MS`. `npm start` no envía solicitudes al backend al iniciar, por lo que la ausencia del backend Java todavía no impide probar el arranque. Detener el servicio con `Ctrl+C`.
 
@@ -200,24 +202,24 @@ La verificación de autorizaciones es documental: el software exige un registro 
 ### Ciclo
 
 - **Cada minuto** (`MAINTENANCE_INTERVAL_MS`, 60000) se descartan los mensajes con más de 30 minutos y se borra su texto. Además, cada mensaje tiene su propio aviso al vencer, así que nunca espera al ciclo (RN-06.11, RN-06.12).
-- **Cada 5 minutos** (`ANALYSIS_INTERVAL_MS`, 300000) corre `analyzeCycle()` (RN-06.5): primero reenvía los resultados que el backend no recibió (RN-06.19); después, si hay pendientes, pide el catálogo con `GET /monitoreo/surtidores`, arma un solo lote ordenado por fecha y lo manda al LLM. Sin pendientes no se llama al LLM ni al backend. Dos ciclos nunca se superponen.
+- **Cada 5 minutos** (`ANALYSIS_INTERVAL_MS`, 300000) corre `analyzeCycle()` (RN-06.5): si hay pendientes, pide el catálogo con `GET /monitoreo/surtidores`, arma un lote ordenado por fecha y lo manda al LLM, de a 500 mensajes por llamada. El lote nuevo se entrega inmediatamente; los resultados antiguos se reintentan a continuación para que una falla previa del backend no impida analizar mensajes nuevos. Sin pendientes no llama al LLM; si existen resultados antiguos, sí puede llamar al backend para reenviarlos. Dos ciclos nunca se superponen.
 - Si el LLM falla (sin conexión, error, cuota o una respuesta que no cumple el esquema), los mensajes siguen pendientes para el ciclo siguiente (RN-06.10). Como vencen a los 30 minutos, un mensaje tiene unos cinco intentos.
 - Si el backend no entrega el catálogo, se usa el último que se leyó; si nunca se leyó uno, el lote espera.
 - Analizado el lote, en **una sola transacción** de SQLite los mensajes quedan `PROCESADO` sin texto y el resultado queda en la tabla `resultado_pendiente`, que solo guarda los avisos del contrato (surtidor, combustible, estado, fila y fecha) (RN-06.12, RN-06.19). Enseguida se envía con `POST /monitoreo/resultados` (RN-06.18). Con 200 se borra; con 400 o 422 se registra y se suelta; con 401, 403, 5xx o sin conexión se conserva y se reenvía en el ciclo siguiente. Un resultado que no se pudo entregar en 24 horas se suelta. Más de 1000 avisos se entregan en varios lotes.
 
 ### Qué viaja al LLM
 
-Solo el texto y la fecha de cada mensaje, con un identificador que es su posición en el lote (`m1`, `m2`…), no el de WhatsApp; no viajan el grupo ni nada del remitente. Antes de enviarlo, `src/phone-mask.js` reemplaza por `[número]` toda secuencia de 7 a 15 dígitos, con o sin `+` y con espacios, puntos o guiones (RN-06.6). Junto al lote viaja el catálogo del backend: surtidores con sus alias, combustibles y filas.
+Solo el texto y la fecha de cada mensaje, con un identificador que es su posición en el lote (`m1`, `m2`…), no el de WhatsApp; no viajan el grupo ni nada del remitente. Antes de enviarlo, `src/phone-mask.js` reemplaza por `[número]` las secuencias telefónicas de 7 a 15 dígitos, incluso con `+`, paréntesis, espacios, puntos o guiones, sin ocultar las fechas comunes (RN-06.6). Junto al lote viaja el catálogo del backend: surtidores con sus alias, combustibles y filas.
 
 El prompt (`src/llm-prompt.js`) es el de la investigación del issue #10 (rama `feature/HU08-CU06-AnalisisLLM`, `05_pro/PruebaAnalisisLLM/03des/HU08_CU06_investigacion_LLM.md`, sección 8.2), con dos cambios: el catálogo sale del backend y no de una lista fija, y cada mensaje se analiza solo, sin ventanas de contexto. Se pide salida estructurada (`responseJsonSchema`) con los surtidores, combustibles y filas del catálogo como valores cerrados. El LLM no devuelve fechas: la fecha del aviso es siempre la del mensaje (RN-06.16).
 
 ### Validación antes de enviar
 
-`src/analysis.js` aplica la validación determinista de la sección 9 de la investigación. Se descarta un aviso si: el mensaje no existe en el lote; el surtidor, combustible, estado o fila no son del catálogo; el surtidor no aparece en el texto por su nombre o un alias; el mensaje es una pregunta (lleva «¿» o termina en «?»); o el mismo mensaje dice que hay y que no hay del mismo surtidor y combustible (RN-06.7 a RN-06.9). Un combustible no mencionado va como `Desconocido` (RN-06.8). El registro cuenta los descartes del LLM y los del validador, nunca su contenido.
+`src/analysis.js` y `src/evidence.js` aplican una segunda barrera determinista de respaldo textual conforme a los principios de la investigación #10 §9. Se descarta un aviso si su surtidor no aparece, su combustible no está respaldado, su estado contradice las expresiones de disponibilidad/agotamiento, se trata de una consulta, contiene rumores/ambigüedades o afirma estados incompatibles sin resolución temporal clara. Nombrar el surtidor y el combustible en la misma frase, sin negación, sin fila y sin futuro («Las Vegas con gasolina», «gasolina en vegas») cuenta como que hay. La fila se revisa aparte: si el texto no respalda la fila que propuso el LLM, el aviso sale **sin fila** en vez de perderse (se cuenta en `filasQuitadas`). El validador es **conservador**: ante expresiones no cubiertas se descarta en vez de inventar un estado. No comprueba la veracidad externa de los mensajes; los casos de lenguaje informal no contemplados requieren pruebas con datos sintéticos y revisión del equipo. Si un mismo ID aparece en `avisos` y `descartados`, se descarta. La fecha siempre se toma del mensaje original; los caducados durante la llamada al LLM no se publican. Un combustible no mencionado puede ir como `Desconocido` (RN-06.8). Los registros no guardan contenido privado.
 
 ### Gemini y sus términos (D-17)
 
-Se usa la API de Gemini, modelo `gemini-3.1-flash-lite` (`LLM_MODEL`), con la clave en la cabecera `x-goog-api-key`, nunca en la URL. **La capa gratuita es un «servicio no pagado»: según los términos adicionales de la API de Gemini, Google usa lo enviado y las respuestas para mejorar sus productos, personas pueden leerlo y Google pide no enviar información personal o confidencial.** Por eso se enmascaran los teléfonos y no viajan grupos ni remitentes; la investigación del issue #10 recomienda activar la facturación antes de procesar conversaciones reales. Términos: <https://ai.google.dev/terms> (vigentes desde el 23 de marzo de 2026), revisados el 14 de noviembre de 2026.
+Se usa la API de Gemini, modelo `gemini-3.1-flash-lite` (`LLM_MODEL`), con la clave en la cabecera `x-goog-api-key`, nunca en la URL. **La capa gratuita es un «servicio no pagado»: según los términos adicionales de la API de Gemini, Google usa lo enviado y las respuestas para mejorar sus productos, personas pueden leerlo y Google pide no enviar información personal o confidencial.** Por eso se enmascaran los teléfonos y no viajan grupos ni remitentes; la investigación del issue #10 recomienda activar la facturación antes de procesar conversaciones reales. Términos oficiales: <https://ai.google.dev/gemini-api/terms> (en vigor desde el 23 de marzo de 2026), consultados el 17 de noviembre de 2026. El enmascarado telefónico **no equivale a anonimización total**; para el Free Tier utilizar únicamente datos ficticios o autorizados cuya divulgación sea admisible según los términos.
 
 ### Configuración
 
@@ -231,5 +233,16 @@ Se usa la API de Gemini, modelo `gemini-3.1-flash-lite` (`LLM_MODEL`), con la cl
 
 ### Pruebas
 
-`test/analisis-lotes.test.js` y `test/llm.test.js` usan un LLM y un backend simulados: CP-74 (aviso de Las Vegas, Gasolina, disponible, fila corta), CP-75 (la pregunta se descarta), CP-76 (LLM caído y reintento), CP-78 (el número llega enmascarado), backend caído y reenvío, 400 y 403 del backend, validador, catálogo caído, lotes de más de 1000 avisos y ciclos superpuestos. Las pruebas imprimen el registro del servicio como evidencia; no contiene textos, números ni nombres. CP-77 (de punta a punta con el backend real) se comprobó con `demo/cp77-extremo-a-extremo.js`; ver su encabezado.
+`test/analisis-lotes.test.js`, `test/llm.test.js` y `test/issue59-refuerzo.test.js` usan un LLM y un backend simulados: CP-74 (aviso de Las Vegas, Gasolina, disponible, fila corta), CP-75 (la pregunta se descarta), CP-76 (LLM caído y reintento), CP-78 (el número llega enmascarado), backend caído y reenvío, 400 y 403 del backend, validador, catálogo caído, lotes de más de 1000 avisos y ciclos superpuestos. Las pruebas imprimen el registro del servicio como evidencia; no contiene textos, números ni nombres. CP-77 (de punta a punta con el backend real) se comprobó con `demo/cp77-extremo-a-extremo.js`; ver su encabezado.
 
+
+
+### Comprobaciones adicionales de esta revisión (issue #59)
+
+- Se agregaron controles de evidencia textual para combustible, estado y fila; descartes de rumores, contradicciones y solicitudes; y consistencia entre avisos y descartados. La decisión de analizar cada mensaje independientemente se conserva.
+- El reenvío de resultados viejos deja de bloquear mensajes nuevos; los POST de lotes nuevos tienen prioridad temporal. El timeout predeterminado de la llamada a Gemini se limita a 45 segundos (RNF-04; la latencia real requiere CP-77).
+- Se verifica nuevamente la vigencia de mensajes después de la llamada a Gemini. Un texto caducado mientras se esperaba respuesta no genera un aviso.
+- Un ciclo toma hasta 10000 pendientes y los manda al LLM de a 500 por llamada, del más viejo al más nuevo (`MAX_MENSAJES_POR_LLAMADA`). Así un backlog grande no arma una sola llamada que se pase de lo que acepta el modelo. Si una llamada falla, lo ya analizado se entrega y el resto queda pendiente para el ciclo siguiente (RN-06.10).
+- Las pruebas `npm test` incluyen recorrido HTTP local con Gemini y backend simulados. Es **integración de simuladores**, no CP-77 con Java, Gemini y WhatsApp reales.
+- `npm run smoke:gemini` prueba una llamada a **Gemini real** con mensajes inventados y la clave puesta por el operador en `LLM_API_KEY` (no ejecutado sin clave). No imprime prompts, respuestas ni teléfonos.
+- El procedimiento manual de CP-77 y las rutas del backend Java están en `VALIDACION_REAL_ISSUE59.md`, junto a los estados de evidencia.

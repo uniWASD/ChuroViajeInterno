@@ -37,6 +37,7 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los i
 | CP-79 (tras reiniciar, el backend y el núcleo vuelven solos) | Hecho el 12/11/2026. Falta probar el inicio de sesión desde la app |
 | CP-80 (al matar el núcleo, el backend lo vuelve a arrancar) | Hecho el 12/11/2026 |
 | Ambiente de pruebas del simulador (T-106, #86) | Preparado en el repositorio: sección 11. Falta correrlo en el servidor y CP-145 |
+| Respaldos diarios y registros de 14 días (T-103, #79) | Preparado en el repositorio: sección 12. Faltan el bucket y la política en la consola, correrlo en el servidor y CP-129 |
 
 ## Datos del servidor
 
@@ -437,6 +438,69 @@ sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/simular.sh 
 sudo tail -n 20 /var/log/churoviaje-pruebas-carga/pruebas-carga.log
 ```
 
+### 12. Respaldos y registros
+
+T-103 (#79). Que un error no haga perder los datos y que los registros no llenen el disco ni guarden datos de los conductores ([06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md)).
+
+**Respaldos.** Todos los días a las 04:00 de Tarija, después de la limpieza diaria del backend (03:30, T-105), `churoviaje-respaldo.timer` respalda la base `churoviaje` con `pg_dump` y lo sube al almacenamiento de objetos de Oracle Cloud, fuera de la instancia. En el bucket quedan los 7 más recientes; en `/var/backups/churoviaje`, solo de root, los 2 últimos. Junto a cada respaldo va un `.resumen`: cuántos eventos, votos, surtidores, estados y conductores había y una huella del contenido de eventos y surtidores, calculados en la misma instantánea que `pg_dump`. Con eso, la prueba de restauración compara de verdad.
+
+El servidor sube los respaldos con su propia identidad (*instance principal*): no hay ninguna llave de Oracle Cloud guardada en el disco. Para eso, una sola vez en la consola de Oracle Cloud:
+
+1. **Bucket.** Storage → Buckets → *Create Bucket*, en el compartimento de la instancia: nombre `churoviaje-respaldos`, nivel Standard, **sin acceso público**. El nivel Always Free incluye 20 GB; los respaldos pesan poco.
+2. **Grupo dinámico.** Identity & Security → Domains → `Default` → Dynamic groups → *Create*: nombre `churoviaje-servidor`, regla `instance.id = '<OCID de churoviaje-server>'` (el OCID está en la página de la instancia).
+3. **Política.** Identity & Security → Policies, en el mismo compartimento → *Create Policy*: nombre `churoviaje-respaldos`, con:
+
+```text
+Allow dynamic-group 'Default'/'churoviaje-servidor' to read buckets in compartment <compartimento> where target.bucket.name = 'churoviaje-respaldos'
+Allow dynamic-group 'Default'/'churoviaje-servidor' to manage objects in compartment <compartimento> where target.bucket.name = 'churoviaje-respaldos'
+```
+
+La política solo deja tocar ese bucket. Puede tardar un par de minutos en aplicarse.
+
+Después, como `ubuntu`:
+
+```bash
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/instalar-respaldos.sh churoviaje-respaldos
+sudo systemctl start churoviaje-respaldo                  # el primer respaldo, ahora
+sudo journalctl -u churoviaje-respaldo -n 20 --no-pager
+```
+
+El instalador pone la CLI de Oracle Cloud en `/opt/oci-cli`, comprueba que la instancia ve el bucket, y copia el script del respaldo a `/usr/local/sbin` como archivo de root: el temporizador corre como root y no debe ejecutar algo que `deploy` puede cambiar. Si se cambia el script en el repositorio, hay que volver a correr el instalador.
+
+**Restaurar.** El respaldo se restaura en una base aparte, `churoviaje_restaurada`; producción no se toca. El script calcula el mismo resumen sobre la base restaurada y lo compara con el del respaldo:
+
+```bash
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/probar-restauracion.sh             # el más reciente
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/probar-restauracion.sh 2026-11-22  # el de ese día
+```
+
+Para una restauración real (perder la base de producción), con el servicio detenido:
+
+```bash
+sudo systemctl stop churoviaje-backend
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/probar-restauracion.sh <día> --conservar
+sudo -u postgres psql -c "ALTER DATABASE churoviaje RENAME TO churoviaje_danada;"
+sudo -u postgres psql -c "ALTER DATABASE churoviaje_restaurada RENAME TO churoviaje;"
+sudo systemctl start churoviaje-backend
+```
+
+La base restaurada y sus tablas ya son del usuario de la aplicación (`churoviaje_app`), como las de producción. Cuando todo funcione, `churoviaje_danada` se puede borrar.
+
+**Registros.** Una sola vez, y otra vez después de pedir un certificado nuevo con certbot (certbot agrega bloques `server` nuevos):
+
+```bash
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/configurar-registros.sh --borrar-registros-viejos
+```
+
+| Registro | Dónde | Cuánto dura | Qué no guarda |
+|---|---|---|---|
+| Backend, núcleo y servicio de WhatsApp/LLM | journald | 14 días, como mucho 1 GB ([registros/journald-churoviaje.conf](registros/journald-churoviaje.conf)) | Ubicaciones ni conductores (no los registran); textos de mensajes (el servicio solo registra eventos de una lista fija) |
+| Accesos a Nginx | `/var/log/nginx/access.log` | 14 días, un archivo por día ([registros/logrotate-nginx](registros/logrotate-nginx)) | La consulta de las URL (con la ubicación en `GET /surtidores` y `GET /lugares`), la IP completa ni el referer ([registros/nginx-formato.conf](registros/nginx-formato.conf)) |
+| Errores de Nginx | `/var/log/nginx/error.log` | 14 días | Solo los críticos: en los niveles más bajos Nginx copia la línea de la petición con su consulta |
+| Pruebas de carga | `/var/log/churoviaje-pruebas-carga` | Hasta revisarlos | Nada de un conductor: solo números de cada prueba (RN-07.11) |
+
+`--borrar-registros-viejos` borra los registros de Nginx que ya estaban escritos, porque tienen la consulta con la ubicación. Si `nginx -t` falla, el script deja Nginx como estaba.
+
 ## Salida hacia la API de ANH
 
 Antes de que el backend dependa de ANH, el 29 de octubre de 2026 se comprobó desde la instancia que las consultas llegan y que el certificado se verifica. Cubre el issue T-119 (#111) y el caso de prueba CP-156. El informe técnico de ANH y el cliente de prueba están en `05_pro/PruebaApiANH`.
@@ -515,6 +579,16 @@ sudo -u deploy cat /etc/churoviaje/backend.env
 ```
 
 CP-79: después de `sudo reboot`, los mismos comandos deben dar lo mismo sin tocar nada.
+
+CP-129: el respaldo de ayer se restaura en una base aparte y tiene los mismos eventos y surtidores (la salida no tiene IPs, llaves ni contraseñas):
+
+```bash
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/probar-restauracion.sh "$(date -d yesterday +%F)"
+systemctl list-timers churoviaje-respaldo.timer --no-pager
+sudo /opt/oci-cli/bin/oci os object list --auth instance_principal --bucket-name churoviaje-respaldos --query 'data[].name' --all
+```
+
+El registro de acceso no debe tener `?`: `sudo grep -c '?' /var/log/nginx/access.log` debe dar 0.
 
 CP-145 (ambiente de pruebas encendido): `POST /sesion/prueba` debe dar 200 con un JWT en `pruebas.churoviaje.orelqu.com` y 403 `ACCESO_DENEGADO` en `churoviaje.orelqu.com`. El script no muestra la credencial ni el JWT, y borra al final el conductor simulado que creó:
 

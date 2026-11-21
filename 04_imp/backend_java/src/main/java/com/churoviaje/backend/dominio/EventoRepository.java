@@ -69,4 +69,14 @@ public interface EventoRepository {
      * por cambios lo entregue (RN-02.6).
      */
     void actualizarVotos(EventoVial evento, boolean cambioDeEstado, Instant ahora);
+
+    /** Cuántos eventos y votos borró la limpieza. */
+    record Borrados(int eventos, int votos) {}
+
+    /**
+     * P-21 y T-105: borra, con sus votos, los eventos que dejaron de mostrarse antes de {@code limite}: los retirados
+     * desde que se retiraron y los demás desde que vencieron, aunque la tarea periódica no los haya marcado. Un evento
+     * vigente nunca se borra.
+     */
+    Borrados borrarTerminadosAntesDe(Instant limite, Instant ahora);
 }

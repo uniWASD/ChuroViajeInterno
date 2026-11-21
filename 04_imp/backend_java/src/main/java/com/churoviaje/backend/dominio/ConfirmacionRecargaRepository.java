@@ -9,4 +9,7 @@ public interface ConfirmacionRecargaRepository {
     boolean existeDesde(long conductorId, long surtidorId, String tipoCodigo, Instant desde);
 
     void guardar(ConfirmacionRecarga confirmacion);
+
+    /** P-21 y T-105: borra las confirmaciones anteriores a {@code limite}. Devuelve cuántas borró. */
+    int borrarAnterioresA(Instant limite);
 }

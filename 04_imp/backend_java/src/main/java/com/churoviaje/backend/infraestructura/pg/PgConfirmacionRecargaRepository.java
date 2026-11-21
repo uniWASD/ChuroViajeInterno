@@ -59,4 +59,16 @@ public class PgConfirmacionRecargaRepository implements ConfirmacionRecargaRepos
             throw new ErrorDeBaseDeDatos("guardar la confirmación de recarga", e);
         }
     }
+
+    @Override
+    public int borrarAnterioresA(Instant limite) {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement(
+                        "delete from confirmacion_recarga where fecha < ?")) {
+            ponerInstante(sentencia, 1, limite);
+            return sentencia.executeUpdate();
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("borrar las confirmaciones viejas", e);
+        }
+    }
 }

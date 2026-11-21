@@ -264,6 +264,42 @@ public class PgEventoRepository implements EventoRepository {
         }
     }
 
+    @Override
+    public Borrados borrarTerminadosAntesDe(Instant limite, Instant ahora) {
+        // Los votos se borran en cascada (V6); se cuentan antes para el registro. Un evento solo se borra si ya no
+        // está vigente: retirado, o vencido según su tipo (RN-02.3).
+        String terminados = """
+                select e.id from evento_vial e join tipo_evento t on t.codigo = e.tipo_codigo
+                where (e.estado = 'RETIRADO' and e.actualizado_en < ?)
+                   or (e.estado <> 'RETIRADO' and %s < ? and %s <= ?)
+                """.formatted(VENCE, VENCE);
+        try (Connection conexion = conexiones.getConnection()) {
+            int votos;
+            try (PreparedStatement sentencia = conexion.prepareStatement(
+                    "select count(*) from voto where evento_id in (" + terminados + ")")) {
+                ponerTerminados(sentencia, limite, ahora);
+                try (ResultSet fila = sentencia.executeQuery()) {
+                    fila.next();
+                    votos = fila.getInt(1);
+                }
+            }
+            try (PreparedStatement sentencia = conexion.prepareStatement(
+                    "delete from evento_vial where id in (" + terminados + ")")) {
+                ponerTerminados(sentencia, limite, ahora);
+                return new Borrados(sentencia.executeUpdate(), votos);
+            }
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("borrar los eventos terminados", e);
+        }
+    }
+
+    private static void ponerTerminados(PreparedStatement sentencia, Instant limite, Instant ahora)
+            throws SQLException {
+        ponerInstante(sentencia, 1, limite);
+        ponerInstante(sentencia, 2, limite);
+        ponerInstante(sentencia, 3, ahora);
+    }
+
     /**
      * La consulta ya trae solo los vigentes; igual, cada {@link EventoVial} responde si sigue vigente (RN-02.2 a
      * RN-02.4) y sale como DTO, sin datos de conductores (RN-02.5).

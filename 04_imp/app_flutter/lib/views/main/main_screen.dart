@@ -201,7 +201,9 @@ class _MainScreenState extends State<MainScreen> {
                               if (recarga.pregunta != null && !busqueda.abierta)
                                 Padding(
                                   padding: EdgeInsets.only(
-                                    top: enElMapa && eventos.sinActualizar ? 64 : 8,
+                                    top: enElMapa && (eventos.sinActualizar || eventos.desactualizados)
+                                        ? 80
+                                        : 8,
                                   ),
                                   child: PreguntaRecargaTarjeta(recarga: recarga),
                                 ),

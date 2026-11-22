@@ -38,6 +38,19 @@ public class Conductor {
         return new Conductor(null, googleId, ahora, false);
     }
 
+    /**
+     * RN-07.4: usuario fantasma del simulador. Su identificador empieza con {@code prueba:}, que no puede ser el de
+     * una cuenta de Google (esos son solo dígitos), así que nunca coincide con un conductor real.
+     */
+    public static Conductor simulado(String pruebaCarga, int usuario, Instant ahora) {
+        return new Conductor(null, identificadorDePrueba(pruebaCarga, usuario), ahora, true);
+    }
+
+    /** El identificador con el que se guarda el usuario fantasma {@code usuario} de una prueba de carga. */
+    public static String identificadorDePrueba(String pruebaCarga, int usuario) {
+        return "prueba:" + pruebaCarga + ":" + usuario;
+    }
+
     /** Reconstruye un conductor guardado. */
     public static Conductor desdeRegistro(long id, String googleId, Instant fechaAlta, boolean simulado) {
         return new Conductor(id, googleId, fechaAlta, simulado);

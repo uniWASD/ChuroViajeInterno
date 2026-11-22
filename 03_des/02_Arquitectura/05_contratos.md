@@ -31,7 +31,7 @@ Hay cuatro contratos: el de la app con el backend, el del backend con el motor c
 | Revisar ruta activa | `POST /rutas/revision` | Posición actual, tramos que faltan, destino, paradas que faltan y eventos ya avisados | Sin cambios; sin alternativa; o ruta alternativa. Las dos últimas traen el evento que las provocó. Si la red vial cambió, «ruta desactualizada» | CU-04 |
 | Enviar telemetría | `POST /telemetria` | Grupo de lecturas: posición, precisión y momento | Recibido | CU-04 |
 | Consultar surtidores | `GET /surtidores` | Ubicación actual | Surtidores por cercanía, con estado por tipo, fila, origen (WhatsApp, Conductores o ANH) y fecha. Si el origen es ANH, también los litros, el estado de ANH y el momento en que el backend lo leyó | CU-05 |
-| Confirmar recarga | `POST /surtidores/{id}/confirmaciones` | Tipo de combustible y ubicación actual | Confirmación aceptada, o motivo del rechazo | CU-05 |
+| Confirmar recarga | `POST /surtidores/{id}/confirmaciones` | Tipo de combustible y ubicación donde la app detectó la parada | Confirmación aceptada, o motivo del rechazo | CU-05 |
 
 La app nunca envía el momento en que ocurrió un evento ya calculado: manda la hora de confirmación y los minutos elegidos, y el `EventoVial` hace la resta ([RN-01.4](04_reglas/CU-01_ReportarEventoVial.md)).
 
@@ -57,6 +57,27 @@ Son las únicas rutas de la app que no piden JWT. Todas reciben y devuelven JSON
 | `NO_AUTENTICADO` | 401 | Una ruta que pide JWT llegó sin él, con uno vencido o con uno mal firmado |
 | `ACCESO_DENEGADO` | 403 | El JWT es válido pero no alcanza para esa ruta; por ejemplo, un conductor en `/monitoreo/*` |
 | `PETICION_INVALIDA` | 400 | Falta el campo del cuerpo o no cumple el formato |
+
+### Sesión de prueba (`POST /sesion/prueba`)
+
+La usa solo el simulador para cada usuario fantasma ([CU-07](04_reglas/CU-07_EjecutarSimuladorTrafico.md), [D-48](08_decisiones_parametros.md)). No pide JWT ni pasa por Google:
+
+```json
+{"credencial":"…","pruebaId":"carga-2026-11-22-a","usuario":7}
+```
+
+Responde 200 con `{"jwt":"…","expiraEn":"…"}`, igual que `POST /sesion/renovar`. No hay token de renovación: cuando el JWT vence, el simulador pide otra sesión de prueba.
+
+- `credencial` es la credencial de prueba del ambiente (`SIMULACION_CREDENCIAL`). `pruebaId` identifica la prueba de carga: letras, números, punto, guion y guion bajo, hasta 64. `usuario` es el número del usuario fantasma, de 1 a 200 ([P-18](08_decisiones_parametros.md)). El mismo `pruebaId` y `usuario` es siempre el mismo conductor simulado ([RN-07.4](04_reglas/CU-07_EjecutarSimuladorTrafico.md)).
+- El JWT lleva el `pruebaId`, y con él el backend anota cada petición en el registro de esa prueba de carga ([RN-07.11](04_reglas/CU-07_EjecutarSimuladorTrafico.md)).
+- Códigos de rechazo: 403 `ACCESO_DENEGADO` si el ambiente no tiene habilitadas las credenciales de prueba, siempre en `prod` ([RN-07.5](04_reglas/CU-07_EjecutarSimuladorTrafico.md)); 401 `CREDENCIAL_PRUEBA_INVALIDA` si la credencial no es la del ambiente; 400 `PETICION_INVALIDA` si falta un campo o no cumple el formato.
+
+### Borrado de datos simulados (`POST /simulacion/borrar`)
+
+Es el comando de mantenimiento que borra lo que dejó el simulador ([RN-07.8](04_reglas/CU-07_EjecutarSimuladorTrafico.md)). Recibe `{"credencial":"…"}`, la misma credencial de prueba, y responde 200 con cuántas filas simuladas borró: `{"votos":12,"eventos":30,"conductores":10}`.
+
+- Borra las filas con la marca de simulado de `voto`, `evento_vial` y `conductor`, en una sola transacción, y ninguna otra. Los eventos simulados que estaban en el mapa dejan de pesar en las rutas ([RN-02.15](04_reglas/CU-02_VisualizarEventosViales.md)).
+- Los rechazos son los mismos de la sesión de prueba: 403 donde no está habilitada y 401 con otra credencial.
 
 ### Catálogos (`GET /catalogos`)
 
@@ -230,6 +251,24 @@ La app manda su ubicación actual: `GET /surtidores?latitud=-21.5355&longitud=-6
 - Un dato vale 6 horas: desde su `fecha` en WhatsApp y Conductores, y desde `consultadoEn` en ANH ([RN-05.5](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md)). Un surtidor sin datos vigentes trae `informacionReciente` falso y la lista vacía: la app muestra «sin información reciente».
 - `fila` sale solo si se conoce. `litros`, `estadoAnh` y `consultadoEn` salen solo en los datos de ANH ([RN-05.4](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Un dato de WhatsApp sin tipo sale como `DESCONOCIDO` ([RN-05.6](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Nunca sale quién aportó el dato ([RN-05.7](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
 - Pide JWT de conductor. Sin `latitud` o `longitud`, o con valores fuera de rango, responde 400 `PETICION_INVALIDA`.
+
+### Confirmación de recarga (`POST /surtidores/{id}/confirmaciones`)
+
+Cuando el conductor responde que sí recargó y elige el tipo ([RN-05.8](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md) a [RN-05.10](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)), la app manda el tipo y la ubicación donde detectó la parada, aunque el conductor ya haya arrancado:
+
+```json
+{"tipo":"DIESEL","ubicacion":{"latitud":-21.52347,"longitud":-64.72477}}
+```
+
+Responde 201 con el dato que quedó, sin nada del conductor ([RN-05.7](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)):
+
+```json
+{"surtidorId":1,"tipo":"DIESEL","disponible":true,"origen":"CONDUCTORES","fecha":"2026-11-22T17:00:00-04:00"}
+```
+
+- `tipo` es `GASOLINA`, `DIESEL`, `GASOLINA_PREMIUM` o `DIESEL_ULS` ([RN-05.9](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). La confirmación deja ese combustible disponible, con origen Conductores y la fecha en que el backend la aceptó; nunca marca agotado ([RN-05.11](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [RN-05.12](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)). Se ve en `GET /surtidores` solo si es más reciente que el dato de WhatsApp y de ANH ([RN-05.15](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
+- La ubicación se usa solo para medir la distancia en PostGIS y no se guarda.
+- Rechazos: 400 `PETICION_INVALIDA` si falta el tipo o la ubicación, o si el tipo no existe; 401 sin JWT; 403 `ACCESO_DENEGADO` para un usuario fantasma ([D-48](08_decisiones_parametros.md)); 404 `SURTIDOR_NO_ENCONTRADO`; 409 `CONFIRMACION_REPETIDA` si el mismo conductor confirmó el mismo surtidor y tipo en los últimos 60 minutos ([RN-05.14](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [P-14](08_decisiones_parametros.md)); 422 `TIPO_NO_PERMITIDO` con `DESCONOCIDO` y 422 `LEJOS_DEL_SURTIDOR` si la parada está a 50 m o más del surtidor ([RN-05.13](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [P-09](08_decisiones_parametros.md)). La app trata el 409 como «ya está registrada» y no vuelve a preguntar por ese surtidor en ese lapso.
 
 ### Búsqueda de destinos (`GET /lugares`)
 

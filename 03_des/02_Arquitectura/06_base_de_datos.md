@@ -26,6 +26,16 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | Registros del servidor (Nginx, backend, núcleo y servicio de WhatsApp/LLM) | Archivos del servidor, sin ubicaciones, sin la consulta de las URL y sin textos de mensajes | 14 días, salvo los de pruebas de carga | [D-16](08_decisiones_parametros.md) |
 | Respaldos de la base de datos | Almacenamiento de objetos de Oracle Cloud, fuera de la instancia | 7 días. Lo que borra [P-21](08_decisiones_parametros.md) desaparece de los respaldos 7 días después | [D-16](08_decisiones_parametros.md) |
 
+## Limpieza diaria
+
+Todos los días a las 03:30 de Tarija, una tarea del backend (`LimpiezaDatos`, T-105) borra en una sola transacción:
+
+- Los eventos retirados hace más de 30 días, contados desde que se retiraron, y los vencidos hace más de 30 días, contados desde que vencieron según su tipo, aunque la tarea de vencimiento no los haya marcado. Sus votos se van con ellos ([P-21](08_decisiones_parametros.md)).
+- Las confirmaciones de recarga de más de 30 días ([P-21](08_decisiones_parametros.md)).
+- Las sesiones cuyo token de renovación ya venció. Las que se cierran ya se borran al momento ([RN-08.14](04_reglas/CU-08_IniciarSesion.md)).
+
+Nada vigente se borra. El registro del backend anota cuántas filas borró de cada cosa.
+
 ## Tablas principales
 
 | Tabla | Columnas principales | Objeto de dominio |
@@ -39,7 +49,7 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | `surtidor_alias` | Surtidor, alias | Surtidor |
 | `tipo_combustible` | Código, nombre | TipoCombustible |
 | `estado_combustible` | Surtidor, tipo, origen (WhatsApp, Conductores o ANH), disponible, fila, fecha del dato, `litros` (no negativo y opcional), `estado_anh` (alto, medio o bajo; opcional) y `consultado_en` (cuándo lo leyó el backend; solo en ANH) | EstadoCombustible |
-| `confirmacion_recarga` | Conductor, surtidor, tipo, fecha | ConfirmaciónRecarga |
+| `confirmacion_recarga` | Conductor, surtidor, tipo (nunca Desconocido), fecha. No guarda la ubicación de la parada (V11) | ConfirmaciónRecarga |
 | `lugar` | Clave de OSM (única), nombre, nombre para buscar (minúsculas, sin tildes, con las abreviaturas completas), categoría, ubicación | Lugar (V10) |
 | `lugar_extracto` | Una sola fila: fecha del extracto cargado, cantidad de lugares y cuándo se cargó | Lugar (V10) |
 
@@ -73,4 +83,6 @@ Las reglas las aplican los objetos de dominio. La base de datos repite ocho de e
 
 ## Datos simulados
 
-La marca de simulado está en el conductor, en sus eventos y en sus votos. Borrar los datos de una prueba es borrar las filas con esa marca, sin tocar ninguna otra ([RN-07.8](04_reglas/CU-07_EjecutarSimuladorTrafico.md)).
+La marca de simulado está en el conductor, en sus eventos y en sus votos. Borrar los datos de una prueba es borrar las filas con esa marca, sin tocar ninguna otra ([RN-07.8](04_reglas/CU-07_EjecutarSimuladorTrafico.md)). Lo hace `POST /simulacion/borrar`, en este orden: votos, eventos y conductores.
+
+Para que eso alcance, nada simulado toca una fila real ([D-48](08_decisiones_parametros.md)): un usuario fantasma solo vota eventos simulados, el voto de cualquiera sobre un evento simulado (en modo demostración) también queda simulado, y un usuario fantasma no puede confirmar recargas, porque `estado_combustible` no tiene marca de simulado. La congestión que nace de recorridos simulados queda simulada y separada de la real del mismo tramo ([RN-04.20](04_reglas/CU-04_RecalcularRuta.md)).

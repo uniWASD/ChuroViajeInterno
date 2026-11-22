@@ -59,7 +59,7 @@ Copy-Item .env.example .env
 npm.cmd start
 ```
 
-En producción, preferir las variables protegidas del gestor de servicios (p. ej. systemd) o un JSON externo **fuera del directorio del servicio y de cualquier repositorio Git**. No colocar tokens reales en `.env` versionado ni en documentación. Ejemplo de archivo externo (`/etc/churoviaje/whatsapp.json`, ruta orientativa):
+En el servidor corre como el servicio `churoviaje-whatsapp`, con las versiones de dependencias de `package-lock.json` (`npm ci`): ver la sección 13 de [la guía del servidor](../../06_proyect/servidor/guia-servidor.md) (T-100, #68). En producción, preferir las variables protegidas del gestor de servicios (p. ej. systemd) o un JSON externo **fuera del directorio del servicio y de cualquier repositorio Git**. No colocar tokens reales en `.env` versionado ni en documentación. Ejemplo de archivo externo (`/etc/churoviaje/whatsapp.json`, ruta orientativa):
 
 ```json
 {

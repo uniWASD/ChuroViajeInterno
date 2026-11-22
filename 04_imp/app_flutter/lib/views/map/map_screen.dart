@@ -6,6 +6,7 @@ import '../../controllers/combustible_controller.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
+import '../../controllers/recarga_controller.dart';
 import '../../controllers/reporte_controller.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
 import '../busqueda/barra_busqueda.dart';
@@ -38,6 +39,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
           .activar(); // RN-02.6: consulta cada 5 segundos
       // RN-05.17: con el mapa abierto, los marcadores de surtidores se actualizan cada 60 segundos.
       context.read<CombustibleController>().activar();
+      // HU-12: con la app abierta se revisa si el conductor está detenido junto a un surtidor (D-11).
+      context.read<RecargaController>().activar();
     });
   }
 
@@ -52,11 +55,13 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final controller = context.read<MapController>();
     final eventos = context.read<EventosController>();
     final combustible = context.read<CombustibleController>();
+    final recarga = context.read<RecargaController>();
     switch (state) {
       case AppLifecycleState.resumed:
         controller.alVolverAPantalla();
         eventos.activar();
         combustible.activar();
+        recarga.activar();
         // Si el conductor fue a los ajustes a dar el permiso o a prender el GPS, se vuelve a revisar.
         if (controller.permiso == PermisoUbicacion.denegadoSiempre ||
             controller.permiso == PermisoUbicacion.servicioApagado) {
@@ -68,6 +73,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         controller.alSalirDePantalla();
         eventos.pausar(); // en segundo plano no se consulta
         combustible.pausar();
+        recarga.pausar();
       case AppLifecycleState.inactive:
         // También pasa al mostrar el diálogo del permiso: no se deja de seguir por eso.
         break;

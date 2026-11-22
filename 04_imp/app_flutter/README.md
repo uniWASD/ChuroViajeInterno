@@ -250,3 +250,13 @@ Las pruebas de la cola usan `sqflite_common_ffi`, que necesita SQLite instalado 
 - El gesto de atrás cierra primero el detalle del surtidor.
 
 Las pruebas están en `test/surtidores_test.dart` (CP-108 a CP-110).
+
+## Pregunta de recarga (HU-12, #80)
+
+- Con la app abierta, `RecargaController` mira la ubicación que ya sigue el mapa y la revisa cada 10 segundos, porque detenido el GPS casi no informa. Si el conductor pasa 3 minutos a menos de 50 m de un surtidor del catálogo, pregunta «¿Acabas de recargar combustible?» (RN-05.8, D-11, P-09). La distancia se mide en el teléfono, con los surtidores que ya trajo `GET /surtidores`.
+- La pregunta es una tarjeta debajo de la barra de búsqueda, como en el diseño «05 · Mapa · ¿Recargaste combustible?». No tapa la lista de surtidores, y en Cómo llegar o en la Navegación activa no aparece: espera a que el conductor vuelva al mapa (RN-05.16).
+- Tocar un tipo (Gasolina, Gasolina Premium, Diesel o Diesel ULS) es el «Sí»: un solo toque. Desconocido no aparece (RN-05.9). «No, no recargué» o la X no envían nada, y no vuelve a preguntar mientras el conductor siga junto a ese surtidor (RN-05.10).
+- La respuesta va a `POST /surtidores/{id}/confirmaciones` con la ubicación donde se detectó la parada, aunque el conductor ya haya arrancado, y la app muestra el resultado. Después de confirmar, o si el backend responde que es repetida, no vuelve a preguntar por ese surtidor en 60 minutos (RN-05.14, P-14). El silencio vive en memoria: si se cierra la app, el backend sigue rechazando la repetida.
+- Una pregunta que nadie responde se cierra sola a los 15 minutos, sin enviar nada.
+
+Las pruebas están en `test/recarga_test.dart` (CP-130 a CP-132), con ubicaciones y un reloj simulados.

@@ -10,9 +10,11 @@ import '../../controllers/combustible_controller.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
+import '../../controllers/recarga_controller.dart';
 import '../busqueda/barra_busqueda.dart';
 import '../map/map_screen.dart';
 import '../events/events_screen.dart';
+import '../stations/pregunta_recarga.dart';
 import '../stations/stations_screen.dart';
 
 /// Pantalla principal con sus tres pestañas y, arriba, la barra de búsqueda (D-47) en lugar del encabezado. El gesto
@@ -35,6 +37,7 @@ class _MainScreenState extends State<MainScreen> {
   bool _puedeSalir = false;
   Timer? _ventana;
   EventosController? _eventos;
+  RecargaController? _recarga;
 
   @override
   void didChangeDependencies() {
@@ -44,13 +47,29 @@ class _MainScreenState extends State<MainScreen> {
       _eventos?.removeListener(_mostrarMensajes);
       _eventos = eventos..addListener(_mostrarMensajes);
     }
+    final recarga = context.read<RecargaController>();
+    if (!identical(recarga, _recarga)) {
+      _recarga?.removeListener(_mostrarMensajesRecarga);
+      _recarga = recarga..addListener(_mostrarMensajesRecarga);
+    }
   }
 
   @override
   void dispose() {
     _ventana?.cancel();
     _eventos?.removeListener(_mostrarMensajes);
+    _recarga?.removeListener(_mostrarMensajesRecarga);
     super.dispose();
+  }
+
+  /// HU-12: si la confirmación de recarga quedó registrada, o el mensaje del backend si la rechazó.
+  void _mostrarMensajesRecarga() {
+    if (!mounted) return;
+    final mensajero = ScaffoldMessenger.maybeOf(context);
+    if (mensajero == null) return;
+    for (var m = _recarga!.tomarMensaje(); m != null; m = _recarga!.tomarMensaje()) {
+      mensajero.showSnackBar(SnackBar(content: Text(m)));
+    }
   }
 
   /// RN-02.11 y RN-02.12: el resultado del voto, o el mensaje del backend si lo rechazó. Se vota desde el detalle,
@@ -136,6 +155,7 @@ class _MainScreenState extends State<MainScreen> {
     final mapa = context.watch<MapController>();
     final busqueda = context.watch<BusquedaController>();
     final combustible = context.watch<CombustibleController>();
+    final recarga = context.watch<RecargaController>();
     return Consumer<NavigationController>(
       builder: (context, controller, child) {
         final enElMapa = controller.selectedIndex == AppTab.map.index;
@@ -163,15 +183,30 @@ class _MainScreenState extends State<MainScreen> {
                       const EventsScreen(),
                     if (controller.selectedIndex == AppTab.stations.index)
                       const StationsScreen(),
-                    const Positioned(
+                    Positioned(
                       top: 0,
                       left: 0,
                       right: 0,
                       child: SafeArea(
                         bottom: false,
                         child: Padding(
-                          padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
-                          child: BarraBusqueda(),
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const BarraBusqueda(),
+                              // HU-12: la pregunta va debajo de la barra y no tapa la lista ni la navegación
+                              // (RN-05.16). Con la búsqueda abierta se queda esperando. Si el mapa avisa que no
+                              // pudo actualizar los eventos, va debajo de ese aviso.
+                              if (recarga.pregunta != null && !busqueda.abierta)
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    top: enElMapa && eventos.sinActualizar ? 64 : 8,
+                                  ),
+                                  child: PreguntaRecargaTarjeta(recarga: recarga),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

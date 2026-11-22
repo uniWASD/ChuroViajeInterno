@@ -143,7 +143,7 @@ class LineaCombustible extends StatelessWidget {
               EtiquetaOrigen(origen: dato.origen),
               const SizedBox(height: 2),
               Text(
-                '${horaDe(dato.fecha)} · hace ${haceCuanto(dato.fecha, ahora)}',
+                '${horaDe(dato.fecha)} · ${_hace(haceCuanto(dato.fecha, ahora))}',
                 style: const TextStyle(fontSize: 12, color: ColoresChuro.textoSecundario),
               ),
             ],
@@ -152,6 +152,8 @@ class LineaCombustible extends StatelessWidget {
       ),
     );
   }
+
+  static String _hace(String cuanto) => cuanto == 'ahora' ? 'recién' : 'hace $cuanto';
 
   static String _litros(double litros) {
     final texto = litros == litros.roundToDouble() ? litros.toStringAsFixed(0) : litros.toStringAsFixed(1);

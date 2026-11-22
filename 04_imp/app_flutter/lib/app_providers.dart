@@ -8,6 +8,7 @@ import 'controllers/cola_controller.dart';
 import 'controllers/eventos_controller.dart';
 import 'controllers/map_controller.dart';
 import 'controllers/navigation_controller.dart';
+import 'controllers/recarga_controller.dart';
 import 'controllers/reporte_controller.dart';
 import 'controllers/sesion_controller.dart';
 import 'controllers/telemetria_controller.dart';
@@ -123,11 +124,23 @@ List<SingleChildWidget> createAppProviders({
     },
   ),
   // CU-05: la lista y los marcadores de surtidores, cada 60 segundos con el mapa abierto (RN-05.17).
+  Provider<ServicioSurtidores>(
+    create: (context) => servicioSurtidores ?? ServicioSurtidores(context.read<ApiClient>()),
+  ),
   ChangeNotifierProvider<CombustibleController>(
     create: (context) => CombustibleController(
-      servicioSurtidores ?? ServicioSurtidores(context.read<ApiClient>()),
+      context.read<ServicioSurtidores>(),
       context.read<SesionController>(),
       context.read<MapController>(),
+    ),
+  ),
+  // HU-12: la pregunta «¿Acabas de recargar combustible?» con la ubicación que ya sigue el mapa (D-11).
+  ChangeNotifierProvider<RecargaController>(
+    create: (context) => RecargaController(
+      context.read<MapController>(),
+      context.read<CombustibleController>(),
+      context.read<ServicioSurtidores>(),
+      reloj: reloj,
     ),
   ),
   ChangeNotifierProvider<EventosController>(

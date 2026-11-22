@@ -1,0 +1,21 @@
+# Rotación de los registros de Nginx (T-103, #79): uno por día y se borran a los 14 días.
+# Copia de /etc/logrotate.d/nginx en churoviaje-server (reemplaza la de Ubuntu, que ya rotaba cada día).
+/var/log/nginx/*.log {
+	daily
+	missingok
+	rotate 14
+	maxage 14
+	compress
+	delaycompress
+	notifempty
+	create 0640 www-data adm
+	sharedscripts
+	prerotate
+		if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+			run-parts /etc/logrotate.d/httpd-prerotate; \
+		fi \
+	endscript
+	postrotate
+		invoke-rc.d nginx rotate >/dev/null 2>&1
+	endscript
+}

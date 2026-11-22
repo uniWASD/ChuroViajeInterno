@@ -18,7 +18,8 @@ main() {
   credencial="$(grep -E '^SIMULACION_CREDENCIAL=' /etc/churoviaje/backend-pruebas.env | cut -d= -f2-)"
   cuerpo="$(mktemp)"
   respuesta="$(mktemp)"
-  trap 'rm -f "$cuerpo" "$respuesta"' EXIT
+  # shellcheck disable=SC2064  # los archivos se fijan ahora: al salir, las variables locales ya no existen
+  trap "rm -f '$cuerpo' '$respuesta'" EXIT
   printf '{"credencial":"%s","pruebaId":"verificacion-cp145","usuario":1}' "$credencial" > "$cuerpo"
 
   echo "== Servicios"

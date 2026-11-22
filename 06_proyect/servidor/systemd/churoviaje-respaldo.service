@@ -1,0 +1,16 @@
+# Respaldo diario de la base de datos (T-103, #79).
+# Copia de /etc/systemd/system/churoviaje-respaldo.service en churoviaje-server. Lo lanza
+# churoviaje-respaldo.timer; también se puede correr a mano: sudo systemctl start churoviaje-respaldo
+
+[Unit]
+Description=ChuroViaje: respaldo de la base de datos al almacenamiento de objetos
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/churoviaje-respaldar-bd
+Nice=10
+IOSchedulingClass=idle
+PrivateTmp=true
+NoNewPrivileges=true

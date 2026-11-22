@@ -1,0 +1,14 @@
+# Todos los días a las 04:00 de Tarija, después de la limpieza diaria del backend (03:30, T-105).
+# Copia de /etc/systemd/system/churoviaje-respaldo.timer en churoviaje-server.
+
+[Unit]
+Description=ChuroViaje: respaldo diario de la base de datos
+
+[Timer]
+OnCalendar=*-*-* 04:00:00 America/La_Paz
+RandomizedDelaySec=5min
+# Si la máquina estaba apagada a esa hora, el respaldo se hace al encenderla.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -23,21 +23,24 @@ public interface EventoRepository {
     /** Para operar: los eventos vigentes, que el motor recibe al arrancar el nucleo (RN-02.2, RN-02.3, T-099). */
     List<EventoVial> vigentes(Instant ahora);
 
-    /** Para mostrar: los eventos vigentes, sin datos de conductores (RN-02.2 a RN-02.5). */
-    List<EventoVialRespuesta> vigentesParaMostrar(Instant ahora);
+    /**
+     * Para mostrar: los eventos vigentes, sin datos de conductores (RN-02.2 a RN-02.5). Los simulados salen solo con
+     * {@code incluirSimulados} (RN-07.13).
+     */
+    List<EventoVialRespuesta> vigentesParaMostrar(Instant ahora, boolean incluirSimulados);
 
     /**
      * Para mostrar: los eventos vigentes que nacieron o cambiaron despues de {@code marca}, por ejemplo los que se
      * confirmaron (RN-02.6).
      */
-    List<EventoVialRespuesta> vigentesCambiadosDesdeParaMostrar(Instant marca, Instant ahora);
+    List<EventoVialRespuesta> vigentesCambiadosDesdeParaMostrar(Instant marca, Instant ahora, boolean incluirSimulados);
 
     /**
      * RN-02.4, RN-02.13 y RN-04.11: los identificadores de los eventos que dejaron de mostrarse entre {@code marca}
      * y {@code ahora}. Un retirado cuenta desde que se retiro; uno vencido, desde que vencio, aunque la tarea
      * periodica todavia no lo haya marcado (RN-02.4).
      */
-    List<Long> quitadosEntre(Instant marca, Instant ahora);
+    List<Long> quitadosEntre(Instant marca, Instant ahora, boolean incluirSimulados);
 
     /** RN-02.4: marca como Vencido todo evento que supero su vigencia y devuelve cuales fueron. */
     List<Long> vencerHasta(Instant ahora);
@@ -66,4 +69,14 @@ public interface EventoRepository {
      * por cambios lo entregue (RN-02.6).
      */
     void actualizarVotos(EventoVial evento, boolean cambioDeEstado, Instant ahora);
+
+    /** Cuántos eventos y votos borró la limpieza. */
+    record Borrados(int eventos, int votos) {}
+
+    /**
+     * P-21 y T-105: borra, con sus votos, los eventos que dejaron de mostrarse antes de {@code limite}: los retirados
+     * desde que se retiraron y los demás desde que vencieron, aunque la tarea periódica no los haya marcado. Un evento
+     * vigente nunca se borra.
+     */
+    Borrados borrarTerminadosAntesDe(Instant limite, Instant ahora);
 }

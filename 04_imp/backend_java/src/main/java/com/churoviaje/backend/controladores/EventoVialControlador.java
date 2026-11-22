@@ -1,5 +1,6 @@
 package com.churoviaje.backend.controladores;
 
+import com.churoviaje.backend.config.AmbienteSimulacion;
 import com.churoviaje.backend.dominio.EventoVialRespuesta;
 import com.churoviaje.backend.dominio.EventosRespuesta;
 import com.churoviaje.backend.dominio.Ubicacion;
@@ -32,12 +33,14 @@ public class EventoVialControlador {
     private final EventoVialServicio eventoVialServicio;
     private final ConsultaEventosServicio consultaEventos;
     private final VotoServicio votos;
+    private final AmbienteSimulacion simulacion;
 
     public EventoVialControlador(EventoVialServicio eventoVialServicio, ConsultaEventosServicio consultaEventos,
-            VotoServicio votos) {
+            VotoServicio votos, AmbienteSimulacion simulacion) {
         this.eventoVialServicio = eventoVialServicio;
         this.consultaEventos = consultaEventos;
         this.votos = votos;
+        this.simulacion = simulacion;
     }
 
     /**
@@ -60,11 +63,14 @@ public class EventoVialControlador {
 
     /**
      * RN-02.2 a RN-02.6: los eventos vigentes, o solo los cambios desde la consulta anterior si la app manda su
-     * marca en {@code desde}.
+     * marca en {@code desde}. Un conductor real ve los eventos simulados solo en modo demostracion (RN-07.13); un
+     * usuario fantasma los ve siempre, porque es parte de la prueba.
      */
     @GetMapping
-    public EventosRespuesta consultarEventos(@RequestParam(name = "desde", required = false) String desde) {
-        return consultaEventos.consultar(desde);
+    public EventosRespuesta consultarEventos(@AuthenticationPrincipal ConductorAutenticado conductor,
+            @RequestParam(name = "desde", required = false) String desde) {
+        boolean incluirSimulados = simulacion.modoDemostracion() || (conductor != null && conductor.simulado());
+        return consultaEventos.consultar(desde, incluirSimulados);
     }
 
     /** El voto que manda la app: {@code "real"} o {@code "falso"}. */

@@ -172,11 +172,11 @@ class Configuracion(TemporalMixin, unittest.TestCase):
         par = validar(datos)
         self.assertEqual((par.usuarios, par.navegando), (50, 10))
 
-    def test_sin_solo_validar_no_envia_nada_todavia(self):
-        codigo, salida, _ = correr()
+    def test_solo_validar_muestra_el_plan_sin_credencial(self):
+        codigo, salida, _ = correr("--solo-validar", "--prueba", "carga-plan")
         self.assertEqual(codigo, OK)
         self.assertIn("Simulación válida", salida)
-        self.assertIn("no se envió nada al backend", salida)
+        self.assertIn("carga-plan", salida)
 
     def test_ayuda_muestra_los_limites(self):
         with self.assertRaises(SystemExit):

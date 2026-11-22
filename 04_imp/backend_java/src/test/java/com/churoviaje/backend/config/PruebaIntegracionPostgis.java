@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 /** Misma configuracion de contexto y contenedor para CP-21, CP-22 y CP-23. */
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("pruebas")
+@ActiveProfiles("test")
 @Import(TestcontainersPostgisConfig.class)
 public abstract class PruebaIntegracionPostgis {
 }

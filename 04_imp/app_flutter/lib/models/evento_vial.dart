@@ -66,6 +66,22 @@ class EventoVial {
     return List.unmodifiable(puntos);
   }
 
+  /// Para guardarlo en el teléfono (HU-04): el mismo formato que llega de `GET /eventos`.
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'tipo': tipo,
+    'ubicacion': {'latitud': ubicacion.latitud, 'longitud': ubicacion.longitud},
+    'momentoOcurrencia': momentoOcurrencia.toUtc().toIso8601String(),
+    'estado': estado,
+    'confirmado': confirmado,
+    'origen': origen,
+    'nivel': ?nivel,
+    if (trazado.isNotEmpty)
+      'trazado': [for (final c in trazado) {'latitud': c.latitud, 'longitud': c.longitud}],
+    'votosReal': votosReal,
+    'votosFalso': votosFalso,
+  };
+
   /// D-20: la congestión que detecta el sistema con la telemetría no se vota.
   bool get votable => origen != 'TELEMETRIA';
 

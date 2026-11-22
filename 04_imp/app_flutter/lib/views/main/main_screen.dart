@@ -6,12 +6,15 @@ import 'package:provider/provider.dart';
 
 import '../../controllers/busqueda_controller.dart';
 import '../../controllers/cola_controller.dart';
+import '../../controllers/combustible_controller.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
+import '../../controllers/recarga_controller.dart';
 import '../busqueda/barra_busqueda.dart';
 import '../map/map_screen.dart';
 import '../events/events_screen.dart';
+import '../stations/pregunta_recarga.dart';
 import '../stations/stations_screen.dart';
 
 /// Pantalla principal con sus tres pestañas y, arriba, la barra de búsqueda (D-47) en lugar del encabezado. El gesto
@@ -34,6 +37,7 @@ class _MainScreenState extends State<MainScreen> {
   bool _puedeSalir = false;
   Timer? _ventana;
   EventosController? _eventos;
+  RecargaController? _recarga;
 
   @override
   void didChangeDependencies() {
@@ -43,13 +47,29 @@ class _MainScreenState extends State<MainScreen> {
       _eventos?.removeListener(_mostrarMensajes);
       _eventos = eventos..addListener(_mostrarMensajes);
     }
+    final recarga = context.read<RecargaController>();
+    if (!identical(recarga, _recarga)) {
+      _recarga?.removeListener(_mostrarMensajesRecarga);
+      _recarga = recarga..addListener(_mostrarMensajesRecarga);
+    }
   }
 
   @override
   void dispose() {
     _ventana?.cancel();
     _eventos?.removeListener(_mostrarMensajes);
+    _recarga?.removeListener(_mostrarMensajesRecarga);
     super.dispose();
+  }
+
+  /// HU-12: si la confirmación de recarga quedó registrada, o el mensaje del backend si la rechazó.
+  void _mostrarMensajesRecarga() {
+    if (!mounted) return;
+    final mensajero = ScaffoldMessenger.maybeOf(context);
+    if (mensajero == null) return;
+    for (var m = _recarga!.tomarMensaje(); m != null; m = _recarga!.tomarMensaje()) {
+      mensajero.showSnackBar(SnackBar(content: Text(m)));
+    }
   }
 
   /// RN-02.11 y RN-02.12: el resultado del voto, o el mensaje del backend si lo rechazó. Se vota desde el detalle,
@@ -72,9 +92,11 @@ class _MainScreenState extends State<MainScreen> {
     EventosController eventos,
     MapController mapa,
     BusquedaController busqueda,
+    CombustibleController combustible,
   ) =>
       busqueda.abierta ||
       eventos.seleccionado != null ||
+      combustible.seleccionado != null ||
       mapa.puntoSeleccionado != null;
 
   void _alVolver(bool salio) {
@@ -83,6 +105,7 @@ class _MainScreenState extends State<MainScreen> {
     final eventos = context.read<EventosController>();
     final mapa = context.read<MapController>();
     final busqueda = context.read<BusquedaController>();
+    final combustible = context.read<CombustibleController>();
     // 1. La lista de la búsqueda (y el teclado) se cierra.
     if (busqueda.abierta) {
       busqueda.cerrar();
@@ -92,6 +115,12 @@ class _MainScreenState extends State<MainScreen> {
     if (pestanas.selectedIndex != AppTab.stations.index &&
         eventos.seleccionado != null) {
       eventos.cerrarFicha();
+      return;
+    }
+    // El detalle de un surtidor (en el Mapa o en Surtidores), igual.
+    if (pestanas.selectedIndex != AppTab.events.index &&
+        combustible.seleccionado != null) {
+      combustible.cerrarFicha();
       return;
     }
     if (pestanas.selectedIndex == AppTab.map.index &&
@@ -125,6 +154,8 @@ class _MainScreenState extends State<MainScreen> {
     final eventos = context.watch<EventosController>();
     final mapa = context.watch<MapController>();
     final busqueda = context.watch<BusquedaController>();
+    final combustible = context.watch<CombustibleController>();
+    final recarga = context.watch<RecargaController>();
     return Consumer<NavigationController>(
       builder: (context, controller, child) {
         final enElMapa = controller.selectedIndex == AppTab.map.index;
@@ -134,7 +165,7 @@ class _MainScreenState extends State<MainScreen> {
           canPop:
               _puedeSalir &&
               enElMapa &&
-              !_hayAlgoAbierto(eventos, mapa, busqueda),
+              !_hayAlgoAbierto(eventos, mapa, busqueda, combustible),
           onPopInvokedWithResult: (salio, _) => _alVolver(salio),
           // Sin encabezado, el mapa llega hasta arriba: los íconos de la barra de estado van oscuros.
           child: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -142,7 +173,7 @@ class _MainScreenState extends State<MainScreen> {
               statusBarColor: Colors.transparent,
             ),
             child: Scaffold(
-              // #172: el mapa queda siempre detrás; Eventos es una hoja sobre él y Surtidores lo tapa. La barra de
+              // #172: el mapa queda siempre detrás; Eventos y Surtidores (#71) son hojas sobre él. La barra de
               // búsqueda (D-47) flota arriba en las tres pestañas.
               body: _AvisosCola(
                 child: Stack(
@@ -151,32 +182,33 @@ class _MainScreenState extends State<MainScreen> {
                     if (controller.selectedIndex == AppTab.events.index)
                       const EventsScreen(),
                     if (controller.selectedIndex == AppTab.stations.index)
-                      Positioned.fill(
-                        child: ColoredBox(
-                          color: Colors.white,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              top:
-                                  MediaQuery.paddingOf(context).top +
-                                  BarraBusqueda.espacio,
-                            ),
-                            child: MediaQuery.removePadding(
-                              context: context,
-                              removeTop: true,
-                              child: const StationsScreen(),
-                            ),
-                          ),
-                        ),
-                      ),
-                    const Positioned(
+                      const StationsScreen(),
+                    Positioned(
                       top: 0,
                       left: 0,
                       right: 0,
                       child: SafeArea(
                         bottom: false,
                         child: Padding(
-                          padding: EdgeInsets.fromLTRB(12, 8, 12, 0),
-                          child: BarraBusqueda(),
+                          padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const BarraBusqueda(),
+                              // HU-12: la pregunta va debajo de la barra y no tapa la lista ni la navegación
+                              // (RN-05.16). Con la búsqueda abierta se queda esperando. Si el mapa avisa que no
+                              // pudo actualizar los eventos, va debajo de ese aviso.
+                              if (recarga.pregunta != null && !busqueda.abierta)
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                    top: enElMapa && (eventos.sinActualizar || eventos.desactualizados)
+                                        ? 80
+                                        : 8,
+                                  ),
+                                  child: PreguntaRecargaTarjeta(recarga: recarga),
+                                ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

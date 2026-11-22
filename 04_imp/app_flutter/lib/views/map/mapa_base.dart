@@ -64,6 +64,22 @@ class MarcaEvento {
   int get hashCode => Object.hash(id, coordenada, color, confirmado, tipo, nivel, Object.hashAll(trazado));
 }
 
+/// Un surtidor dibujado en el mapa (CU-05, D-25): una gota con el ícono del surtidor, del color de su estado.
+class MarcaSurtidor {
+  final int id;
+  final Coordenada coordenada;
+  final Color color;
+
+  const MarcaSurtidor({required this.id, required this.coordenada, required this.color});
+
+  @override
+  bool operator ==(Object other) =>
+      other is MarcaSurtidor && other.id == id && other.coordenada == coordenada && other.color == color;
+
+  @override
+  int get hashCode => Object.hash(id, coordenada, color);
+}
+
 /// Los colores de la congestión dibujada como línea (P-06): naranja si está congestionada y rojo si está muy
 /// congestionada, como el tráfico de Google Maps.
 const Color colorCongestionado = Color(0xFFF29900);
@@ -100,6 +116,12 @@ class DatosMapa {
   /// El conductor tocó un evento: se abre su ficha.
   final ValueChanged<int>? alTocarEvento;
 
+  /// Los surtidores del catálogo con el color de su estado (D-25, RN-05.17).
+  final List<MarcaSurtidor> surtidores;
+
+  /// El conductor tocó un surtidor: se abre su detalle.
+  final ValueChanged<int>? alTocarSurtidor;
+
   /// #172: el evento abierto. Cuando cambia, la cámara va hasta él.
   final Coordenada? foco;
 
@@ -121,6 +143,8 @@ class DatosMapa {
     this.trazado = const [],
     this.eventos = const [],
     this.alTocarEvento,
+    this.surtidores = const [],
+    this.alTocarSurtidor,
     this.foco,
     this.tapadoAbajo = 0,
     required this.alTocar,

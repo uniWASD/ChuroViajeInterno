@@ -2,15 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/cola_controller.dart';
+import '../../controllers/combustible_controller.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
+import '../../controllers/recarga_controller.dart';
 import '../../controllers/reporte_controller.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
 import '../busqueda/barra_busqueda.dart';
+import '../events/aviso_desactualizados.dart';
 import '../events/detalle_evento.dart';
 import '../reporte/reportar_evento_screen.dart';
 import '../ruta/como_llegar_screen.dart';
+import '../stations/detalle_surtidor.dart';
+import '../stations/estilo_surtidor.dart';
 import '../tema/tema.dart';
 import 'mapa_base.dart';
 
@@ -33,6 +38,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       context
           .read<EventosController>()
           .activar(); // RN-02.6: consulta cada 5 segundos
+      // RN-05.17: con el mapa abierto, los marcadores de surtidores se actualizan cada 60 segundos.
+      context.read<CombustibleController>().activar();
+      // HU-12: con la app abierta se revisa si el conductor está detenido junto a un surtidor (D-11).
+      context.read<RecargaController>().activar();
     });
   }
 
@@ -46,10 +55,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final controller = context.read<MapController>();
     final eventos = context.read<EventosController>();
+    final combustible = context.read<CombustibleController>();
+    final recarga = context.read<RecargaController>();
     switch (state) {
       case AppLifecycleState.resumed:
         controller.alVolverAPantalla();
         eventos.activar();
+        combustible.activar();
+        recarga.activar();
         // Si el conductor fue a los ajustes a dar el permiso o a prender el GPS, se vuelve a revisar.
         if (controller.permiso == PermisoUbicacion.denegadoSiempre ||
             controller.permiso == PermisoUbicacion.servicioApagado) {
@@ -60,6 +73,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
       case AppLifecycleState.detached:
         controller.alSalirDePantalla();
         eventos.pausar(); // en segundo plano no se consulta
+        combustible.pausar();
+        recarga.pausar();
       case AppLifecycleState.inactive:
         // También pasa al mostrar el diálogo del permiso: no se deja de seguir por eso.
         break;
@@ -72,8 +87,10 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     // #172: el mapa también se ve detrás de la hoja de Eventos; sus botones y su ficha, solo en la pestaña Mapa.
     final enElMapa =
         context.watch<NavigationController>().selectedIndex == AppTab.map.index;
+    final combustible = context.watch<CombustibleController>();
     return Consumer2<MapController, EventosController>(
       builder: (context, controller, eventos, child) {
+        final surtidorAbierto = eventos.seleccionado == null ? combustible.seleccionado : null;
         return Stack(
           children: [
             Positioned.fill(
@@ -85,10 +102,20 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     mostrarUbicacion: controller.siguiendoUbicacion,
                     puntoSeleccionado: controller.puntoSeleccionado,
                     eventos: marcasDeEventos(eventos),
-                    alTocarEvento: eventos.seleccionar,
+                    alTocarEvento: (id) {
+                      combustible.cerrarFicha();
+                      eventos.seleccionar(id);
+                    },
+                    surtidores: marcasDeSurtidores(combustible),
+                    alTocarSurtidor: (id) {
+                      eventos.cerrarFicha();
+                      combustible.seleccionar(id);
+                    },
                     // #172: al abrir un evento la cámara va hasta él, por encima del detalle. D-47: también va
-                    // hasta el lugar elegido en la búsqueda.
-                    foco: eventos.seleccionado?.ubicacion ?? controller.foco,
+                    // hasta el lugar elegido en la búsqueda, y #71, hasta el surtidor abierto.
+                    foco: eventos.seleccionado?.ubicacion ??
+                        combustible.seleccionado?.ubicacion ??
+                        controller.foco,
                     tapadoAbajo: 0.3,
                     alTocar: controller.seleccionarPunto,
                     alFallar: controller.informarErrorMapa,
@@ -98,13 +125,16 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ),
             if (controller.errorMapa != null)
               Positioned.fill(child: AvisoErrorMapa(controller: controller)),
-            if (enElMapa && eventos.sinActualizar)
-              // Debajo de la barra de búsqueda (D-47).
+            if (enElMapa && (eventos.desactualizados || eventos.sinActualizar))
+              // Debajo de la barra de búsqueda (D-47). Con los eventos guardados (RN-02.9), su marca; si no, el
+              // aviso de que no se pudo actualizar (RN-02.8).
               Positioned(
                 top: MediaQuery.paddingOf(context).top + BarraBusqueda.espacio,
                 left: 8,
                 right: 8,
-                child: const _AvisoSinActualizar(),
+                child: eventos.desactualizados
+                    ? AvisoDesactualizados(eventos: eventos)
+                    : const _AvisoSinActualizar(),
               ),
             if (enElMapa)
               Positioned(
@@ -167,6 +197,14 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         child: DetalleEvento(
                           evento: eventos.seleccionado!,
                           eventos: eventos,
+                        ),
+                      )
+                    else if (surtidorAbierto != null)
+                      HojaInferior(
+                        key: const Key('hoja-surtidor-mapa'),
+                        child: DetalleSurtidor(
+                          surtidor: surtidorAbierto,
+                          combustible: combustible,
                         ),
                       )
                     else if (controller.puntoSeleccionado != null)
@@ -233,6 +271,12 @@ List<MarcaEvento> marcasDeEventos(EventosController eventos) {
       ),
   ];
 }
+
+/// D-25: los surtidores con el color de su estado general.
+List<MarcaSurtidor> marcasDeSurtidores(CombustibleController combustible) => [
+  for (final s in combustible.surtidores)
+    MarcaSurtidor(id: s.id, coordenada: s.ubicacion, color: colorDeEstado(s.estadoGeneral)),
+];
 
 /// RN-02.8: el backend no respondió; el mapa conserva lo último y reintenta en el siguiente ciclo.
 class _AvisoSinActualizar extends StatelessWidget {

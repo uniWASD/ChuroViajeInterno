@@ -49,12 +49,19 @@ public class VotoServicio {
         EventoVial evento = eventos.buscarParaVotar(eventoId)
                 .orElseThrow(() -> new ExcepcionRechazo(HttpStatus.NOT_FOUND, "EVENTO_NO_ENCONTRADO",
                         "Ese evento ya no existe."));
+        if (votante.isSimulado() && !evento.isSimulado()) {
+            // RN-07.9: un usuario fantasma no puede retirar ni confirmar un evento real
+            throw new ExcepcionRechazo(HttpStatus.UNPROCESSABLE_ENTITY, "VOTO_NO_PERMITIDO",
+                    "Un usuario fantasma solo vota eventos simulados.");
+        }
         if (votos.yaVoto(eventoId, conductorId)) {
             throw votoRepetido(); // RN-02.11
         }
         EventoVial votado = evento.registrarVoto(valor, conductorId, ahora); // RN-02.10, RN-02.12 a RN-02.14
-        // RN-02.16: el voto de un conductor simulado queda simulado
-        if (!votos.guardarSiNoVoto(new Voto(eventoId, conductorId, valor, ahora, votante.isSimulado()))) {
+        // RN-02.16: el voto de un conductor simulado queda simulado, y también el de cualquiera sobre un evento
+        // simulado (modo demostración): al borrar lo simulado se va con su evento y no queda ninguna fila real tocada
+        boolean simulado = votante.isSimulado() || evento.isSimulado();
+        if (!votos.guardarSiNoVoto(new Voto(eventoId, conductorId, valor, ahora, simulado))) {
             throw votoRepetido(); // la base es la segunda barrera de RN-02.11
         }
         eventos.actualizarVotos(votado, votado.getEstado() != evento.getEstado(), ahora);

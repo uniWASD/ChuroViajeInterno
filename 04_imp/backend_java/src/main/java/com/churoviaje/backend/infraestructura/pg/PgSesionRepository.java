@@ -82,4 +82,15 @@ public class PgSesionRepository implements SesionRepository {
             throw new ErrorDeBaseDeDatos("borrar la sesion", e);
         }
     }
+
+    @Override
+    public int borrarVencidas(java.time.Instant ahora) {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement("delete from sesion where expira_en <= ?")) {
+            ponerInstante(sentencia, 1, ahora);
+            return sentencia.executeUpdate();
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("borrar las sesiones vencidas", e);
+        }
+    }
 }

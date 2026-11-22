@@ -26,6 +26,16 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | Registros del servidor (Nginx, backend, núcleo y servicio de WhatsApp/LLM) | Archivos del servidor, sin ubicaciones, sin la consulta de las URL y sin textos de mensajes | 14 días, salvo los de pruebas de carga | [D-16](08_decisiones_parametros.md) |
 | Respaldos de la base de datos | Almacenamiento de objetos de Oracle Cloud, fuera de la instancia | 7 días. Lo que borra [P-21](08_decisiones_parametros.md) desaparece de los respaldos 7 días después | [D-16](08_decisiones_parametros.md) |
 
+## Limpieza diaria
+
+Todos los días a las 03:30 de Tarija, una tarea del backend (`LimpiezaDatos`, T-105) borra en una sola transacción:
+
+- Los eventos retirados hace más de 30 días, contados desde que se retiraron, y los vencidos hace más de 30 días, contados desde que vencieron según su tipo, aunque la tarea de vencimiento no los haya marcado. Sus votos se van con ellos ([P-21](08_decisiones_parametros.md)).
+- Las confirmaciones de recarga de más de 30 días ([P-21](08_decisiones_parametros.md)).
+- Las sesiones cuyo token de renovación ya venció. Las que se cierran ya se borran al momento ([RN-08.14](04_reglas/CU-08_IniciarSesion.md)).
+
+Nada vigente se borra. El registro del backend anota cuántas filas borró de cada cosa.
+
 ## Tablas principales
 
 | Tabla | Columnas principales | Objeto de dominio |

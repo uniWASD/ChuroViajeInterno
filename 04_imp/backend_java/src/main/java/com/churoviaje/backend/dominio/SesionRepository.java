@@ -16,4 +16,7 @@ public interface SesionRepository {
 
     /** Invalida el token de renovacion (RN-08.14). Borrar una sesion que ya no existe no es un error. */
     void borrarPorHuellaDeToken(String huella);
+
+    /** RN-08.14 y T-105: borra las sesiones cuyo token de renovación ya venció. Devuelve cuántas borró. */
+    int borrarVencidas(java.time.Instant ahora);
 }

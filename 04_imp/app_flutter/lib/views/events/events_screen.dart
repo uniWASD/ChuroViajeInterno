@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../models/evento_vial.dart';
 import '../tema/tema.dart';
+import 'aviso_desactualizados.dart';
 import 'detalle_evento.dart';
 
 /// Pestaña Eventos (CU-02, HU-11, #172): una hoja sobre el mapa con los eventos que reportaron los conductores, su
@@ -84,7 +85,12 @@ class _EventsScreenState extends State<EventsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Center(child: AsaHoja()),
-                  if (eventos.sinActualizar)
+                  if (eventos.desactualizados)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: AvisoDesactualizados(eventos: eventos),
+                    )
+                  else if (eventos.sinActualizar)
                     Material(
                       color: Theme.of(context).colorScheme.errorContainer,
                       child: const ListTile(

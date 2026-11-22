@@ -10,6 +10,7 @@ import '../../controllers/recarga_controller.dart';
 import '../../controllers/reporte_controller.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
 import '../busqueda/barra_busqueda.dart';
+import '../events/aviso_desactualizados.dart';
 import '../events/detalle_evento.dart';
 import '../reporte/reportar_evento_screen.dart';
 import '../ruta/como_llegar_screen.dart';
@@ -124,13 +125,16 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ),
             if (controller.errorMapa != null)
               Positioned.fill(child: AvisoErrorMapa(controller: controller)),
-            if (enElMapa && eventos.sinActualizar)
-              // Debajo de la barra de búsqueda (D-47).
+            if (enElMapa && (eventos.desactualizados || eventos.sinActualizar))
+              // Debajo de la barra de búsqueda (D-47). Con los eventos guardados (RN-02.9), su marca; si no, el
+              // aviso de que no se pudo actualizar (RN-02.8).
               Positioned(
                 top: MediaQuery.paddingOf(context).top + BarraBusqueda.espacio,
                 left: 8,
                 right: 8,
-                child: const _AvisoSinActualizar(),
+                child: eventos.desactualizados
+                    ? AvisoDesactualizados(eventos: eventos)
+                    : const _AvisoSinActualizar(),
               ),
             if (enElMapa)
               Positioned(

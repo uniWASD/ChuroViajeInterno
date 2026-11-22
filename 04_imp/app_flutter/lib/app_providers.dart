@@ -143,11 +143,13 @@ List<SingleChildWidget> createAppProviders({
       reloj: reloj,
     ),
   ),
+  // HU-04: los últimos eventos quedan guardados en el teléfono y se muestran sin conexión (RN-02.9).
   ChangeNotifierProvider<EventosController>(
     create: (context) => EventosController(
       context.read<ServicioEventos>(),
       context.read<SesionController>(),
       reloj: reloj,
-    ),
+      almacen: context.read<AlmacenLocal>(),
+    )..cargarGuardados(),
   ),
 ];

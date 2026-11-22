@@ -25,7 +25,7 @@ Map<String, dynamic> lugarJson(String nombre, String categoria, double lat, doub
   'nombre': nombre,
   'categoria': categoria,
   'ubicacion': {'latitud': lat, 'longitud': lon},
-  if (distancia != null) 'distanciaM': distancia,
+  'distanciaM': ?distancia,
 };
 
 http.Response respuestaLugares(List<Map<String, dynamic>> lugares) =>

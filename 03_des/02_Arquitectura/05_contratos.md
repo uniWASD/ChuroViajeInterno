@@ -58,6 +58,27 @@ Son las únicas rutas de la app que no piden JWT. Todas reciben y devuelven JSON
 | `ACCESO_DENEGADO` | 403 | El JWT es válido pero no alcanza para esa ruta; por ejemplo, un conductor en `/monitoreo/*` |
 | `PETICION_INVALIDA` | 400 | Falta el campo del cuerpo o no cumple el formato |
 
+### Sesión de prueba (`POST /sesion/prueba`)
+
+La usa solo el simulador para cada usuario fantasma ([CU-07](04_reglas/CU-07_EjecutarSimuladorTrafico.md), [D-48](08_decisiones_parametros.md)). No pide JWT ni pasa por Google:
+
+```json
+{"credencial":"…","pruebaId":"carga-2026-11-22-a","usuario":7}
+```
+
+Responde 200 con `{"jwt":"…","expiraEn":"…"}`, igual que `POST /sesion/renovar`. No hay token de renovación: cuando el JWT vence, el simulador pide otra sesión de prueba.
+
+- `credencial` es la credencial de prueba del ambiente (`SIMULACION_CREDENCIAL`). `pruebaId` identifica la prueba de carga: letras, números, punto, guion y guion bajo, hasta 64. `usuario` es el número del usuario fantasma, de 1 a 200 ([P-18](08_decisiones_parametros.md)). El mismo `pruebaId` y `usuario` es siempre el mismo conductor simulado ([RN-07.4](04_reglas/CU-07_EjecutarSimuladorTrafico.md)).
+- El JWT lleva el `pruebaId`, y con él el backend anota cada petición en el registro de esa prueba de carga ([RN-07.11](04_reglas/CU-07_EjecutarSimuladorTrafico.md)).
+- Códigos de rechazo: 403 `ACCESO_DENEGADO` si el ambiente no tiene habilitadas las credenciales de prueba, siempre en `prod` ([RN-07.5](04_reglas/CU-07_EjecutarSimuladorTrafico.md)); 401 `CREDENCIAL_PRUEBA_INVALIDA` si la credencial no es la del ambiente; 400 `PETICION_INVALIDA` si falta un campo o no cumple el formato.
+
+### Borrado de datos simulados (`POST /simulacion/borrar`)
+
+Es el comando de mantenimiento que borra lo que dejó el simulador ([RN-07.8](04_reglas/CU-07_EjecutarSimuladorTrafico.md)). Recibe `{"credencial":"…"}`, la misma credencial de prueba, y responde 200 con cuántas filas simuladas borró: `{"votos":12,"eventos":30,"conductores":10}`.
+
+- Borra las filas con la marca de simulado de `voto`, `evento_vial` y `conductor`, en una sola transacción, y ninguna otra. Los eventos simulados que estaban en el mapa dejan de pesar en las rutas ([RN-02.15](04_reglas/CU-02_VisualizarEventosViales.md)).
+- Los rechazos son los mismos de la sesión de prueba: 403 donde no está habilitada y 401 con otra credencial.
+
 ### Catálogos (`GET /catalogos`)
 
 La app no lleva listas propias: todo lo que muestra en los selectores sale de esta respuesta ([D-06](08_decisiones_parametros.md)). Los tipos de evento y de combustible salen de la base de datos; los tiempos del reporte y los valores de la fila son fijos del backend. El orden de cada lista es estable y es el que debe mostrar la app. Los valores del ejemplo son los del catálogo inicial (migraciones de la base de datos), recortado a dos elementos por lista.

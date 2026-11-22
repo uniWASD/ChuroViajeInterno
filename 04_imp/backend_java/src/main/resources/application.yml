@@ -44,3 +44,10 @@ churoviaje:
     google:
       client-id: ${GOOGLE_CLIENT_ID:}
     credencial-servicio: ${SERVICE_CREDENTIAL:}
+  # CU-07 y P-20: sesiones de prueba para el simulador y modo demostracion. Apagados aqui y siempre en `prod`;
+  # solo el perfil `pruebas` los enciende (SimulacionAmbiente).
+  simulacion:
+    credencial: ""
+    demostracion: false
+    # Archivo donde se anota cada prueba de carga (RN-07.11). Vacio: solo va al registro del backend.
+    registro: ""

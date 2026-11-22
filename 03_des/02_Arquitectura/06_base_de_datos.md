@@ -73,4 +73,6 @@ Las reglas las aplican los objetos de dominio. La base de datos repite ocho de e
 
 ## Datos simulados
 
-La marca de simulado está en el conductor, en sus eventos y en sus votos. Borrar los datos de una prueba es borrar las filas con esa marca, sin tocar ninguna otra ([RN-07.8](04_reglas/CU-07_EjecutarSimuladorTrafico.md)).
+La marca de simulado está en el conductor, en sus eventos y en sus votos. Borrar los datos de una prueba es borrar las filas con esa marca, sin tocar ninguna otra ([RN-07.8](04_reglas/CU-07_EjecutarSimuladorTrafico.md)). Lo hace `POST /simulacion/borrar`, en este orden: votos, eventos y conductores.
+
+Para que eso alcance, nada simulado toca una fila real ([D-48](08_decisiones_parametros.md)): un usuario fantasma solo vota eventos simulados, el voto de cualquiera sobre un evento simulado (en modo demostración) también queda simulado, y un usuario fantasma no puede confirmar recargas, porque `estado_combustible` no tiene marca de simulado. La congestión que nace de recorridos simulados queda simulada y separada de la real del mismo tramo ([RN-04.20](04_reglas/CU-04_RecalcularRuta.md)).

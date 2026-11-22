@@ -38,14 +38,25 @@ public class ConsultaEventosServicio {
      */
     @Transactional(readOnly = true)
     public EventosRespuesta consultar(String marca) {
+        return consultar(marca, false);
+    }
+
+    /**
+     * Como {@link #consultar(String)}; con {@code incluirSimulados} entran tambien los eventos de los usuarios
+     * fantasma. Un conductor real los ve solo en modo demostracion (RN-07.13).
+     */
+    @Transactional(readOnly = true)
+    public EventosRespuesta consultar(String marca, boolean incluirSimulados) {
         Instant ahora = reloj.instant();
         String marcaNueva = ahora.minus(SOLAPAMIENTO).toString();
         if (marca == null || marca.isBlank()) {
-            return new EventosRespuesta(marcaNueva, true, eventos.vigentesParaMostrar(ahora), List.of());
+            return new EventosRespuesta(marcaNueva, true, eventos.vigentesParaMostrar(ahora, incluirSimulados),
+                    List.of());
         }
         Instant desde = leerMarca(marca);
-        return new EventosRespuesta(marcaNueva, false, eventos.vigentesCambiadosDesdeParaMostrar(desde, ahora),
-                eventos.quitadosEntre(desde, ahora));
+        return new EventosRespuesta(marcaNueva, false,
+                eventos.vigentesCambiadosDesdeParaMostrar(desde, ahora, incluirSimulados),
+                eventos.quitadosEntre(desde, ahora, incluirSimulados));
     }
 
     private static Instant leerMarca(String marca) {

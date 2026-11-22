@@ -39,7 +39,7 @@ El sistema guarda solo lo que necesita para cumplir sus reglas. Las rutas y la t
 | `surtidor_alias` | Surtidor, alias | Surtidor |
 | `tipo_combustible` | Código, nombre | TipoCombustible |
 | `estado_combustible` | Surtidor, tipo, origen (WhatsApp, Conductores o ANH), disponible, fila, fecha del dato, `litros` (no negativo y opcional), `estado_anh` (alto, medio o bajo; opcional) y `consultado_en` (cuándo lo leyó el backend; solo en ANH) | EstadoCombustible |
-| `confirmacion_recarga` | Conductor, surtidor, tipo, fecha | ConfirmaciónRecarga |
+| `confirmacion_recarga` | Conductor, surtidor, tipo (nunca Desconocido), fecha. No guarda la ubicación de la parada (V11) | ConfirmaciónRecarga |
 | `lugar` | Clave de OSM (única), nombre, nombre para buscar (minúsculas, sin tildes, con las abreviaturas completas), categoría, ubicación | Lugar (V10) |
 | `lugar_extracto` | Una sola fila: fecha del extracto cargado, cantidad de lugares y cuándo se cargó | Lugar (V10) |
 

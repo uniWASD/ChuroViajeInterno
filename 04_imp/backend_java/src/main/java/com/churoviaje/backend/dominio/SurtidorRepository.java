@@ -13,4 +13,7 @@ public interface SurtidorRepository {
 
     /** RN-05.2: todos los surtidores, del más cercano al más lejano de {@code punto}, medido en PostGIS. */
     List<Cercano> porCercania(Ubicacion punto);
+
+    /** RN-05.13: el surtidor {@code id} con su distancia en metros a {@code punto}, medida en PostGIS; vacío si no existe. */
+    java.util.Optional<Cercano> buscarConDistancia(long id, Ubicacion punto);
 }

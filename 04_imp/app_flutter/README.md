@@ -238,3 +238,15 @@ Para que el selector de cuentas funcione en Android hay que registrar en Google 
 - **Lista y votos (HU-11, #64):** la pestaña Eventos muestra los eventos vigentes con su tipo, hace cuánto ocurrieron y la marca de confirmado, con los mismos datos que el mapa (comparten `EventosController`). «Es real» y «Es falso» son un toque a `POST /eventos/{id}/votos`; después, los botones de ese evento quedan desactivados. Si el backend responde que ya votó, que es su propio evento o que ya no está vigente, se muestra su mensaje y nada cambia; sin red se puede volver a tocar. Las congestiones de la telemetría aparecen sin botones (D-20). Un evento retirado desaparece en la siguiente actualización (o enseguida, si fue el voto de este conductor el que lo retiró).
 
 Las pruebas de la cola usan `sqflite_common_ffi`, que necesita SQLite instalado en la máquina donde se corren (en Windows viene con el paquete; en Linux, `libsqlite3`).
+
+## Surtidores (HU-07, #71)
+
+- **Lista:** la pestaña Surtidores es una hoja sobre el mapa, como la de Eventos (Figma «08 · Surtidores»). Muestra los surtidores de `GET /surtidores` del más cercano al más lejano. Cada fila lleva una barra con el estado general: verde si hay todo, amarilla si hay algunos combustibles, roja si no hay ninguno y gris sin información reciente. También muestra hace cuánto llegó el último dato y el ícono de su origen. Al tocar la fila se despliega el estado por combustible y el botón «Ir»; la «i» abre el detalle.
+- **Detalle:** el nombre, la distancia y, por cada combustible, si hay o no, la fila si se conoce, el origen (WhatsApp, Conductores o ANH, cada uno con su ícono y su color) y la hora del dato. Si el origen es ANH, también el saldo en litros y el estado de ANH. Un surtidor sin datos vigentes dice «Sin información reciente».
+- **Mapa:** los surtidores también son marcadores, con el color de su estado. Al tocar uno se abre su detalle y la cámara va hasta él.
+- **Cada 60 segundos:** `CombustibleController` vuelve a pedir la lista mientras el mapa está en pantalla, sea en la pestaña Mapa, Eventos o Surtidores, y la pausa en segundo plano (RN-05.17, P-27). La lista y los marcadores salen de la misma consulta.
+- **Sin ubicación:** pide desde el centro de Tarija, para que los marcadores salgan igual, y la hoja explica que necesita la ubicación para ordenar por cercanía, con el botón para concederla. Cuando llega la primera posición, vuelve a pedir la lista.
+- **Cómo llegar:** «Ir» y «Cómo llegar» marcan el surtidor como punto elegido con su nombre (`MapController.elegirLugar`) y abren Cómo llegar con él como destino.
+- El gesto de atrás cierra primero el detalle del surtidor.
+
+Las pruebas están en `test/surtidores_test.dart` (CP-108 a CP-110).

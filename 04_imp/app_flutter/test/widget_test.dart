@@ -74,10 +74,8 @@ void main() {
     await tester.tap(find.text('Surtidores').last);
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Aquí se mostrarán los surtidores disponibles.'),
-      findsOneWidget,
-    );
+    // La pestaña Surtidores es una hoja sobre el mapa con la lista (#71).
+    expect(find.byKey(const Key('hoja-surtidores')), findsOneWidget);
 
     await tester.tap(find.text('Mapa').last);
     await tester.pumpAndSettle();

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../controllers/busqueda_controller.dart';
 import '../../controllers/cola_controller.dart';
+import '../../controllers/combustible_controller.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
@@ -72,9 +73,11 @@ class _MainScreenState extends State<MainScreen> {
     EventosController eventos,
     MapController mapa,
     BusquedaController busqueda,
+    CombustibleController combustible,
   ) =>
       busqueda.abierta ||
       eventos.seleccionado != null ||
+      combustible.seleccionado != null ||
       mapa.puntoSeleccionado != null;
 
   void _alVolver(bool salio) {
@@ -83,6 +86,7 @@ class _MainScreenState extends State<MainScreen> {
     final eventos = context.read<EventosController>();
     final mapa = context.read<MapController>();
     final busqueda = context.read<BusquedaController>();
+    final combustible = context.read<CombustibleController>();
     // 1. La lista de la búsqueda (y el teclado) se cierra.
     if (busqueda.abierta) {
       busqueda.cerrar();
@@ -92,6 +96,12 @@ class _MainScreenState extends State<MainScreen> {
     if (pestanas.selectedIndex != AppTab.stations.index &&
         eventos.seleccionado != null) {
       eventos.cerrarFicha();
+      return;
+    }
+    // El detalle de un surtidor (en el Mapa o en Surtidores), igual.
+    if (pestanas.selectedIndex != AppTab.events.index &&
+        combustible.seleccionado != null) {
+      combustible.cerrarFicha();
       return;
     }
     if (pestanas.selectedIndex == AppTab.map.index &&
@@ -125,6 +135,7 @@ class _MainScreenState extends State<MainScreen> {
     final eventos = context.watch<EventosController>();
     final mapa = context.watch<MapController>();
     final busqueda = context.watch<BusquedaController>();
+    final combustible = context.watch<CombustibleController>();
     return Consumer<NavigationController>(
       builder: (context, controller, child) {
         final enElMapa = controller.selectedIndex == AppTab.map.index;
@@ -134,7 +145,7 @@ class _MainScreenState extends State<MainScreen> {
           canPop:
               _puedeSalir &&
               enElMapa &&
-              !_hayAlgoAbierto(eventos, mapa, busqueda),
+              !_hayAlgoAbierto(eventos, mapa, busqueda, combustible),
           onPopInvokedWithResult: (salio, _) => _alVolver(salio),
           // Sin encabezado, el mapa llega hasta arriba: los íconos de la barra de estado van oscuros.
           child: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -142,7 +153,7 @@ class _MainScreenState extends State<MainScreen> {
               statusBarColor: Colors.transparent,
             ),
             child: Scaffold(
-              // #172: el mapa queda siempre detrás; Eventos es una hoja sobre él y Surtidores lo tapa. La barra de
+              // #172: el mapa queda siempre detrás; Eventos y Surtidores (#71) son hojas sobre él. La barra de
               // búsqueda (D-47) flota arriba en las tres pestañas.
               body: _AvisosCola(
                 child: Stack(
@@ -151,23 +162,7 @@ class _MainScreenState extends State<MainScreen> {
                     if (controller.selectedIndex == AppTab.events.index)
                       const EventsScreen(),
                     if (controller.selectedIndex == AppTab.stations.index)
-                      Positioned.fill(
-                        child: ColoredBox(
-                          color: Colors.white,
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              top:
-                                  MediaQuery.paddingOf(context).top +
-                                  BarraBusqueda.espacio,
-                            ),
-                            child: MediaQuery.removePadding(
-                              context: context,
-                              removeTop: true,
-                              child: const StationsScreen(),
-                            ),
-                          ),
-                        ),
-                      ),
+                      const StationsScreen(),
                     const Positioned(
                       top: 0,
                       left: 0,

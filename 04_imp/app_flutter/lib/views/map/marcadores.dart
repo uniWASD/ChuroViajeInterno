@@ -26,6 +26,16 @@ class Marcadores {
     _hechos.clear();
   }
 
+  /// CU-05: el marcador de un surtidor, con su ícono, del color de su estado.
+  Future<Uint8List> deSurtidor(Color color) async {
+    final clave = 'surtidor|${color.toARGB32()}';
+    final hecho = _hechos[clave];
+    if (hecho != null) return hecho;
+    final png = await dibujarMarcador(icono: Icons.local_gas_station, color: color, confirmado: false, escala: escala);
+    _hechos[clave] = png;
+    return png;
+  }
+
   Future<Uint8List> de({required String tipo, required Color color, required bool confirmado}) async {
     final clave = '$tipo|${color.toARGB32()}|$confirmado';
     final hecho = _hechos[clave];

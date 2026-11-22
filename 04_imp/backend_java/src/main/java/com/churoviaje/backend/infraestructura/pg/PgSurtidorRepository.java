@@ -79,6 +79,30 @@ public class PgSurtidorRepository implements SurtidorRepository {
         }
     }
 
+    @Override
+    public java.util.Optional<Cercano> buscarConDistancia(long id, Ubicacion punto) {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement("""
+                        select s.id, s.nombre, ST_Y(s.ubicacion::geometry) as latitud, ST_X(s.ubicacion::geometry) as longitud,
+                               coalesce(array_agg(a.alias order by a.alias) filter (where a.alias is not null), '{}') as alias,
+                               ST_Distance(s.ubicacion, ST_SetSRID(ST_MakePoint(?, ?), 4326)::geography) as distancia
+                        from surtidor s
+                        left join surtidor_alias a on a.surtidor_id = s.id
+                        where s.id = ?
+                        group by s.id""")) {
+            sentencia.setBigDecimal(1, punto.longitud());
+            sentencia.setBigDecimal(2, punto.latitud());
+            sentencia.setLong(3, id);
+            try (ResultSet fila = sentencia.executeQuery()) {
+                return fila.next()
+                        ? java.util.Optional.of(new Cercano(surtidor(fila), fila.getDouble("distancia")))
+                        : java.util.Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("buscar el surtidor", e);
+        }
+    }
+
     static Surtidor surtidor(ResultSet fila) throws SQLException {
         Array alias = fila.getArray("alias");
         List<String> lista = Arrays.asList((String[]) alias.getArray());

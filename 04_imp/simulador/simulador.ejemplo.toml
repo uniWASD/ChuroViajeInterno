@@ -9,3 +9,4 @@ rutas = "../datos/rutas_referencia.json"
 # Ambiente de pruebas en esta máquina (RN-07.12). Otro servidor exige ambiente_remoto = true y HTTPS.
 backend = "http://127.0.0.1:8080"
 # semilla = 7              # opcional: repite la misma simulación
+# La credencial de prueba no va aquí: se lee de la variable SIMULACION_CREDENCIAL (RN-07.5).

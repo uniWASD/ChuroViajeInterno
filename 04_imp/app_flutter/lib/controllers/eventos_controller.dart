@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 
@@ -6,11 +7,17 @@ import '../models/catalogos.dart';
 import '../models/evento_vial.dart';
 import '../services/api/api_client.dart';
 import '../services/eventos/servicio_eventos.dart';
+import '../services/sesion/almacen_local.dart';
 import 'sesion_controller.dart';
 
 /// Controlador de mapa para los eventos (CU-02): consulta `GET /eventos` cada 5 segundos mientras el mapa está en
-/// pantalla, pide solo los cambios y conserva lo último que mostró si el backend no responde.
+/// pantalla, pide solo los cambios y conserva lo último que mostró si el backend no responde. Cada consulta exitosa
+/// guarda los eventos en el teléfono; sin conexión, al abrir la app se muestran esos con la marca de desactualizados
+/// hasta que una consulta vuelva a funcionar (HU-04, RN-02.9).
 class EventosController extends ChangeNotifier {
+  /// Donde quedan guardados los últimos eventos (HU-04). Cerrar sesión borra todo lo guardado (RN-08.14).
+  static const String claveGuardados = 'eventos_guardados';
+
   /// RN-02.6: con el mapa abierto, la app consulta cada 5 segundos.
   static const Duration ciclo = Duration(seconds: 5);
   static const String mensajeSinActualizar = 'No se pudo actualizar eventos';
@@ -19,6 +26,10 @@ class EventosController extends ChangeNotifier {
   final SesionController _sesion;
   final DateTime Function() _ahora;
   final Duration _ciclo;
+  final AlmacenLocal? _telefono;
+  bool _desactualizados = false;
+  DateTime? _guardadosEn;
+  bool _yaGuardo = false;
 
   final Map<int, EventoVial> _eventos = {};
   String? _marca;
@@ -39,8 +50,10 @@ class EventosController extends ChangeNotifier {
     this._sesion, {
     DateTime Function()? reloj,
     Duration? cadaCuanto,
+    AlmacenLocal? almacen,
   }) : _ahora = reloj ?? DateTime.now,
-       _ciclo = cadaCuanto ?? ciclo {
+       _ciclo = cadaCuanto ?? ciclo,
+       _telefono = almacen {
     _sesion.addListener(_alCambiarSesion);
   }
 
@@ -57,6 +70,42 @@ class EventosController extends ChangeNotifier {
 
   /// true si la última consulta falló: el mapa avisa y conserva lo último (RN-02.8).
   bool get sinActualizar => _sinActualizar;
+
+  /// RN-02.9: true mientras se muestran los eventos guardados en el teléfono porque no hubo conexión; la vista
+  /// avisa que pueden estar desactualizados.
+  bool get desactualizados => _desactualizados;
+
+  /// Cuándo se guardaron los eventos que se muestran sin conexión.
+  DateTime? get guardadosEn => _guardadosEn;
+
+  /// Al abrir la app: si todavía no llegó ninguna consulta, muestra los eventos guardados con la marca de
+  /// desactualizados (RN-02.9). Los que ya vencieron según el catálogo no se dibujan, igual que siempre.
+  Future<void> cargarGuardados() async {
+    final almacen = _telefono;
+    if (almacen == null) return;
+    String? texto;
+    try {
+      texto = await almacen.leer(claveGuardados);
+    } on Object catch (e) {
+      debugPrint('No se pudieron leer los eventos guardados: $e');
+      return;
+    }
+    // Si una consulta ya respondió mientras se leía, mandan los datos frescos.
+    if (texto == null || _disposed || _marca != null || _eventos.isNotEmpty) return;
+    try {
+      final json = jsonDecode(texto) as Map<String, dynamic>;
+      for (final e in (json['eventos'] as List? ?? const [])) {
+        final evento = EventoVial.fromJson(e as Map<String, dynamic>);
+        _eventos[evento.id] = evento;
+      }
+      _guardadosEn = DateTime.tryParse(json['guardadoEn'] as String? ?? '');
+      _desactualizados = true;
+    } on Object catch (e) {
+      debugPrint('Los eventos guardados no se pudieron leer: $e');
+      return;
+    }
+    _avisar();
+  }
 
   /// true mientras corre el ciclo de 5 segundos.
   bool get activo => _temporizador != null;
@@ -97,6 +146,11 @@ class EventosController extends ChangeNotifier {
       }
       _marca = respuesta.marca;
       _sinActualizar = false;
+      _desactualizados = false; // RN-02.9: volvió la red y lo guardado se reemplaza por lo vigente
+      _guardadosEn = null;
+      if (respuesta.completa || respuesta.eventos.isNotEmpty || respuesta.quitados.isNotEmpty || !_yaGuardo) {
+        unawaited(_guardar());
+      }
     } on Object catch (e) {
       // ApiException (sin red, tiempo de espera, error del backend) o una respuesta que no se pudo leer.
       debugPrint('No se pudieron actualizar los eventos: $e');
@@ -160,6 +214,22 @@ class EventosController extends ChangeNotifier {
     return !ahora.isBefore(e.momentoOcurrencia.add(tipo.vigencia));
   }
 
+  /// HU-04: cada consulta que trae algo guarda los eventos que conoce la app.
+  Future<void> _guardar() async {
+    final almacen = _telefono;
+    if (almacen == null) return;
+    _yaGuardo = true;
+    final texto = jsonEncode({
+      'guardadoEn': _ahora().toUtc().toIso8601String(),
+      'eventos': [for (final e in _eventos.values) e.toJson()],
+    });
+    try {
+      await almacen.guardar(claveGuardados, texto);
+    } on Object catch (e) {
+      debugPrint('No se pudieron guardar los eventos: $e');
+    }
+  }
+
   void _alCambiarSesion() {
     if (_sesion.conSesion) {
       // La sesión terminó de cargar (o se volvió a iniciar) con el mapa abierto: no se espera al ciclo.
@@ -171,6 +241,9 @@ class EventosController extends ChangeNotifier {
     _marca = null;
     _seleccionado = null;
     _sinActualizar = false;
+    _desactualizados = false;
+    _guardadosEn = null;
+    _yaGuardo = false;
     _votados.clear();
     _mensajes.clear();
   }

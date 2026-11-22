@@ -51,7 +51,7 @@ La seguridad (CU-08, D-13) pide tres variables más, sin valor por defecto: si f
 
 ### Pruebas
 
-JUnit usa el perfil `pruebas` y Testcontainers inicia una base PostGIS desechable; no hace falta levantar Compose. Ejecuta el mismo comando que el CI:
+JUnit usa el perfil `test` y Testcontainers inicia una base PostGIS desechable; no hace falta levantar Compose. Ejecuta el mismo comando que el CI:
 
 ```bash
 ./mvnw -B clean test
@@ -63,7 +63,18 @@ Un arranque manual con este perfil requiere `TEST_DATABASE_URL`, `TEST_DB_USER` 
 
 ### Producción
 
-Define `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD` y `CHUROVIAJE_GEOJSON_PATH`. Este perfil deshabilita Swagger y rechaza coberturas provisionales. Define también `JWT_SECRET`, `GOOGLE_CLIENT_ID` y `SERVICE_CREDENTIAL`, que viven solo en el servidor con acceso restringido.
+Define `SPRING_PROFILES_ACTIVE=prod`, `DB_URL`, `DB_USER`, `DB_PASSWORD` y `CHUROVIAJE_GEOJSON_PATH`. Este perfil deshabilita Swagger y rechaza coberturas provisionales. Define también `JWT_SECRET`, `GOOGLE_CLIENT_ID` y `SERVICE_CREDENTIAL`, que viven solo en el servidor con acceso restringido. En `prod` no hay sesiones de prueba ni modo demostración, aunque se defina la credencial de prueba ([D-48](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+
+### Ambiente de pruebas del simulador
+
+El segundo backend del servidor (T-106, #86) usa `SPRING_PROFILES_ACTIVE=pruebas`, con las mismas variables que `prod` pero su propia base y sus propios secretos. Además lee:
+
+| Variable | Qué es |
+| --- | --- |
+| `SIMULACION_CREDENCIAL` | Credencial de prueba que presenta el simulador en `POST /sesion/prueba` y `POST /simulacion/borrar`: al menos 32 caracteres. Sin ella, este ambiente tampoco entrega sesiones de prueba |
+| `SIMULACION_REGISTRO_PATH` | Opcional. Archivo donde se anota cada prueba de carga (RN-07.11), además del registro del backend |
+
+Este perfil enciende el modo demostración: los conductores reales ven los datos simulados (RN-07.13). Cada prueba de carga deja en el registro líneas `[prueba-carga]` con su identificador: cuándo entró el primer usuario fantasma, el avance cada minuto, el primer 503 si el backend se satura (RN-07.10) y el resumen final cuando pasan 2 minutos sin peticiones. Ninguna línea dice nada de un conductor.
 
 ## Acceso a datos
 
@@ -79,7 +90,7 @@ Cómo está armado:
 
 ## Endpoints de utilidad
 
-- Swagger, habilitado en `dev` y `pruebas`: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
+- Swagger, habilitado en `dev` y `test`: [http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html).
 - Salud: `curl http://127.0.0.1:8081/actuator/health`.
 
 ## Base de datos
@@ -119,4 +130,10 @@ Los tiempos (`motor.tiempo-maximo` 3 s, `motor.espera-arranque`, `motor.espera-r
 
 `GET /surtidores` (HU-07, #69) ordena los surtidores por distancia con `ST_Distance` y de cada uno muestra, por tipo, el dato vigente más reciente de los tres orígenes (`EstadoCombustible.paraMostrar`) ([05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#surtidores-get-surtidores)).
 
+`POST /surtidores/{id}/confirmaciones` (HU-12, #72) registra que un conductor recargó: `ConfirmacionRecarga` comprueba el tipo y que la parada esté a menos de 50 m del surtidor (medido en PostGIS), el servicio rechaza la repetida de los últimos 60 minutos con el conductor bloqueado, y guarda la fila en `confirmacion_recarga` (V11) y el dato en `estado_combustible` con origen Conductores ([05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#confirmación-de-recarga-post-surtidoresidconfirmaciones)). Lo prueba `ConfirmacionRecargaIntegracionTest` (CP-111 a CP-113).
+
+`LimpiezaDatos` (T-105, #85) corre cada día a las 03:30 de Tarija (`churoviaje.limpieza.cron`) y borra los eventos retirados o vencidos hace más de 30 días con sus votos, las confirmaciones de recarga de más de 30 días y las sesiones vencidas, sin tocar nada vigente ([06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md#limpieza-diaria)). Lo prueba `LimpiezaDatosIntegracionTest` (CP-144).
+
 `POST /rutas` (HU-05) es la primera operación que usa el motor: comprueba que origen, destino y paradas estén en la mancha urbana sin llamar al núcleo y, si lo están, le pide la ruta. El formato está en [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#rutas-post-rutas). Sus pruebas reemplazan `MotorDeRutas` por un doble; con `MOTOR_PATH` y `RED_VIAL_PATH` definidos, `MotorDeRutasNucleoRealTest` y `RutaConNucleoRealTest` usan el núcleo real (por ejemplo, con `04_imp/motor_cpp/tests/datos/red_irregular.json`). Con `MOTOR_PATH` y `RED_VIAL_REAL` (la red real de Tarija), `RutasReferenciaNucleoRealTest` calcula los viajes de referencia de [04_imp/datos](../datos/README.md#viajes-de-referencia) a través de `MotorDeRutas` (T-120).
+
+`POST /sesion/prueba` y `POST /simulacion/borrar` (HU-09, #84) reciben al simulador: el primero entrega el JWT de un conductor simulado y el segundo borra todas las filas simuladas sin tocar una real ([05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#sesión-de-prueba-post-sesionprueba), [D-48](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Fuera del modo demostración, `GET /eventos` no le muestra los eventos simulados a un conductor real. Lo prueban `SimulacionIntegracionTest` (CP-142, CP-143), `SesionPruebaProduccionIntegracionTest` (CP-141) y `SimulacionDemostracionIntegracionTest`.

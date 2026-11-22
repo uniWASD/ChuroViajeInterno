@@ -1,5 +1,6 @@
 package com.churoviaje.backend.servicios;
 
+import com.churoviaje.backend.config.AmbienteSimulacion;
 import com.churoviaje.backend.config.PropiedadesSeguridad;
 import com.churoviaje.backend.dominio.Conductor;
 import com.churoviaje.backend.dominio.ConductorRepository;
@@ -35,10 +36,13 @@ public class SesionServicio {
     private final PropiedadesSeguridad propiedades;
     private final Clock reloj;
     private final TransactionTemplate transaccion;
+    private final AmbienteSimulacion simulacion;
+    private final RegistroPruebasCarga registroPruebas;
 
     public SesionServicio(ValidadorTokenGoogle validadorGoogle, ConductorRepository conductores,
             SesionRepository sesiones, JwtServicio jwtServicio, TokensRenovacion tokensRenovacion,
-            PropiedadesSeguridad propiedades, Clock reloj, PlatformTransactionManager gestorTransacciones) {
+            PropiedadesSeguridad propiedades, Clock reloj, PlatformTransactionManager gestorTransacciones,
+            AmbienteSimulacion simulacion, RegistroPruebasCarga registroPruebas) {
         this.validadorGoogle = validadorGoogle;
         this.conductores = conductores;
         this.sesiones = sesiones;
@@ -47,6 +51,8 @@ public class SesionServicio {
         this.propiedades = propiedades;
         this.reloj = reloj;
         this.transaccion = new TransactionTemplate(gestorTransacciones);
+        this.simulacion = simulacion;
+        this.registroPruebas = registroPruebas;
     }
 
     /** RN-08.3 a RN-08.6: valida con Google, busca o crea al conductor y abre la sesion. */
@@ -75,6 +81,30 @@ public class SesionServicio {
                 jwtServicio.emitir(conductor.getId(), ahora),
                 aFecha(jwtServicio.vencimientoDesde(ahora)),
                 tokenRenovacionNuevo);
+    }
+
+    /**
+     * CU-07, RN-07.4 y RN-07.5: el JWT de un usuario fantasma. No pasa por Google y solo existe donde el ambiente
+     * tiene habilitadas las credenciales de prueba; en {@code prod} responde 403 (P-20). No hay token de renovación:
+     * cuando el JWT vence, el simulador pide otra sesión de prueba. Cada número de usuario de una prueba es siempre el
+     * mismo conductor simulado.
+     */
+    public JwtRenovado iniciarSesionDePrueba(String credencial, String pruebaCarga, int usuario) {
+        if (!simulacion.sesionesDePruebaHabilitadas()) {
+            throw new ExcepcionRechazo(HttpStatus.FORBIDDEN, "ACCESO_DENEGADO",
+                    "Las sesiones de prueba no están habilitadas en este ambiente.");
+        }
+        if (!simulacion.credencialCorrecta(credencial)) {
+            throw new ExcepcionRechazo(HttpStatus.UNAUTHORIZED, "CREDENCIAL_PRUEBA_INVALIDA",
+                    "La credencial de prueba no es válida.");
+        }
+        Instant ahora = reloj.instant();
+        String identificador = Conductor.identificadorDePrueba(pruebaCarga, usuario);
+        Conductor conductor = transaccion.execute(estado -> conductores.buscarPorGoogleId(identificador)
+                .orElseGet(() -> conductores.guardarNuevo(Conductor.simulado(pruebaCarga, usuario, ahora))));
+        registroPruebas.usuarioEntro(pruebaCarga, usuario); // RN-07.11
+        return new JwtRenovado(jwtServicio.emitirDePrueba(conductor.getId(), pruebaCarga, ahora),
+                aFecha(jwtServicio.vencimientoDesde(ahora)));
     }
 
     /** RN-08.12: JWT nuevo sin pasar por Google mientras el token de renovacion siga vigente. */

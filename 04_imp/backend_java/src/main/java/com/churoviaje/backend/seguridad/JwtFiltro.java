@@ -48,8 +48,7 @@ public class JwtFiltro extends OncePerRequestFilter {
             if (esCredencialDeServicio(token)) {
                 autenticar("servicio", ROL_SERVICIO);
             } else {
-                jwtServicio.conductorDe(token)
-                        .ifPresent(id -> autenticar(new ConductorAutenticado(id), ROL_CONDUCTOR));
+                jwtServicio.autenticar(token).ifPresent(conductor -> autenticar(conductor, ROL_CONDUCTOR));
             }
         }
         cadena.doFilter(peticion, respuesta);

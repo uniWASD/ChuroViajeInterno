@@ -1,0 +1,50 @@
+# Backend del ambiente de pruebas del simulador (T-106, #86).
+# Copia de /etc/systemd/system/churoviaje-backend-pruebas.service en churoviaje-server.
+# Es un segundo backend, con su propio núcleo C++ y su propia base (churoviaje_pruebas), para correr
+# el simulador sin tocar producción (RN-07.12). Usa la misma versión desplegada que producción
+# (/opt/churoviaje/actual) y no arranca solo con la máquina: se enciende para una prueba y se apaga.
+# Los secretos están en /etc/churoviaje/backend-pruebas.env, fuera del repositorio.
+
+[Unit]
+Description=ChuroViaje backend de pruebas (simulador, CU-07)
+After=network-online.target postgresql.service
+Wants=network-online.target postgresql.service
+
+[Service]
+Type=simple
+User=churoviaje-pruebas
+Group=churoviaje-pruebas
+SupplementaryGroups=churoviaje
+EnvironmentFile=/etc/churoviaje/backend-pruebas.env
+WorkingDirectory=/opt/churoviaje
+ExecStart=/usr/bin/java -Xms128m -Xmx768m -jar /opt/churoviaje/actual/backend.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=30
+
+# Una prueba de carga no debe dejar sin recursos a producción: con 2 OCPU el total es 200 %;
+# este servicio (backend y núcleo juntos) usa como mucho el 60 % y 1,5 GB, y cede la CPU primero.
+CPUQuota=60%
+MemoryMax=1536M
+Nice=5
+
+# Las líneas de cada prueba de carga (RN-07.11) van a /var/log/churoviaje-pruebas-carga, que
+# systemd crea con el dueño del servicio. No se borran a los 14 días como los demás registros (T-103).
+LogsDirectory=churoviaje-pruebas-carga
+LogsDirectoryMode=0750
+
+# Endurecimiento: igual que producción.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadOnlyPaths=/opt/churoviaje
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

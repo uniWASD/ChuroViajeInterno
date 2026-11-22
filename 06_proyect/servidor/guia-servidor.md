@@ -36,6 +36,7 @@ Guía de la instancia de Oracle Cloud donde se despliega ChuroViaje. Cubre los i
 | Carga de la red vial en el servidor | 244 ms, el 12/11/2026 (criterio de T-096) |
 | CP-79 (tras reiniciar, el backend y el núcleo vuelven solos) | Hecho el 12/11/2026. Falta probar el inicio de sesión desde la app |
 | CP-80 (al matar el núcleo, el backend lo vuelve a arrancar) | Hecho el 12/11/2026 |
+| Ambiente de pruebas del simulador (T-106, #86) | Preparado en el repositorio: sección 11. Falta correrlo en el servidor y CP-145 |
 
 ## Datos del servidor
 
@@ -377,6 +378,65 @@ curl -s http://127.0.0.1:8081/actuator/health
 
 Los mensajes del núcleo aparecen en el registro del backend con el nivel `WARN`, aunque sean normales, porque el wrapper registra así todo lo que el núcleo escribe en su salida de errores.
 
+### 11. Ambiente de pruebas del simulador
+
+T-106 (#86). Un segundo backend, con su propio núcleo C++ y su propia base, para correr el simulador sin tocar producción ([RN-07.12](../../03_des/02_Arquitectura/04_reglas/CU-07_EjecutarSimuladorTrafico.md)). Con 12 GB de memoria, la instancia aguanta los dos.
+
+| Qué | Producción | Pruebas |
+|---|---|---|
+| Servicio | `churoviaje-backend` | `churoviaje-backend-pruebas`, no arranca solo con la máquina |
+| Usuario del servicio | `churoviaje` | `churoviaje-pruebas`, en el grupo `churoviaje` para leer `/opt/churoviaje`; no puede leer los secretos de producción |
+| Perfil | `prod` | `pruebas`: sesiones de prueba y modo demostración ([P-20](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-48](../../03_des/02_Arquitectura/08_decisiones_parametros.md)) |
+| Puertos (solo `127.0.0.1`) | 8080 y 8081 (salud) | 8090 y 8091 (salud) |
+| Base | `churoviaje`, usuario `churoviaje_app` | `churoviaje_pruebas`, usuario `churoviaje_pruebas_app` |
+| Secretos | `/etc/churoviaje/backend.env` | `/etc/churoviaje/backend-pruebas.env`, con un JWT, una credencial de servicio y una credencial de prueba propios |
+| Dirección | `https://churoviaje.orelqu.com` | `https://pruebas.churoviaje.orelqu.com` |
+| Versión | `/opt/churoviaje/actual` | La misma: al desplegar, si está encendido, pasa a la versión nueva |
+| Recursos | Sin límite | Como mucho 60 % de CPU (de 200 % con 2 OCPU) y 1,5 GB, contando el núcleo, y cede la CPU primero (`Nice=5`) |
+| Registro de las pruebas de carga | — | `/var/log/churoviaje-pruebas-carga/pruebas-carga.log`, que no se borra a los 14 días |
+
+**Dominio.** En Cloudflare, **DNS → Records**, un registro más, también con la nube gris (el certificado gratis de Cloudflare no cubre dos niveles de subdominio, y además el certificado tiene que ser el de Let's Encrypt):
+
+| Tipo | Nombre | Valor | Proxy |
+|---|---|---|---|
+| `A` | `pruebas.churoviaje` | `<IP_PUBLICA>` | DNS only (nube gris) |
+
+**Preparar el ambiente.** Como `ubuntu`, después de traer la rama al clon de `deploy`:
+
+```bash
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/crear-ambiente-pruebas.sh
+```
+
+El script crea el usuario, la base con PostGIS, el archivo de entorno con secretos nuevos (la contraseña de la base se genera al azar y solo queda en ese archivo), instala el servicio y deja que `deploy` lo reinicie al desplegar solo si está encendido (`try-restart`). Se puede correr más de una vez: lo que ya existe no lo toca. No imprime ningún secreto.
+
+**Nginx y certificado.**
+
+```bash
+sudo cp /home/deploy/ChuroViajeInterno/06_proyect/servidor/nginx/churoviaje-pruebas.conf /etc/nginx/sites-available/churoviaje-pruebas
+sudo ln -s /etc/nginx/sites-available/churoviaje-pruebas /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d pruebas.churoviaje.orelqu.com --redirect -m <CORREO> --agree-tos --no-eff-email
+```
+
+**Encender y apagar.** Apagado no gasta memoria ni CPU, y encenderlo o apagarlo no toca producción:
+
+```bash
+sudo systemctl start churoviaje-backend-pruebas
+curl -s http://127.0.0.1:8091/actuator/health
+sudo systemctl stop churoviaje-backend-pruebas
+```
+
+La primera vez, Flyway crea las tablas en `churoviaje_pruebas`. Con la base vacía, el núcleo puede arrancar antes de que existan y el registro muestra un error de `evento_vial`; el backend lo reinicia solo a los 2 segundos. Si se quiere que arranque con la máquina: `sudo systemctl enable churoviaje-backend-pruebas`.
+
+**Correr el simulador en el servidor.** Así la credencial de prueba no sale del servidor: el script la lee del archivo de entorno y corre el simulador como `deploy` contra `http://127.0.0.1:8090`.
+
+```bash
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/simular.sh --usuarios 10 --navegando 4 \
+     --eventos-por-minuto 4 --duracion 5 --prueba cp146 --reporte /home/deploy/simulaciones/cp146.json
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/simular.sh --borrar
+sudo tail -n 20 /var/log/churoviaje-pruebas-carga/pruebas-carga.log
+```
+
 ## Salida hacia la API de ANH
 
 Antes de que el backend dependa de ANH, el 29 de octubre de 2026 se comprobó desde la instancia que las consultas llegan y que el certificado se verifica. Cubre el issue T-119 (#111) y el caso de prueba CP-156. El informe técnico de ANH y el cliente de prueba están en `05_pro/PruebaApiANH`.
@@ -455,6 +515,12 @@ sudo -u deploy cat /etc/churoviaje/backend.env
 ```
 
 CP-79: después de `sudo reboot`, los mismos comandos deben dar lo mismo sin tocar nada.
+
+CP-145 (ambiente de pruebas encendido): `POST /sesion/prueba` debe dar 200 con un JWT en `pruebas.churoviaje.orelqu.com` y 403 `ACCESO_DENEGADO` en `churoviaje.orelqu.com`. El script no muestra la credencial ni el JWT, y borra al final el conductor simulado que creó:
+
+```bash
+sudo bash /home/deploy/ChuroViajeInterno/06_proyect/servidor/scripts/verificar-ambiente-pruebas.sh
+```
 
 Desde un teléfono, `http://churoviaje.orelqu.com` debe pasar solo a `https://` y abrir sin aviso de certificado.
 

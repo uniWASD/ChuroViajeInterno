@@ -134,8 +134,19 @@ class Migracion(unittest.TestCase):
             {"anh_id": "2002", "surtidor": "Agrupa", "distancia_m": "10", "revisado": "no"},
         ]
         confirmados = pv.pares_confirmados(filas, self.catalogo)
-        self.assertEqual([(c[0], c[1]) for c in confirmados], [(2341, "Ex Terminal"), (2388, "Panamericano")])
+        self.assertEqual([(c.anh_id, c.surtidor) for c in confirmados], [(2341, "Ex Terminal"), (2388, "Panamericano")])
         self.assertEqual(pv.p31_sugerida(confirmados), 700)
+
+    def test_una_excepcion_no_cuenta_para_p31(self):
+        filas = [
+            {"anh_id": "2341", "surtidor": "Ex Terminal", "distancia_m": "28", "revisado": "si"},
+            {"anh_id": "2627", "surtidor": "Moto Mendez", "distancia_m": "221", "revisado": "si"},
+            {"anh_id": "2388", "surtidor": "Panamericano", "distancia_m": "651", "revisado": "si",
+             "comentario": "Excepción a P-31: ANH tiene mal el punto"},
+        ]
+        confirmados = pv.pares_confirmados(filas, self.catalogo)
+        self.assertEqual(pv.p31_sugerida(confirmados), 250)
+        self.assertEqual([c.surtidor for c in confirmados if c.excepcion], ["Panamericano"])
 
     def test_un_id_o_un_surtidor_repetido_no_genera_nada(self):
         with self.assertRaises(pv.ErrorRevision) as e:
@@ -152,9 +163,11 @@ class Migracion(unittest.TestCase):
             pv.pares_confirmados([{"anh_id": "2341", "surtidor": "Inventado", "revisado": "si"}], self.catalogo)
 
     def test_la_migracion_actualiza_y_comprueba_cuantos_quedaron(self):
-        sql = pv.sql_migracion([(2341, "Ex Terminal", 40.0), (2388, "Panamericano", 651.0)], "Franz",
+        sql = pv.sql_migracion([pv.Confirmado(2341, "Ex Terminal", 40.0),
+                                pv.Confirmado(2388, "Panamericano", 651.0, "Excepción a P-31")], "Franz",
                                dt.date(2026, 11, 24))
-        self.assertIn("UPDATE surtidor SET anh_id = 2341 WHERE nombre = 'Ex Terminal';", sql)
+        self.assertIn("UPDATE surtidor SET anh_id = 2341 WHERE nombre = 'Ex Terminal'; -- a 40 m", sql)
+        self.assertIn("-- a 651 m; Excepción a P-31", sql)
         self.assertIn("revisado a mano por Franz el 2026-11-24", sql)
         self.assertIn("<> 2 THEN", sql)
 

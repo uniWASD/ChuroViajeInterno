@@ -313,10 +313,23 @@ class ErrorRevision(Exception):
     pass
 
 
-def pares_confirmados(filas: list[dict[str, str]], catalogo: list[Surtidor]) -> list[tuple[int, str, float | None]]:
+@dataclass
+class Confirmado:
+    anh_id: int
+    surtidor: str
+    distancia: float | None
+    comentario: str = ""
+
+    @property
+    def excepcion(self) -> bool:
+        """Un par que el equipo confirmó aunque pase P-31 (por ejemplo, porque ANH tiene mal el punto)."""
+        return normalizar(self.comentario).startswith("excepcion")
+
+
+def pares_confirmados(filas: list[dict[str, str]], catalogo: list[Surtidor]) -> list[Confirmado]:
     """Los pares con `revisado` en «si». Falla si un id o un surtidor se repite, o si el surtidor no existe."""
     nombres = {s.nombre for s in catalogo}
-    confirmados: list[tuple[int, str, float | None]] = []
+    confirmados: list[Confirmado] = []
     errores: list[str] = []
     for n, fila in enumerate(filas, start=2):
         if normalizar(fila.get("revisado")) not in {normalizar(s) for s in SI}:
@@ -328,21 +341,22 @@ def pares_confirmados(filas: list[dict[str, str]], catalogo: list[Surtidor]) -> 
         if surtidor not in nombres:
             errores.append(f"línea {n}: el surtidor {surtidor!r} no está en el catálogo (V2)")
             continue
-        confirmados.append((int(crudo), surtidor, _numero(fila.get("distancia_m"))))
-    for i, (anh_id, surtidor, _) in enumerate(confirmados):
-        for otro_id, otro_surtidor, _ in confirmados[i + 1:]:
-            if anh_id == otro_id:
-                errores.append(f"el id de ANH {anh_id} está confirmado para dos surtidores (RN-09.10)")
-            if surtidor == otro_surtidor:
-                errores.append(f"{surtidor} está confirmado para dos estaciones de ANH (RN-09.10)")
+        confirmados.append(Confirmado(int(crudo), surtidor, _numero(fila.get("distancia_m")),
+                                      (fila.get("comentario") or "").strip()))
+    for i, c in enumerate(confirmados):
+        for otro in confirmados[i + 1:]:
+            if c.anh_id == otro.anh_id:
+                errores.append(f"el id de ANH {c.anh_id} está confirmado para dos surtidores (RN-09.10)")
+            if c.surtidor == otro.surtidor:
+                errores.append(f"{c.surtidor} está confirmado para dos estaciones de ANH (RN-09.10)")
     if errores:
         raise ErrorRevision("\n".join(errores))
-    return sorted(confirmados, key=lambda c: c[1])
+    return sorted(confirmados, key=lambda c: c.surtidor)
 
 
-def p31_sugerida(confirmados: list[tuple[int, str, float | None]]) -> int | None:
-    """La mayor distancia entre los pares confirmados, redondeada hacia arriba a 50 m."""
-    distancias = [d for _, _, d in confirmados if d is not None]
+def p31_sugerida(confirmados: list[Confirmado]) -> int | None:
+    """La mayor distancia de los pares confirmados, sin las excepciones, redondeada hacia arriba a 50 m."""
+    distancias = [c.distancia for c in confirmados if c.distancia is not None and not c.excepcion]
     return int(math.ceil(max(distancias) / 50) * 50) if distancias else None
 
 
@@ -353,10 +367,12 @@ def sql_migracion(confirmados, revisado_por: str, fecha: dt.date) -> str:
         f" el {fecha.isoformat()}.",
         "-- Cada surtidor que no aparece aqui queda sin estacion de ANH, y CU-09 ignora sus datos (RN-09.9).",
     ]
-    for anh_id, surtidor, distancia in confirmados:
-        extra = f" -- a {distancia:.0f} m" if distancia is not None else ""
-        lineas.append(f"UPDATE surtidor SET anh_id = {anh_id} WHERE nombre = '{surtidor.replace(chr(39), chr(39) * 2)}';"
-                      + extra)
+    for c in confirmados:
+        nota = f"a {c.distancia:.0f} m" if c.distancia is not None else "sin distancia"
+        if c.comentario:
+            nota += "; " + " ".join(c.comentario.split())
+        nombre = c.surtidor.replace("'", "''")
+        lineas.append(f"UPDATE surtidor SET anh_id = {c.anh_id} WHERE nombre = '{nombre}'; -- {nota}")
     lineas += [
         "",
         "-- Si un nombre del catalogo cambio y algun UPDATE no encontro su fila, la migracion falla en vez de seguir.",
@@ -417,7 +433,10 @@ def main(argv: list[str] | None = None) -> int:
     print(f"{len(confirmados)} vínculos en {destino}")
     sugerida = p31_sugerida(confirmados)
     if sugerida is not None:
-        print(f"P-31 sugerida: {sugerida} m (la mayor distancia confirmada, redondeada a 50 m)")
+        print(f"P-31 sugerida: {sugerida} m (la mayor distancia confirmada sin las excepciones, redondeada a 50 m)")
+    for c in confirmados:
+        if c.excepcion:
+            print(f"Excepción a P-31: {c.surtidor} (ANH {c.anh_id}) a {c.distancia:.0f} m")
     return 0
 
 

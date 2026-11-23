@@ -52,6 +52,8 @@ python .\vinculacion\proponer_vinculos.py migracion .\vinculos_<fecha>\pares_pro
 
 Escribe `V13__vinculos_anh.sql` en `04_imp/backend_java/src/main/resources/db/migration/`, solo con los pares que tienen «si». Además muestra la **P-31 sugerida**: la mayor distancia entre los pares confirmados, redondeada hacia arriba a 50 m. Esa distancia va a `08_decisiones_parametros.md` como Confirmada.
 
+Un par que se confirma aunque pase P-31 lleva en `comentario` un texto que empieza con «Excepción»: queda anotado en la migración y no cuenta para la P-31 sugerida.
+
 La migración falla, en vez de seguir a medias, si un nombre del catálogo cambió y algún vínculo no encontró su surtidor. Si ya existe una migración con ese número, el script no la sobrescribe: usa el siguiente número libre.
 
 ## Pruebas
@@ -59,3 +61,14 @@ La migración falla, en vez de seguir a medias, si un nombre del catálogo cambi
 ```powershell
 python -m unittest discover -s 05_pro/PruebaApiANH/vinculacion
 ```
+
+## La revisión del 23/11/2026
+
+`pares_revisados_20261123.csv` guarda la revisión que generó `V13__vinculos_anh.sql`:
+
+- **Las estaciones:** ANH devolvió 31 estaciones de Tarija. 17 quedan fuera de la mancha urbana, todas a más de 38 km de la plaza, y 14 dentro.
+- **Los pares:** las 14 de adentro tienen su surtidor en el catálogo. 11 coinciden por nombre. Las otras 3 (Surtidor Tarija, Las Vegas y Campesino) están a menos de 10 m de su surtidor y las respaldan los comentarios de V2.
+- **Candidatas y catálogo:** no hay candidatas nuevas, ni surtidores del catálogo sin estación.
+- **P-31:** 250 m, porque el par más lejano está a 221 m (Moto Mendez). Panamericano, a 651 m, queda como excepción: ANH tiene mal su punto.
+
+Revisó Marcelo Quiroga.

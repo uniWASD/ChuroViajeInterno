@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -77,9 +78,11 @@ class ConsultaAnhIntegracionTest extends PruebaIntegracionPostgis {
 
     private long elMolle;
     private long lasVegas;
+    private List<Map<String, Object>> vinculosGuardados;
 
     @BeforeEach
     void preparar() {
+        vinculosGuardados = jdbc.queryForList("select id, anh_id from surtidor where anh_id is not null");
         ANH.reiniciar();
         ANH.responder("departamentos/?producto=0", Respuesta.json(catalogo()));
         ReflectionTestUtils.setField(consulta, "noConsultarAntesDe", null);
@@ -90,6 +93,16 @@ class ConsultaAnhIntegracionTest extends PruebaIntegracionPostgis {
         lasVegas = jdbc.queryForObject("select id from surtidor where nombre = 'Las Vegas'", Long.class);
         jdbc.update("update surtidor set anh_id = ? where id = ?", EL_MOLLE, elMolle);
         jdbc.update("update surtidor set anh_id = ? where id = ?", LAS_VEGAS, lasVegas);
+    }
+
+    /** Deja los vínculos como estaban (los de la migración de datos de #113, si ya está), para las demás pruebas. */
+    @AfterEach
+    void restaurar() {
+        jdbc.update("delete from estado_combustible");
+        jdbc.update("update surtidor set anh_id = null");
+        for (Map<String, Object> v : vinculosGuardados) {
+            jdbc.update("update surtidor set anh_id = ? where id = ?", v.get("anh_id"), v.get("id"));
+        }
     }
 
     private static String elMolle(int producto, String litros, String estado, String hora) {

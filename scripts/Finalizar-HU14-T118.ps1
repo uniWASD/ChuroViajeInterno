@@ -1,6 +1,7 @@
 ﻿[CmdletBinding()]
 param(
-    [string]$Repo = (Join-Path $env:USERPROFILE 'Downloads\ChuroViajeInterno_HU14_CU09_revision_completa')
+    [string]$Repo = (Split-Path -Parent $PSScriptRoot),
+    [string]$CsvAnh = ""
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,7 +12,8 @@ if (-not (Test-Path -LiteralPath $Repo -PathType Container)) {
 
 $PythonDir = Join-Path $Repo '05_pro\PruebaApiANH'
 $BackendDir = Join-Path $Repo '04_imp\backend_java'
-$CsvAnh = Join-Path $PythonDir 'salida_tarija\20261123T172823_989807Z\estaciones_tarija.csv'
+if ([string]::IsNullOrWhiteSpace($CsvAnh)) { $CsvAnh = Join-Path $PythonDir 'salida_tarija\20261123T172823_989807Z\estaciones_tarija.csv' }
+Write-Host "Repositorio validado: $Repo"
 $Pares = Join-Path $PythonDir 'vinculacion\evidencias_t118\pares_para_revision_final_delegada.csv'
 $EvidenceDir = Join-Path $PythonDir 'vinculacion\evidencias_t118\ejecuciones'
 New-Item -ItemType Directory -Force -Path $EvidenceDir | Out-Null

@@ -8,6 +8,7 @@ import com.churoviaje.backend.config.PropiedadesAnh;
 import com.churoviaje.backend.infraestructura.anh.ClienteAnh;
 import com.churoviaje.backend.infraestructura.anh.FalloAnh;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.time.Clock;
 import java.time.Duration;
@@ -43,7 +44,7 @@ class ClienteAnhTest {
 
     private ClienteAnh cliente(int reintentos, Duration pausa) {
         PropiedadesAnh propiedades = new PropiedadesAnh(true, anh.base(), Duration.ofMinutes(10), Duration.ZERO,
-                Duration.ofSeconds(2), reintentos, pausa);
+                Duration.ofSeconds(2), reintentos, pausa, true);
         return new ClienteAnh(propiedades, new ObjectMapper(), Clock.fixed(AHORA, ZoneOffset.UTC), esperas::add);
     }
 
@@ -60,6 +61,17 @@ class ClienteAnhTest {
     }
 
     @Test
+    @DisplayName("RN-09.12: el cliente conserva la precisión decimal del JSON sin convertir litros a double")
+    void conservaPrecisionDecimalDelJson() throws Exception {
+        String valor = "1234.567890123456789";
+        anh.responder(RUTA, Respuesta.json("{\"litros\": " + valor + "}"));
+
+        BigDecimal litros = cliente.get(RUTA).cuerpo().get("litros").decimalValue();
+
+        assertThat(litros).isEqualByComparingTo(new BigDecimal(valor));
+    }
+
+    @Test
     @DisplayName("RN-09.4: un 503 se reintenta una vez, con la pausa entre peticiones")
     void reintentaUnaVez() throws Exception {
         anh.responder(RUTA, Respuesta.estado(503), Respuesta.json(ServidorAnhFalso.listado()));
@@ -69,6 +81,20 @@ class ClienteAnhTest {
         assertThat(r.intentos()).isEqualTo(2);
         assertThat(anh.pedidos(RUTA)).isEqualTo(2);
         assertThat(esperas).contains(Duration.ofSeconds(1));
+    }
+
+    @Test
+    @DisplayName("RN-09.4: un 503 se reintenta aunque su cuerpo de error supere 10 MiB")
+    void reintenta503SinLeerCuerpoDeError() throws Exception {
+        Respuesta errorGrande = new Respuesta(503, "x".repeat(ClienteAnh.TAMANO_MAXIMO + 1),
+                java.util.Map.of("Content-Type", "application/json"));
+        anh.responder(RUTA, errorGrande, Respuesta.json(ServidorAnhFalso.listado()));
+
+        ClienteAnh.Respuesta respuesta = cliente.get(RUTA);
+
+        assertThat(respuesta.estadoHttp()).isEqualTo(200);
+        assertThat(respuesta.intentos()).isEqualTo(2);
+        assertThat(anh.pedidos(RUTA)).isEqualTo(2);
     }
 
     @Test
@@ -105,6 +131,17 @@ class ClienteAnhTest {
         assertThatThrownBy(() -> cliente.get(RUTA))
                 .isInstanceOfSatisfying(FalloAnh.class,
                         f -> assertThat(f.pausarHasta()).isEqualTo(AHORA.plusSeconds(120)));
+        assertThat(anh.pedidos(RUTA)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Retry-After numérico de más de nueve dígitos se respeta sin desbordar")
+    void retryAfterNumericoLargo() {
+        anh.responder(RUTA, Respuesta.estado(503).conCabecera("Retry-After", "1000000000"));
+
+        assertThatThrownBy(() -> cliente.get(RUTA))
+                .isInstanceOfSatisfying(FalloAnh.class,
+                        f -> assertThat(f.pausarHasta()).isEqualTo(AHORA.plusSeconds(1_000_000_000L)));
         assertThat(anh.pedidos(RUTA)).isEqualTo(1);
     }
 
@@ -151,6 +188,16 @@ class ClienteAnhTest {
     }
 
     @Test
+    @DisplayName("RN-09.3: el cliente exige TLS 1.2 o superior y verifica el nombre del servidor")
+    void politicaTls() throws Exception {
+        var metodo = ClienteAnh.class.getDeclaredMethod("parametrosTls");
+        metodo.setAccessible(true);
+        var tls = (javax.net.ssl.SSLParameters) metodo.invoke(null);
+        assertThat(tls.getProtocols()).containsExactly("TLSv1.3", "TLSv1.2");
+        assertThat(tls.getEndpointIdentificationAlgorithm()).isEqualTo("HTTPS");
+    }
+
+    @Test
     @DisplayName("RN-09.3: una redirección a otro servidor se detiene")
     void redireccionAOtroServidor() {
         anh.responder(RUTA, new Respuesta(302, "", java.util.Map.of("Location", "https://otro.example.com/api/")));
@@ -183,6 +230,8 @@ class ClienteAnhTest {
                 URI.create("https://abastecimiento.prod.anh.gob.bo.example.com/api/"))).isFalse();
         assertThat((boolean) permitida.invoke(null, base,
                 URI.create("https://abastecimiento.prod.anh.gob.bo:8443/api/"))).isFalse();
+        assertThat((boolean) permitida.invoke(null, base,
+                URI.create("https://usuario@abastecimiento.prod.anh.gob.bo/api/"))).isFalse();
     }
 
     @Test
@@ -201,13 +250,26 @@ class ClienteAnhTest {
     @DisplayName("RN-09.3: la configuración rechaza una base por HTTP que no sea la propia máquina, y ciclos de menos de 10 min")
     void configuracion() {
         assertThatThrownBy(() -> new PropiedadesAnh(true, URI.create("http://abastecimiento.prod.anh.gob.bo/api/"),
-                Duration.ofMinutes(10), Duration.ZERO, Duration.ofSeconds(12), 1, Duration.ofSeconds(1)))
+                Duration.ofMinutes(10), Duration.ZERO, Duration.ofSeconds(12), 1, Duration.ofSeconds(1), false))
                 .hasMessageContaining("HTTPS");
+        assertThatThrownBy(() -> new PropiedadesAnh(true, anh.base(), Duration.ofMinutes(10), Duration.ZERO,
+                Duration.ofSeconds(12), 1, Duration.ofSeconds(1), false))
+                .hasMessageContaining("perfil de pruebas");
+        PropiedadesAnh localSoloPruebas = new PropiedadesAnh(true, anh.base(), Duration.ofMinutes(10), Duration.ZERO,
+                Duration.ofSeconds(12), 1, Duration.ofSeconds(1), true);
+        assertThat(localSoloPruebas.base()).isEqualTo(anh.base());
+        assertThatThrownBy(() -> new PropiedadesAnh(true, URI.create("https://servidor-ajeno.example/api/"),
+                Duration.ofMinutes(10), Duration.ZERO, Duration.ofSeconds(12), 1, Duration.ofSeconds(1), false))
+                .hasMessageContaining("host oficial");
+        assertThatThrownBy(() -> new PropiedadesAnh(true,
+                URI.create("https://usuario:clave@abastecimiento.prod.anh.gob.bo/api/"),
+                Duration.ofMinutes(10), Duration.ZERO, Duration.ofSeconds(12), 1, Duration.ofSeconds(1), false))
+                .hasMessageContaining("credenciales");
         assertThatThrownBy(() -> new PropiedadesAnh(true, URI.create("https://abastecimiento.prod.anh.gob.bo/api/"),
-                Duration.ofMinutes(5), Duration.ZERO, Duration.ofSeconds(12), 1, Duration.ofSeconds(1)))
+                Duration.ofMinutes(5), Duration.ZERO, Duration.ofSeconds(12), 1, Duration.ofSeconds(1), false))
                 .hasMessageContaining("10 minutos");
         PropiedadesAnh sinBarra = new PropiedadesAnh(true, URI.create("https://abastecimiento.prod.anh.gob.bo/api"),
-                Duration.ofMinutes(10), Duration.ZERO, Duration.ofSeconds(12), 1, Duration.ofSeconds(1));
+                Duration.ofMinutes(10), Duration.ZERO, Duration.ofSeconds(12), 1, Duration.ofSeconds(1), false);
         assertThat(sinBarra.base().toString()).endsWith("/api/");
     }
 }

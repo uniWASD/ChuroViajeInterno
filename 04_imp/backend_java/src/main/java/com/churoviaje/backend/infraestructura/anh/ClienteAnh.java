@@ -3,8 +3,10 @@ package com.churoviaje.backend.infraestructura.anh;
 import com.churoviaje.backend.config.PropiedadesAnh;
 import com.churoviaje.backend.infraestructura.anh.FalloAnh.Motivo;
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.ConnectException;
@@ -14,15 +16,18 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Clock;
+import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.math.BigInteger;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLParameters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -65,7 +70,11 @@ public class ClienteAnh {
 
     public ClienteAnh(PropiedadesAnh propiedades, ObjectMapper json, Clock reloj, Espera espera) {
         this.propiedades = Objects.requireNonNull(propiedades);
-        this.json = json.copy().enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
+        this.json = json.copy()
+                .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+                .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
+        // RN-09.12: ANH puede entregar decimales con más de dos posiciones; no convertirlos primero a double.
+        this.json.setNodeFactory(JsonNodeFactory.withExactBigDecimals(true));
         this.reloj = reloj;
         this.espera = espera;
         // Las redirecciones las sigue este cliente, para comprobar cada destino (RN-09.3). La verificación del
@@ -73,6 +82,7 @@ public class ClienteAnh {
         this.http = HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .connectTimeout(propiedades.esperaPeticion())
+                .sslParameters(parametrosTls())
                 .build();
     }
 
@@ -96,7 +106,14 @@ public class ClienteAnh {
                 Instant ahora = reloj.instant();
                 Duration retryAfter = r.retryAfter(ahora);
                 if (retryAfter != null && retryAfter.compareTo(RETRY_AFTER_MAXIMO) > 0) {
-                    throw new FalloAnh(ruta, r.motivo, r.estadoHttp, intentos, ahora.plus(retryAfter),
+                    Instant reanudar;
+                    try {
+                        reanudar = ahora.plus(retryAfter);
+                    } catch (DateTimeException | ArithmeticException fueraDeRango) {
+                        // Un Retry-After enorme no debe convertirse en una nueva consulta prematura.
+                        reanudar = Instant.MAX;
+                    }
+                    throw new FalloAnh(ruta, r.motivo, r.estadoHttp, intentos, reanudar,
                             "ANH pidió esperar " + retryAfter.toSeconds() + " s");
                 }
                 if (intentos > propiedades.reintentos()) {
@@ -141,18 +158,21 @@ public class ClienteAnh {
                     destino = siguiente;
                     continue;
                 }
-                byte[] cuerpo = leer(respuesta, ruta, intentos);
                 if (REINTENTABLES.contains(estado)) {
-                    throw new Reintentable(Motivo.HTTP, estado, respuesta.headers().firstValue("Retry-After").orElse(null),
-                            "HTTP " + estado);
+                    String retryAfter = respuesta.headers().firstValue("Retry-After").orElse(null);
+                    cerrar(respuesta);
+                    throw new Reintentable(Motivo.HTTP, estado, retryAfter, "HTTP " + estado);
                 }
                 if (estado != 200) {
+                    cerrar(respuesta);
                     throw new FalloAnh(ruta, Motivo.HTTP, estado, intentos, null, "HTTP " + estado);
                 }
                 String tipo = respuesta.headers().firstValue("Content-Type").orElse("").toLowerCase(Locale.ROOT);
                 if (!tipo.contains("json")) {
+                    cerrar(respuesta);
                     throw new FalloAnh(ruta, Motivo.NO_ES_JSON, estado, intentos, null, "Content-Type " + tipo);
                 }
+                byte[] cuerpo = leer(respuesta, ruta, intentos);
                 try {
                     return new Respuesta(ruta, estado, intentos, json.readTree(cuerpo));
                 } catch (IOException e) {
@@ -174,6 +194,14 @@ public class ClienteAnh {
         } finally {
             finUltimaPeticion = reloj.instant();
         }
+    }
+
+    /** RN-09.3: TLS 1.2 como mínimo y verificación explícita del nombre del servidor. */
+    static SSLParameters parametrosTls() {
+        SSLParameters tls = new SSLParameters();
+        tls.setProtocols(new String[] {"TLSv1.3", "TLSv1.2"});
+        tls.setEndpointIdentificationAlgorithm("HTTPS");
+        return tls;
     }
 
     private HttpResponse<InputStream> enviar(URI destino) throws IOException, InterruptedException {
@@ -211,7 +239,7 @@ public class ClienteAnh {
     static boolean redireccionPermitida(URI base, URI destino) {
         return destino.getScheme() != null && destino.getScheme().equalsIgnoreCase(base.getScheme())
                 && destino.getHost() != null && destino.getHost().equalsIgnoreCase(base.getHost())
-                && destino.getPort() == base.getPort();
+                && destino.getPort() == base.getPort() && destino.getUserInfo() == null;
     }
 
     /** {@code Retry-After} en segundos o como fecha HTTP; null si no vino o no se entiende. */
@@ -220,8 +248,12 @@ public class ClienteAnh {
             return null;
         }
         String texto = valor.trim();
-        if (texto.matches("\\d{1,9}")) {
-            return Duration.ofSeconds(Long.parseLong(texto));
+        if (texto.matches("\\d+")) {
+            try {
+                return Duration.ofSeconds(new BigInteger(texto).min(BigInteger.valueOf(Long.MAX_VALUE)).longValue());
+            } catch (NumberFormatException fueraDeRango) {
+                return Duration.ofSeconds(Long.MAX_VALUE);
+            }
         }
         try {
             Instant hasta = ZonedDateTime.parse(texto, DateTimeFormatter.RFC_1123_DATE_TIME).toInstant();

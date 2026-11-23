@@ -45,6 +45,14 @@ class ReporteAnhTest {
     }
 
     @Test
+    @DisplayName("RN-09.2: un identificador textual de diez dígitos dentro del rango INTEGER se acepta")
+    void idTextualDeDiezDigitos() throws Exception {
+        assertThat(ReporteAnh.idDeTarija(json(
+                "{\"decCodigo\": 1, \"oResultado\": [{\"id\": \"2000000000\", \"nombre\": \"Tarija\"}]}")))
+                .isEqualTo(2_000_000_000);
+    }
+
+    @Test
     @DisplayName("RN-09.2: sin Tarija, o con dos, no se supone ningún id")
     void tarijaTieneQueSerUnica() {
         assertThatThrownBy(() -> ReporteAnh.idDeTarija(json("{\"decCodigo\": 1, \"oResultado\": [{\"id\": 1, \"nombre\": \"La Paz\"}]}")))

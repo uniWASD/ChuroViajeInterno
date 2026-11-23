@@ -614,3 +614,8 @@ La consulta la hace `ConsultaAnh` (HU-14, #114) con los valores de `churoviaje.a
 | 503 | El motor core no responde a tiempo o se está reiniciando | [RN-03.15](04_reglas/CU-03_CalcularRutaOptima.md) |
 
 Que no exista una ruta no es un rechazo: la respuesta es correcta y dice «No se encontró una ruta válida» ([RN-03.12](04_reglas/CU-03_CalcularRutaOptima.md)).
+
+
+### Evidencia de integración HU-14 / T-118
+
+La prueba `ConsultaAnhVinculosRealesGetIntegracionTest` aplica V14 sobre PostGIS de Testcontainers, consulta un identificador del crosswalk (ANH 2977 / El Molle) mediante un servidor ANH falso, persiste gasolina y diésel y verifica que ambos datos se devuelven en `GET /surtidores` con `origen=ANH`, litros y `estadoAnh`. Es una prueba E2E de integración; no representa una consulta de producción ni sustituye CI/CD/despliegue.

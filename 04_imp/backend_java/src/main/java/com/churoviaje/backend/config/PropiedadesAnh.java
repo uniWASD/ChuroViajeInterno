@@ -19,10 +19,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param reintentos     cuántas veces se repite una petición que falló por falta de conexión, tiempo agotado o 429,
  *                       502, 503 o 504 (P-32, RN-09.4)
  * @param pausa          pausa mínima entre una petición y la siguiente (P-32, RN-09.4)
+ * @param permitirHttpLocal permite HTTP únicamente contra loopback en el perfil de pruebas; debe ser falso fuera de
+ *                         ese perfil (RN-09.3)
  */
 @ConfigurationProperties(prefix = "churoviaje.anh")
 public record PropiedadesAnh(boolean habilitada, URI base, Duration ciclo, Duration esperaInicial,
-        Duration esperaPeticion, int reintentos, Duration pausa) {
+        Duration esperaPeticion, int reintentos, Duration pausa, boolean permitirHttpLocal) {
 
     public PropiedadesAnh {
         Objects.requireNonNull(base, "churoviaje.anh.base");
@@ -33,11 +35,23 @@ public record PropiedadesAnh(boolean habilitada, URI base, Duration ciclo, Durat
         if (!base.toString().endsWith("/")) {
             base = URI.create(base + "/");
         }
-        if (!"https".equalsIgnoreCase(base.getScheme()) && !haciaEstaMaquina(base)) {
-            throw new IllegalStateException("La API de ANH se consulta solo por HTTPS (RN-09.3): " + base);
-        }
         if (base.getHost() == null) {
             throw new IllegalStateException("churoviaje.anh.base no tiene servidor: " + base);
+        }
+        boolean local = haciaEstaMaquina(base);
+        if (local && !permitirHttpLocal) {
+            throw new IllegalStateException(
+                    "HTTP solo se permite contra loopback en el perfil de pruebas (RN-09.3): " + base);
+        }
+        boolean hostOficial = "abastecimiento.prod.anh.gob.bo".equalsIgnoreCase(base.getHost());
+        boolean puertoHttps = base.getPort() == -1 || base.getPort() == 443;
+        if (!local && (!"https".equalsIgnoreCase(base.getScheme()) || !hostOficial || !puertoHttps)) {
+            throw new IllegalStateException(
+                    "La API de ANH debe usar HTTPS en el host oficial abastecimiento.prod.anh.gob.bo (RN-09.3): " + base);
+        }
+        if (base.getUserInfo() != null || base.getQuery() != null || base.getFragment() != null) {
+            throw new IllegalStateException(
+                    "churoviaje.anh.base no puede contener credenciales, consulta ni fragmento (RN-09.3)");
         }
         // RN-09.1 y T-117: no se carga a ANH más de una vez cada 10 minutos sin justificarlo por escrito.
         if (ciclo.compareTo(Duration.ofMinutes(10)) < 0) {

@@ -22,3 +22,4 @@ churoviaje:
   # CU-09: produccion ya consulta a ANH; este ambiente no repite esas consultas.
   anh:
     habilitada: false
+    permitir-http-local: false

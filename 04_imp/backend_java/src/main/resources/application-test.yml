@@ -4,6 +4,10 @@ spring:
     username: ${TEST_DB_USER:churoviaje}
     password: ${TEST_DB_PASSWORD:}
 churoviaje:
+  anh:
+    habilitada: false
+    # Solo este perfil permite HTTP hacia el servidor falso local de las pruebas.
+    permitir-http-local: true
   cobertura:
     permitir-provisional: false
   # Las tareas periodicas no corren solas en las pruebas: cada prueba las llama cuando las necesita.

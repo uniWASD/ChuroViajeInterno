@@ -90,12 +90,14 @@ Mientras ningún surtidor tenga `anh_id`, la consulta corre pero no guarda nada.
 
 | Propiedad (`churoviaje.anh`) | Valor | Qué es |
 | --- | --- | --- |
-| `habilitada` | `ANH_HABILITADA`, `true` por defecto; `false` en el perfil `pruebas` | Si la tarea periódica consulta |
+| `habilitada` | `ANH_HABILITADA`, `true` por defecto; `false` en los perfiles `pruebas` y `test` | Si la tarea periódica consulta |
+| `permitir-http-local` | `false`; `true` únicamente en el perfil `test` | Permite el servidor ANH falso de loopback; nunca habilita HTTP fuera de pruebas |
 | `ciclo` | `PT10M` | Cada cuánto (P-29). La configuración no acepta menos de 10 minutos |
 | `espera-peticion`, `reintentos`, `pausa` | `PT12S`, `1`, `PT1S` | Espera, reintentos y pausa entre peticiones (P-32) |
 | `espera-inicial` | `PT2M` | Cuánto espera la primera consulta después de arrancar |
 
-Estos valores son los que propone T-117 (#112, PR #123). Las pruebas usan un servidor de ANH falso (`ServidorAnhFalso`): `ReporteAnhTest`, `ClienteAnhTest` y `ConsultaAnhIntegracionTest` (CP-161 a CP-165).
+Los valores P-29=10 min, P-30=6 h, P-31=50 m y P-32=12 s/1 reintento/1 s de pausa fueron aceptados por el solicitante el 23/11/2026. Esa aceptación se documenta en `08_decisiones_parametros.md`, pero **no acredita un acta de los responsables T-117/T-118** ni una cuota oficial publicada por ANH. La herramienta de vinculación rechaza enlaces con distancias superiores a P-31; las discrepancias de Panamericano y Moto Méndez deben corregirse antes de aplicar SQL. La vigencia actual de seis horas está en `EstadoCombustible` y también debe contrastarse con el cierre de P-30. Las pruebas usan un servidor de ANH falso (`ServidorAnhFalso`): `ReporteAnhTest`, `ClienteAnhTest` y `ConsultaAnhIntegracionTest` (CP-161 a CP-165).
+
 
 ## Acceso a datos
 
@@ -153,7 +155,7 @@ Los tiempos (`motor.tiempo-maximo` 3 s, `motor.espera-arranque`, `motor.espera-r
 
 `POST /surtidores/{id}/confirmaciones` (HU-12, #72) registra que un conductor recargó: `ConfirmacionRecarga` comprueba el tipo y que la parada esté a menos de 50 m del surtidor (medido en PostGIS), el servicio rechaza la repetida de los últimos 60 minutos con el conductor bloqueado, y guarda la fila en `confirmacion_recarga` (V11) y el dato en `estado_combustible` con origen Conductores ([05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#confirmación-de-recarga-post-surtidoresidconfirmaciones)). Lo prueba `ConfirmacionRecargaIntegracionTest` (CP-111 a CP-113).
 
-La migración V12 (T-118, #113) agrega `surtidor.anh_id`, el identificador de la estación de ANH de cada surtidor: opcional, entero positivo y único (RN-09.10). Llega vacío; los vínculos los carga una migración de datos que se genera con `05_pro/PruebaApiANH/vinculacion/proponer_vinculos.py` después de que el equipo revisa los pares. Lo prueba `VinculoAnhIntegracionTest` (CP-159 y CP-160).
+La migración V12 (T-118, #113) agrega `surtidor.anh_id`, el identificador de la estación de ANH de cada surtidor: opcional, entero positivo y único (RN-09.10). Llega vacío; los vínculos los carga una migración de datos que se genera con `05_pro/PruebaApiANH/vinculacion/proponer_vinculos.py` después de que el equipo revisa los pares. Lo prueba `VinculoAnhIntegracionTest` (CP-159 y CP-160). V13 amplía `estado_combustible.litros` a `NUMERIC` sin escala fija para conservar la precisión decimal recibida de ANH (RN-09.12); los valores históricos ya redondeados por V8 no se pueden recuperar.
 
 `LimpiezaDatos` (T-105, #85) corre cada día a las 03:30 de Tarija (`churoviaje.limpieza.cron`) y borra los eventos retirados o vencidos hace más de 30 días con sus votos, las confirmaciones de recarga de más de 30 días y las sesiones vencidas, sin tocar nada vigente ([06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md#limpieza-diaria)). Lo prueba `LimpiezaDatosIntegracionTest` (CP-144).
 

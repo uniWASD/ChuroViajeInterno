@@ -58,7 +58,8 @@ public class PgEstadoCombustibleRepository implements EstadoCombustibleRepositor
                                      else excluded.estado_anh end,
                    fecha_dato = excluded.fecha_dato,
                    consultado_en = excluded.consultado_en,
-                   actualizado_en = excluded.actualizado_en
+                   actualizado_en = case when e.fecha_dato = excluded.fecha_dato
+                                          then e.actualizado_en else excluded.actualizado_en end
              where e.fecha_dato <= excluded.fecha_dato
             returning (select fecha_dato from previo) as fecha_previa, e.fecha_dato""";
 

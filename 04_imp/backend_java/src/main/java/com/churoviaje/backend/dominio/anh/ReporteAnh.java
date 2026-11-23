@@ -255,8 +255,16 @@ public record ReporteAnh(int departamento, int producto, List<LecturaAnh> lectur
         if (valor.isIntegralNumber() && valor.canConvertToInt()) {
             return valor.intValue();
         }
-        if (valor.isTextual() && valor.asText().trim().matches("\\d{1,9}")) {
-            return Integer.parseInt(valor.asText().trim());
+        if (valor.isTextual()) {
+            String texto = valor.asText().trim();
+            if (!texto.matches("\\d{1,10}")) {
+                return null;
+            }
+            try {
+                return Integer.valueOf(texto);
+            } catch (NumberFormatException fueraDeRango) {
+                return null;
+            }
         }
         return null;
     }

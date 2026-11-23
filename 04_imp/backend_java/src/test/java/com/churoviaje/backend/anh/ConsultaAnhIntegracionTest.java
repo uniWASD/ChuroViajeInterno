@@ -117,7 +117,8 @@ class ConsultaAnhIntegracionTest extends PruebaIntegracionPostgis {
 
     private List<Map<String, Object>> estadosDeAnh() {
         return jdbc.queryForList("""
-                select surtidor_id, tipo_codigo, disponible, litros, estado_anh, fecha_dato, consultado_en
+                select surtidor_id, tipo_codigo, disponible, litros, estado_anh, fecha_dato, consultado_en,
+                       actualizado_en
                 from estado_combustible where origen = 'ANH' order by surtidor_id, tipo_codigo""");
     }
 
@@ -228,6 +229,21 @@ class ConsultaAnhIntegracionTest extends PruebaIntegracionPostgis {
     }
 
     @Test
+    @DisplayName("RN-09.12: los litros se guardan sin redondear la precisión decimal recibida de ANH")
+    void conservaPrecisionDecimalDeLitros() throws Exception {
+        String litrosRecibidos = "1234.567890123456789";
+        ANH.responder(GASOLINA, Respuesta.json(listado(elMolle(0, litrosRecibidos, "medio", HORA_ANH))));
+        ANH.responder(DIESEL, Respuesta.json(listado()));
+
+        consulta.consultar();
+
+        BigDecimal litrosGuardados = jdbc.queryForObject(
+                "select litros from estado_combustible where surtidor_id = ? and tipo_codigo = 'GASOLINA' and origen = 'ANH'",
+                BigDecimal.class, elMolle);
+        assertThat(litrosGuardados).isEqualByComparingTo(litrosRecibidos);
+    }
+
+    @Test
     @DisplayName("RN-09.14: con la misma fecha solo se actualiza el momento de la lectura")
     void mismaFechaSoloReleido() throws Exception {
         guardarAnh(elMolle, "300", HORA_ANH_UTC, AHORA.minus(Duration.ofMinutes(10)));
@@ -240,6 +256,8 @@ class ConsultaAnhIntegracionTest extends PruebaIntegracionPostgis {
         assertThat((BigDecimal) estado.get("litros")).isEqualByComparingTo("300");
         assertThat(estado.get("estado_anh")).isEqualTo("MEDIO");
         assertThat(((Timestamp) estado.get("consultado_en")).toInstant()).isEqualTo(AHORA);
+        assertThat(((Timestamp) estado.get("actualizado_en")).toInstant())
+                .isEqualTo(AHORA.minus(Duration.ofMinutes(10)));
     }
 
     @Test

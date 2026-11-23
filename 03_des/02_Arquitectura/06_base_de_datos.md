@@ -57,6 +57,8 @@ En un evento de origen Telemetría, la columna del reportante queda vacía y `tr
 
 Las columnas `litros`, `estado_anh` y `consultado_en` solo se llenan cuando el origen es ANH. La fecha del dato de ANH es su `updated_at`, la que informa la estación, y no el momento en que el backend la leyó: ese momento va en `consultado_en`, y de él se cuenta la vigencia ([RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md)). El estado de ANH se guarda como llega y no cambia el campo `disponible`, que sale solo de los litros ([RN-09.11](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.12](04_reglas/CU-09_ConsultarEstadoANH.md)).
 
+`surtidor.anh_id` llega con la migración V12 (T-118, #113), vacío en todos los surtidores. Los vínculos se cargan en una migración de datos aparte, que genera `05_pro/PruebaApiANH/vinculacion/proponer_vinculos.py` solo con los pares que el equipo revisó a mano ([RN-09.10](04_reglas/CU-09_ConsultarEstadoANH.md)). Mientras un surtidor no tenga `anh_id`, la consulta a ANH ignora su estación ([RN-09.9](04_reglas/CU-09_ConsultarEstadoANH.md)).
+
 Las tablas `lugar` y `lugar_extracto` (V10) no llevan datos en la migración. Las llena el backend al arrancar con el JSON de `preparar_lugares.py` (variable `LUGARES_PATH`), y solo si la fecha del extracto cambió; el reemplazo va en una transacción, así que si el archivo trae algo mal quedan los lugares de antes. Un lugar fuera de la mancha urbana, sin nombre o con una categoría desconocida se descarta ([D-47](08_decisiones_parametros.md)).
 
 ## Lo que la base de datos asegura por su cuenta

@@ -19,3 +19,6 @@ churoviaje:
     credencial: ${SIMULACION_CREDENCIAL:}
     demostracion: true
     registro: ${SIMULACION_REGISTRO_PATH:}
+  # CU-09: produccion ya consulta a ANH; este ambiente no repite esas consultas.
+  anh:
+    habilitada: false

@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@EnableConfigurationProperties({PropiedadesSeguridad.class, PropiedadesSimulacion.class})
+@EnableConfigurationProperties({PropiedadesSeguridad.class, PropiedadesSimulacion.class, PropiedadesAnh.class})
 public class ConfiguracionBasica {
 
     /** Reloj unico: las pruebas lo reemplazan para no esperar una hora ni 30 dias. */

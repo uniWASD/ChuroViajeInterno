@@ -44,6 +44,16 @@ churoviaje:
     google:
       client-id: ${GOOGLE_CLIENT_ID:}
     credencial-servicio: ${SERVICE_CREDENTIAL:}
+  # CU-09 (HU-14): la consulta a ANH. Valores de partida de T-117 (#112): P-29, cada 10 minutos (nunca menos);
+  # P-32, 12 s por peticion, 1 reintento y 1 s entre peticiones. La base es siempre HTTPS (RN-09.3).
+  anh:
+    habilitada: ${ANH_HABILITADA:true}
+    base: https://abastecimiento.prod.anh.gob.bo/api/
+    ciclo: PT10M
+    espera-inicial: PT2M
+    espera-peticion: PT12S
+    reintentos: 1
+    pausa: PT1S
   # CU-07 y P-20: sesiones de prueba para el simulador y modo demostracion. Apagados aqui y siempre en `prod`;
   # solo el perfil `pruebas` los enciende (SimulacionAmbiente).
   simulacion:

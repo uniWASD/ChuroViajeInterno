@@ -12,6 +12,7 @@ El proyecto usa un solo MVC (D-01):
 - `servicios`: un servicio por caso de uso, que recibe por el constructor las interfaces de sus repositorios y coordina el dominio y los repositorios.
 - `dominio`: objetos y valores que contienen las reglas de negocio, las interfaces de los repositorios (`EventoRepository`, `VotoRepository`, `ConductorRepository`, `SesionRepository` y, en `dominio/catalogo`, `CatalogoRepository`) y los DTO de consulta (`record` de solo lectura) junto a su repositorio: `EventoVialRespuesta`, `EventosRespuesta` y `CatalogosRespuesta` ([D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-42](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Nada aquí accede a la base de datos.
 - `infraestructura/pg`: implementaciones de los repositorios para PostgreSQL (`PgEventoRepository`, `PgVotoRepository`, `PgConductorRepository`, `PgSesionRepository` y `PgCatalogoRepository`), con JDBC y sentencias preparadas ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+- `infraestructura/anh`: el cliente de la API de ANH (`ClienteAnh`), que solo hace GET por HTTPS (CU-09).
 - `motor`: comunicación con el núcleo C++ mediante `MotorDeRutas` y pipe (D-15).
 - `seguridad`: el JWT del conductor, los tokens de renovación y el filtro que los comprueba (CU-08).
 - `errores`: traducción de errores al formato de rechazo del contrato.
@@ -75,6 +76,26 @@ El segundo backend del servidor (T-106, #86) usa `SPRING_PROFILES_ACTIVE=pruebas
 | `SIMULACION_REGISTRO_PATH` | Opcional. Archivo donde se anota cada prueba de carga (RN-07.11), además del registro del backend |
 
 Este perfil enciende el modo demostración: los conductores reales ven los datos simulados (RN-07.13). Cada prueba de carga deja en el registro líneas `[prueba-carga]` con su identificador: cuándo entró el primer usuario fantasma, el avance cada minuto, el primer 503 si el backend se satura (RN-07.10) y el resumen final cuando pasan 2 minutos sin peticiones. Ninguna línea dice nada de un conductor.
+
+### Consulta a ANH
+
+`ConsultaAnh` (HU-14, #114) consulta a ANH cada 10 minutos y guarda el saldo de los surtidores vinculados con origen ANH ([CU-09](../../03_des/02_Arquitectura/04_reglas/CU-09_ConsultarEstadoANH.md), [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#backend-con-la-api-de-anh)). En cada ciclo:
+
+- Busca a Tarija en el catálogo de departamentos y pide el listado de gasolina y el de diésel.
+- `ReporteAnh` valida cada respuesta.
+- Toma solo las estaciones que están dentro de la mancha urbana y vinculadas a un surtidor por su `anh_id` (V12).
+- Deja una línea por ruta en el registro: la ruta, el estado HTTP, cuántas estaciones llegaron, cuántas se aceptaron y cuántas se ignoraron. Las estaciones de la mancha que no están en el catálogo se anotan como candidatas.
+
+Mientras ningún surtidor tenga `anh_id`, la consulta corre pero no guarda nada.
+
+| Propiedad (`churoviaje.anh`) | Valor | Qué es |
+| --- | --- | --- |
+| `habilitada` | `ANH_HABILITADA`, `true` por defecto; `false` en el perfil `pruebas` | Si la tarea periódica consulta |
+| `ciclo` | `PT10M` | Cada cuánto (P-29). La configuración no acepta menos de 10 minutos |
+| `espera-peticion`, `reintentos`, `pausa` | `PT12S`, `1`, `PT1S` | Espera, reintentos y pausa entre peticiones (P-32) |
+| `espera-inicial` | `PT2M` | Cuánto espera la primera consulta después de arrancar |
+
+Estos valores son los que propone T-117 (#112, PR #123). Las pruebas usan un servidor de ANH falso (`ServidorAnhFalso`): `ReporteAnhTest`, `ClienteAnhTest` y `ConsultaAnhIntegracionTest` (CP-161 a CP-165).
 
 ## Acceso a datos
 

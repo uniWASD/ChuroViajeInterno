@@ -16,4 +16,7 @@ public interface SurtidorRepository {
 
     /** RN-05.13: el surtidor {@code id} con su distancia en metros a {@code punto}, medida en PostGIS; vacío si no existe. */
     java.util.Optional<Cercano> buscarConDistancia(long id, Ubicacion punto);
+
+    /** RN-09.9 y RN-09.10: el surtidor de cada estación de ANH vinculada, por su {@code anh_id} (V12). */
+    java.util.Map<Integer, Long> vinculadosAnh();
 }

@@ -6,6 +6,7 @@ import static com.churoviaje.backend.infraestructura.pg.ValoresSql.ponerInstante
 import com.churoviaje.backend.config.ConfiguracionAccesoDatos;
 import com.churoviaje.backend.dominio.EstadoCombustible;
 import com.churoviaje.backend.dominio.EstadoCombustibleRepository;
+import com.churoviaje.backend.dominio.EstadoCombustibleRepository.ResultadoAnh;
 import com.churoviaje.backend.dominio.OrigenCombustible;
 import com.churoviaje.backend.dominio.catalogo.ValorFila;
 import java.sql.Connection;
@@ -38,6 +39,29 @@ public class PgEstadoCombustibleRepository implements EstadoCombustibleRepositor
                    consultado_en = excluded.consultado_en, actualizado_en = excluded.actualizado_en
              where estado_combustible.fecha_dato < excluded.fecha_dato""";
 
+    /**
+     * RN-09.14: con la misma fecha solo cambia el momento de la lectura; un dato más viejo no entra (el {@code where}
+     * deja la fila como está y no devuelve nada). {@code previo} ve la fila de antes, para saber qué pasó.
+     */
+    private static final String GUARDAR_DE_ANH = """
+            with previo as (
+                select fecha_dato from estado_combustible
+                 where surtidor_id = ? and tipo_codigo = ? and origen = 'ANH')
+            insert into estado_combustible as e (surtidor_id, tipo_codigo, origen, disponible, fila, fecha_dato, litros,
+                                                 estado_anh, consultado_en, actualizado_en)
+            values (?, ?, 'ANH', ?, null, ?, ?, ?, ?, ?)
+            on conflict (surtidor_id, tipo_codigo, origen) do update
+               set disponible = case when e.fecha_dato = excluded.fecha_dato then e.disponible
+                                     else excluded.disponible end,
+                   litros = case when e.fecha_dato = excluded.fecha_dato then e.litros else excluded.litros end,
+                   estado_anh = case when e.fecha_dato = excluded.fecha_dato then e.estado_anh
+                                     else excluded.estado_anh end,
+                   fecha_dato = excluded.fecha_dato,
+                   consultado_en = excluded.consultado_en,
+                   actualizado_en = excluded.actualizado_en
+             where e.fecha_dato <= excluded.fecha_dato
+            returning (select fecha_dato from previo) as fecha_previa, e.fecha_dato""";
+
     private final DataSource conexiones;
 
     public PgEstadoCombustibleRepository(
@@ -66,6 +90,36 @@ public class PgEstadoCombustibleRepository implements EstadoCombustibleRepositor
             return sentencia.executeUpdate() == 1;
         } catch (SQLException e) {
             throw new ErrorDeBaseDeDatos("guardar el estado de combustible", e);
+        }
+    }
+
+    @Override
+    public ResultadoAnh guardarDeAnh(EstadoCombustible estado, java.time.Instant ahora) {
+        if (estado.origen() != OrigenCombustible.ANH) {
+            throw new IllegalArgumentException("Solo datos de ANH");
+        }
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement(GUARDAR_DE_ANH)) {
+            sentencia.setLong(1, estado.surtidorId());
+            sentencia.setString(2, estado.tipoCodigo());
+            sentencia.setLong(3, estado.surtidorId());
+            sentencia.setString(4, estado.tipoCodigo());
+            sentencia.setBoolean(5, estado.disponible());
+            ponerInstante(sentencia, 6, estado.fecha());
+            sentencia.setBigDecimal(7, estado.litros());
+            sentencia.setString(8, estado.estadoAnh());
+            ponerInstante(sentencia, 9, estado.consultadoEn());
+            ponerInstante(sentencia, 10, ahora);
+            try (ResultSet fila = sentencia.executeQuery()) {
+                if (!fila.next()) {
+                    return ResultadoAnh.MAS_VIEJO;
+                }
+                OffsetDateTime previa = fila.getObject("fecha_previa", OffsetDateTime.class);
+                return previa != null && previa.toInstant().equals(estado.fecha())
+                        ? ResultadoAnh.RELEIDO : ResultadoAnh.GUARDADO;
+            }
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("guardar el estado de combustible de ANH", e);
         }
     }
 

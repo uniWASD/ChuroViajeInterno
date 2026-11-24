@@ -54,7 +54,7 @@ Escribe `V13__vinculos_anh.sql` en `04_imp/backend_java/src/main/resources/db/mi
 
 Un par que se confirma aunque pase P-31 lleva en `comentario` un texto que empieza con «Excepción»: queda anotado en la migración y no cuenta para la P-31 sugerida.
 
-La migración falla, en vez de seguir a medias, si un nombre del catálogo cambió y algún vínculo no encontró su surtidor. Si ya existe una migración con ese número, el script no la sobrescribe: usa el siguiente número libre.
+La migración falla, en vez de seguir a medias, si un nombre del catálogo cambió y algún vínculo no encontró su surtidor. Si ya existe una migración con ese número, el script detiene la ejecución para evitar sobrescribirla. Se debe indicar manualmente un número de migración disponible.
 
 ## Pruebas
 

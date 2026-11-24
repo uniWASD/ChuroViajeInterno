@@ -103,6 +103,22 @@ public class PgSurtidorRepository implements SurtidorRepository {
         }
     }
 
+    @Override
+    public java.util.Map<Integer, Long> vinculadosAnh() {
+        try (Connection conexion = conexiones.getConnection();
+                PreparedStatement sentencia = conexion.prepareStatement(
+                        "select anh_id, id from surtidor where anh_id is not null");
+                ResultSet fila = sentencia.executeQuery()) {
+            java.util.Map<Integer, Long> vinculados = new java.util.HashMap<>();
+            while (fila.next()) {
+                vinculados.put(fila.getInt("anh_id"), fila.getLong("id"));
+            }
+            return vinculados;
+        } catch (SQLException e) {
+            throw new ErrorDeBaseDeDatos("leer los vínculos con ANH", e);
+        }
+    }
+
     static Surtidor surtidor(ResultSet fila) throws SQLException {
         Array alias = fila.getArray("alias");
         List<String> lista = Arrays.asList((String[]) alias.getArray());

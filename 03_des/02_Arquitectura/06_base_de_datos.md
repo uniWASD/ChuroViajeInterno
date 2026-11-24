@@ -59,6 +59,8 @@ Las columnas `litros`, `estado_anh` y `consultado_en` solo se llenan cuando el o
 
 `surtidor.anh_id` llega con la migración V12 (T-118, #113), vacío en todos los surtidores. Los vínculos se cargan en una migración de datos aparte, que genera `05_pro/PruebaApiANH/vinculacion/proponer_vinculos.py` solo con los pares que el equipo revisó a mano ([RN-09.10](04_reglas/CU-09_ConsultarEstadoANH.md)). Mientras un surtidor no tenga `anh_id`, la consulta a ANH ignora su estación ([RN-09.9](04_reglas/CU-09_ConsultarEstadoANH.md)). La migración V13 carga los 14 vínculos revisados el 23/11/2026: los 14 surtidores del catálogo tienen su estación, y las 14 estaciones de ANH dentro de la mancha urbana tienen su surtidor. El detalle de la revisión está en `05_pro/PruebaApiANH/vinculacion/pares_revisados_20261123.csv`.
 
+La migración V14 amplía `estado_combustible.litros` de `NUMERIC(12,2)` a `NUMERIC` sin escala fija, para no redondear los decimales que ANH entregue (RN-09.12). Los valores que V8 ya redondeó a dos decimales no recuperan la precisión original.
+
 Las tablas `lugar` y `lugar_extracto` (V10) no llevan datos en la migración. Las llena el backend al arrancar con el JSON de `preparar_lugares.py` (variable `LUGARES_PATH`), y solo si la fecha del extracto cambió; el reemplazo va en una transacción, así que si el archivo trae algo mal quedan los lugares de antes. Un lugar fuera de la mancha urbana, sin nombre o con una categoría desconocida se descarta ([D-47](08_decisiones_parametros.md)).
 
 ## Lo que la base de datos asegura por su cuenta

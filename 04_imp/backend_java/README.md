@@ -12,6 +12,7 @@ El proyecto usa un solo MVC (D-01):
 - `servicios`: un servicio por caso de uso, que recibe por el constructor las interfaces de sus repositorios y coordina el dominio y los repositorios.
 - `dominio`: objetos y valores que contienen las reglas de negocio, las interfaces de los repositorios (`EventoRepository`, `VotoRepository`, `ConductorRepository`, `SesionRepository` y, en `dominio/catalogo`, `CatalogoRepository`) y los DTO de consulta (`record` de solo lectura) junto a su repositorio: `EventoVialRespuesta`, `EventosRespuesta` y `CatalogosRespuesta` ([D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-42](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Nada aquí accede a la base de datos.
 - `infraestructura/pg`: implementaciones de los repositorios para PostgreSQL (`PgEventoRepository`, `PgVotoRepository`, `PgConductorRepository`, `PgSesionRepository` y `PgCatalogoRepository`), con JDBC y sentencias preparadas ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md), [D-41](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+- `infraestructura/anh`: el cliente de la API de ANH (`ClienteAnh`), que solo hace GET por HTTPS (CU-09).
 - `motor`: comunicación con el núcleo C++ mediante `MotorDeRutas` y pipe (D-15).
 - `seguridad`: el JWT del conductor, los tokens de renovación y el filtro que los comprueba (CU-08).
 - `errores`: traducción de errores al formato de rechazo del contrato.
@@ -76,6 +77,27 @@ El segundo backend del servidor (T-106, #86) usa `SPRING_PROFILES_ACTIVE=pruebas
 
 Este perfil enciende el modo demostración: los conductores reales ven los datos simulados (RN-07.13). Cada prueba de carga deja en el registro líneas `[prueba-carga]` con su identificador: cuándo entró el primer usuario fantasma, el avance cada minuto, el primer 503 si el backend se satura (RN-07.10) y el resumen final cuando pasan 2 minutos sin peticiones. Ninguna línea dice nada de un conductor.
 
+### Consulta a ANH
+
+`ConsultaAnh` (HU-14, #114) consulta a ANH cada 10 minutos y guarda el saldo de los surtidores vinculados con origen ANH ([CU-09](../../03_des/02_Arquitectura/04_reglas/CU-09_ConsultarEstadoANH.md), [05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#backend-con-la-api-de-anh)). En cada ciclo:
+
+- Busca a Tarija en el catálogo de departamentos y pide el listado de gasolina y el de diésel.
+- `ReporteAnh` valida cada respuesta.
+- Toma solo las estaciones que están dentro de la mancha urbana y vinculadas a un surtidor por su `anh_id` (V12).
+- Deja una línea por ruta en el registro: la ruta, el estado HTTP, cuántas estaciones llegaron, cuántas se aceptaron y cuántas se ignoraron. Las estaciones de la mancha que no están en el catálogo se anotan como candidatas.
+
+Mientras ningún surtidor tenga `anh_id`, la consulta corre pero no guarda nada.
+
+| Propiedad (`churoviaje.anh`) | Valor | Qué es |
+| --- | --- | --- |
+| `habilitada` | `ANH_HABILITADA`, `true` por defecto; `false` en los perfiles `pruebas` y `test` | Si la tarea periódica consulta |
+| `permitir-http-local` | `false`; `true` únicamente en el perfil `test` | Permite el servidor ANH falso de loopback; nunca habilita HTTP fuera de pruebas |
+| `ciclo` | `PT10M` | Cada cuánto (P-29). La configuración no acepta menos de 10 minutos |
+| `espera-peticion`, `reintentos`, `pausa` | `PT12S`, `1`, `PT1S` | Espera, reintentos y pausa entre peticiones (P-32) |
+| `espera-inicial` | `PT2M` | Cuánto espera la primera consulta después de arrancar |
+
+Estos valores (P-29, P-30 y P-32) se aceptaron el 23/11/2026. Las pruebas usan un servidor de ANH falso (`ServidorAnhFalso`): `ReporteAnhTest`, `ClienteAnhTest`, `ConsultaAnhIntegracionTest` (CP-161 a CP-165) y `ConsultaAnhVinculosRealesGetIntegracionTest`, que recorre un vínculo real de V13 hasta `GET /surtidores`.
+
 ## Acceso a datos
 
 El backend accede a PostgreSQL con JDBC (`java.sql`) y `PreparedStatement`, sin JPA ni `JdbcTemplate` ([D-37](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). Los valores van siempre como parámetros `?`; el SQL nunca se arma con un valor. Cada operación pide la conexión, la usa y la cierra con `try-with-resources`; la conexión sale de un pool HikariCP, que trae `spring-boot-starter-jdbc` ([D-39](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). El driver es la dependencia `org.postgresql:postgresql` de Maven, sin `.jar` en una carpeta `lib` ([D-38](../../03_des/02_Arquitectura/08_decisiones_parametros.md)). La dirección, el usuario y la contraseña salen de `DB_URL`, `DB_USER` y `DB_PASSWORD` ([D-40](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
@@ -132,7 +154,7 @@ Los tiempos (`motor.tiempo-maximo` 3 s, `motor.espera-arranque`, `motor.espera-r
 
 `POST /surtidores/{id}/confirmaciones` (HU-12, #72) registra que un conductor recargó: `ConfirmacionRecarga` comprueba el tipo y que la parada esté a menos de 50 m del surtidor (medido en PostGIS), el servicio rechaza la repetida de los últimos 60 minutos con el conductor bloqueado, y guarda la fila en `confirmacion_recarga` (V11) y el dato en `estado_combustible` con origen Conductores ([05_contratos.md](../../03_des/02_Arquitectura/05_contratos.md#confirmación-de-recarga-post-surtidoresidconfirmaciones)). Lo prueba `ConfirmacionRecargaIntegracionTest` (CP-111 a CP-113).
 
-La migración V12 (T-118, #113) agrega `surtidor.anh_id`, el identificador de la estación de ANH de cada surtidor: opcional, entero positivo y único (RN-09.10). Llega vacío; los vínculos los carga una migración de datos que se genera con `05_pro/PruebaApiANH/vinculacion/proponer_vinculos.py` después de que el equipo revisa los pares. La migración V13 carga los 14 vínculos que el equipo revisó el 23/11/2026, con P-31 en 250 m y Panamericano como excepción (ANH tiene mal su punto). Lo prueba `VinculoAnhIntegracionTest` (CP-159 y CP-160).
+La migración V12 (T-118, #113) agrega `surtidor.anh_id`, el identificador de la estación de ANH de cada surtidor: opcional, entero positivo y único (RN-09.10). Llega vacío; los vínculos los carga una migración de datos que se genera con `05_pro/PruebaApiANH/vinculacion/proponer_vinculos.py` después de que el equipo revisa los pares. La migración V13 carga los 14 vínculos que el equipo revisó el 23/11/2026, con P-31 en 250 m y Panamericano como excepción (ANH tiene mal su punto). Lo prueba `VinculoAnhIntegracionTest` (CP-159 y CP-160). V14 (HU-14, #114) amplía `estado_combustible.litros` a `NUMERIC` sin escala fija, para guardar los litros de ANH sin redondear (RN-09.12); los valores que V8 ya redondeó no recuperan sus decimales.
 
 `LimpiezaDatos` (T-105, #85) corre cada día a las 03:30 de Tarija (`churoviaje.limpieza.cron`) y borra los eventos retirados o vencidos hace más de 30 días con sus votos, las confirmaciones de recarga de más de 30 días y las sesiones vencidas, sin tocar nada vigente ([06_base_de_datos.md](../../03_des/02_Arquitectura/06_base_de_datos.md#limpieza-diaria)). Lo prueba `LimpiezaDatosIntegracionTest` (CP-144).
 

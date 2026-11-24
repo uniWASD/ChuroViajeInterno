@@ -598,6 +598,8 @@ Se aplican [RN-09.4](04_reglas/CU-09_ConsultarEstadoANH.md), [RN-09.5](04_reglas
 
 El backend no publica ningún endpoint nuevo para ANH: lo que se guarda se ve en `GET /surtidores`.
 
+La consulta la hace `ConsultaAnh` (HU-14, #114) con los valores de `churoviaje.anh` en `application.yml`: el ciclo (P-29), la espera por petición, los reintentos y la pausa (P-32). La base solo puede ser HTTPS; la configuración acepta HTTP únicamente hacia la propia máquina, para el servidor falso de las pruebas. El ambiente de pruebas del servidor (perfil `pruebas`) no consulta a ANH, para no duplicar las consultas de producción.
+
 ## Respuestas de rechazo
 
 | Código HTTP | Cuándo se usa | Ejemplo |

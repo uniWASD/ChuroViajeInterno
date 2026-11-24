@@ -10,6 +10,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -24,6 +25,24 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
     @Autowired PostgreSQLContainer<?> postgres;
 
     // CP-23: 20 denominaciones aceptadas tras retirar pimentel; una fila por establecimiento real.
+    // T-118 / V13: los vínculos revisados entre cada estación de ANH y su surtidor del catálogo.
+    private static final Map<String, Integer> VINCULOS_ANH = Map.ofEntries(
+        Map.entry("Tacuarandi", 2339),
+        Map.entry("Ex Terminal", 2341),
+        Map.entry("Sointa", 2364),
+        Map.entry("Panamericano", 2388),
+        Map.entry("Agrupa", 2390),
+        Map.entry("El Portillo", 2472),
+        Map.entry("Moto Mendez", 2627),
+        Map.entry("San Jorge", 2688),
+        Map.entry("Don Daniel", 2804),
+        Map.entry("YPFB Parada Chaco", 2974),
+        Map.entry("El Molle", 2977),
+        Map.entry("Surtidor Tarija", 2386),
+        Map.entry("Las Vegas", 2642),
+        Map.entry("Campesino", 2911)
+    );
+
     private static final Map<String, String> SURTIDORES_POR_DENOMINACION = Map.ofEntries(
         Map.entry("las vegas", "Las Vegas"),
         Map.entry("don daniel", "Don Daniel"),
@@ -101,7 +120,8 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
                 () -> verificarAlias(base),
                 () -> verificarRestricciones(base),
                 () -> verificarCoberturaReal(base),
-                () -> verificarAceptacionSurtidores(base));
+                () -> verificarAceptacionSurtidores(base),
+                () -> verificarVinculosAnh(base));
     }
 
     private void verificarEstructura(String base) throws SQLException {
@@ -181,6 +201,21 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
                 assertEquals(alias, ClaveAlias.normalizar(alias));
             }
         }
+    }
+
+    private void verificarVinculosAnh(String base) throws SQLException {
+        Map<String, Integer> actuales = new HashMap<>();
+        try (var conexion = conectar(base); var sentencia = conexion.createStatement();
+                var resultado = sentencia.executeQuery("SELECT nombre, anh_id FROM surtidor WHERE anh_id IS NOT NULL")) {
+            while (resultado.next()) {
+                actuales.put(resultado.getString("nombre"), resultado.getInt("anh_id"));
+            }
+        }
+        assertAll("V13: vínculos ANH/catálogo",
+            () -> assertEquals(VINCULOS_ANH, actuales, "Cada ID ANH debe apuntar al surtidor esperado"),
+            () -> assertEquals(14, contar(base, "SELECT count(*) FROM surtidor WHERE anh_id IS NOT NULL")),
+            () -> assertEquals(14, contar(base, "SELECT count(DISTINCT anh_id) FROM surtidor WHERE anh_id IS NOT NULL"))
+        );
     }
 
     private void verificarAceptacionSurtidores(String base) throws SQLException {

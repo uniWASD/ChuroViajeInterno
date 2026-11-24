@@ -2,6 +2,3 @@ comandosPersonales.md
 prs.json
 issues.json
 __pycache__/
-# T-118: salidas del cliente de prueba de ANH y de la propuesta de vinculos (datos de ANH, no van al repositorio)
-05_pro/PruebaApiANH/salida_tarija/
-05_pro/PruebaApiANH/vinculos_*/

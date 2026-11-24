@@ -28,7 +28,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * T-118 + HU-14: aplica V14 en PostGIS, consulta un ID real del crosswalk (2977/El Molle)
+ * T-118 + HU-14: aplica V13 en PostGIS, consulta un vínculo real (2977/El Molle)
  * contra un servidor ANH falso, persiste gasolina y diésel y comprueba el resultado en GET /surtidores.
  * Es una prueba E2E automatizada de integración; no es una consulta de producción a ANH.
  */
@@ -76,7 +76,7 @@ class ConsultaAnhVinculosRealesGetIntegracionTest extends PruebaIntegracionPostg
     }
 
     @Test
-    @DisplayName("V14: 14 vínculos únicos; ANH -> PostGIS -> GET /surtidores devuelve gasolina y diésel")
+    @DisplayName("V13: 14 vínculos únicos; ANH -> PostGIS -> GET /surtidores devuelve gasolina y diésel")
     void v14ConsultaAnhPersisteYExponeEnGetSurtidores() throws Exception {
         assertThat(jdbc.queryForObject("select count(*) from surtidor where anh_id is not null", Integer.class))
                 .isEqualTo(14);

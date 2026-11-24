@@ -59,8 +59,6 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 
 ## Parámetros
 
-**Constancia de aceptación del solicitante (23/11/2026).** El mensaje «lo de los parámetros está bien» acepta los valores propuestos P-29 a P-32 para preparar y probar la implementación. No se dispone de acta, firma ni respuesta verificable del equipo responsable de T-117/T-118, ni de una política oficial de límites de llamadas de ANH. La aceptación del solicitante no acredita por sí sola el cierre administrativo o la validación de todas las estaciones.
-
 | Código | Qué se define | Dónde se usa | Valor | Estado |
 | --- | --- | --- | --- | --- |
 | P-01 | Votos «falso» que retiran un evento | [RN-02.13](04_reglas/CU-02_VisualizarEventosViales.md) | 3 votos | Confirmado |
@@ -87,10 +85,10 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | P-26 | Tiempo que el aviso de ruta alternativa espera una respuesta | [RN-04.21](04_reglas/CU-04_RecalcularRuta.md) | 15 segundos | Confirmado |
 | P-27 | Cada cuánto se actualizan la lista y los marcadores de surtidores con su vista abierta | [RN-05.17](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md) | 60 segundos | Confirmado |
 | P-28 | Cuánto se conservan, sin texto, las filas terminadas del servicio de WhatsApp/LLM | [RN-06.12](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md), [06_base_de_datos.md](06_base_de_datos.md) | 24 horas, para no repetir mensajes recibidos al reconectarse; después se borran en el siguiente mantenimiento | Confirmado el 23/10/2026 |
-| P-29 | Cada cuánto el backend consulta a ANH | [RN-09.1](04_reglas/CU-09_ConsultarEstadoANH.md) | 10 minutos por ciclo; respetar `Retry-After` y no solapar ejecuciones | Aceptado por solicitante el 23/11/2026; aplicado en la configuración del backend |
-| P-30 | Vigencia del dato de ANH | [RN-05.5](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md) | 6 horas contadas desde `consultado_en` | Aceptado por solicitante el 23/11/2026; aplicado en la lógica de vigencia |
-| P-31 | Distancia máxima para vincular una estación de ANH con un surtidor del catálogo | [RN-09.10](04_reglas/CU-09_ConsultarEstadoANH.md) | 50 metros para vinculación ordinaria; si se supera, resolver primero la georreferenciación y repetir la revisión; no crear excepción automática | Aceptado por solicitante el 23/11/2026; revisión documental delegada registrada en V14; correcciones 2388 y 2627 documentadas |
-| P-32 | Tiempo de espera y reintentos de la consulta a ANH | [RN-09.4](04_reglas/CU-09_ConsultarEstadoANH.md) | Hasta 12 segundos por petición, 1 reintento selectivo y al menos 1 segundo de pausa; obedecer `Retry-After` según RN-09.4 | Aceptado por solicitante el 23/11/2026; aplicado en el cliente ANH |
+| P-29 | Cada cuánto el backend consulta a ANH | [RN-09.1](04_reglas/CU-09_ConsultarEstadoANH.md) | 10 minutos, contados desde que termina el ciclo anterior; se respeta `Retry-After` (RN-09.4) | Aceptado el 23/11/2026 |
+| P-30 | Vigencia del dato de ANH | [RN-05.5](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md), [RN-09.17](04_reglas/CU-09_ConsultarEstadoANH.md) | 6 horas, contadas desde `consultado_en` | Aceptado el 23/11/2026 |
+| P-31 | Distancia máxima para vincular una estación de ANH con un surtidor del catálogo | [RN-09.10](04_reglas/CU-09_ConsultarEstadoANH.md) | 250 m. Sale de los 14 pares revisados a mano el 23/11/2026 (T-118, #113): el más lejano está a 221 m (Moto Mendez) y los demás a menos de 40 m. Panamericano (ANH 2388, a 651 m) queda como excepción revisada a mano, porque ANH tiene mal su punto (V2) y se reconoce por el nombre | Confirmada (23/11/2026) |
+| P-32 | Tiempo de espera y reintentos de la consulta a ANH | [RN-09.4](04_reglas/CU-09_ConsultarEstadoANH.md) | 12 segundos por petición, 1 reintento y al menos 1 segundo entre peticiones | Aceptado el 23/11/2026 |
 | P-33 | Tiempo que el wrapper espera a que el núcleo cargue la red vial antes de reiniciarlo | [D-35](08_decisiones_parametros.md) | 60 segundos (`motor.espera-arranque`). La carga debe tardar menos de 10 segundos, así que el resto es margen | Propuesta |
 | P-34 | Intervalo de reintento del servicio de WhatsApp/LLM tras perder la conexión | [RN-06.13](04_reglas/CU-06_MonitorearSurtidoresWhatsApp.md) | 15 segundos fijos (`WHATSAPP_RECONNECT_MS`, entre 1 y 300 segundos) | Propuesta |
 | P-35 | Tamaño máximo del pool de conexiones a PostgreSQL | [D-39](08_decisiones_parametros.md) | Se fija con las primeras pruebas de carga. Mientras tanto vale el predeterminado de HikariCP, 10 conexiones | Pendiente |
@@ -99,12 +97,3 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | P-38 | Cuánto puede cambiar de dirección la cuadra siguiente para ser la misma calle | [RN-04.24](04_reglas/CU-04_RecalcularRuta.md) | Menos de 40 grados (`kCambioMaximoMismaCalleGrados`), el mismo ángulo que RN-04.7 toma como giro | Confirmado el 19/11/2026 |
 
 P-07, P-08 y P-10 se cerraron con las decisiones D-09, D-08 y D-12. P-16 quedó sin uso.
-
-
-## Revisión documental delegada de vinculaciones T-118 / HU-14
-
-El solicitante delegó expresamente la revisión técnica de las correspondencias ANH/catálogo el 23/11/2026. Se contrastaron el directorio oficial ANH, resoluciones/documentos históricos ANH, el catálogo V2, referencias OSM y fuentes locales para nombres comerciales. La matriz y los comentarios quedan en `05_pro/PruebaApiANH/vinculacion/evidencias_t118/pares_para_revision_final_delegada.csv`; la migración se aplica mediante `V14__vinculos_anh.sql`. Esta es una revisión documental/geoespacial; no se afirma que haya existido visita presencial.
-
-Dos puntos ANH tenían georreferenciación cruda fuera de P-31: ID 2388 Panamericano (651,191 m) e ID 2627 Moto Méndez (221,386 m). Se conservan esas coordenadas originales y se documenta la referencia corregida mediante dirección oficial ANH y los nodos OSM 1753664990 y 3207058741, respectivamente. Las coordenadas corregidas se utilizan solo para resolver la correspondencia física; no se altera la respuesta cruda de ANH.
-
-La revisión documental determina 14 correspondencias únicas para los 14 surtidores del catálogo V2. V14 valida que cada nombre exista una sola vez, que cada `anh_id` sea único y que no se sobrescriba un vínculo previo diferente. La prueba `ConsultaAnhVinculosRealesGetIntegracionTest` comprueba el recorrido V14 → consulta ANH simulada → PostGIS → `GET /surtidores`.

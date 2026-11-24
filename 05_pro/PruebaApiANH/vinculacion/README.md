@@ -1,76 +1,74 @@
-# Vinculación ANH ↔ surtidores — T-118 / HU-14 (V5)
+# Vincular las estaciones de ANH con los surtidores del catálogo (T-118, #113)
 
-La migración V14 asigna los identificadores ANH a los 14 surtidores del catálogo V2. La revisión se realizó documental/geoespacialmente por delegación expresa del solicitante el 23/11/2026; no se afirma visita presencial.
+ANH devuelve todas las estaciones del departamento de Tarija. Para que la consulta del backend (CU-09) sepa a qué surtidor pertenece cada dato, cada surtidor del catálogo lleva el identificador de su estación en ANH (`surtidor.anh_id`, migración V12). Este script propone esos vínculos; **una persona del equipo los revisa a mano** antes de que entren en una migración (RN-09.10).
 
-## Evidencia
+Solo usa la biblioteca estándar de Python 3.10 o posterior. No llama a ANH: trabaja con el CSV que deja el cliente de prueba de la carpeta de arriba.
 
-En `evidencias_t118/` están:
+## 1. Sacar las estaciones de ANH
 
-- `pares_para_revision_final_delegada.csv`: 14 pares, `revisado=si`, comentario y fuentes.
-- `estaciones_tarija_fuente_anh_snapshot_14.csv`: snapshot de 14 estaciones reconstruido desde la matriz técnica. Para la comprobación más fuerte, usar el CSV original de 31 estaciones que dejó `anh_tarija.py`.
-- `REVISION_DELEGADA_T118.md`: justificación de cada correspondencia y correcciones geográficas.
-- `Matriz_revision_delegada_T118.xlsx`: matriz legible para auditoría.
-- `estado_cierre/ESTADO_CIERRE.md`: estado automático del cierre.
-
-## P-31 y correcciones geográficas
-
-P-31 = **50 m** de distancia efectiva. Dos coordenadas crudas de la API estaban desplazadas:
-
-- ANH 2388 Panamericano: 651,191 m de distancia cruda. Se conserva el punto original y se documenta la referencia OSM 1753664990 junto con la dirección oficial ANH; el punto efectivo V2 queda en 0 m.
-- ANH 2627 Moto Méndez: 221,386 m de distancia cruda. Se conserva el punto original y se documenta la referencia OSM 3207058741 junto con la dirección oficial ANH; el punto efectivo V2 queda en 0 m.
-
-Las equivalencias Tarija S.R.L./Surtidor Tarija, Las Américas/Campesino, Avenida Circunvalación/Las Vegas, La Terminal/Ex Terminal y Presidente Arce/YPFB Parada Chaco se justifican en el expediente. La asociación Las Vegas es por el sitio físico; no afirma que la marca sea la razón social.
-
-## V14
-
-`04_imp/backend_java/src/main/resources/db/migration/V14__vinculos_anh.sql` carga los 14 vínculos. Cada asignación verifica que el surtidor exista, que el ID ANH no pertenezca a otro surtidor, que no se reemplace un vínculo diferente y que el `UPDATE` afecte exactamente una fila.
-
-Para regenerar una copia de V14 contra el CSV original de 31 estaciones (desde `05_pro/PruebaApiANH`):
+Desde `05_pro/PruebaApiANH`, con el cliente de prueba (ver su `README.md`):
 
 ```powershell
-$CsvAnh = '.\salida_tarija\20261123T172823_989807Z\estaciones_tarija.csv'
-$Pares = '.\vinculacion\evidencias_t118\pares_para_revision_final_delegada.csv'
-$Preview = Join-Path $env:TEMP 'T118_V14_preview'
-New-Item -ItemType Directory -Force -Path $Preview | Out-Null
-python .\vinculacion\proponer_vinculos.py migracion $Pares --fuente-anh $CsvAnh `
-  --revisado-por 'Revisión técnica documental delegada por el solicitante' --version 14 --salida $Preview
+python -m pip install -r requirements.txt
+python .\anh_tarija.py --usar-certifi
 ```
+
+Deja una carpeta nueva en `salida_tarija/` con `estaciones_tarija.csv`.
+
+## 2. Proponer los pares
+
+```powershell
+python .\vinculacion\proponer_vinculos.py proponer .\salida_tarija\<carpeta>\estaciones_tarija.csv
+```
+
+El script:
+
+- deja afuera las estaciones que no caen en la mancha urbana (`04_imp/datos/mancha_urbana_tarija.geojson`), como Bermejo o Yacuiba (RN-09.8);
+- para cada una de las demás, busca en el catálogo de V2 un surtidor a menos de 1 km cuyo nombre o alias coincida con el de ANH;
+- si ninguno coincide, propone el surtidor más cercano, siempre que esté a menos de 300 m.
+
+Esas distancias solo sirven para buscar: **no son P-31**. P-31 sale de los pares que el equipo confirme.
+
+Escribe una carpeta `vinculos_<fecha>` con tres archivos, separados por punto y coma para abrirlos en Excel:
+
+| Archivo | Qué tiene |
+| --- | --- |
+| `pares_propuestos.csv` | Una fila por estación de ANH dentro de la mancha, con el surtidor propuesto, la distancia, si coincide el nombre y una de estas propuestas: **vincular** (coincide el nombre), **revisar** (está cerca, pero el nombre no coincide, o el surtidor se propone para dos estaciones) o **candidata** (no hay ningún surtidor del catálogo cerca; el equipo decide si entra al catálogo, RN-09.9). La columna `nota_v2` dice si los comentarios de V2 ya nombraban un id de ANH para ese surtidor |
+| `surtidores_sin_estacion.csv` | Los surtidores del catálogo que no quedaron en ningún par, para revisar sus nombres y alias (#41) |
+| `fuera_de_la_mancha.csv` | Las estaciones que se dejaron afuera, solo con su id y su nombre |
+
+## 3. Revisar
+
+Abre `pares_propuestos.csv` y escribe **si** en la columna `revisado` de cada par que confirmes. Compara el nombre y la ubicación en un mapa, por ejemplo pegando `latitud_anh, longitud_anh` en Google Maps. Usa `comentario` para lo que haya que contar.
+
+- Un par equivocado se deja vacío, o se corrige el nombre del surtidor antes de poner «si».
+- Un surtidor no puede quedar con dos estaciones, ni una estación con dos surtidores: el paso 4 lo comprueba.
+
+## 4. Generar la migración
+
+```powershell
+python .\vinculacion\proponer_vinculos.py migracion .\vinculos_<fecha>\pares_propuestos.csv --revisado-por "Nombre" --version 13
+```
+
+Escribe `V13__vinculos_anh.sql` en `04_imp/backend_java/src/main/resources/db/migration/`, solo con los pares que tienen «si». Además muestra la **P-31 sugerida**: la mayor distancia entre los pares confirmados, redondeada hacia arriba a 50 m. Esa distancia va a `08_decisiones_parametros.md` como Confirmada.
+
+Un par que se confirma aunque pase P-31 lleva en `comentario` un texto que empieza con «Excepción»: queda anotado en la migración y no cuenta para la P-31 sugerida.
+
+La migración falla, en vez de seguir a medias, si un nombre del catálogo cambió y algún vínculo no encontró su surtidor. Si ya existe una migración con ese número, el script detiene la ejecución para evitar sobrescribirla. Se debe indicar manualmente un número de migración disponible.
 
 ## Pruebas
 
-Pruebas Python (38 tests):
-
 ```powershell
-python -m unittest discover -s .\vinculacion -v
+python -m unittest discover -s 05_pro/PruebaApiANH/vinculacion
 ```
 
-Pruebas Java/PostGIS y E2E (desde `04_imp/backend_java`):
+## La revisión del 23/11/2026
 
-```powershell
-.\mvnw.cmd -B '-Dtest=MigracionesPostgisTest,ConsultaAnhVinculosRealesGetIntegracionTest' test
-.\mvnw.cmd -B clean test
-```
+`pares_revisados_20261123.csv` guarda la revisión que generó `V13__vinculos_anh.sql`:
 
-`ConsultaAnhVinculosRealesGetIntegracionTest` aplica V14 en Testcontainers/PostGIS, consulta un servidor ANH falso para ID 2977 (El Molle), persiste gasolina y diésel y valida que `GET /surtidores` los exponga con JWT. Es una prueba E2E de integración; no es una consulta de producción.
+- **Las estaciones:** ANH devolvió 31 estaciones de Tarija. 17 quedan fuera de la mancha urbana, todas a más de 38 km de la plaza, y 14 dentro.
+- **Los pares:** las 14 de adentro tienen su surtidor en el catálogo. 11 coinciden por nombre. Las otras 3 (Surtidor Tarija, Las Vegas y Campesino) están a menos de 10 m de su surtidor y las respaldan los comentarios de V2.
+- **Candidatas y catálogo:** no hay candidatas nuevas, ni surtidores del catálogo sin estación.
+- **P-31:** 250 m, porque el par más lejano está a 221 m (Moto Mendez). Panamericano, a 651 m, queda como excepción: ANH tiene mal su punto.
 
-## Cierre automatizado
-
-La verificación exige tanto el log de la prueba E2E como el log de la suite completa. Desde `05_pro/PruebaApiANH`:
-
-```powershell
-$CsvAnh = '.\salida_tarija\20261123T172823_989807Z\estaciones_tarija.csv'
-$Pares = '.\vinculacion\evidencias_t118\pares_para_revision_final_delegada.csv'
-python .\vinculacion\verificar_cierre.py --pares $Pares --fuente-anh $CsvAnh `
-  --evidencia-maven '.\vinculacion\evidencias_t118\ejecuciones\T118_V14_E2E.log' `
-  --evidencia-suite '.\vinculacion\evidencias_t118\ejecuciones\T118_V14_FULL.log' --estricto
-```
-
-## Un solo comando para ejecutar todo
-
-Desde la raíz del repositorio:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\Finalizar-HU14-T118.ps1
-```
-
-El script ejecuta las 38 pruebas Python, las pruebas dirigidas de V14/E2E, la suite Java completa y el verificador de cierre. Conserva ambos logs en `evidencias_t118/ejecuciones/`, fuera de `target`, para que `clean test` no los elimine.
+Revisó Marcelo Quiroga.

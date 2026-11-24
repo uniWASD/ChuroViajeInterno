@@ -25,7 +25,7 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
     @Autowired PostgreSQLContainer<?> postgres;
 
     // CP-23: 20 denominaciones aceptadas tras retirar pimentel; una fila por establecimiento real.
-    // T-118 / V14: vínculos documentados entre el identificador ANH y el surtidor físico del catálogo.
+    // T-118 / V13: los vínculos revisados entre cada estación de ANH y su surtidor del catálogo.
     private static final Map<String, Integer> VINCULOS_ANH = Map.ofEntries(
         Map.entry("Tacuarandi", 2339),
         Map.entry("Ex Terminal", 2341),
@@ -211,7 +211,7 @@ class MigracionesPostgisTest extends PruebaIntegracionPostgis {
                 actuales.put(resultado.getString("nombre"), resultado.getInt("anh_id"));
             }
         }
-        assertAll("V14: crosswalk ANH/catálogo",
+        assertAll("V13: vínculos ANH/catálogo",
             () -> assertEquals(VINCULOS_ANH, actuales, "Cada ID ANH debe apuntar al surtidor esperado"),
             () -> assertEquals(14, contar(base, "SELECT count(*) FROM surtidor WHERE anh_id IS NOT NULL")),
             () -> assertEquals(14, contar(base, "SELECT count(DISTINCT anh_id) FROM surtidor WHERE anh_id IS NOT NULL"))

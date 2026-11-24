@@ -1,12 +1,17 @@
 """T-118 (#113): proponer los vínculos entre las estaciones de ANH y los surtidores del catálogo.
 
-Dos pasos con revisión documentada (RN-09.10):
+Dos pasos, con una revisión del equipo en medio (RN-09.10):
 
-1. Proponer. Lee el CSV de `anh_tarija.py`, el catálogo V2 y la mancha urbana.
-2. Generar la migración. Solo admite filas `revisado=si`, comentario de evidencia, coordenadas contrastadas
-   contra la extracción y distancia efectiva <= P-31 (50 m). Si la coordenada cruda de ANH es errónea, se conserva
-   en `latitud_anh_original`/`longitud_anh_original`, y la coordenada corregida requiere `coordenadas_corregidas=si`
-   y `evidencia_georreferenciacion` verificable. No se altera la respuesta original de ANH.
+1. Proponer. Lee el CSV que deja el cliente de prueba (`anh_tarija.py`, archivo `estaciones_tarija.csv`), el
+   catálogo de surtidores de la migración V2 y la mancha urbana. Para cada estación de ANH dentro de la mancha busca
+   el surtidor del catálogo que le corresponde por nombre y distancia, y escribe `pares_propuestos.csv` para revisar.
+
+       python proponer_vinculos.py proponer ruta/a/estaciones_tarija.csv
+
+2. Generar la migración. Con el CSV ya revisado (columna `revisado` en «si» para cada par confirmado), escribe la
+   migración de datos que carga los vínculos y sugiere P-31: la mayor distancia entre los pares confirmados.
+
+       python proponer_vinculos.py migracion pares_propuestos.csv --revisado-por "Franz" --version 13
 
 Solo usa la biblioteca estándar de Python 3.10 o posterior. No llama a ANH: los datos salen del CSV del prototipo.
 """
@@ -29,10 +34,8 @@ CATALOGO_V2 = RAIZ / "04_imp/backend_java/src/main/resources/db/migration/V2__su
 MANCHA = RAIZ / "04_imp/datos/mancha_urbana_tarija.geojson"
 MIGRACIONES = RAIZ / "04_imp/backend_java/src/main/resources/db/migration"
 
-# Distancia para propuestas exploratorias; NO autoriza a vincular (P-31).
+# Hasta dónde se busca un surtidor para una estación. No es P-31: P-31 sale de los pares que el equipo confirme.
 RADIO_BUSQUEDA_M = 1000
-# P-31 aceptado por el solicitante el 23/11/2026; debe registrarse en el equipo T-118.
-P31_MAXIMA_M = 50.0
 # Sin coincidencia de nombre, un surtidor más cerca que esto se propone para revisar.
 CERCA_SIN_NOMBRE_M = 300
 
@@ -119,16 +122,8 @@ def leer_estaciones(ruta: Path) -> tuple[list[Estacion], list[str]]:
             avisos.append(f"Fila sin estacion_id entero: {crudo!r}; se omite")
             continue
         anh_id = int(crudo)
-        if anh_id <= 0:
-            avisos.append(f"Fila con estacion_id no positivo: {crudo!r}; se omite")
-            continue
-        latitud, longitud = _numero(fila.get("latitud")), _numero(fila.get("longitud"))
-        if (latitud is None or longitud is None or not -90 <= latitud <= 90
-                or not -180 <= longitud <= 180 or (latitud == 0 and longitud == 0)):
-            if latitud is not None or longitud is not None:
-                avisos.append(f"La estación {anh_id} trae coordenadas incompletas o fuera de rango; queda para revisión")
-            latitud, longitud = None, None
-        nueva = Estacion(anh_id, (fila.get("nombre_estacion") or "").strip(), latitud, longitud)
+        nueva = Estacion(anh_id, (fila.get("nombre_estacion") or "").strip(),
+                         _numero(fila.get("latitud")), _numero(fila.get("longitud")))
         vieja = estaciones.get(anh_id)
         if vieja is None:
             estaciones[anh_id] = nueva
@@ -252,12 +247,7 @@ def proponer(estaciones: list[Estacion], catalogo: list[Surtidor], mancha) -> tu
         por_nombre = [(d, s) for d, s in cercanos if d <= RADIO_BUSQUEDA_M and coincide_nombre(e, s)]
         if por_nombre:
             d, s = por_nombre[0]
-            if d <= P31_MAXIMA_M:
-                pares.append(Par(e, s, d, True, "vincular", "coincide el nombre y respeta P-31"))
-            else:
-                pares.append(Par(e, s, d, True, "revisar",
-                                 f"coincide el nombre, pero está a {d:.3f} m y excede P-31 ({P31_MAXIMA_M:g} m); "
-                                 "resolver coordenadas antes de aprobar"))
+            pares.append(Par(e, s, d, True, "vincular", "coincide el nombre"))
         elif cercanos and cercanos[0][0] <= CERCA_SIN_NOMBRE_M:
             d, s = cercanos[0]
             pares.append(Par(e, s, d, False, "revisar", "cerca, pero el nombre no coincide"))
@@ -279,12 +269,8 @@ def proponer(estaciones: list[Estacion], catalogo: list[Surtidor], mancha) -> tu
     return pares, fuera
 
 
-CAMPOS_REVISION = [
-    "anh_id", "nombre_anh", "latitud_anh", "longitud_anh", "surtidor", "distancia_m",
-    "coincide_nombre", "propuesta", "motivo", "nota_v2", "revisado", "comentario",
-    "coordenadas_corregidas", "latitud_anh_original", "longitud_anh_original",
-    "distancia_original_m", "evidencia_georreferenciacion",
-]
+CAMPOS_REVISION = ["anh_id", "nombre_anh", "latitud_anh", "longitud_anh", "surtidor", "distancia_m",
+                   "coincide_nombre", "propuesta", "motivo", "nota_v2", "revisado", "comentario"]
 
 
 def escribir_propuesta(pares: list[Par], fuera: list[Estacion], catalogo: list[Surtidor], carpeta: Path) -> None:
@@ -298,13 +284,11 @@ def escribir_propuesta(pares: list[Par], fuera: list[Estacion], catalogo: list[S
                 "anh_id": p.estacion.anh_id, "nombre_anh": p.estacion.nombre,
                 "latitud_anh": p.estacion.latitud, "longitud_anh": p.estacion.longitud,
                 "surtidor": p.surtidor.nombre if p.surtidor else "",
-                "distancia_m": f"{p.distancia:.6f}" if p.distancia is not None else "",
+                "distancia_m": f"{p.distancia:.0f}" if p.distancia is not None else "",
                 "coincide_nombre": "si" if p.por_nombre else "no",
                 "propuesta": p.propuesta, "motivo": p.motivo,
                 "nota_v2": p.surtidor.nota_v2 if p.surtidor else "",
-                "revisado": "", "comentario": "", "coordenadas_corregidas": "no",
-                "latitud_anh_original": "", "longitud_anh_original": "",
-                "distancia_original_m": "", "evidencia_georreferenciacion": "",
+                "revisado": "", "comentario": "",
             })
     with (carpeta / "fuera_de_la_mancha.csv").open("w", encoding="utf-8-sig", newline="") as f:
         w = csv.writer(f, delimiter=";")
@@ -322,230 +306,84 @@ def escribir_propuesta(pares: list[Par], fuera: list[Estacion], catalogo: list[S
 
 # ---------------------------------------------------------------- migración
 
-# Solo «si» / «sí» indica aprobación. No interpretamos «x» u «ok» como firma humana.
-SI = {"si", "sí"}
+SI = {"si", "sí", "s", "x", "yes", "ok"}
 
 
 class ErrorRevision(Exception):
     pass
 
 
-def pares_confirmados(filas: list[dict[str, str]], catalogo: list[Surtidor]) -> list[tuple[int, str, float | None]]:
-    """Valida aprobaciones explícitas, incluida una georreferenciación corregida con evidencia.
+@dataclass
+class Confirmado:
+    anh_id: int
+    surtidor: str
+    distancia: float | None
+    comentario: str = ""
 
-    `latitud_anh`/`longitud_anh` son las coordenadas efectivas usadas para P-31.
-    Cuando `coordenadas_corregidas=si`, las coordenadas crudas de la API se conservan en
-    `latitud_anh_original`/`longitud_anh_original`; se exige evidencia independiente y se
-    valida también la distancia original. No se modifica ni se reescribe la respuesta ANH.
-    """
-    surtidores = {s.nombre: s for s in catalogo}
-    confirmados: list[tuple[int, str, float | None]] = []
+    @property
+    def excepcion(self) -> bool:
+        """Un par que el equipo confirmó aunque pase P-31 (por ejemplo, porque ANH tiene mal el punto)."""
+        return normalizar(self.comentario).startswith("excepcion")
+
+
+def pares_confirmados(filas: list[dict[str, str]], catalogo: list[Surtidor]) -> list[Confirmado]:
+    """Los pares con `revisado` en «si». Falla si un id o un surtidor se repite, o si el surtidor no existe."""
+    nombres = {s.nombre for s in catalogo}
+    confirmados: list[Confirmado] = []
     errores: list[str] = []
     for n, fila in enumerate(filas, start=2):
-        revision = normalizar(fila.get("revisado"))
-        if revision not in {"", "no", "si"}:
-            errores.append(f"línea {n}: 'revisado' debe ser 'si', 'no' o vacío; se recibió {fila.get('revisado')!r}")
+        if normalizar(fila.get("revisado")) not in {normalizar(s) for s in SI}:
             continue
-        if revision != "si":
+        crudo, surtidor = (fila.get("anh_id") or "").strip(), (fila.get("surtidor") or "").strip()
+        if not re.fullmatch(r"\d+", crudo) or int(crudo) <= 0:
+            errores.append(f"línea {n}: anh_id {crudo!r} no es un entero positivo")
             continue
-
-        crudo, nombre = (fila.get("anh_id") or "").strip(), (fila.get("surtidor") or "").strip()
-        if not re.fullmatch(r"\d+", crudo) or not 0 < int(crudo) <= 2_147_483_647:
-            errores.append(f"línea {n}: anh_id {crudo!r} no cabe como entero positivo PostgreSQL")
+        if surtidor not in nombres:
+            errores.append(f"línea {n}: el surtidor {surtidor!r} no está en el catálogo (V2)")
             continue
-        if nombre not in surtidores:
-            errores.append(f"línea {n}: el surtidor {nombre!r} no está en el catálogo (V2)")
-            continue
-        if not (fila.get("nombre_anh") or "").strip():
-            errores.append(f"línea {n}: falta el nombre de la estación ANH para comprobar su identidad")
-            continue
-        if not (fila.get("comentario") or "").strip():
-            errores.append(f"línea {n}: falta comentario con evidencia de la revisión (RN-09.10)")
-            continue
-
-        lat = _numero(fila.get("latitud_anh"))
-        lon = _numero(fila.get("longitud_anh"))
-        distancia = _numero(fila.get("distancia_m"))
-        if (lat is None or lon is None or not -90 <= lat <= 90 or not -180 <= lon <= 180
-                or (lat == 0 and lon == 0) or distancia is None or distancia < 0):
-            errores.append(f"línea {n}: las coordenadas/distancia efectivas deben ser numéricas y válidas")
-            continue
-
-        s = surtidores[nombre]
-        recalculada = distancia_m(lat, lon, s.latitud, s.longitud)
-        if abs(recalculada - distancia) > 1:
-            errores.append(f"línea {n}: distancia declarada {distancia:.3f} m, recalculada {recalculada:.3f} m; "
-                           "CSV alterado o par incorrecto")
-            continue
-
-        corregidas_valor = normalizar(fila.get("coordenadas_corregidas"))
-        corregidas = corregidas_valor == "si"
-        if corregidas:
-            lat_original = _numero(fila.get("latitud_anh_original"))
-            lon_original = _numero(fila.get("longitud_anh_original"))
-            distancia_original = _numero(fila.get("distancia_original_m"))
-            evidencia = (fila.get("evidencia_georreferenciacion") or "").strip()
-            if (lat_original is None or lon_original is None or not -90 <= lat_original <= 90
-                    or not -180 <= lon_original <= 180 or (lat_original == 0 and lon_original == 0)
-                    or distancia_original is None or distancia_original < 0 or not evidencia):
-                errores.append(f"línea {n}: corrección geográfica sin coordenadas originales, distancia original o evidencia")
-                continue
-            distancia_original_recalculada = distancia_m(
-                lat_original, lon_original, s.latitud, s.longitud
-            )
-            if abs(distancia_original_recalculada - distancia_original) > 1:
-                errores.append(f"línea {n}: distancia original inconsistente para ANH {crudo}")
-                continue
-        else:
-            if corregidas_valor not in {"", "no"}:
-                errores.append(f"línea {n}: coordenadas_corregidas debe ser 'si' o 'no'")
-                continue
-            lat_original = _numero(fila.get("latitud_anh_original"))
-            lon_original = _numero(fila.get("longitud_anh_original"))
-            if lat_original is not None or lon_original is not None:
-                if lat_original is None or lon_original is None or distancia_m(
-                        lat_original, lon_original, s.latitud, s.longitud) > 1:
-                    errores.append(f"línea {n}: campos de coordenadas originales no coinciden con las efectivas")
-                    continue
-
-        if recalculada > P31_MAXIMA_M:
-            errores.append(f"línea {n}: distancia efectiva {recalculada:.3f} m excede P-31 "
-                           f"({P31_MAXIMA_M:g} m). Resolver georreferenciación antes de migrar")
-            continue
-        confirmados.append((int(crudo), nombre, distancia))
-
-    ids = [id for id, _, _ in confirmados]
-    nombres = [nombre for _, nombre, _ in confirmados]
-    if len(ids) != len(set(ids)):
-        errores.append("el mismo anh_id está confirmado para dos surtidores (RN-09.10)")
-    if len(nombres) != len(set(nombres)):
-        errores.append("el mismo surtidor está confirmado para dos estaciones de ANH (RN-09.10)")
+        confirmados.append(Confirmado(int(crudo), surtidor, _numero(fila.get("distancia_m")),
+                                      (fila.get("comentario") or "").strip()))
+    for i, c in enumerate(confirmados):
+        for otro in confirmados[i + 1:]:
+            if c.anh_id == otro.anh_id:
+                errores.append(f"el id de ANH {c.anh_id} está confirmado para dos surtidores (RN-09.10)")
+            if c.surtidor == otro.surtidor:
+                errores.append(f"{c.surtidor} está confirmado para dos estaciones de ANH (RN-09.10)")
     if errores:
         raise ErrorRevision("\n".join(errores))
-    return sorted(confirmados, key=lambda c: c[1])
+    return sorted(confirmados, key=lambda c: c.surtidor)
 
 
-def p31_sugerida(confirmados: list[tuple[int, str, float | None]]) -> int | None:
-    """Sugerencia de análisis, nunca P-31 confirmada; 0 m no permite inferir un máximo útil."""
-    distancias = [d for _, _, d in confirmados if d is not None]
-    if not distancias or max(distancias) <= 0:
-        return None
-    return int(math.ceil(max(distancias) / 50) * 50)
+def p31_sugerida(confirmados: list[Confirmado]) -> int | None:
+    """La mayor distancia de los pares confirmados, sin las excepciones, redondeada hacia arriba a 50 m."""
+    distancias = [c.distancia for c in confirmados if c.distancia is not None and not c.excepcion]
+    return int(math.ceil(max(distancias) / 50) * 50) if distancias else None
 
 
-def validar_con_fuente_anh(filas: list[dict[str, str]], ruta_fuente: Path) -> None:
-    """Contrasta ID, nombre y coordenadas originales con la extracción ANH.
-
-    En una corrección geográfica documentada, valida las coordenadas crudas contra la fuente,
-    y mantiene la posición corregida en campos separados para comprobar P-31.
-    """
-    estaciones, avisos = leer_estaciones(ruta_fuente)
-    por_id = {e.anh_id: e for e in estaciones}
-    catalogo = {s.nombre: s for s in leer_catalogo()}
-    errores: list[str] = []
-    for n, fila in enumerate(filas, 2):
-        if normalizar(fila.get("revisado")) != "si":
-            continue
-        crudo = (fila.get("anh_id") or "").strip()
-        if not re.fullmatch(r"\d+", crudo):
-            errores.append(f"línea {n}: identificador ANH inválido")
-            continue
-        estacion = por_id.get(int(crudo))
-        if estacion is None:
-            errores.append(f"línea {n}: ANH id {crudo} no existe en el CSV fuente")
-            continue
-        if normalizar(fila.get("nombre_anh")) != normalizar(estacion.nombre):
-            errores.append(f"línea {n}: nombre ANH diferente del CSV fuente para id {crudo}")
-            continue
-
-        corregidas = normalizar(fila.get("coordenadas_corregidas")) in SI
-        lat_raw = _numero(fila.get("latitud_anh_original")) if corregidas else _numero(fila.get("latitud_anh"))
-        lon_raw = _numero(fila.get("longitud_anh_original")) if corregidas else _numero(fila.get("longitud_anh"))
-        if lat_raw is None or lon_raw is None or estacion.latitud is None or estacion.longitud is None:
-            errores.append(f"línea {n}: no hay coordenadas ANH originales comparables para id {crudo}")
-            continue
-        if distancia_m(lat_raw, lon_raw, estacion.latitud, estacion.longitud) > 1.0:
-            errores.append(f"línea {n}: coordenadas ANH originales de id {crudo} cambiadas (>1 m) respecto de la extracción")
-            continue
-
-        if corregidas:
-            evidencia = (fila.get("evidencia_georreferenciacion") or "").strip()
-            lat_eff, lon_eff = _numero(fila.get("latitud_anh")), _numero(fila.get("longitud_anh"))
-            nombre = (fila.get("surtidor") or "").strip()
-            s = catalogo.get(nombre)
-            distancia_eff = _numero(fila.get("distancia_m"))
-            if not evidencia or s is None or lat_eff is None or lon_eff is None or distancia_eff is None:
-                errores.append(f"línea {n}: corrección geográfica sin evidencia o catálogo para ANH {crudo}")
-                continue
-            if not -90 <= lat_eff <= 90 or not -180 <= lon_eff <= 180:
-                errores.append(f"línea {n}: coordenada corregida fuera de rango para ANH {crudo}")
-                continue
-            if abs(distancia_m(lat_eff, lon_eff, s.latitud, s.longitud) - distancia_eff) > 1:
-                errores.append(f"línea {n}: distancia efectiva incorrecta tras corrección geográfica para ANH {crudo}")
-    if errores:
-        raise ErrorRevision("\n".join(errores))
-
-
-def siguiente_version_disponible(carpeta: Path, version_inicial: int) -> int:
-    """Devuelve la primera versión Flyway libre desde version_inicial, aunque tenga otro sufijo."""
-    version = version_inicial
-    while any(carpeta.glob(f"V{version}__*.sql")):
-        version += 1
-    return version
-
-
-def sql_migracion(confirmados, revisado_por: str, fecha: dt.date,
-                  evidencias: dict[int, str] | None = None) -> str:
-    """Genera SQL transaccional con validación explícita de cada vínculo.
-
-    No presupone que todos los surtidores anteriormente vinculados pertenecen a este lote.
-    No reemplaza un anh_id distinto que ya estuviera confirmado.
-    """
-    evidencias = evidencias or {}
-    for anh_id, surtidor, distancia in confirmados:
-        if distancia is None or not math.isfinite(distancia) or distancia > P31_MAXIMA_M or distancia < 0:
-            raise ErrorRevision(f"El vínculo ANH {anh_id} / {surtidor} no respeta P-31 ({P31_MAXIMA_M:g} m)")
+def sql_migracion(confirmados, revisado_por: str, fecha: dt.date) -> str:
     lineas = [
-        "-- T-118 / RN-09.10: vínculos aprobados en revisión técnica documental delegada por el solicitante.",
-        f"-- Revisión declarada por {revisado_por} el {fecha.isoformat()}.",
-        "-- La revisión es documental/geoespacial; no representa visita presencial ni inspección física.",
-        "-- Las coordenadas ANH originales y las correcciones justificadas constan en el CSV y expediente T-118.",
-        "-- Flyway ejecuta la migración como una transacción: cualquier error revierte el lote.",
-        "DO $vinculos_anh$",
-        "DECLARE",
-        "    filas_modificadas integer;",
-        "BEGIN",
+        "-- T-118 (CU-09): vinculos entre los surtidores del catalogo y las estaciones de ANH (RN-09.10).",
+        f"-- Generado con 05_pro/PruebaApiANH/vinculacion/proponer_vinculos.py; revisado a mano por {revisado_por}"
+        f" el {fecha.isoformat()}.",
+        "-- Cada surtidor que no aparece aqui queda sin estacion de ANH, y CU-09 ignora sus datos (RN-09.9).",
     ]
-    for anh_id, surtidor, distancia in confirmados:
-        nombre_sql = surtidor.replace("'", "''")
-        evidencia = " ".join((evidencias.get(anh_id) or "").replace("--", "—").split())
-        if len(evidencia) > 700:
-            evidencia = evidencia[:697] + "..."
-        lineas += [
-            f"    -- {surtidor}: ANH {anh_id}, distancia efectiva {distancia:.3f} m",
-        ]
-        if evidencia:
-            lineas.append(f"    -- Evidencia: {evidencia}")
-        lineas += [
-            f"    IF NOT EXISTS (SELECT 1 FROM surtidor WHERE nombre = '{nombre_sql}') THEN",
-            f"        RAISE EXCEPTION 'No existe el surtidor del catálogo: %', '{nombre_sql}';",
-            "    END IF;",
-            f"    IF EXISTS (SELECT 1 FROM surtidor WHERE nombre = '{nombre_sql}' "
-            f"AND anh_id IS NOT NULL AND anh_id <> {anh_id}) THEN",
-            f"        RAISE EXCEPTION 'El surtidor % ya tiene un vínculo ANH diferente', '{nombre_sql}';",
-            "    END IF;",
-            f"    IF EXISTS (SELECT 1 FROM surtidor WHERE anh_id = {anh_id} "
-            f"AND nombre <> '{nombre_sql}') THEN",
-            f"        RAISE EXCEPTION 'El identificador ANH {anh_id} ya pertenece a otro surtidor';",
-            "    END IF;",
-            f"    UPDATE surtidor SET anh_id = {anh_id} WHERE nombre = '{nombre_sql}' "
-            f"AND (anh_id IS NULL OR anh_id = {anh_id});",
-            "    GET DIAGNOSTICS filas_modificadas = ROW_COUNT;",
-            "    IF filas_modificadas <> 1 THEN",
-            f"        RAISE EXCEPTION 'Se esperó una fila única para el surtidor %', '{nombre_sql}';",
-            "    END IF;",
-        ]
-    lineas += ["END $vinculos_anh$;", ""]
+    for c in confirmados:
+        nota = f"a {c.distancia:.0f} m" if c.distancia is not None else "sin distancia"
+        if c.comentario:
+            nota += "; " + " ".join(c.comentario.split())
+        nombre = c.surtidor.replace("'", "''")
+        lineas.append(f"UPDATE surtidor SET anh_id = {c.anh_id} WHERE nombre = '{nombre}'; -- {nota}")
+    lineas += [
+        "",
+        "-- Si un nombre del catalogo cambio y algun UPDATE no encontro su fila, la migracion falla en vez de seguir.",
+        "DO $$",
+        "BEGIN",
+        f"    IF (SELECT count(*) FROM surtidor WHERE anh_id IS NOT NULL) <> {len(confirmados)} THEN",
+        "        RAISE EXCEPTION 'No se cargaron todos los vinculos de ANH';",
+        "    END IF;",
+        "END $$;",
+        "",
+    ]
     return "\n".join(lineas)
 
 
@@ -558,10 +396,8 @@ def main(argv: list[str] | None = None) -> int:
     p1.add_argument("estaciones", type=Path, help="estaciones_tarija.csv que dejó anh_tarija.py")
     p1.add_argument("--salida", type=Path, default=None, help="Carpeta de salida (por defecto, vinculos_<fecha>)")
     p2 = sub.add_parser("migracion", help="Genera la migración con los pares revisados")
-    p2.add_argument("revisados", type=Path, help="CSV revisado con decisiones explícitas y evidencia documentada")
-    p2.add_argument("--fuente-anh", type=Path, required=True,
-                    help="CSV fuente ANH de la extracción; admite snapshot de auditoría con origen documentado")
-    p2.add_argument("--revisado-por", required=True, help="Responsable/delegación que realizó la revisión documentada")
+    p2.add_argument("revisados", type=Path, help="pares_propuestos.csv con la columna revisado llena")
+    p2.add_argument("--revisado-por", required=True, help="Quién revisó los pares")
     p2.add_argument("--version", type=int, required=True, help="Número de la migración Flyway, por ejemplo 13")
     p2.add_argument("--salida", type=Path, default=MIGRACIONES, help="Carpeta donde escribir la migración")
     args = parser.parse_args(argv)
@@ -581,48 +417,26 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Archivos en {carpeta.resolve()}")
         return 0
 
-    if args.version < 1:
-        print("--version debe ser un entero positivo.", file=sys.stderr)
-        return 2
-    revisado_por = " ".join(args.revisado_por.split())
-    if not revisado_por:
-        print("--revisado-por no puede estar vacío.", file=sys.stderr)
-        return 2
     try:
-        filas_revisadas = _abrir_csv(args.revisados)
-        confirmados = pares_confirmados(filas_revisadas, catalogo)
-        validar_con_fuente_anh(filas_revisadas, args.fuente_anh)
-    except (ErrorRevision, OSError, ValueError) as e:
+        confirmados = pares_confirmados(_abrir_csv(args.revisados), catalogo)
+    except ErrorRevision as e:
         print(f"La revisión tiene problemas:\n{e}", file=sys.stderr)
         return 2
     if not confirmados:
         print("Ninguna fila tiene «si» en la columna revisado: no se genera nada.", file=sys.stderr)
         return 2
-    args.salida.mkdir(parents=True, exist_ok=True)
-    if any(args.salida.glob("V*__vinculos_anh.sql")):
-        print("Ya existe una migración de vínculos ANH; revisa su contenido e historial Flyway. "
-              "No se crea una segunda migración automáticamente.", file=sys.stderr)
+    destino = args.salida / f"V{args.version}__vinculos_anh.sql"
+    if destino.exists():
+        print(f"{destino} ya existe: no se sobrescribe.", file=sys.stderr)
         return 2
-    version = siguiente_version_disponible(args.salida, args.version)
-    destino = args.salida / f"V{version}__vinculos_anh.sql"
-    if version != args.version:
-        print(f"V{args.version} ya está ocupada; se usará V{version}.")
-    evidencias = {}
-    for fila in filas_revisadas:
-        if normalizar(fila.get("revisado")) == "si":
-            anh_id = int((fila.get("anh_id") or "0").strip())
-            comentario = (fila.get("comentario") or "").strip()
-            if normalizar(fila.get("coordenadas_corregidas")) in SI:
-                detalle = (f"Georreferenciación corregida; ANH original="
-                           f"({fila.get('latitud_anh_original')},{fila.get('longitud_anh_original')}); "
-                           f"distancia original={fila.get('distancia_original_m')} m; "
-                           f"evidencia={fila.get('evidencia_georreferenciacion')}. ")
-                comentario = detalle + comentario
-            evidencias[anh_id] = comentario
-    destino.write_text(sql_migracion(confirmados, revisado_por, dt.date.today(), evidencias), encoding="utf-8")
+    destino.write_text(sql_migracion(confirmados, args.revisado_por, dt.date.today()), encoding="utf-8")
     print(f"{len(confirmados)} vínculos en {destino}")
-    print(f"P-31 aceptado por solicitante: {P31_MAXIMA_M:g} m; "
-          "se validaron las distancias efectivas y se preservaron las coordenadas ANH originales")
+    sugerida = p31_sugerida(confirmados)
+    if sugerida is not None:
+        print(f"P-31 sugerida: {sugerida} m (la mayor distancia confirmada sin las excepciones, redondeada a 50 m)")
+    for c in confirmados:
+        if c.excepcion:
+            print(f"Excepción a P-31: {c.surtidor} (ANH {c.anh_id}) a {c.distancia:.0f} m")
     return 0
 
 

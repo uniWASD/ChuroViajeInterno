@@ -7,6 +7,7 @@ import com.churoviaje.backend.config.PruebaIntegracionPostgis;
 import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,9 +30,11 @@ class VinculoAnhIntegracionTest extends PruebaIntegracionPostgis {
 
     private long lasVegas;
     private long donDaniel;
+    private List<Map<String, Object>> vinculosDeV13;
 
     @BeforeEach
     void preparar() {
+        vinculosDeV13 = jdbc.queryForList("select id, anh_id from surtidor where anh_id is not null");
         jdbc.update("delete from estado_combustible");
         jdbc.update("update surtidor set anh_id = null");
         lasVegas = jdbc.queryForObject("select id from surtidor where nombre = 'Las Vegas'", Long.class);
@@ -42,6 +45,26 @@ class VinculoAnhIntegracionTest extends PruebaIntegracionPostgis {
     void limpiar() {
         jdbc.update("delete from estado_combustible");
         jdbc.update("update surtidor set anh_id = null");
+        for (Map<String, Object> v : vinculosDeV13) {
+            jdbc.update("update surtidor set anh_id = ? where id = ?", v.get("anh_id"), v.get("id"));
+        }
+    }
+
+    @Test
+    @DisplayName("V13 carga los 14 vínculos revisados, uno por surtidor del catálogo")
+    void v13CargaLosVinculosRevisados() {
+        Map<Integer, String> vinculos = new java.util.TreeMap<>();
+        for (Map<String, Object> v : vinculosDeV13) {
+            vinculos.put((Integer) v.get("anh_id"),
+                    jdbc.queryForObject("select nombre from surtidor where id = ?", String.class, v.get("id")));
+        }
+        assertThat(vinculos).hasSize(14)
+                .containsEntry(2977, "El Molle")
+                .containsEntry(2642, "Las Vegas")
+                .containsEntry(2911, "Campesino")
+                .containsEntry(2388, "Panamericano")
+                .containsEntry(2341, "Ex Terminal")
+                .containsEntry(2974, "YPFB Parada Chaco");
     }
 
     @Test

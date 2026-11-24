@@ -7,6 +7,7 @@ import '../../models/surtidor.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
 import '../events/events_screen.dart';
 import '../tema/tema.dart';
+import '../ruta/hoja_ruta.dart';
 import 'detalle_surtidor.dart';
 import 'estilo_surtidor.dart';
 
@@ -206,11 +207,9 @@ class _FilaSurtidor extends StatelessWidget {
                           for (final dato in surtidor.combustibles) LineaCombustible(dato: dato, ahora: ahora),
                         Row(
                           children: [
+                            // #191: la distancia con el auto a la izquierda.
                             if (combustible.ordenadosPorCercania && surtidor.distanciaParaMostrar != null)
-                              Text(
-                                'A ${surtidor.distanciaParaMostrar}',
-                                style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario),
-                              ),
+                              DistanciaEnAuto(distancia: surtidor.distanciaParaMostrar!),
                             const Spacer(),
                             FilledButton(
                               key: Key('ir-${surtidor.id}'),
@@ -219,7 +218,8 @@ class _FilaSurtidor extends StatelessWidget {
                                 minimumSize: const Size(44, 30),
                                 padding: const EdgeInsets.symmetric(horizontal: 14),
                               ),
-                              onPressed: () => abrirComoLlegar(context, surtidor),
+                              // #191: «Ir» abre directamente la navegación hasta el surtidor.
+                              onPressed: () => irA(context, surtidor.ubicacion, surtidor.nombre),
                               child: const Text('Ir'),
                             ),
                           ],
@@ -229,15 +229,6 @@ class _FilaSurtidor extends StatelessWidget {
                   ),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(width: 4),
-          // RNF-07: de dónde vino el último dato.
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: SizedBox(
-              width: 22,
-              child: sinDatos || ultimo == null ? null : EtiquetaOrigen(origen: ultimo.origen, soloIcono: true),
             ),
           ),
           IconButton(

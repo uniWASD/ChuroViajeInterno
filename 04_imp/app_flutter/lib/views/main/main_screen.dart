@@ -11,6 +11,8 @@ import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
 import '../../controllers/recarga_controller.dart';
+import '../../controllers/reporte_controller.dart';
+import '../../controllers/ruta_controller.dart';
 import '../busqueda/barra_busqueda.dart';
 import '../map/map_screen.dart';
 import '../events/events_screen.dart';
@@ -38,6 +40,7 @@ class _MainScreenState extends State<MainScreen> {
   Timer? _ventana;
   EventosController? _eventos;
   RecargaController? _recarga;
+  ReporteController? _reporte;
 
   @override
   void didChangeDependencies() {
@@ -52,6 +55,21 @@ class _MainScreenState extends State<MainScreen> {
       _recarga?.removeListener(_mostrarMensajesRecarga);
       _recarga = recarga..addListener(_mostrarMensajesRecarga);
     }
+    final reporte = context.read<ReporteController>();
+    if (!identical(reporte, _reporte)) {
+      _reporte?.removeListener(_mostrarMensajesReporte);
+      _reporte = reporte..addListener(_mostrarMensajesReporte);
+    }
+  }
+
+  /// #191: la hoja «Notificar evento» se cierra sola al enviar; su mensaje se muestra aquí.
+  void _mostrarMensajesReporte() {
+    if (!mounted) return;
+    final mensajero = ScaffoldMessenger.maybeOf(context);
+    if (mensajero == null) return;
+    for (var m = _reporte!.tomarAviso(); m != null; m = _reporte!.tomarAviso()) {
+      mensajero.showSnackBar(SnackBar(content: Text(m)));
+    }
   }
 
   @override
@@ -59,6 +77,7 @@ class _MainScreenState extends State<MainScreen> {
     _ventana?.cancel();
     _eventos?.removeListener(_mostrarMensajes);
     _recarga?.removeListener(_mostrarMensajesRecarga);
+    _reporte?.removeListener(_mostrarMensajesReporte);
     super.dispose();
   }
 
@@ -93,8 +112,10 @@ class _MainScreenState extends State<MainScreen> {
     MapController mapa,
     BusquedaController busqueda,
     CombustibleController combustible,
+    ReporteController reporte,
   ) =>
       busqueda.abierta ||
+      reporte.abierto ||
       eventos.seleccionado != null ||
       combustible.seleccionado != null ||
       mapa.puntoSeleccionado != null;
@@ -106,9 +127,16 @@ class _MainScreenState extends State<MainScreen> {
     final mapa = context.read<MapController>();
     final busqueda = context.read<BusquedaController>();
     final combustible = context.read<CombustibleController>();
+    final reporte = context.read<ReporteController>();
+    final ruta = context.read<RutaController>();
     // 1. La lista de la búsqueda (y el teclado) se cierra.
     if (busqueda.abierta) {
       busqueda.cerrar();
+      return;
+    }
+    // #191: la hoja «Notificar evento» se cierra.
+    if (pestanas.selectedIndex == AppTab.map.index && reporte.abierto) {
+      reporte.cerrar();
       return;
     }
     // 2. El detalle de un evento (en el Mapa o en Eventos) o un punto abierto se cierra.
@@ -125,7 +153,15 @@ class _MainScreenState extends State<MainScreen> {
     }
     if (pestanas.selectedIndex == AppTab.map.index &&
         mapa.puntoSeleccionado != null) {
-      mapa.limpiarPunto();
+      // #191: primero se deja de elegir la parada, después se cierra la ruta y al final el lugar.
+      if (ruta.eligiendoParada) {
+        ruta.cancelarParada();
+      } else if (ruta.mostrando && ruta.destino == mapa.puntoSeleccionado) {
+        ruta.ocultar(mapa.posicion);
+      } else {
+        ruta.limpiar();
+        mapa.limpiarPunto();
+      }
       return;
     }
     // 3. Desde otra pestaña, se vuelve al Mapa.
@@ -156,6 +192,7 @@ class _MainScreenState extends State<MainScreen> {
     final busqueda = context.watch<BusquedaController>();
     final combustible = context.watch<CombustibleController>();
     final recarga = context.watch<RecargaController>();
+    final reporte = context.watch<ReporteController>();
     return Consumer<NavigationController>(
       builder: (context, controller, child) {
         final enElMapa = controller.selectedIndex == AppTab.map.index;
@@ -165,7 +202,7 @@ class _MainScreenState extends State<MainScreen> {
           canPop:
               _puedeSalir &&
               enElMapa &&
-              !_hayAlgoAbierto(eventos, mapa, busqueda, combustible),
+              !_hayAlgoAbierto(eventos, mapa, busqueda, combustible, reporte),
           onPopInvokedWithResult: (salio, _) => _alVolver(salio),
           // Sin encabezado, el mapa llega hasta arriba: los íconos de la barra de estado van oscuros.
           child: AnnotatedRegion<SystemUiOverlayStyle>(

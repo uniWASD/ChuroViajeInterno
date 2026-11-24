@@ -76,7 +76,7 @@ void main() {
     expect(ubicacion.ajustesAbiertos, 1);
   });
 
-  testWidgets('Tocar el mapa devuelve las coordenadas del punto', (
+  testWidgets('Tocar el mapa elige el punto y abre su hoja (#191)', (
     tester,
   ) async {
     await tester.pumpWidget(app());
@@ -86,13 +86,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Punto elegido'), findsOneWidget);
-    expect(find.text('-21.541756, -64.725011'), findsOneWidget);
+    expect(find.byKey(const Key('hoja-lugar')), findsOneWidget);
     expect(
       mapa.ultimo!.puntoSeleccionado,
       const Coordenada(-21.541756, -64.725011),
     );
 
-    await tester.tap(find.byTooltip('Quitar el punto'));
+    await tester.tap(find.byTooltip('Quitar el lugar'));
     await tester.pumpAndSettle();
     expect(find.text('Punto elegido'), findsNothing);
   });

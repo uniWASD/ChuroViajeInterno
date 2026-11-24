@@ -11,7 +11,6 @@ import 'package:app_flutter/models/ruta.dart';
 import 'package:app_flutter/services/api/api_client.dart';
 import 'package:app_flutter/views/map/map_screen.dart';
 import 'package:app_flutter/views/navegacion/navegacion_activa_screen.dart';
-import 'package:app_flutter/views/ruta/como_llegar_screen.dart';
 
 import 'dobles/dobles_mapa.dart';
 import 'dobles/dobles_sesion.dart';
@@ -46,11 +45,10 @@ void main() {
     await tester.pumpAndSettle();
     ubicacion.emitir(esquinaA);
     await tester.pump();
-    await tester.tap(find.text('Cómo llegar'));
+    // #191: el destino se toca en el mapa principal, «Cómo llegar» muestra la ruta y «Iniciar» la empieza.
+    mapa.ultimo!.alTocar(esquinaC);
     await tester.pumpAndSettle();
-    mapa.comoLlegar!.alTocar(esquinaC);
-    await tester.pump();
-    await tester.tap(find.text('Calcular ruta'));
+    await tester.tap(find.byKey(const Key('como-llegar-lugar')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('iniciar-navegacion')));
     await tester.pumpAndSettle();
@@ -66,7 +64,9 @@ void main() {
   testWidgets('CP-107: al tocar «Iniciar», la vista Navegación activa sigue la posición del conductor', (tester) async {
     await iniciarNavegacion(tester);
     expect(find.byType(NavegacionActivaScreen), findsOneWidget);
-    expect(find.byType(ComoLlegarScreen), findsNothing, reason: 'Navegación activa reemplaza a Cómo llegar');
+    expect(find.byKey(const Key('hoja-ruta')), findsNothing, reason: 'la Navegación activa va encima del mapa');
+    // #191 (punto 7): abre en el conductor, no en el destino.
+    expect(mapa.navegacion!.centro, esquinaA);
     expect(mapa.navegacion!.seguirUbicacion, isTrue);
     expect(mapa.navegacion!.mostrarUbicacion, isTrue);
     expect(mapa.navegacion!.trazado, rutaEnL.trazado);

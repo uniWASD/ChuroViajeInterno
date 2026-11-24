@@ -8,12 +8,15 @@ import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
 import '../../controllers/recarga_controller.dart';
 import '../../controllers/reporte_controller.dart';
+import '../../controllers/ruta_controller.dart';
+import '../../models/coordenada.dart';
+import '../../models/trafico.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
 import '../busqueda/barra_busqueda.dart';
 import '../events/aviso_desactualizados.dart';
 import '../events/detalle_evento.dart';
-import '../reporte/reportar_evento_screen.dart';
-import '../ruta/como_llegar_screen.dart';
+import '../reporte/hoja_notificar.dart';
+import '../ruta/hoja_ruta.dart';
 import '../stations/detalle_surtidor.dart';
 import '../stations/estilo_surtidor.dart';
 import '../tema/tema.dart';
@@ -88,9 +91,17 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     final enElMapa =
         context.watch<NavigationController>().selectedIndex == AppTab.map.index;
     final combustible = context.watch<CombustibleController>();
+    final ruta = context.watch<RutaController>();
+    final reporte = context.watch<ReporteController>();
     return Consumer2<MapController, EventosController>(
       builder: (context, controller, eventos, child) {
         final surtidorAbierto = eventos.seleccionado == null ? combustible.seleccionado : null;
+        final punto = controller.puntoSeleccionado;
+        // #191: «Cómo llegar» se ve en este mismo mapa, hacia el lugar elegido.
+        final enRuta = ruta.mostrando && punto != null && ruta.destino == punto;
+        final rutaVisible = enRuta ? ruta.ruta : null;
+        final congestiones = unirCongestiones(eventos.eventos);
+        final notificando = enElMapa && reporte.abierto;
         return Stack(
           children: [
             Positioned.fill(
@@ -100,8 +111,18 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                   context,
                   DatosMapa(
                     mostrarUbicacion: controller.siguiendoUbicacion,
-                    puntoSeleccionado: controller.puntoSeleccionado,
-                    eventos: marcasDeEventos(eventos),
+                    // Mientras se notifica, el pin marca dónde va el evento (o ninguno, si va en la posición).
+                    puntoSeleccionado: notificando ? reporte.puntoManual : punto,
+                    marcas: [
+                      if (enRuta)
+                        for (final p in ruta.paradas) MarcaMapa(p, TipoMarca.parada),
+                    ],
+                    trazado: rutaVisible?.trazado ?? const [],
+                    // #191: la ruta de amarillo o de rojo donde pasa por una congestión.
+                    trafico: rutaVisible == null
+                        ? const []
+                        : pintarRutaPorTrafico(rutaVisible.trazado, congestiones),
+                    eventos: marcasDeEventos(eventos, congestiones: congestiones),
                     alTocarEvento: (id) {
                       combustible.cerrarFicha();
                       eventos.seleccionar(id);
@@ -117,7 +138,8 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         combustible.seleccionado?.ubicacion ??
                         controller.foco,
                     tapadoAbajo: 0.3,
-                    alTocar: controller.seleccionarPunto,
+                    alTocar: (c) => _alTocarMapa(context, c),
+                    alTocarLugar: (c, nombre) => _alTocarMapa(context, c, nombre: nombre),
                     alFallar: controller.informarErrorMapa,
                   ),
                 ),
@@ -125,16 +147,23 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
             ),
             if (controller.errorMapa != null)
               Positioned.fill(child: AvisoErrorMapa(controller: controller)),
-            if (enElMapa && (eventos.desactualizados || eventos.sinActualizar))
+            if (enElMapa && (eventos.desactualizados || eventos.sinActualizar || ruta.eligiendoParada))
               // Debajo de la barra de búsqueda (D-47). Con los eventos guardados (RN-02.9), su marca; si no, el
-              // aviso de que no se pudo actualizar (RN-02.8).
+              // aviso de que no se pudo actualizar (RN-02.8). Mientras se elige una parada, cómo hacerlo.
               Positioned(
                 top: MediaQuery.paddingOf(context).top + BarraBusqueda.espacio,
                 left: 8,
                 right: 8,
-                child: eventos.desactualizados
-                    ? AvisoDesactualizados(eventos: eventos)
-                    : const _AvisoSinActualizar(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (eventos.desactualizados)
+                      AvisoDesactualizados(eventos: eventos)
+                    else if (eventos.sinActualizar)
+                      const _AvisoSinActualizar(),
+                    if (ruta.eligiendoParada) const AvisoElegirParada(),
+                  ],
+                ),
               ),
             if (enElMapa)
               Positioned(
@@ -151,38 +180,24 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: FloatingActionButton.extended(
-                              heroTag: 'reportar-evento',
-                              // #172: «Notificar» va en el rojo suave del diseño.
-                              backgroundColor: ColoresChuro.rojoSuave,
-                              onPressed: () {
-                                context.read<ReporteController>().empezar();
-                                Navigator.of(context)
-                                    .push(ReportarEventoScreen.ruta());
-                              },
-                              icon: const Icon(
-                                Icons.notifications_active_outlined,
+                          // #191: solo la campana, para notificar en la posición del conductor en 3 toques (RNF-06).
+                          if (!notificando && !enRuta)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: FloatingActionButton(
+                                key: const Key('boton-notificar'),
+                                heroTag: 'notificar-evento',
+                                tooltip: 'Notificar evento',
+                                backgroundColor: ColoresChuro.rojoSuave,
+                                shape: const CircleBorder(),
+                                onPressed: () {
+                                  eventos.cerrarFicha();
+                                  combustible.cerrarFicha();
+                                  reporte.empezar();
+                                },
+                                child: const Icon(Icons.notifications_active_outlined),
                               ),
-                              label: const Text('Reportar evento'),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Align(
-                            alignment: Alignment.centerRight,
-                            child: FloatingActionButton.extended(
-                              heroTag: 'como-llegar',
-                              onPressed: () => Navigator.of(context).push(
-                                ComoLlegarScreen.ruta(
-                                  context,
-                                  destinoInicial: controller.puntoSeleccionado,
-                                ),
-                              ),
-                              icon: const Icon(Icons.directions),
-                              label: const Text('Cómo llegar'),
-                            ),
-                          ),
                           const SizedBox(height: 8),
                           const _ReportesPendientes(),
                           if (controller.permiso != null &&
@@ -192,7 +207,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                       ),
                     ),
                     // #172: lo que se abre sobre el mapa va en una hoja inferior con asa, como en el diseño.
-                    if (eventos.seleccionado != null)
+                    if (notificando)
+                      const HojaInferior(child: HojaNotificar())
+                    else if (eventos.seleccionado != null)
                       HojaInferior(
                         child: DetalleEvento(
                           evento: eventos.seleccionado!,
@@ -207,9 +224,17 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                           combustible: combustible,
                         ),
                       )
-                    else if (controller.puntoSeleccionado != null)
+                    else if (enRuta)
                       HojaInferior(
-                        child: _PuntoElegido(controller: controller),
+                        child: HojaRuta(nombre: controller.nombrePunto, posicion: controller.posicion),
+                      )
+                    else if (punto != null)
+                      HojaInferior(
+                        child: HojaLugar(
+                          punto: punto,
+                          nombre: controller.nombrePunto,
+                          posicion: controller.posicion,
+                        ),
                       ),
                   ],
                 ),
@@ -218,6 +243,27 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         );
       },
     );
+  }
+
+  /// #191: un toque en el mapa (o en un lugar conocido, con su [nombre]) depende de lo que esté abierto: con
+  /// «Notificar evento» cambia el punto del evento; después de «Otra parada», es la parada; con la ruta a la vista no
+  /// hace nada, como en Google Maps; si no, elige el lugar y abre su hoja.
+  void _alTocarMapa(BuildContext context, Coordenada punto, {String? nombre}) {
+    final mapa = context.read<MapController>();
+    final reporte = context.read<ReporteController>();
+    final ruta = context.read<RutaController>();
+    if (reporte.abierto) {
+      reporte.usarPunto(punto);
+      return;
+    }
+    if (ruta.eligiendoParada) {
+      ruta.agregarParada(punto, mapa.posicion);
+      return;
+    }
+    if (ruta.mostrando && ruta.destino == mapa.puntoSeleccionado) return;
+    context.read<EventosController>().cerrarFicha();
+    context.read<CombustibleController>().cerrarFicha();
+    mapa.seleccionarPunto(punto, nombre: nombre);
   }
 }
 
@@ -255,19 +301,36 @@ class _ReportesPendientes extends StatelessWidget {
 }
 
 /// Los eventos vigentes con el color de su tipo, tomado de los catálogos guardados (RN-02.7). Las congestiones con
-/// trazado llevan su nivel y su trazado, para dibujarse como línea (RN-04.25).
-List<MarcaEvento> marcasDeEventos(EventosController eventos) {
+/// trazado se dibujan como línea (RN-04.25) y, desde #191, las cuadras seguidas del mismo sentido y nivel se unen en
+/// una sola línea de donde empieza a donde acaba. Al tocarla se abre la primera.
+List<MarcaEvento> marcasDeEventos(EventosController eventos, {List<CongestionUnida>? congestiones}) {
   final catalogos = eventos.catalogos;
+  final lista = eventos.eventos;
+  final unidas = congestiones ?? unirCongestiones(lista);
+  final enLinea = {for (final u in unidas) ...u.ids};
+  final colorCongestion = catalogos?.tipo('CONGESTION')?.colorFlutter ?? Colors.grey;
+  final porId = {for (final e in lista) e.id: e};
   return [
-    for (final e in eventos.eventos)
+    for (final e in lista)
+      if (!enLinea.contains(e.id))
+        MarcaEvento(
+          id: e.id,
+          coordenada: e.ubicacion,
+          color: catalogos?.tipo(e.tipo)?.colorFlutter ?? Colors.grey,
+          confirmado: e.confirmado,
+          tipo: e.tipo,
+          nivel: e.nivel,
+          trazado: e.trazado,
+        ),
+    for (final u in unidas)
       MarcaEvento(
-        id: e.id,
-        coordenada: e.ubicacion,
-        color: catalogos?.tipo(e.tipo)?.colorFlutter ?? Colors.grey,
-        confirmado: e.confirmado,
-        tipo: e.tipo,
-        nivel: e.nivel,
-        trazado: e.trazado,
+        id: u.id,
+        coordenada: porId[u.id]?.ubicacion ?? u.trazado.first,
+        color: colorCongestion,
+        confirmado: false,
+        tipo: 'CONGESTION',
+        nivel: u.nivel,
+        trazado: u.trazado,
       ),
   ];
 }
@@ -324,48 +387,6 @@ class AvisoErrorMapa extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _PuntoElegido extends StatelessWidget {
-  final MapController controller;
-
-  const _PuntoElegido({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    final punto = controller.puntoSeleccionado!;
-    return Row(
-      children: [
-        const Icon(Icons.place, color: ColoresChuro.rojo),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // D-47: si vino de la búsqueda, su nombre.
-              Text(
-                controller.nombrePunto ?? 'Punto elegido',
-                style: const TextStyle(fontSize: 20),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              Text(
-                '${punto.latitud.toStringAsFixed(6)}, ${punto.longitud.toStringAsFixed(6)}',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: ColoresChuro.textoSecundario,
-                ),
-              ),
-            ],
-          ),
-        ),
-        BotonCerrarHoja(
-          alTocar: controller.limpiarPunto,
-          tooltip: 'Quitar el punto',
-        ),
-      ],
     );
   }
 }

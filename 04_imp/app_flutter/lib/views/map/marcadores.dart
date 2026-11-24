@@ -36,6 +36,22 @@ class Marcadores {
     return png;
   }
 
+  /// #191: el pin rojo del lugar elegido, como en el diseño: la gota con un punto blanco.
+  Future<Uint8List> dePin(Color color) async {
+    final clave = 'pin|${color.toARGB32()}';
+    final hecho = _hechos[clave];
+    if (hecho != null) return hecho;
+    final png = await dibujarMarcador(
+      icono: Icons.circle,
+      color: color,
+      confirmado: false,
+      escala: escala,
+      tamanoIcono: 13,
+    );
+    _hechos[clave] = png;
+    return png;
+  }
+
   Future<Uint8List> de({required String tipo, required Color color, required bool confirmado}) async {
     final clave = '$tipo|${color.toARGB32()}|$confirmado';
     final hecho = _hechos[clave];
@@ -52,6 +68,7 @@ Future<Uint8List> dibujarMarcador({
   required Color color,
   required bool confirmado,
   double escala = 3,
+  double tamanoIcono = 22,
 }) async {
   final grabadora = ui.PictureRecorder();
   final lienzo = Canvas(grabadora)..scale(escala);
@@ -80,7 +97,7 @@ Future<Uint8List> dibujarMarcador({
   final texto = TextPainter(
     text: TextSpan(
       text: String.fromCharCode(icono.codePoint),
-      style: TextStyle(fontSize: 22, fontFamily: icono.fontFamily, package: icono.fontPackage, color: Colors.white),
+      style: TextStyle(fontSize: tamanoIcono, fontFamily: icono.fontFamily, package: icono.fontPackage, color: Colors.white),
     ),
     textDirection: TextDirection.ltr,
   )..layout();

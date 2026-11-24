@@ -11,7 +11,6 @@ import 'package:app_flutter/services/rutas/servicio_rutas.dart';
 import 'package:app_flutter/services/ubicacion/servicio_ubicacion.dart';
 import 'package:app_flutter/views/map/mapa_base.dart';
 import 'package:app_flutter/views/navegacion/navegacion_activa_screen.dart';
-import 'package:app_flutter/views/ruta/como_llegar_screen.dart';
 
 /// Ubicación falsa: decide qué responde el permiso y deja emitir posiciones a mano.
 class UbicacionFalsa implements ServicioUbicacion {
@@ -78,26 +77,18 @@ class UbicacionFalsa implements ServicioUbicacion {
 
 /// Mapa falso: un recuadro que guarda lo último que le pidió cada vista.
 class MapaFalso {
-  /// Lo último que pidió la vista Mapa principal.
+  /// Lo último que pidió la vista Mapa principal (también con «Cómo llegar», que desde #191 va en ella).
   DatosMapa? ultimo;
-
-  /// Lo último que pidió la vista Cómo llegar (que se abre encima de la principal).
-  DatosMapa? comoLlegar;
 
   /// Lo último que pidió la vista Navegación activa.
   DatosMapa? navegacion;
   int construcciones = 0;
 
   Widget construir(BuildContext context, DatosMapa datos) {
-    final enComoLlegar =
-        context.widget is ComoLlegarScreen ||
-        context.findAncestorWidgetOfExactType<ComoLlegarScreen>() != null;
     final enNavegacion = context.widget is NavegacionActivaScreen ||
         context.findAncestorWidgetOfExactType<NavegacionActivaScreen>() != null;
     if (enNavegacion) {
       navegacion = datos;
-    } else if (enComoLlegar) {
-      comoLlegar = datos;
     } else {
       ultimo = datos;
     }

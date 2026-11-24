@@ -13,15 +13,18 @@ class Inicio extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final estado = context.select<SesionController, EstadoSesion>((s) => s.estado);
-    if (estado == EstadoSesion.sinSesion && !_reporteAbierto(context)) {
-      // Si la sesión se perdió con otra vista abierta encima (por ejemplo, Cómo llegar), se cierra. Reportar evento
-      // queda abierta para no perder lo que el conductor eligió: al confirmar, se cierra sola (RN-01.16).
+    final reporteAbierto = _reporteAbierto(context);
+    if (estado == EstadoSesion.sinSesion && !reporteAbierto) {
+      // Si la sesión se perdió con otra vista abierta encima (por ejemplo, la Navegación), se cierra.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) Navigator.of(context).popUntil((ruta) => ruta.isFirst);
       });
     }
     return switch (estado) {
       EstadoSesion.cargando => const CargandoSesion(),
+      // La hoja «Notificar evento» queda abierta para no perder lo que el conductor eligió: al enviar, se cierra sola
+      // y recién entonces se pide iniciar sesión (RN-01.16).
+      EstadoSesion.sinSesion when reporteAbierto => const MainScreen(),
       EstadoSesion.sinSesion => const InicioSesionScreen(),
       EstadoSesion.conSesion => const MainScreen(),
     };
@@ -29,7 +32,7 @@ class Inicio extends StatelessWidget {
 
   static bool _reporteAbierto(BuildContext context) {
     try {
-      return context.read<ReporteController>().abierto;
+      return context.select<ReporteController, bool>((r) => r.abierto);
     } on ProviderNotFoundException {
       return false;
     }

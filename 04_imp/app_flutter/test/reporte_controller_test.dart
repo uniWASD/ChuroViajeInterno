@@ -126,6 +126,63 @@ void main() {
     });
   });
 
+  test('CP-194: un punto elegido a 1 km o menos se envía con la posición del conductor (RN-01.5)', () async {
+    await preparar();
+    reporte.empezar(punto: const Coordenada(-21.5275, -64.7296)); // unos 890 m al norte
+    expect(reporte.fueraDeAlcance, isFalse);
+    reporte.elegirTipo('BLOQUEO');
+    await reporte.confirmar();
+
+    expect(reporte.estado, EstadoReporte.enviado);
+    expect(backend.reportesEnviados().single['ubicacion'], {'latitud': -21.5275, 'longitud': -64.7296});
+    expect(backend.reportesEnviados().single['posicionConductor'], {'latitud': -21.5355, 'longitud': -64.7296});
+  });
+
+  test('CP-194: un punto a más de 1 km no se envía y se avisa; al tocar uno más cerca se puede enviar', () async {
+    await preparar();
+    reporte.empezar(punto: const Coordenada(-21.5250, -64.7296)); // unos 1170 m al norte
+    reporte.elegirTipo('ACCIDENTE');
+    expect(reporte.fueraDeAlcance, isTrue);
+    expect(reporte.estado, EstadoReporte.fueraDeAlcance);
+    expect(reporte.mensaje, ReporteController.mensajeFueraDeAlcance);
+    expect(reporte.puedeConfirmar, isFalse);
+    await reporte.confirmar();
+    expect(backend.reportesEnviados(), isEmpty);
+
+    reporte.usarPunto(const Coordenada(-21.5300, -64.7296)); // unos 610 m
+    expect(reporte.estado, EstadoReporte.eligiendo);
+    expect(reporte.mensaje, isNull);
+    await reporte.confirmar();
+    expect(backend.reportesEnviados(), hasLength(1));
+  });
+
+  test('CP-194: en la posición del conductor no se manda posicionConductor (no hace falta)', () async {
+    await preparar();
+    reporte.elegirTipo('OTRO');
+    await reporte.confirmar();
+    expect(backend.reportesEnviados().single.containsKey('posicionConductor'), isFalse);
+  });
+
+  test('Si el backend lo rechaza por lejano, se muestra su mensaje', () async {
+    await preparar();
+    backend.rechazo = {'codigo': 'UBICACION_LEJANA', 'mensaje': 'Solo puedes reportar eventos a 1 km de donde estás.'};
+    backend.estadoRechazo = 422;
+    reporte.empezar(punto: const Coordenada(-21.5300, -64.7296));
+    reporte.elegirTipo('OTRO');
+    await reporte.confirmar();
+    expect(reporte.estado, EstadoReporte.rechazado);
+    expect(reporte.mensaje, 'Solo puedes reportar eventos a 1 km de donde estás.');
+  });
+
+  test('Al enviarse, la hoja se cierra sola y deja su mensaje para la pantalla', () async {
+    await preparar();
+    reporte.elegirTipo('OTRO');
+    await reporte.confirmar();
+    expect(reporte.abierto, isFalse);
+    expect(reporte.tomarAviso(), ReporteController.mensajeEnviado);
+    expect(reporte.tomarAviso(), isNull);
+  });
+
   test('CP-58: con el GPS apagado, el conductor ajusta el punto en el mapa y el reporte se envía con ese punto', () async {
     await preparar(conGps: false);
     reporte.elegirTipo('BLOQUEO');
@@ -199,7 +256,7 @@ void main() {
     expect(enviado['horaConfirmacion'], '2026-11-01T14:00:00.000Z', reason: 'la hora de la confirmación original');
   });
 
-  testWidgets('CP-57: desde el mapa, el reporte se completa en 3 toques: «Reportar evento», el tipo y «Confirmar»', (tester) async {
+  testWidgets('CP-57 y CP-199: desde el mapa, el reporte se completa en 3 toques: la campana, el tipo y «Enviar»', (tester) async {
     final enviados = <Map<String, dynamic>>[];
     final api = ApiClient(client: MockClient(sinEventos((pedido) async {
       if (pedido.url.path == '/eventos') {
@@ -238,9 +295,17 @@ void main() {
     ubicacionWidget.emitir(const Coordenada(-21.5355, -64.7296));
     await tester.pump();
 
-    await tester.tap(find.text('Reportar evento')); // 1
+    await tester.tap(find.byKey(const Key('boton-notificar'))); // 1
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Control policial')); // 2
+    // La hoja del diseño: tipos y tiempos cortos, sin imagen ni comentario.
+    expect(find.text('Notificar evento'), findsOneWidget);
+    expect(find.text('Policía'), findsOneWidget);
+    expect(find.text('Un momento'), findsOneWidget);
+    expect(find.text('30 min'), findsOneWidget);
+    expect(find.textContaining('Comentario'), findsNothing);
+    expect(find.textContaining('Imagen'), findsNothing);
+    expect(find.byType(TextField).hitTestable(), findsOneWidget, reason: 'solo el de la barra de búsqueda');
+    await tester.tap(find.text('Policía')); // 2
     await tester.pump();
     await tester.tap(find.byKey(const Key('confirmar-reporte'))); // 3
     await tester.pumpAndSettle();
@@ -248,10 +313,11 @@ void main() {
     expect(enviados.single['tipo'], 'CONTROL_POLICIAL');
     expect(enviados.single['minutosElegidos'], 5);
     expect(find.text(ReporteController.mensajeEnviado), findsOneWidget);
-    expect(find.text('Cómo llegar'), findsOneWidget, reason: 'vuelve al mapa');
+    expect(find.byKey(const Key('hoja-notificar')), findsNothing, reason: 'la hoja se cerró');
+    expect(find.byKey(const Key('boton-notificar')), findsOneWidget, reason: 'vuelve al mapa');
   });
 
-  testWidgets('RN-01.16: si la sesión vence mientras se llena el reporte, la vista sigue abierta y el reporte se envía '
+  testWidgets('RN-01.16: si la sesión vence mientras se llena el reporte, la hoja sigue abierta y el reporte se envía '
       'al volver a iniciar sesión', (tester) async {
     final backend = BackendReportes();
     var ahora = DateTime.now().toUtc();
@@ -290,9 +356,9 @@ void main() {
     await tester.pumpAndSettle();
     ubicacionWidget.emitir(const Coordenada(-21.5355, -64.7296));
     await tester.pump();
-    await tester.tap(find.text('Reportar evento'));
+    await tester.tap(find.byKey(const Key('boton-notificar')));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Control policial'));
+    await tester.tap(find.text('Policía'));
     await tester.pump();
 
     // Mientras el conductor elige, vence el JWT y la renovación ya no vale: la consulta de eventos pierde la sesión.
@@ -302,7 +368,7 @@ void main() {
     await tester.pump();
     expect(tester.element(find.byKey(const Key('confirmar-reporte'))).read<SesionController>().estado,
         EstadoSesion.sinSesion);
-    expect(find.byKey(const Key('confirmar-reporte')), findsOneWidget, reason: 'la vista no se cerró');
+    expect(find.byKey(const Key('confirmar-reporte')), findsOneWidget, reason: 'la hoja no se cerró');
 
     await tester.tap(find.byKey(const Key('confirmar-reporte')));
     await tester.pumpAndSettle();
@@ -317,7 +383,10 @@ void main() {
     expect(enviados.single.headers['Authorization'], isNot('Bearer jwt-0'));
     expect(cola.filas, isEmpty);
 
-    await tester.tap(find.text('Reportar evento'));
+    // El aviso de «se envió» tapa por un momento la campana.
+    ScaffoldMessenger.of(tester.element(find.byType(MainScreen))).clearSnackBars();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('boton-notificar')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('confirmar-reporte')), findsOneWidget, reason: 'se puede empezar otro reporte');
     expect(tester.widget<FilledButton>(find.byKey(const Key('confirmar-reporte'))).onPressed, isNull,

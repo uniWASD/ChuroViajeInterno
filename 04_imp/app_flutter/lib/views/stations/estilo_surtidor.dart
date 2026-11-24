@@ -47,10 +47,22 @@ String haceCuanto(DateTime fecha, DateTime ahora) {
   return '${minutos ~/ 60} h';
 }
 
-/// La hora del dato en el teléfono, como «16:50».
-String horaDe(DateTime fecha) {
-  final local = fecha.toLocal();
-  return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+/// #191: la distancia a un surtidor con el auto a la izquierda, como en la hoja del lugar.
+class DistanciaEnAuto extends StatelessWidget {
+  final String distancia;
+
+  const DistanciaEnAuto({super.key, required this.distancia});
+
+  @override
+  Widget build(BuildContext context) => Row(
+    key: const Key('distancia-en-auto'),
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      const Icon(Icons.directions_car, size: 16, color: ColoresChuro.textoSecundario),
+      const SizedBox(width: 4),
+      Text(distancia, style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario)),
+    ],
+  );
 }
 
 /// La barra vertical de color del diseño.
@@ -101,8 +113,9 @@ class EtiquetaOrigen extends StatelessWidget {
   }
 }
 
-/// Una línea por combustible: la barra (verde si hay, roja si no), el nombre, la fila si se conoce, el origen y
-/// cuándo llegó el dato. Si el origen es ANH, también el saldo en litros y el estado de ANH (RN-05.4).
+/// Una línea por combustible: la barra (verde si hay, roja si no), el nombre (con los litros entre paréntesis si
+/// el dato es de ANH, «Gasolina (19 L)»), la fila si se conoce, el origen y hace cuánto llegó el dato (RN-05.4).
+/// Desde #191 no se muestran la hora exacta ni el estado de ANH: el ícono del origen ya dice de dónde vino.
 class LineaCombustible extends StatelessWidget {
   final EstadoCombustible dato;
   final DateTime ahora;
@@ -114,9 +127,8 @@ class LineaCombustible extends StatelessWidget {
     final detalles = [
       dato.disponible ? 'Disponible' : 'Agotado',
       ?dato.filaParaMostrar,
-      if (dato.origen == OrigenDato.anh && dato.litros != null) '${_litros(dato.litros!)} L',
-      if (dato.origen == OrigenDato.anh && dato.estadoAnhParaMostrar != null) 'estado ANH ${dato.estadoAnhParaMostrar}',
     ];
+    final litros = dato.origen == OrigenDato.anh && dato.litros != null ? ' (${_litros(dato.litros!)} L)' : '';
     return Padding(
       key: Key('combustible-${dato.tipo}'),
       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -129,7 +141,7 @@ class LineaCombustible extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(dato.nombreParaMostrar, style: const TextStyle(fontSize: 15)),
+                Text('${dato.nombreParaMostrar}$litros', style: const TextStyle(fontSize: 15)),
                 Text(
                   detalles.join(' · '),
                   style: const TextStyle(fontSize: 13, color: ColoresChuro.textoSecundario),
@@ -143,7 +155,7 @@ class LineaCombustible extends StatelessWidget {
               EtiquetaOrigen(origen: dato.origen),
               const SizedBox(height: 2),
               Text(
-                '${horaDe(dato.fecha)} · ${_hace(haceCuanto(dato.fecha, ahora))}',
+                _hace(haceCuanto(dato.fecha, ahora)),
                 style: const TextStyle(fontSize: 12, color: ColoresChuro.textoSecundario),
               ),
             ],

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import '../../models/coordenada.dart';
+import '../../models/trafico.dart';
 
 enum TipoMarca { punto, origen, parada, destino }
 
@@ -80,9 +81,9 @@ class MarcaSurtidor {
   int get hashCode => Object.hash(id, coordenada, color);
 }
 
-/// Los colores de la congestión dibujada como línea (P-06): naranja si está congestionada y rojo si está muy
-/// congestionada, como el tráfico de Google Maps.
-const Color colorCongestionado = Color(0xFFF29900);
+/// Los colores del tráfico (P-06, #191): amarillo si está congestionado y rojo si está muy congestionado, como el
+/// tráfico de Google Maps. Se usan en la congestión del mapa y en la ruta.
+const Color colorCongestionado = Color(0xFFF2B600);
 const Color colorMuyCongestionado = Color(0xFFD93025);
 
 Color colorDeNivel(String? nivel) =>
@@ -110,6 +111,9 @@ class DatosMapa {
   /// El trazado de la ruta calculada, si hay una; el mapa la dibuja y la encuadra.
   final List<Coordenada> trazado;
 
+  /// #191: las partes de la ruta que pasan por una congestión; se pintan de amarillo o de rojo encima de la ruta.
+  final List<LineaTrafico> trafico;
+
   /// Los eventos viales vigentes (CU-02).
   final List<MarcaEvento> eventos;
 
@@ -131,6 +135,10 @@ class DatosMapa {
   /// El conductor tocó el mapa en esa coordenada.
   final ValueChanged<Coordenada> alTocar;
 
+  /// #191: el conductor tocó un lugar conocido del mapa base (por ejemplo, «Mercado Negro»): su punto y su nombre.
+  /// Sin este callback, tocar un lugar cuenta como tocar el mapa.
+  final void Function(Coordenada punto, String nombre)? alTocarLugar;
+
   /// El mapa base no pudo cargar; el texto es el detalle técnico, para el registro.
   final ValueChanged<String> alFallar;
 
@@ -141,6 +149,7 @@ class DatosMapa {
     this.puntoSeleccionado,
     this.marcas = const [],
     this.trazado = const [],
+    this.trafico = const [],
     this.eventos = const [],
     this.alTocarEvento,
     this.surtidores = const [],
@@ -148,6 +157,7 @@ class DatosMapa {
     this.foco,
     this.tapadoAbajo = 0,
     required this.alTocar,
+    this.alTocarLugar,
     required this.alFallar,
   });
 }

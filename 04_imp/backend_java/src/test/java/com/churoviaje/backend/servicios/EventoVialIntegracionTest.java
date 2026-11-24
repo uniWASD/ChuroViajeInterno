@@ -265,4 +265,47 @@ class EventoVialIntegracionTest extends PruebaIntegracionPostgis {
         reportar(999_999L, cuerpo("ACCIDENTE", LAT, LON, 0)).andExpect(status().isUnauthorized());
         assertEquals(0, eventosGuardados());
     }
+
+    private String cuerpoConPosicion(double lat, double lon, double latConductor, double lonConductor) {
+        return "{\"tipo\":\"BLOQUEO\",\"ubicacion\":{\"latitud\":" + lat + ",\"longitud\":" + lon + "},"
+                + "\"posicionConductor\":{\"latitud\":" + latConductor + ",\"longitud\":" + lonConductor + "},"
+                + "\"horaConfirmacion\":\"" + ahoraEnBolivia(Duration.ZERO) + "\",\"minutosElegidos\":0}";
+    }
+
+    @Test
+    @DisplayName("CP-192: un punto a 1 km o menos de la posicion del conductor se registra (RN-01.5, P-39)")
+    void cp192PuntoCercanoSeRegistra() throws Exception {
+        // 0,0081 grados de latitud son unos 900 m.
+        reportar(conductor, cuerpoConPosicion(LAT, LON, LAT + 0.0081, LON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.ubicacion.latitud").value(LAT));
+        assertEquals(1, eventosGuardados());
+    }
+
+    @Test
+    @DisplayName("CP-192: un punto a mas de 1 km de la posicion del conductor responde 422 UBICACION_LEJANA")
+    void cp192PuntoLejanoResponde422() throws Exception {
+        // 0,0099 grados de latitud son unos 1100 m.
+        reportar(conductor, cuerpoConPosicion(LAT, LON, LAT + 0.0099, LON))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.codigo").value("UBICACION_LEJANA"))
+                .andExpect(jsonPath("$.mensaje").value("Solo puedes reportar eventos a 1 km de donde estás."));
+        assertEquals(0, eventosGuardados());
+    }
+
+    @Test
+    @DisplayName("CP-192: sin la posicion del conductor (sin GPS o el simulador) el reporte se acepta como antes")
+    void cp192SinPosicionSeAceptaComoAntes() throws Exception {
+        reportar("BLOQUEO", LAT, LON, 0).andExpect(status().isCreated());
+        assertEquals(1, eventosGuardados());
+    }
+
+    @Test
+    @DisplayName("CP-192: una posicion del conductor con coordenadas invalidas responde 400")
+    void cp192PosicionInvalidaResponde400() throws Exception {
+        reportar(conductor, cuerpoConPosicion(LAT, LON, 95, LON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.codigo").value("PETICION_INVALIDA"));
+        assertEquals(0, eventosGuardados());
+    }
 }

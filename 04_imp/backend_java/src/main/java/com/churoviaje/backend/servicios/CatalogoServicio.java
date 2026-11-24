@@ -1,5 +1,6 @@
 package com.churoviaje.backend.servicios;
 
+import com.churoviaje.backend.dominio.Ubicacion;
 import com.churoviaje.backend.dominio.catalogo.CatalogoRepository;
 import com.churoviaje.backend.dominio.catalogo.CatalogosRespuesta;
 import com.churoviaje.backend.dominio.catalogo.CatalogosRespuesta.TiempoReporteDto;
@@ -43,7 +44,8 @@ public class CatalogoServicio {
                         .toList(),
                 Arrays.stream(ValorFila.values())
                         .map(v -> new ValorFilaDto(v.name(), v.nombre()))
-                        .toList());
+                        .toList(),
+                Ubicacion.RADIO_REPORTE_METROS);
     }
 
     private static <T> Comparator<T> porOrden(List<String> orden, java.util.function.Function<T, String> codigo) {

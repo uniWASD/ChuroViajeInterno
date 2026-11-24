@@ -72,6 +72,13 @@ class CatalogosIntegracionTest extends PruebaIntegracionPostgis {
     }
 
     @Test
+    @DisplayName("CP-193: trae el radio del reporte, 1000 m (RN-01.5, P-39)")
+    void cp193RadioDelReporte() throws Exception {
+        mvc.perform(get("/catalogos").header("Authorization", autorizacion()))
+                .andExpect(jsonPath("$.radioReporteMetros").value(1000));
+    }
+
+    @Test
     @DisplayName("P-15: sin fila, corta, media y larga")
     void valoresDeLaFila() throws Exception {
         mvc.perform(get("/catalogos").header("Authorization", autorizacion()))

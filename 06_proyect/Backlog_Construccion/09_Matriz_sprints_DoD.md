@@ -841,7 +841,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | Issue | Responsable | Casos de prueba |
 | --- | --- | --- |
 | [T-124][Sprint 6.5] Correcciones de interfaz ([#191](https://github.com/uniWASD/ChuroViajeInterno/issues/191)) | Marcelo | CP-192 a CP-201 |
-| [T-125][Sprint 6.5] Optimización de la app y de la telemetría ([#T125-ISSUE](https://github.com/uniWASD/ChuroViajeInterno/issues/T125-ISSUE)) | Marcelo | CP-202 a CP-208 |
+| [T-125][Sprint 6.5] Optimización de la app y de la telemetría ([#193](https://github.com/uniWASD/ChuroViajeInterno/issues/193)) | Marcelo | CP-202 a CP-208 |
 
 ### [T-124][Sprint 6.5] Correcciones de interfaz: hoja del lugar, Cómo llegar en el mapa, tráfico y reporte a 1 km · [#191](https://github.com/uniWASD/ChuroViajeInterno/issues/191)
 
@@ -874,7 +874,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | **CP-200** los surtidores no muestran el ícono junto a (i), la hora exacta ni el estado de ANH; la distancia lleva el auto y los litros van entre paréntesis | Prueba de widget y captura en el teléfono |  |
 | **CP-201** al iniciar la navegación la cámara se centra en el conductor sobre la ruta | Video en el teléfono |  |
 
-### [T-125][Sprint 6.5] Optimización de la app y de la telemetría · [#T125-ISSUE](https://github.com/uniWASD/ChuroViajeInterno/issues/T125-ISSUE)
+### [T-125][Sprint 6.5] Optimización de la app y de la telemetría · [#193](https://github.com/uniWASD/ChuroViajeInterno/issues/193)
 
 **Responsable:** Marcelo · **Fechas:** 25/11
 

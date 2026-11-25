@@ -834,6 +834,45 @@ Un issue está terminado cuando cumple las tres condiciones:
 | --- | --- | --- |
 | **CP-145** POST /sesion/prueba funciona en pruebas.dominio y responde 403 en el dominio de producción | Salida del comando de comprobación, sin IPs internas, llaves ni contraseñas |  |
 
+## Sprint 6.5 (24/11 – 25/11)
+
+1 issue. Corrige la interfaz después de revisarla con el diseño.
+
+| Issue | Responsable | Casos de prueba |
+| --- | --- | --- |
+| [T-124][Sprint 6.5] Correcciones de interfaz ([#191](https://github.com/uniWASD/ChuroViajeInterno/issues/191)) | Marcelo | CP-192 a CP-201 |
+
+### [T-124][Sprint 6.5] Correcciones de interfaz: hoja del lugar, Cómo llegar en el mapa, tráfico y reporte a 1 km · [#191](https://github.com/uniWASD/ChuroViajeInterno/issues/191)
+
+**Responsable:** Marcelo · **Fechas:** 24/11 – 25/11
+
+**Reglas y decisiones**
+
+- RN-01.5 y P-39 ([CU-01](../../03_des/02_Arquitectura/04_reglas/CU-01_ReportarEventoVial.md)); D-49 y P-06 ([decisiones](../../03_des/02_Arquitectura/08_decisiones_parametros.md)); RN-04.25 ([CU-04](../../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md)); RN-05.4 ([CU-05](../../03_des/02_Arquitectura/04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
+
+**Criterios de aceptación**
+
+- En el mapa solo queda la campana, y reportar en la posición sigue tomando 3 toques
+- Al tocar un lugar se abre su hoja con la distancia, el tiempo, «Notificar», «Ir» y «Cómo llegar»
+- «Cómo llegar» se ve en el mismo mapa con «Iniciar» y «Otra parada»
+- La ruta se pinta de amarillo o rojo donde hay congestión, y la congestión se ve de donde empieza a donde acaba
+- Se puede notificar un evento a 1 km o menos de la posición, en la hoja del diseño, sin imagen ni comentario
+- Los surtidores ya no muestran el ícono junto a (i), la hora exacta ni el estado de ANH
+- Al iniciar la navegación, la cámara se centra en el conductor
+
+| Caso de prueba | Evidencia esperada | Validación |
+| --- | --- | --- |
+| **CP-192** un reporte a 1 km o menos de la posición se acepta, más lejos se rechaza con `UBICACION_LEJANA` y sin la posición se acepta como antes | Prueba automatizada y su salida en la CI |  |
+| **CP-193** `GET /catalogos` trae el radio del reporte (1000 m) | Prueba automatizada y su salida en la CI |  |
+| **CP-194** la app no envía un reporte a más de 1 km y lo avisa; a 1 km o menos lo envía con el punto y la posición | Prueba unitaria |  |
+| **CP-195** en el mapa solo queda la campana; al tocar un punto o un lugar se abre su hoja con la distancia, el tiempo, «Notificar», «Ir» y «Cómo llegar» | Prueba de widget y video en el teléfono |  |
+| **CP-196** «Ir» abre la navegación; «Cómo llegar» dibuja la ruta en el mapa con «Iniciar» y «Otra parada», y una parada nueva recalcula | Prueba de widget y video en el teléfono |  |
+| **CP-197** la ruta se pinta de amarillo o rojo donde pasa por una congestión de su mismo sentido | Pruebas de la función y captura en el teléfono |  |
+| **CP-198** las cuadras congestionadas seguidas del mismo sentido y nivel se unen en una línea | Pruebas de la función y captura en el teléfono |  |
+| **CP-199** la campana abre «Notificar evento» y el reporte se completa en 3 toques, sin imagen ni comentario | Prueba de widget y captura en el teléfono |  |
+| **CP-200** los surtidores no muestran el ícono junto a (i), la hora exacta ni el estado de ANH; la distancia lleva el auto y los litros van entre paréntesis | Prueba de widget y captura en el teléfono |  |
+| **CP-201** al iniciar la navegación la cámara se centra en el conductor sobre la ruta | Video en el teléfono |  |
+
 ## Sprint 7 (26/11 – 30/11)
 
 6 issues · 18 puntos.

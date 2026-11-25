@@ -24,7 +24,7 @@ Hay cuatro contratos: el de la app con el backend, el del backend con el motor c
 | Cerrar sesión | `POST /sesion/cerrar` | Token de renovación | Nada; el token de renovación deja de valer | CU-08 |
 | Sesión de prueba | `POST /sesion/prueba` | Credenciales de prueba e identificador de la prueba de carga | JWT de un conductor simulado | CU-07 |
 | Leer catálogos | `GET /catalogos` | Nada | Tipos de evento con color, vigencia y si son reportables; tipos de combustible; tiempos del reporte | CU-01, CU-02 |
-| Reportar evento | `POST /eventos` | Tipo, ubicación, hora de confirmación y minutos elegidos | Evento aceptado, o motivo del rechazo | CU-01 |
+| Reportar evento | `POST /eventos` | Tipo, ubicación, hora de confirmación, minutos elegidos y, si el punto lo eligió el conductor, su posición | Evento aceptado, o motivo del rechazo | CU-01 |
 | Consultar eventos | `GET /eventos` | Marca de la última consulta, opcional | Eventos vigentes o solo los cambios, y la marca nueva | CU-02 |
 | Votar un evento | `POST /eventos/{id}/votos` | Real o falso | Estado del evento tras el voto | CU-02 |
 | Calcular ruta | `POST /rutas` | Origen, destino y paradas | Trazado, distancia y tiempo, con el identificador y el nombre de la calle de cada tramo; o «sin ruta» o «punto inválido» | CU-03 |
@@ -100,7 +100,8 @@ La app no lleva listas propias: todo lo que muestra en los selectores sale de es
   "valoresFila": [
     {"codigo": "SIN_FILA", "nombre": "Sin fila"},
     {"codigo": "CORTA", "nombre": "Corta"}
-  ]
+  ],
+  "radioReporteMetros": 1000
 }
 ```
 
@@ -108,6 +109,7 @@ La app no lleva listas propias: todo lo que muestra en los selectores sale de es
 - `seleccionable` es falso para «Desconocido»: lo usa el sistema cuando un mensaje no dice el combustible y el conductor no puede elegirlo ([RN-05.9](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)).
 - `tiemposReporte` ofrece 0, 5, 10 y 30 minutos; el marcado con `porDefecto` es el que se usa si el conductor no elige ([D-09](08_decisiones_parametros.md)).
 - `valoresFila` son los mismos de [P-15](08_decisiones_parametros.md). La app los trata como una lista cerrada.
+- `radioReporteMetros` es hasta dónde puede reportar un conductor desde su posición ([RN-01.5](04_reglas/CU-01_ReportarEventoVial.md), [P-39](08_decisiones_parametros.md)). La app lo usa para avisar antes de enviar; un catálogo guardado sin este dato no se revisa en la app y decide el backend (#191).
 - La ruta pide JWT, como el resto de la API de la app.
 
 ### Rutas (`POST /rutas`)
@@ -168,7 +170,7 @@ Responde siempre 200, con uno de cuatro estados:
 ### Reporte de evento (`POST /eventos`)
 
 ```json
-{"tipo":"CONTROL_POLICIAL","ubicacion":{"latitud":-21.5355,"longitud":-64.7296},"horaConfirmacion":"2026-11-01T08:00:00-04:00","minutosElegidos":5}
+{"tipo":"CONTROL_POLICIAL","ubicacion":{"latitud":-21.5275,"longitud":-64.7296},"horaConfirmacion":"2026-11-01T08:00:00-04:00","minutosElegidos":5,"posicionConductor":{"latitud":-21.5355,"longitud":-64.7296}}
 ```
 
 Si lo acepta, responde 201 con el evento creado:
@@ -178,8 +180,9 @@ Si lo acepta, responde 201 con el evento creado:
 ```
 
 - `minutosElegidos` es opcional y vale 0, 5, 10 o 30; sin él, el evento ocurrió hace 5 minutos. El backend resta los minutos a la hora de confirmación y nunca deja el evento en el futuro ([RN-01.4](04_reglas/CU-01_ReportarEventoVial.md)).
+- `posicionConductor` es opcional (#191). La app la manda cuando el conductor eligió el punto en el mapa: el punto debe estar a 1 km o menos de ella ([RN-01.5](04_reglas/CU-01_ReportarEventoVial.md), [P-39](08_decisiones_parametros.md)). Sin ella (el GPS no respondió, o el simulador) el punto se acepta como antes. La posición solo sirve para esta revisión: no se guarda.
 - Esta respuesta y cualquier consulta posterior nunca dicen quién reportó el evento ([RN-01.12](04_reglas/CU-01_ReportarEventoVial.md)). Los eventos de congestión traen además `nivel`.
-- Rechazos: 400 `PETICION_INVALIDA` si falta el tipo, la ubicación o la hora, o si los minutos no son una de las opciones; 422 `TIPO_NO_REPORTABLE` para la congestión o un tipo que no existe, `UBICACION_FUERA_COBERTURA` fuera de Tarija y `EVENTO_VENCIDO` si ya pasó la vigencia de su tipo; 409 `REPORTE_DUPLICADO` (mismo conductor y tipo, a menos de 100 m y dentro de 10 minutos); 429 `LIMITE_DE_REPORTES` (más de 5 en 10 minutos) ([RN-01.2](04_reglas/CU-01_ReportarEventoVial.md) a [RN-01.9](04_reglas/CU-01_ReportarEventoVial.md)).
+- Rechazos: 400 `PETICION_INVALIDA` si falta el tipo, la ubicación o la hora, o si los minutos no son una de las opciones; 422 `TIPO_NO_REPORTABLE` para la congestión o un tipo que no existe, `UBICACION_FUERA_COBERTURA` fuera de Tarija, `UBICACION_LEJANA` si el punto está a más de 1 km de `posicionConductor` y `EVENTO_VENCIDO` si ya pasó la vigencia de su tipo; 409 `REPORTE_DUPLICADO` (mismo conductor y tipo, a menos de 100 m y dentro de 10 minutos); 429 `LIMITE_DE_REPORTES` (más de 5 en 10 minutos) ([RN-01.2](04_reglas/CU-01_ReportarEventoVial.md) a [RN-01.9](04_reglas/CU-01_ReportarEventoVial.md)).
 
 ### Consulta de eventos (`GET /eventos`)
 

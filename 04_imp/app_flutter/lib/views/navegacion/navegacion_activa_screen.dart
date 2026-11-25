@@ -7,6 +7,7 @@ import '../../controllers/navegacion_controller.dart';
 import '../../models/coordenada.dart';
 import '../../models/navegacion.dart';
 import '../../models/ruta.dart';
+import '../../models/trafico.dart';
 import '../../services/rutas/servicio_rutas.dart';
 import '../map/map_screen.dart';
 import '../map/mapa_base.dart';
@@ -47,6 +48,8 @@ class NavegacionActivaScreen extends StatelessWidget {
     final mapa = context.watch<MapController>();
     final nav = context.watch<NavegacionController>();
     final eventos = context.watch<EventosController>();
+    final congestiones = unirCongestiones(eventos.eventos);
+    final falta = nav.trazadoQueFalta;
     return PopScope(
       // Volver atrás también termina la ruta: una ruta Activa sin su vista no se sigue (D-05).
       onPopInvokedWithResult: (salio, _) {
@@ -62,7 +65,9 @@ class NavegacionActivaScreen extends StatelessWidget {
                 child: construirMapa(
                   context,
                   DatosMapa(
-                    centro: mapa.posicion ?? nav.destino,
+                    // #191 (punto 7): abre en el conductor o, si todavía no hay posición, al comienzo de la ruta;
+                    // nunca en el destino. Después la cámara lo sigue.
+                    centro: mapa.posicion ?? (falta.isNotEmpty ? falta.first : nav.destino),
                     mostrarUbicacion: mapa.siguiendoUbicacion,
                     seguirUbicacion: true,
                     marcas: [
@@ -70,9 +75,11 @@ class NavegacionActivaScreen extends StatelessWidget {
                       MarcaMapa(nav.destino, TipoMarca.destino),
                     ],
                     // #172: lo ya recorrido desaparece, como en Google Maps.
-                    trazado: nav.trazadoQueFalta,
+                    trazado: falta,
+                    // #191: lo que falta de la ruta, de amarillo o de rojo donde hay congestión.
+                    trafico: pintarRutaPorTrafico(falta, congestiones),
                     // RN-04.18: el evento queda a la vista, se acepte o se rechace la alternativa.
-                    eventos: marcasDeEventos(eventos),
+                    eventos: marcasDeEventos(eventos, congestiones: congestiones),
                     alTocar: (_) {},
                     alFallar: mapa.informarErrorMapa,
                   ),

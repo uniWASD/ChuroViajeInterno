@@ -45,19 +45,21 @@ public class EventoVialControlador {
 
     /**
      * Lo que manda la app al reportar (RN-01.2). Los minutos son opcionales: sin ellos, el evento ocurrio hace 5
-     * minutos (RN-01.4).
+     * minutos (RN-01.4). La posicion del conductor tambien es opcional: si viene, el punto debe estar a 1 km o menos
+     * de ella (RN-01.5, P-39).
      */
     public record PeticionReporteEvento(
             @NotBlank(message = "Falta el tipo de evento") String tipo,
             @NotNull(message = "Falta la ubicación") @Valid Ubicacion ubicacion,
             @NotNull(message = "Falta la hora de confirmación") OffsetDateTime horaConfirmacion,
-            Integer minutosElegidos) {}
+            Integer minutosElegidos,
+            @Valid Ubicacion posicionConductor) {}
 
     @PostMapping
     public ResponseEntity<EventoVialRespuesta> reportarEvento(@AuthenticationPrincipal ConductorAutenticado conductor,
             @Valid @RequestBody PeticionReporteEvento peticion) {
         var evento = eventoVialServicio.registrarEvento(conductor.id(), peticion.tipo(), peticion.ubicacion(),
-                peticion.horaConfirmacion(), peticion.minutosElegidos());
+                peticion.horaConfirmacion(), peticion.minutosElegidos(), peticion.posicionConductor());
         return ResponseEntity.status(HttpStatus.CREATED).body(EventoVialRespuesta.de(evento));
     }
 

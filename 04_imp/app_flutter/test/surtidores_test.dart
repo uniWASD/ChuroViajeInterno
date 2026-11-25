@@ -16,7 +16,7 @@ import 'package:app_flutter/models/surtidor.dart';
 import 'package:app_flutter/services/api/api_client.dart';
 import 'package:app_flutter/services/ubicacion/servicio_ubicacion.dart';
 import 'package:app_flutter/views/main/main_screen.dart';
-import 'package:app_flutter/views/ruta/como_llegar_screen.dart';
+import 'package:app_flutter/views/navegacion/navegacion_activa_screen.dart';
 import 'package:app_flutter/views/stations/estilo_surtidor.dart';
 
 import 'dobles/dobles_mapa.dart';
@@ -151,7 +151,7 @@ void main() {
     expect(nombres, ['Las Vegas', 'Don Daniel', 'Ex Terminal']);
   });
 
-  testWidgets('CP-108: un surtidor con un aviso de WhatsApp de hace 10 minutos muestra el estado, el origen WhatsApp y la hora', (tester) async {
+  testWidgets('CP-108: un surtidor con un aviso de WhatsApp de hace 10 minutos muestra el estado, el origen WhatsApp y hace cuánto llegó', (tester) async {
     await abrirSurtidores(tester);
     expect(find.descendant(of: find.byKey(const Key('surtidor-1')), matching: find.text('· 10 min')), findsOneWidget);
 
@@ -163,7 +163,8 @@ void main() {
     final gasolina = find.byKey(const Key('combustible-GASOLINA'));
     expect(find.descendant(of: gasolina, matching: find.text('Disponible · Fila corta')), findsOneWidget);
     expect(find.descendant(of: gasolina, matching: find.byKey(const Key('origen-whatsapp'))), findsOneWidget);
-    expect(find.descendant(of: gasolina, matching: find.text('${horaDe(hace10)} · hace 10 min')), findsOneWidget);
+    // #191: sin la hora exacta, solo hace cuánto.
+    expect(find.descendant(of: gasolina, matching: find.text('hace 10 min')), findsOneWidget);
     final diesel = find.byKey(const Key('combustible-DIESEL'));
     expect(find.descendant(of: diesel, matching: find.text('Agotado')), findsOneWidget);
     expect(find.descendant(of: diesel, matching: find.byKey(const Key('origen-conductores'))), findsOneWidget);
@@ -178,14 +179,31 @@ void main() {
     expect(find.text('Sin información reciente'), findsOneWidget);
   });
 
-  testWidgets('RN-05.4: un dato de ANH muestra el saldo en litros y el estado de ANH', (tester) async {
+  testWidgets('CP-200 y RN-05.4: un dato de ANH muestra los litros junto al combustible, sin el texto «estado ANH»', (tester) async {
     await abrirSurtidores(tester);
     await tester.tap(find.byKey(const Key('surtidor-3')));
     await tester.pumpAndSettle();
 
     final diesel = find.byKey(const Key('combustible-DIESEL'));
-    expect(find.descendant(of: diesel, matching: find.text('Disponible · 1250,5 L · estado ANH alto')), findsOneWidget);
+    expect(find.descendant(of: diesel, matching: find.text('Diesel (1250,5 L)')), findsOneWidget);
+    expect(find.descendant(of: diesel, matching: find.text('Disponible')), findsOneWidget);
+    expect(find.descendant(of: diesel, matching: find.textContaining('estado ANH')), findsNothing);
     expect(find.descendant(of: diesel, matching: find.byKey(const Key('origen-anh'))), findsOneWidget);
+  });
+
+  testWidgets('CP-200: junto a (i) ya no va el ícono del origen, y la distancia lleva el auto a la izquierda', (tester) async {
+    await abrirSurtidores(tester);
+    final fila = find.byKey(const Key('surtidor-1')).first;
+    expect(find.byKey(const Key('info-surtidor-1')), findsOneWidget);
+    // El ícono de origen solo aparece dentro de cada combustible, al desplegar.
+    expect(find.byTooltip('Dato de WhatsApp'), findsNothing);
+
+    await tester.tap(fila);
+    await tester.pumpAndSettle();
+    final distancia = find.byKey(const Key('distancia-en-auto'));
+    expect(distancia, findsOneWidget);
+    expect(find.descendant(of: distancia, matching: find.byIcon(Icons.directions_car)), findsOneWidget);
+    expect(find.textContaining(RegExp(r'^\d{2}:\d{2}')), findsNothing, reason: 'sin la hora exacta');
   });
 
   testWidgets('D-25: los surtidores son marcadores del mapa con el color de su estado, y al tocar uno se ve su estado', (tester) async {
@@ -224,30 +242,32 @@ void main() {
     expect(mapa.ultimo!.surtidores[1].color, ColoresSurtidor.disponible);
   });
 
-  testWidgets('D-24: desde un surtidor de la lista, «Ir» abre Cómo llegar con el surtidor como destino', (tester) async {
+  testWidgets('#191: desde un surtidor de la lista, «Ir» abre directamente la navegación hasta el surtidor', (tester) async {
     await abrirSurtidores(tester);
     await tester.tap(find.byKey(const Key('surtidor-1')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('ir-1')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ComoLlegarScreen), findsOneWidget);
-    expect(mapa.comoLlegar!.marcas.last.coordenada, const Coordenada(-21.5235, -64.7248));
-    final contexto = tester.element(find.byType(ComoLlegarScreen));
-    expect(contexto.read<MapController>().nombrePunto, 'Las Vegas');
-    expect(contexto.read<NavigationController>().selectedIndex, AppTab.map.index);
+    expect(find.byType(NavegacionActivaScreen), findsOneWidget);
+    expect(mapa.navegacion!.marcas.last.coordenada, const Coordenada(-21.5235, -64.7248));
+    expect(tester.element(find.byType(MainScreen, skipOffstage: false)).read<NavigationController>().selectedIndex, AppTab.map.index);
   });
 
-  testWidgets('D-24: desde el detalle de un surtidor del mapa también se abre Cómo llegar', (tester) async {
+  testWidgets('D-24: desde el detalle de un surtidor del mapa, «Cómo llegar» muestra la ruta en el mapa', (tester) async {
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
+    ubicacion.emitir(const Coordenada(-21.5355, -64.7296));
+    await tester.pump();
     mapa.ultimo!.alTocarSurtidor!(3);
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('como-llegar-surtidor')));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ComoLlegarScreen), findsOneWidget);
-    expect(mapa.comoLlegar!.marcas.last.coordenada, const Coordenada(-21.5419, -64.7241));
+    expect(find.byKey(const Key('hoja-ruta')), findsOneWidget);
+    expect(mapa.ultimo!.puntoSeleccionado, const Coordenada(-21.5419, -64.7241));
+    expect(mapa.ultimo!.trazado, isNotEmpty);
+    expect(tester.element(find.byType(MainScreen)).read<MapController>().nombrePunto, 'Ex Terminal');
   });
 
   testWidgets('Sin permiso de ubicación, explica que lo necesita, deja concederlo y pide desde el centro de Tarija', (tester) async {

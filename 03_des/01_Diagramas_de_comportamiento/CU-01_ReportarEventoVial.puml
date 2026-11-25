@@ -3,6 +3,7 @@
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09), secciones 4 y 6
 ' Issue: T-045 (actualizado en T-086)
 ' Revisión de coherencia (06/10/2026): modal con tipo y tiempo, descarte del reporte vencido y propagación por consulta periódica.
+' Sprint 6.5 (#191): hoja «Notificar evento» desde la campana o desde un lugar elegido, y punto a 1 km o menos (RN-01.5).
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -32,25 +33,28 @@ title CU-01: Reportar Evento Vial\nDiagrama de actividad
 
 |Conductor|
 start
-:Abre el mapa y
-presiona "Reportar
-evento";
+:Toca la campana del
+mapa, o "Notificar"
+en un lugar que
+eligió;
 |Sistema ChuroViaje|
-:Muestra el modal con
-los tipos de evento y
-el tiempo ("Hace 5
-minutos" por defecto);
+:Muestra la hoja
+"Notificar evento"
+con los tipos y el
+tiempo ("5 min" por
+defecto);
 |Conductor|
 :Selecciona el tipo
 de evento y, si hace
 falta, cambia el
-tiempo;
-:Confirma el envío
-del reporte;
+tiempo o toca otro
+punto cercano;
+:Toca "Enviar";
 |Sistema ChuroViaje|
-:Captura la
-ubicación GPS
-actual;
+:Toma la ubicación
+GPS o el punto
+elegido, a 1 km o
+menos;
 if (¿Hay conexión a\ninternet?) then (sí)
 else (no [3a])
   #FFF8E1:[3a] Almacena el
@@ -102,6 +106,7 @@ else (no [4b])
   #FFF8E1:[4b] Muestra el
 motivo del rechazo
 (fuera de Tarija,
+a más de 1 km,
 evento vencido,
 repetido o límite
 superado);

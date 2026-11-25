@@ -10,6 +10,7 @@ import 'controllers/map_controller.dart';
 import 'controllers/navigation_controller.dart';
 import 'controllers/recarga_controller.dart';
 import 'controllers/reporte_controller.dart';
+import 'controllers/ruta_controller.dart';
 import 'controllers/sesion_controller.dart';
 import 'controllers/telemetria_controller.dart';
 import 'services/api/api_client.dart';
@@ -71,6 +72,10 @@ List<SingleChildWidget> createAppProviders({
         (AppConfig.usarRutaDeEjemplo
             ? ServicioRutasDeEjemplo()
             : ServicioRutasApi(context.read<ApiClient>())),
+  ),
+  // #191: la ruta hacia el lugar elegido vive en el mapa principal; «Cómo llegar» ya no es una pantalla aparte.
+  ChangeNotifierProvider<RutaController>(
+    create: (context) => RutaController(context.read<ServicioRutas>()),
   ),
   Provider<ConstructorMapa>.value(
     value: constructorMapa ?? construirMapaMapbox,

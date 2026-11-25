@@ -16,9 +16,11 @@ import 'dobles/dobles_sesion.dart';
 
 void main() {
   late MapaFalso mapa;
+  late UbicacionFalsa ubicacion;
 
   Widget createTestApp({ApiClient? apiClient}) {
     mapa = MapaFalso();
+    ubicacion = UbicacionFalsa();
     final client =
         apiClient ??
         ApiClient(client: MockClient(sinEventos((_) async => http.Response('{}', 200))));
@@ -26,7 +28,7 @@ void main() {
     return MultiProvider(
       providers: createAppProviders(
         apiClient: client,
-        ubicacion: UbicacionFalsa(),
+        ubicacion: ubicacion,
         servicioRutas: ServicioRutasApi(client),
         constructorMapa: mapa.construir,
         almacen: AlmacenFalso.conSesionVigente(),
@@ -59,7 +61,8 @@ void main() {
     expect(find.text('Mapa'), findsWidgets);
     expect(find.text('Eventos'), findsWidgets);
     expect(find.text('Surtidores'), findsWidgets);
-    expect(find.text('Cómo llegar'), findsOneWidget);
+    // #191: en el mapa solo queda la campana para notificar.
+    expect(find.byKey(const Key('boton-notificar')), findsOneWidget);
   });
 
   testWidgets('Permite navegar entre las pantallas', (tester) async {
@@ -80,7 +83,7 @@ void main() {
     await tester.tap(find.text('Mapa').last);
     await tester.pumpAndSettle();
 
-    expect(find.text('Cómo llegar'), findsOneWidget);
+    expect(find.byKey(const Key('boton-notificar')), findsOneWidget);
   });
 
   testWidgets('Configura el idioma español', (tester) async {
@@ -104,23 +107,17 @@ void main() {
     await tester.pumpWidget(createTestApp(apiClient: apiClient));
 
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Cómo llegar'));
-    await tester.pumpAndSettle();
-    // Sin ubicación en la prueba: se marca el origen y después el destino.
-    await tester.tap(find.text('Marcar'));
+    ubicacion.emitir(const Coordenada(-21.5344253, -64.7339992));
     await tester.pump();
-    mapa.comoLlegar!.alTocar(const Coordenada(-21.5344253, -64.7339992));
-    await tester.pump();
-    mapa.comoLlegar!.alTocar(const Coordenada(-21.541756, -64.725011));
-    await tester.pump();
-    await tester.tap(find.text('Calcular ruta'));
+    // #191: al tocar un punto se pide la ruta para la hoja del lugar.
+    mapa.ultimo!.alTocar(const Coordenada(-21.541756, -64.725011));
     await tester.pumpAndSettle();
 
     expect(
       find.text('No se pudo conectar con el servidor. Verifica tu conexión.'),
       findsOneWidget,
     );
-    expect(find.text('Cómo llegar'), findsOneWidget);
+    expect(find.byKey(const Key('hoja-lugar')), findsOneWidget);
     expect(find.text('Reintentar'), findsOneWidget);
   });
 }

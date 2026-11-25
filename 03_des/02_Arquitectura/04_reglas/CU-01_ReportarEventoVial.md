@@ -12,7 +12,7 @@ Cubre HU-01 y HU-02, y los requisitos RF-01, RF-02, RNF-01, RNF-06, RNF-08 y RNF
 | RN-01.2 | Un reporte lleva tres datos obligatorios: tipo de evento, ubicación y momento en que ocurrió. Si falta uno, se rechaza entero. | EventoVial | CU-01 paso 3, HU-01 c.3 |
 | RN-01.3 | El tipo debe ser uno de los reportables: accidente, control policial, bloqueo u otro. La congestión no se puede reportar. | TipoEvento | CU-01 paso 2, [D-10](../08_decisiones_parametros.md), [D-04](../08_decisiones_parametros.md) |
 | RN-01.4 | El momento en que ocurrió es la hora en que el conductor confirmó el reporte menos el tiempo elegido: ahora mismo, hace 5 minutos, hace 10 minutos u hace 30 minutos. Si el conductor no elige, vale hace 5 minutos. Nunca puede quedar en el futuro. | EventoVial | CU-01 pasos 1 y 2, HU-01 c.2, [D-09](../08_decisiones_parametros.md) |
-| RN-01.5 | La ubicación es la del GPS al confirmar. Si el GPS no responde, vale el punto que el conductor ajusta en el mapa. Sin ubicación no hay reporte. | Ubicación | CU-01 sección 8, HU-01 c.5 |
+| RN-01.5 | La ubicación es la del GPS al confirmar, o un punto que el conductor elige en el mapa a 1 km o menos de su posición ([P-39](../08_decisiones_parametros.md)); si está más lejos, el reporte se rechaza. Si el GPS no responde, vale el punto que el conductor marca en el mapa, sin ese límite. Sin ubicación no hay reporte. | Ubicación | CU-01 sección 8, HU-01 c.5, Issue #191 |
 | RN-01.6 | La ubicación debe caer dentro de la mancha urbana de Tarija. | Ubicación | Visión 1.2.2, CU-01 ext. 4b, HU-01 c.7 |
 | RN-01.7 | Un evento que al llegar al backend ya superó la vigencia de su tipo no se registra, y el conductor recibe el aviso. | EventoVial, TipoEvento | CU-01 ext. 3a y 4b, HU-01 c.7, HU-02 c.5 |
 | RN-01.8 | Un conductor no puede registrar dos eventos del mismo tipo, a menos de 100 metros uno del otro y dentro de 10 minutos: el segundo se rechaza como duplicado. | EventoVial | CU-01 sección 7 y ext. 4b, HU-01 c.7, RNF-09 |
@@ -30,12 +30,12 @@ Los valores de RN-01.8 y RN-01.9 son iniciales, se confirmaron el 06/10/2026 y s
 
 ## Recorrido por Vista, Controlador y Modelo
 
-1. **Vista Mapa principal.** El conductor toca «Reportar evento».
-2. **Controlador de reporte (app).** Abre la vista Reportar evento con «Hace 5 minutos» marcado.
-3. **Vista Reportar evento.** El conductor elige el tipo, cambia el tiempo si hace falta y confirma. Son tres toques.
-4. **Controlador de reporte (app).** Toma la ubicación del GPS o el punto ajustado a mano. Si no hay red, guarda el reporte en la cola local (RN-01.13) y termina aquí. Si hay red, envía el reporte al backend con el JWT.
+1. **Vista Mapa principal.** El conductor toca la campana para reportar en su posición, o «Notificar» en la hoja de un lugar que eligió en el mapa (#191).
+2. **Controlador de reporte (app).** Abre la hoja Notificar evento con «5 min» marcado.
+3. **Vista Notificar evento.** El conductor elige el tipo, cambia el tiempo si hace falta y toca «Enviar». Desde la campana son tres toques (RNF-06); desde un lugar, uno más. Mientras la hoja está abierta, tocar el mapa cambia el punto.
+4. **Controlador de reporte (app).** Toma la ubicación del GPS o el punto elegido. Si el punto está a más de 1 km del conductor, avisa y no lo envía (RN-01.5); con un punto elegido manda también la posición del conductor. Si no hay red, guarda el reporte en la cola local (RN-01.13) y termina aquí. Si hay red, envía el reporte al backend con el JWT.
 5. **Controlador REST de eventos (backend).** Comprueba el JWT (RN-01.1) y que la petición tenga el formato esperado. Llama al servicio del modelo que registra eventos.
-6. **Modelo (backend).** Construye la `Ubicación` (RN-01.5, RN-01.6), busca el `TipoEvento` (RN-01.3) y crea el `EventoVial` (RN-01.2, RN-01.4, RN-01.7). Comprueba duplicado y límite (RN-01.8, RN-01.9) y lo guarda como Activo (RN-01.10, RN-01.11).
+6. **Modelo (backend).** Construye la `Ubicación` y revisa que esté a 1 km o menos de la posición del conductor, si vino (RN-01.5, RN-01.6), busca el `TipoEvento` (RN-01.3) y crea el `EventoVial` (RN-01.2, RN-01.4, RN-01.7). Comprueba duplicado y límite (RN-01.8, RN-01.9) y lo guarda como Activo (RN-01.10, RN-01.11).
 7. **Controlador REST de eventos (backend).** Devuelve que el evento fue aceptado, o el motivo del rechazo.
 8. **Controlador de reporte (app) y vista.** Muestran la confirmación o el mensaje de error. Si la sesión expiró, la app intenta renovarla y, si no puede, se pasa a CU-08. Después se reintenta (RN-01.16).
 9. **Los demás conductores.** Reciben el evento en su siguiente consulta periódica, que es parte de CU-02 (RN-01.12).

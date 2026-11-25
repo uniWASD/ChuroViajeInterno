@@ -75,11 +75,16 @@ class Catalogos {
   final List<dynamic> tiposCombustible;
   final List<dynamic> valoresFila;
 
+  /// RN-01.5 y P-39 (#191): hasta cuántos metros de su posición puede reportar el conductor. Un catálogo guardado
+  /// antes de #191 no lo trae: entonces la app no lo revisa y el backend decide.
+  final int? radioReporteMetros;
+
   const Catalogos({
     required this.tiposEvento,
     required this.tiemposReporte,
     this.tiposCombustible = const [],
     this.valoresFila = const [],
+    this.radioReporteMetros,
   });
 
   /// Los tipos que puede reportar un conductor; la congestión no aparece (RN-01.3).
@@ -111,6 +116,7 @@ class Catalogos {
     ],
     tiposCombustible: List<dynamic>.from(json['tiposCombustible'] as List? ?? const []),
     valoresFila: List<dynamic>.from(json['valoresFila'] as List? ?? const []),
+    radioReporteMetros: (json['radioReporteMetros'] as num?)?.toInt(),
   );
 
   Map<String, dynamic> toJson() => {
@@ -118,5 +124,6 @@ class Catalogos {
     'tiemposReporte': [for (final t in tiemposReporte) t.toJson()],
     'tiposCombustible': tiposCombustible,
     'valoresFila': valoresFila,
+    'radioReporteMetros': ?radioReporteMetros,
   };
 }

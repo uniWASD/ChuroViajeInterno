@@ -15,7 +15,7 @@ La arquitectura responde a los requisitos no funcionales de la matriz y respeta 
 | Los surtidores cercanos se listan en menos de 3 segundos | RNF-03 | El estado de cada surtidor ya está guardado cuando el conductor pregunta; la búsqueda por cercanía la resuelve PostGIS |
 | El estado de un surtidor se actualiza en menos de 6 minutos | RNF-04 | El servicio de WhatsApp/LLM analiza cada 5 minutos y envía el resultado directo al backend; el backend guarda lo que lee de ANH en cada consulta ([P-29](08_decisiones_parametros.md)); la app refresca la lista de surtidores cada 60 segundos mientras está abierta |
 | El inicio de sesión tarda menos de 3 segundos | RNF-05 | Tras elegir la cuenta de Google, la app hace una sola llamada al backend |
-| Reportar un evento toma 3 toques como máximo | RNF-06 | La vista de reporte trae el tiempo preseleccionado |
+| Reportar un evento toma 3 toques como máximo | RNF-06 | La campana del mapa abre la hoja «Notificar evento» con el tiempo preseleccionado: el tipo y «Enviar» completan los 3 toques ([D-49](08_decisiones_parametros.md)) |
 | El origen del dato de cada surtidor es visible | RNF-07 | El origen (WhatsApp, Conductores o ANH) es un atributo obligatorio del estado de combustible |
 | Solo entran usuarios con sesión | RNF-08 | Todos los controladores del backend exigen un JWT válido, salvo el de inicio de sesión |
 | No se aceptan reportes, votos ni confirmaciones repetidos | RNF-09 | La regla vive en los objetos de dominio: un voto por conductor y evento, sin reportes ni confirmaciones duplicados en poco tiempo |

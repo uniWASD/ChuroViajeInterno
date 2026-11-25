@@ -6,6 +6,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import '../../config/app_config.dart';
 import '../../models/coordenada.dart';
+import '../../models/trafico.dart';
 import 'estilo_mapa.dart';
 import 'mapa_base.dart';
 import 'marcadores.dart';
@@ -32,7 +33,12 @@ class _MapaMapboxState extends State<MapaMapbox> {
   Cancelable? _toquesSurtidores;
   final Marcadores _dibujos = Marcadores();
   PolylineAnnotationManager? _lineas;
+  PolylineAnnotationManager? _trafico;
   PolylineAnnotationManager? _congestiones;
+  PointAnnotationManager? _pines;
+
+  /// #191: mueve la cámara a seguir al conductor cuando empieza la navegación.
+  final ViewportController _vista = ViewportController();
   PolylineAnnotation? _ruta;
   Cancelable? _toquesEventos;
   Cancelable? _toquesCongestiones;
@@ -61,6 +67,12 @@ class _MapaMapboxState extends State<MapaMapbox> {
     }
     if (!listEquals(anterior.datos.trazado, widget.datos.trazado)) {
       _dibujarTrazado();
+    }
+    if (!listEquals(anterior.datos.trafico, widget.datos.trafico)) {
+      _dibujarTrafico();
+    }
+    if (_siguiendo && !(anterior.datos.seguirUbicacion && anterior.datos.mostrarUbicacion)) {
+      _seguirAlConductor();
     }
     if (!listEquals(anterior.datos.eventos, widget.datos.eventos)) {
       _dibujarEventos();
@@ -93,6 +105,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
 
   @override
   void dispose() {
+    _vista.dispose();
     _toquesEventos?.cancel();
     _toquesCongestiones?.cancel();
     _toquesSurtidores?.cancel();
@@ -119,12 +132,31 @@ class _MapaMapboxState extends State<MapaMapbox> {
         widget.datos.alTocar(Coordenada(c.lat.toDouble(), c.lng.toDouble()));
       }),
     );
-    // Primero la ruta, después las congestiones sobre la calle y al final los puntos, para que queden encima.
+    // #191: tocar un lugar conocido del mapa base lo elige con su nombre, como en Google Maps. Mapbox atiende las
+    // interacciones sobre lugares antes que la del mapa y esta detiene el toque, así que no llega también como un
+    // punto suelto.
+    mapa.addInteraction(
+      TapInteraction(StandardPOIs(), (lugar, contexto) {
+        final c = lugar.coordinate?.coordinates ?? contexto.point.coordinates;
+        final punto = Coordenada(c.lat.toDouble(), c.lng.toDouble());
+        final nombre = lugar.name;
+        final alTocarLugar = widget.datos.alTocarLugar;
+        if (alTocarLugar != null && nombre != null && nombre.isNotEmpty) {
+          alTocarLugar(punto, nombre);
+        } else {
+          widget.datos.alTocar(punto);
+        }
+      }),
+    );
+    // Primero la ruta y su tráfico, después las congestiones sobre la calle y al final los puntos, para que queden
+    // encima.
     _lineas = await mapa.annotations.createPolylineAnnotationManager();
+    _trafico = await mapa.annotations.createPolylineAnnotationManager();
     _congestiones = await mapa.annotations.createPolylineAnnotationManager();
     _surtidores = await mapa.annotations.createPointAnnotationManager();
     _eventos = await mapa.annotations.createPointAnnotationManager();
     _marcas = await mapa.annotations.createCircleAnnotationManager();
+    _pines = await mapa.annotations.createPointAnnotationManager();
     _toquesSurtidores = _surtidores!.tapEvents(onTap: (anotacion) {
       final id = anotacion.customData?['surtidor'];
       if (id is num) widget.datos.alTocarSurtidor?.call(id.toInt());
@@ -133,7 +165,9 @@ class _MapaMapboxState extends State<MapaMapbox> {
     // Al tocar la línea de una congestión se abre su ficha, igual que con un punto.
     _toquesCongestiones = _congestiones!.tapEvents(onTap: (anotacion) => _tocarEvento(anotacion.customData));
     await _actualizarUbicacion();
+    if (_siguiendo) _seguirAlConductor();
     await _dibujarTrazado();
+    await _dibujarTrafico();
     await _dibujarEventos();
     await _dibujarSurtidores();
     await _marcarPunto();
@@ -214,18 +248,37 @@ class _MapaMapboxState extends State<MapaMapbox> {
     );
   }
 
+  /// El origen y las paradas van como círculos; el punto elegido y el destino, como el pin rojo del diseño (#191).
   Future<void> _marcarPunto() async {
     final marcas = _marcas;
-    if (marcas == null) return;
+    final pines = _pines;
+    if (marcas == null || pines == null) return;
+    _dibujos.usarEscala(MediaQuery.devicePixelRatioOf(context));
     await marcas.deleteAll();
+    await pines.deleteAll();
     final todas = [
       ...widget.datos.marcas,
       if (widget.datos.puntoSeleccionado != null)
         MarcaMapa(widget.datos.puntoSeleccionado!, TipoMarca.punto),
     ];
-    if (todas.isEmpty) return;
-    await marcas.createMulti([
+    final conPin = {
       for (final m in todas)
+        if (m.tipo == TipoMarca.punto || m.tipo == TipoMarca.destino) m.coordenada,
+    };
+    if (conPin.isNotEmpty) {
+      final pin = await _dibujos.dePin(Colors.red.shade700);
+      await pines.createMulti([
+        for (final c in conPin)
+          PointAnnotationOptions(geometry: _punto(c), image: pin, iconAnchor: IconAnchor.BOTTOM, iconSize: 0.9),
+      ]);
+    }
+    final circulos = [
+      for (final m in todas)
+        if (m.tipo == TipoMarca.origen || m.tipo == TipoMarca.parada) m,
+    ];
+    if (circulos.isEmpty) return;
+    await marcas.createMulti([
+      for (final m in circulos)
         CircleAnnotationOptions(
           geometry: _punto(m.coordenada),
           circleRadius: m.tipo == TipoMarca.parada ? 6 : 8,
@@ -284,6 +337,38 @@ class _MapaMapboxState extends State<MapaMapbox> {
     await mapa.flyTo(camara, MapAnimationOptions(duration: 600));
   }
 
+  /// #191: las partes de la ruta que pasan por una congestión, de amarillo o de rojo encima de la línea azul.
+  Future<void> _dibujarTrafico() async {
+    final capa = _trafico;
+    if (capa == null) return;
+    await capa.deleteAll();
+    final lineas = [
+      for (final l in widget.datos.trafico)
+        if (l.puntos.length >= 2) l,
+    ];
+    if (lineas.isEmpty) return;
+    await capa.createMulti([
+      for (final l in lineas)
+        PolylineAnnotationOptions(
+          geometry: LineString(coordinates: [for (final c in l.puntos) _punto(c).coordinates]),
+          lineColor: (l.nivel == nivelMuyCongestionado ? colorMuyCongestionado : colorCongestionado).toARGB32(),
+          lineBorderColor: const Color(0x33000000).toARGB32(),
+          lineBorderWidth: 1,
+          lineWidth: 7,
+          lineJoin: LineJoin.ROUND,
+        ),
+    ]);
+  }
+
+  /// #191 (punto 7): al empezar la navegación la cámara va hasta el conductor y lo sigue, inclinada como en Google
+  /// Maps. Si el conductor mueve el mapa, la cámara deja de seguirlo hasta la siguiente navegación.
+  void _seguirAlConductor() {
+    _vista.moveTo(
+      const FollowPuckViewportState(zoom: 16.5, pitch: 40, bearing: FollowPuckViewportStateBearingCourse()),
+      transition: const DefaultViewportTransition(maxDuration: Duration(milliseconds: 1200)),
+    );
+  }
+
   /// El azul de la ruta y su borde, como en Google Maps.
   static const Color colorRuta = Color(0xFF1A73E8);
   static const Color colorBordeRuta = Color(0xFF1557B0);
@@ -310,12 +395,13 @@ class _MapaMapboxState extends State<MapaMapbox> {
     }
     return MapWidget(
       styleUri: MapboxStyles.STANDARD,
-      viewport: _siguiendo
-          ? const FollowPuckViewportState(zoom: 16.5, pitch: 40)
-          : CameraViewportState(
-              center: _punto(widget.datos.centro),
-              zoom: 13.5,
-            ),
+      // Abre donde está el conductor (o en el centro pedido) y, al navegar, [_seguirAlConductor] lo sigue.
+      viewport: CameraViewportState(
+        center: _punto(widget.datos.centro),
+        zoom: widget.datos.seguirUbicacion ? 16.5 : 13.5,
+        pitch: widget.datos.seguirUbicacion ? 40 : 0,
+      ),
+      viewportController: _vista,
       onMapCreated: _alCrear,
       onStyleLoadedListener: (_) => _aplicarEstilo(),
       onMapLoadErrorListener: (error) {

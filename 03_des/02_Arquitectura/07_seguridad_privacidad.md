@@ -49,6 +49,7 @@ El sistema no guarda contraseñas ni credenciales de Google. El JWT dura 1 hora 
 | Dato | Cómo se protege | Fuente |
 | --- | --- | --- |
 | Ubicación del conductor | Se obtiene solo con la app abierta en pantalla. El permiso se puede revocar y el resto de la app sigue funcionando | RNF-13, [RN-04.1](04_reglas/CU-04_RecalcularRuta.md), [RN-04.3](04_reglas/CU-04_RecalcularRuta.md) |
+| Posición del conductor al reportar | Solo viaja cuando el conductor elige el punto del evento en el mapa, sirve para revisar que esté a 1 km o menos y no se guarda (#191) | [RN-01.5](04_reglas/CU-01_ReportarEventoVial.md), RNF-10 |
 | Telemetría | No se guarda después de analizarse y llega al motor core sin datos del conductor | [RN-04.12](04_reglas/CU-04_RecalcularRuta.md) |
 | Rutas | No se guardan en el servidor | [D-05](08_decisiones_parametros.md), Visión 6.3 |
 | Quién reportó, votó o confirmó | Nunca sale en una respuesta | RNF-10, [RN-02.5](04_reglas/CU-02_VisualizarEventosViales.md), [RN-05.7](04_reglas/CU-05_ConsultarDisponibilidadCombustible.md) |

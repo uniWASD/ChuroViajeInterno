@@ -94,10 +94,11 @@ class MapController extends ChangeNotifier {
 
   Future<void> abrirAjustesDeUbicacion() => _ubicacion.abrirAjustes();
 
-  /// El conductor tocó un punto del mapa (para el ajuste del reporte o para elegir un destino).
-  void seleccionarPunto(Coordenada punto) {
+  /// El conductor tocó un punto del mapa, o un lugar conocido del mapa base con su [nombre] (#191). Se abre la hoja
+  /// del lugar; la cámara no se mueve, porque el conductor ya lo está viendo.
+  void seleccionarPunto(Coordenada punto, {String? nombre}) {
     _puntoSeleccionado = punto;
-    _nombrePunto = null;
+    _nombrePunto = nombre;
     _foco = null;
     notifyListeners();
   }

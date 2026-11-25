@@ -11,7 +11,7 @@ Cubre HU-07 y HU-12, y los requisitos RF-07, RF-13, RNF-03, RNF-07 y RNF-09. El 
 | RN-05.1 | Solo un conductor con sesión vigente puede consultar los surtidores y confirmar una recarga. | Sesión | CU-05 sección 7, RNF-08 |
 | RN-05.2 | La consulta parte de la ubicación actual del conductor y devuelve los surtidores del catálogo ordenados del más cercano al más lejano. | Surtidor | CU-05 pasos 1 y 2, HU-07 c.1 |
 | RN-05.3 | Para cada surtidor y tipo de combustible se muestra un solo dato: el más reciente, venga de WhatsApp, de Conductores o de ANH. | EstadoCombustible | CU-05 sección 8, HU-07 c.2, [D-28](../08_decisiones_parametros.md) |
-| RN-05.4 | Todo dato se muestra con su disponibilidad (disponible o agotado), su tipo de combustible, su origen y su fecha. La fila aparece solo si se conoce. Si el origen es ANH, se muestran además el saldo en litros y el estado de ANH (alto, medio o bajo). | EstadoCombustible | CU-05 paso 4, HU-07 c.1 y c.3, RNF-07, [D-31](../08_decisiones_parametros.md) |
+| RN-05.4 | Todo dato se muestra con su disponibilidad (disponible o agotado), su tipo de combustible, su origen y hace cuánto llegó. La fila aparece solo si se conoce. Si el origen es ANH, el saldo en litros va junto al tipo, por ejemplo «Gasolina (19 L)». Desde #191 no se muestran la hora exacta ni el estado de ANH (alto, medio o bajo): el ícono del origen ya dice de dónde vino. | EstadoCombustible | CU-05 paso 4, HU-07 c.1 y c.3, RNF-07, [D-31](../08_decisiones_parametros.md) |
 | RN-05.5 | Un dato con más de 6 horas deja de tomarse en cuenta. Las horas se cuentan desde la fecha del dato en WhatsApp y en Conductores, y desde que el backend lo leyó en ANH ([RN-09.17](CU-09_ConsultarEstadoANH.md)). Un surtidor sin ningún dato vigente se muestra como «sin información reciente». | EstadoCombustible | CU-05 ext. 3a y sección 8, HU-07 c.4, [P-30](../08_decisiones_parametros.md) |
 | RN-05.6 | Todo dato lleva un tipo del catálogo. Cuando un mensaje de WhatsApp no lo indica, el dato se guarda y se muestra con el tipo Desconocido. Los datos de ANH siempre traen el tipo del combustible que se pidió. | TipoCombustible | CU-05 sección 8, HU-07 c.5 |
 | RN-05.7 | Nunca se muestra quién aportó un dato. | EstadoCombustible | CU-05 sección 7, HU-07 seguridad |
@@ -35,7 +35,7 @@ La consulta:
 3. **Controlador REST de surtidores (backend).** Comprueba el JWT (RN-05.1) y el formato. Llama al servicio del modelo que consulta surtidores.
 4. **Modelo (backend).** Ordena los `Surtidor` por cercanía (RN-05.2). Para cada uno, el `EstadoCombustible` elige el dato más reciente por tipo y descarta lo vencido (RN-05.3, RN-05.5, RN-05.6).
 5. **Controlador REST de surtidores (backend).** Devuelve la lista sin datos de quien aportó (RN-05.7).
-6. **Vista Surtidores.** Muestra cada surtidor con su estado por tipo, la fila si se conoce, el saldo en litros si el origen es ANH, el origen y la fecha (RN-05.4). Mientras sigue abierta, la consulta se repite cada 60 segundos (RN-05.17).
+6. **Vista Surtidores.** Muestra cada surtidor con su estado por tipo, la fila si se conoce, el saldo en litros si el origen es ANH, el origen y hace cuánto llegó (RN-05.4). Mientras sigue abierta, la consulta se repite cada 60 segundos (RN-05.17).
 
 La confirmación de recarga:
 

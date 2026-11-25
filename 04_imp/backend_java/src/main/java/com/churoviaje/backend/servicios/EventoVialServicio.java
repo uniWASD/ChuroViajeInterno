@@ -41,14 +41,15 @@ public class EventoVialServicio {
     /**
      * RN-01.2 a RN-01.11, en una sola transaccion: si algo falla, no queda nada guardado (RN-01.11). El conductor
      * queda bloqueado mientras se revisa, asi que dos reportes suyos que llegan juntos no esquivan el duplicado ni
-     * el limite.
+     * el limite. Si llega la posicion del conductor, el punto no puede estar a mas de 1 km de ella (RN-01.5).
      */
     @Transactional
     public EventoVial registrarEvento(long conductorId, String codigoTipo, Ubicacion ubicacion,
-            OffsetDateTime horaConfirmacion, Integer minutosElegidos) {
+            OffsetDateTime horaConfirmacion, Integer minutosElegidos, Ubicacion posicionConductor) {
         Instant ahora = reloj.instant();
         var tipo = catalogo.buscarTipoDeEvento(codigoTipo).orElseThrow(EventoVial::tipoNoReportable); // RN-01.3
         ubicacion.validarParaReporte(cobertura); // RN-01.6
+        ubicacion.validarCercaniaDelConductor(posicionConductor); // RN-01.5, P-39
         Conductor reportante = conductores.buscarYBloquear(conductorId)
                 .orElseThrow(() -> new ExcepcionRechazo(HttpStatus.UNAUTHORIZED, "NO_AUTENTICADO",
                         "Inicia sesión para continuar."));

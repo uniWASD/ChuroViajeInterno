@@ -27,7 +27,8 @@ const String catalogosJson = '''
   {"minutos":5,"nombre":"Hace 5 minutos","porDefecto":true},
   {"minutos":10,"nombre":"Hace 10 minutos","porDefecto":false},
   {"minutos":30,"nombre":"Hace 30 minutos","porDefecto":false}],
- "valoresFila":[{"codigo":"SIN_FILA","nombre":"Sin fila"}]}
+ "valoresFila":[{"codigo":"SIN_FILA","nombre":"Sin fila"}],
+ "radioReporteMetros":1000}
 ''';
 
 /// Un backend falso que responde las rutas de sesión y de catálogos, y anota lo que recibió.

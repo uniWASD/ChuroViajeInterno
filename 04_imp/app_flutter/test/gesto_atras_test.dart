@@ -24,6 +24,7 @@ import 'sesion_controller_test.dart' show catalogosJson;
 void main() {
   late MapaFalso mapa;
   late int salidas;
+  late UbicacionFalsa ubicacion;
 
   Widget app() {
     mapa = MapaFalso();
@@ -41,7 +42,8 @@ void main() {
     return MultiProvider(
       providers: createAppProviders(
         apiClient: api,
-        ubicacion: UbicacionFalsa(),
+        ubicacion: ubicacion = UbicacionFalsa(),
+        servicioRutas: ServicioRutasFalso(),
         constructorMapa: mapa.construir,
         almacen: AlmacenFalso.conSesionVigente()..datos[ServicioCatalogos.clave] = catalogosJson,
         google: GoogleFalso(),
@@ -180,5 +182,41 @@ void main() {
     await tester.tap(find.text('Surtidores').last);
     await tester.pump();
     expect(scope().canPop, isFalse, reason: 'en otra pestaña el gesto vuelve al Mapa');
+  });
+
+  testWidgets('#191: con «Notificar evento» abierta, el gesto la cierra y no sale', (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('boton-notificar')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('hoja-notificar')), findsOneWidget);
+
+    await atras(tester);
+    expect(find.byKey(const Key('hoja-notificar')), findsNothing);
+    expect(salidas, 0);
+  });
+
+  testWidgets('#191: con la ruta a la vista, el gesto vuelve a la hoja del lugar y después quita el lugar',
+      (tester) async {
+    await tester.pumpWidget(app());
+    await tester.pumpAndSettle();
+    ubicacion.emitir(const Coordenada(-21.5344, -64.7340));
+    await tester.pump();
+    mapa.ultimo!.alTocar(const Coordenada(-21.5417, -64.7250));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('como-llegar-lugar')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('otra-parada')));
+    await tester.pump();
+
+    await atras(tester);
+    expect(find.text('Toca el mapa para agregar la parada'), findsNothing, reason: 'primero deja de elegir la parada');
+    expect(find.byKey(const Key('hoja-ruta')), findsOneWidget);
+    await atras(tester);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('hoja-lugar')), findsOneWidget);
+    await atras(tester);
+    expect(find.byKey(const Key('hoja-lugar')), findsNothing);
+    expect(salidas, 0);
   });
 }

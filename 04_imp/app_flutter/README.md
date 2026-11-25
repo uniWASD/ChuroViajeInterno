@@ -41,8 +41,10 @@ Aplicación móvil del proyecto ChuroViaje, desarrollada con Flutter y Dart. Est
 │       │   ├── map_screen.dart
 │       │   ├── mapa_base.dart
 │       │   └── mapa_mapbox.dart
+│       ├── reporte/
+│       │   └── hoja_notificar.dart
 │       ├── ruta/
-│       │   └── como_llegar_screen.dart
+│       │   └── hoja_ruta.dart
 │       ├── events/
 │       │   └── events_screen.dart
 │       └── stations/
@@ -52,7 +54,7 @@ Aplicación móvil del proyecto ChuroViaje, desarrollada con Flutter y Dart. Est
     │   └── dobles_mapa.dart
     ├── widget_test.dart
     ├── api_client_test.dart
-    ├── como_llegar_screen_test.dart
+    ├── como_llegar_test.dart
     ├── map_screen_test.dart
     ├── ruta_controller_test.dart
     ├── ruta_test.dart
@@ -140,15 +142,17 @@ flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.xxxxx --dart-define=API_URL_DEV
 
 ## Cómo llegar
 
-El botón «Cómo llegar» de la vista Mapa abre la vista del mismo nombre (CU-03). Si había un punto elegido en el mapa, pasa a ser el destino.
+Desde #191 (D-49) la ruta se elige en el mismo Mapa principal, como en Google Maps (CU-03). Ya no hay una vista Cómo llegar aparte.
 
-* El origen es la posición actual; con «Marcar» se puede tocar otro punto. Si no hay ubicación ni origen marcado, la vista lo pide antes de llamar al backend.
-* El destino y las paradas se eligen tocando el mapa. El destino también puede venir de la barra de búsqueda del Mapa: el lugar elegido queda marcado y «Cómo llegar» lo toma (D-47). Las paradas van en el orden en que se agregan y son 10 como máximo (RN-03.2).
-* La app manda los puntos a `POST /rutas` y dibuja lo que vuelve, con su tiempo y su distancia (RN-03.13). Las reglas las aplica el backend.
-* «No se encontró una ruta válida» y «Origen o destino inválido» se muestran como respuesta, no como error. Si el backend no responde o responde 503, se muestra el fallo con «Reintentar» (RN-03.15).
-* «Iniciar» pone la ruta Activa y abre la vista Navegación activa en lugar de Cómo llegar (RN-03.17).
+* Al tocar un punto, un lugar conocido del mapa base (por ejemplo «Mercado Negro», con `TapInteraction(StandardPOIs())`) o un resultado de la búsqueda (D-47), se abre la hoja del lugar (`HojaLugar`). `RutaController`, que ahora vive en toda la app, pide la ruta a `POST /rutas` desde la posición del conductor y la hoja muestra su distancia y su tiempo (RN-03.13), con «Notificar», «Ir» y «Cómo llegar». Si el conductor elige otro lugar mientras tanto, la respuesta vieja se descarta.
+* El origen es siempre la posición. Sin ubicación, la hoja lo avisa y la ruta se pide cuando llega la primera posición.
+* «Cómo llegar» dibuja la ruta en el mapa con la hoja `HojaRuta`: «Iniciar» y «Otra parada». Cada parada se toca en el mapa, van en el orden en que se agregan y son 10 como máximo (RN-03.2); se quitan desde su chip. Cerrar la hoja vuelve a la del lugar, sin paradas.
+* La ruta se pinta de amarillo o rojo donde pasa por una congestión de su mismo sentido (`pintarRutaPorTrafico`, en `lib/models/trafico.dart`), también en la Navegación activa.
+* «No se encontró una ruta válida» y «Origen o destino inválido» se muestran como respuesta, no como error, y no dejan ir. Si el backend no responde o responde 503, se muestra el fallo con «Reintentar» (RN-03.15).
+* «Iniciar» o «Ir» ponen la ruta Activa y abren la vista Navegación activa (RN-03.17), con la cámara sobre el conductor. Al volver no queda nada elegido.
+* El gesto de atrás deja de elegir la parada, después cierra la ruta y al final quita el lugar.
 
-Desde HU-10 la app inicia sesión y pide la ruta al backend. Con `--dart-define=RUTA_DE_EJEMPLO=true` (fuera de producción) la vista usa `assets/datos/ruta_ejemplo_post_rutas.json`: la respuesta del primer viaje de referencia de Tarija (T-120, de la plaza Luis de Fuentes a la ex terminal), copiada de `04_imp/datos`. Es siempre la misma ruta, elija el conductor los puntos que elija, y la vista lo avisa.
+Desde HU-10 la app inicia sesión y pide la ruta al backend. Con `--dart-define=RUTA_DE_EJEMPLO=true` (fuera de producción) la vista usa `assets/datos/ruta_ejemplo_post_rutas.json`: la respuesta del primer viaje de referencia de Tarija (T-120, de la plaza Luis de Fuentes a la ex terminal), copiada de `04_imp/datos`. Es siempre la misma ruta, elija el conductor los puntos que elija, y la hoja lo avisa.
 
 ## Cliente HTTP
 
@@ -216,7 +220,7 @@ Mientras la ruta está Activa, cada 5 segundos (con la consulta de eventos) el c
 
 ## Estado actual
 
-La app tiene la estructura inicial, la navegación principal, la gestión de estado con Provider, la configuración por entornos, un cliente HTTP centralizado, el mapa base de Mapbox con la ubicación del conductor (T-093) y la vista Cómo llegar (HU-05).
+La app tiene la estructura inicial, la navegación principal, la gestión de estado con Provider, la configuración por entornos, un cliente HTTP centralizado, el mapa base de Mapbox con la ubicación del conductor (T-093) y Cómo llegar en el mismo mapa (HU-05, #191).
 
 La navegación activa llegó con HU-05 (#94). Los surtidores se incorporarán en etapas posteriores.
 
@@ -232,7 +236,7 @@ Para que el selector de cuentas funcione en Android hay que registrar en Google 
 
 ## Eventos viales (HU-01, HU-02 y HU-03)
 
-- **Reportar (HU-01):** «Reportar evento» en el mapa abre la vista con los tipos reportables del catálogo y «Hace 5 minutos» marcado: con el tipo y «Confirmar» son tres toques. La app usa la ubicación del GPS o, si no hay, el punto que el conductor marca en el mapa. Envía la hora de confirmación y los minutos; nunca calcula el momento del evento.
+- **Reportar (HU-01):** desde #191 es la hoja «Notificar evento» sobre el mapa, con los tipos reportables del catálogo y «5 min» marcado, sin imagen ni comentario. La campana la abre en la posición del conductor: con el tipo y «Enviar» son tres toques (RNF-06). «Notificar», en la hoja de un lugar, la abre en ese lugar, y mientras está abierta se puede tocar el mapa para cambiar el punto. El punto puede estar a 1 km o menos del conductor (RN-01.5, `radioReporteMetros` del catálogo): más lejos, la hoja lo avisa y no lo envía; con un punto elegido la app manda también `posicionConductor` para que el backend lo revise. Sin GPS vale el punto que el conductor marca. Al enviarse, la hoja se cierra sola y el mensaje aparece abajo. Envía la hora de confirmación y los minutos; nunca calcula el momento del evento.
 - **Sin conexión (HU-02):** si no hay red, el reporte se guarda en una base SQLite del teléfono (`sqflite`) y se reenvía solo cuando vuelve la red (`connectivity_plus`) o cada 30 segundos con la app abierta. Antes de reenviarlo, la app comprueba su vigencia con el catálogo guardado. Los que fallan varias veces se muestran como pendientes en el mapa.
 - **Ver (HU-03):** con el mapa abierto, la app consulta `GET /eventos` cada 5 segundos, pidiendo solo los cambios con la marca de la consulta anterior. Cada evento se dibuja con el color de su tipo; al tocarlo se ven su tipo y hace cuánto ocurrió. Si el backend no responde, el mapa conserva lo último y avisa «No se pudo actualizar eventos».
 - **Sin conexión (HU-04, #62):** cada consulta de `GET /eventos` que trae algo guarda en el teléfono los eventos que conoce la app, con la hora (los catálogos ya los guarda el inicio de sesión). Al abrir la app, mientras no llega una consulta, el mapa y la lista muestran esos eventos con la marca amarilla «Sin conexión: eventos guardados», que dice a qué hora se guardaron y que pueden estar desactualizados. En cuanto una consulta funciona, que con la consulta de cada 5 segundos es apenas vuelve la red, la marca desaparece y lo guardado se reemplaza por lo vigente (RN-02.9). Un evento guardado que ya venció según el catálogo no se dibuja. Cerrar sesión borra lo guardado. Las pruebas están en `test/eventos_sin_conexion_test.dart` (CP-84, CP-85).
@@ -242,12 +246,12 @@ Las pruebas de la cola usan `sqflite_common_ffi`, que necesita SQLite instalado 
 
 ## Surtidores (HU-07, #71)
 
-- **Lista:** la pestaña Surtidores es una hoja sobre el mapa, como la de Eventos (Figma «08 · Surtidores»). Muestra los surtidores de `GET /surtidores` del más cercano al más lejano. Cada fila lleva una barra con el estado general: verde si hay todo, amarilla si hay algunos combustibles, roja si no hay ninguno y gris sin información reciente. También muestra hace cuánto llegó el último dato y el ícono de su origen. Al tocar la fila se despliega el estado por combustible y el botón «Ir»; la «i» abre el detalle.
-- **Detalle:** el nombre, la distancia y, por cada combustible, si hay o no, la fila si se conoce, el origen (WhatsApp, Conductores o ANH, cada uno con su ícono y su color) y la hora del dato. Si el origen es ANH, también el saldo en litros y el estado de ANH. Un surtidor sin datos vigentes dice «Sin información reciente».
+- **Lista:** la pestaña Surtidores es una hoja sobre el mapa, como la de Eventos (Figma «08 · Surtidores»). Muestra los surtidores de `GET /surtidores` del más cercano al más lejano. Cada fila lleva una barra con el estado general: verde si hay todo, amarilla si hay algunos combustibles, roja si no hay ninguno y gris sin información reciente. También muestra hace cuánto llegó el último dato. Al tocar la fila se despliega el estado por combustible, la distancia con el ícono del auto y el botón «Ir»; la «i» abre el detalle.
+- **Detalle:** el nombre, la distancia y, por cada combustible, si hay o no, la fila si se conoce, el origen (WhatsApp, Conductores o ANH, cada uno con su ícono y su color) y hace cuánto llegó el dato. Si el origen es ANH, el saldo en litros va junto al combustible: «Gasolina (19 L)». Desde #191 no se muestran la hora exacta ni el estado de ANH. Un surtidor sin datos vigentes dice «Sin información reciente».
 - **Mapa:** los surtidores también son marcadores, con el color de su estado. Al tocar uno se abre su detalle y la cámara va hasta él.
 - **Cada 60 segundos:** `CombustibleController` vuelve a pedir la lista mientras el mapa está en pantalla, sea en la pestaña Mapa, Eventos o Surtidores, y la pausa en segundo plano (RN-05.17, P-27). La lista y los marcadores salen de la misma consulta.
 - **Sin ubicación:** pide desde el centro de Tarija, para que los marcadores salgan igual, y la hoja explica que necesita la ubicación para ordenar por cercanía, con el botón para concederla. Cuando llega la primera posición, vuelve a pedir la lista.
-- **Cómo llegar:** «Ir» y «Cómo llegar» marcan el surtidor como punto elegido con su nombre (`MapController.elegirLugar`) y abren Cómo llegar con él como destino.
+- **Ir y Cómo llegar:** los dos marcan el surtidor como punto elegido con su nombre (`MapController.elegirLugar`). «Ir», en la lista, abre directamente la Navegación activa; «Cómo llegar», en el detalle, muestra la ruta en el mapa (#191).
 - El gesto de atrás cierra primero el detalle del surtidor.
 
 Las pruebas están en `test/surtidores_test.dart` (CP-108 a CP-110).

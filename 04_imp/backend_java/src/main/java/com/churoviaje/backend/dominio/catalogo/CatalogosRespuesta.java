@@ -4,13 +4,15 @@ import java.util.List;
 
 /**
  * DTO de {@code GET /catalogos} (D-06, D-42): la app no tiene valores propios, todo sale de aqui. Los tipos de evento
- * y de combustible los entrega {@link CatalogoRepository} ya como DTO.
+ * y de combustible los entrega {@link CatalogoRepository} ya como DTO. {@code radioReporteMetros} es hasta donde puede
+ * reportar un conductor desde su posicion (RN-01.5, P-39).
  */
 public record CatalogosRespuesta(
         List<TipoEventoDto> tiposEvento,
         List<TipoCombustibleDto> tiposCombustible,
         List<TiempoReporteDto> tiemposReporte,
-        List<ValorFilaDto> valoresFila) {
+        List<ValorFilaDto> valoresFila,
+        int radioReporteMetros) {
 
     public record TipoEventoDto(String codigo, String nombre, String color, int vigenciaMinutos, boolean reportable) {
 

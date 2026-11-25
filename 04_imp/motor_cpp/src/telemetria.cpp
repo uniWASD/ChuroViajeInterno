@@ -166,18 +166,29 @@ ResultadoTelemetria AnalizadorTelemetria::analizar(const std::string& recorrido,
       cortar_racha(e.tramos_lentos, e.informados, e.metros_lentos, e.segundos_lentos);
       e.lento_desde = comienzo;
       e.inicio_lento = desde_donde;
+      e.ultimo_avance = desde_donde;
+      e.avance_desde = comienzo;
+    }
+    // RN-04.26: cada vez que se aleja 10 m del último punto donde avanzó, vuelve a contar desde ahí.
+    if (distancia_m(e.ultimo_avance, l.posicion) >= kAvanceRecienteM) {
+      e.ultimo_avance = l.posicion;
+      e.avance_desde = l.momento;
     }
     if (!contiene(e.tramos_lentos, tramo->tramo)) e.tramos_lentos.push_back(tramo->tramo);
     e.metros_lentos += metros;
     e.segundos_lentos += static_cast<double>(dt);
 
     // RN-04.10: 2 minutos seguidos lento, en la misma cuadra o en las siguientes de la misma calle. Además,
-    // RN-04.22: venía manejando hace poco, y RN-04.23: avanzó desde donde empezó la racha. El nivel sale de la
-    // velocidad media de la racha: por debajo de la cuarta parte de la esperada, muy congestionado.
+    // RN-04.22: venía manejando hace poco, RN-04.23: avanzó desde donde empezó la racha, y RN-04.26: sigue
+    // avanzando. El nivel sale de la velocidad media de la racha: por debajo de la cuarta parte de la esperada, muy
+    // congestionado.
     const bool dos_minutos = l.momento - e.lento_desde >= kTiempoCongestionS;
     const bool venia_manejando = e.manejando_hasta && l.momento - *e.manejando_hasta <= kVentanaManejoS;
     const bool avanzo = distancia_m(e.inicio_lento, l.posicion) >= kAvanceMinimoM;
-    if (dos_minutos && venia_manejando && avanzo) {
+    // RN-04.26: y sigue avanzando. Quien se acercó despacio y estacionó ya cumple RN-04.23, pero lleva más de
+    // 90 segundos sin moverse 10 m.
+    const bool sigue_avanzando = l.momento - e.avance_desde <= kSinAvanzarMaximoS;
+    if (dos_minutos && venia_manejando && avanzo && sigue_avanzando) {
       const double media_kmh = e.metros_lentos / e.segundos_lentos * 3.6;
       const NivelTrafico nivel =
           media_kmh < esperada_kmh / 4 ? NivelTrafico::muy_congestionado : NivelTrafico::congestionado;

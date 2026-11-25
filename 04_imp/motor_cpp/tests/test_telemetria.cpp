@@ -148,6 +148,15 @@ void quieto(std::vector<Lectura>& lecturas, int segundos) {
   }
 }
 
+// Un auto quieto con un GPS que casi no tiembla (menos de 3 m, así que no da rumbo ni cuenta como giro).
+void quieto_sin_temblor(std::vector<Lectura>& lecturas, int segundos, double metros = 1) {
+  const Lectura centro = lecturas.back();
+  for (int t = 3; t <= segundos; t += 3) {
+    const double norte = (t / 3 % 2 == 0 ? metros : -metros) * grados_lat_por_metro();
+    lecturas.push_back({centro.lat + norte, centro.lon, centro.momento + t});
+  }
+}
+
 }  // namespace
 
 TEST(Telemetria, RumboYDiferenciaDeRumbo) {
@@ -473,4 +482,56 @@ TEST(Telemetria, CP175_CadaCongestionTraeElTrazadoDeSuTramo) {
   const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
   ASSERT_FALSE(congestiones.empty());
   EXPECT_EQ(congestiones.back().at("trazado"), json::parse("[[-21.54,-64.74],[-21.54,-64.73]]"));
+}
+
+// RN-04.26, P-40: «sigue avanzando». Desde que la app manda lecturas también con el auto quieto (P-13), quien se
+// acerca despacio a un lugar y estaciona con la app abierta ya cumplía RN-04.22 y RN-04.23.
+TEST(Telemetria, RN0426_AcercarseDespacioYEstacionarNoEsCongestion) {
+  for (const double temblor : {0.0, 1.0}) {
+    Prueba p;
+    auto lecturas = llega_por_la_avenida();
+    avanzar(lecturas, 8, 90, 15);                // unos 33 m despacio, buscando lugar
+    quieto_sin_temblor(lecturas, 900, temblor);  // 15 minutos estacionado
+    EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty()) << "temblor de " << temblor << " m";
+  }
+}
+
+TEST(Telemetria, RN0426_UnaFilaATironesSigueSiendoCongestion) {
+  Prueba p;
+  auto lecturas = llega_por_la_avenida();
+  for (int i = 0; i < 5; ++i) {
+    quieto_sin_temblor(lecturas, 30);  // 30 s detenido en la fila
+    avanzar(lecturas, 6, 90, 9);       // avanza unos 15 m
+  }
+  const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
+  ASSERT_FALSE(congestiones.empty());
+  EXPECT_EQ(congestiones.back().at("tramo"), "avenida:ida");
+}
+
+TEST(Telemetria, RN0426_SiLaFilaSeDetieneMasDe90SegundosDejaDeInformarYVuelveAlAvanzar) {
+  Prueba p;
+  auto lecturas = llega_por_la_avenida();
+  avanzar(lecturas, 8, 90, 126);  // ya es congestión (CP-114)
+  ASSERT_FALSE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
+
+  // Se detiene del todo 2 minutos. Las lecturas se parten en tramos de 30 s para ver cuándo deja de informar.
+  std::vector<Lectura> detenido{lecturas.back()};
+  quieto_sin_temblor(detenido, 120);
+  auto parte = [&](int desde_s, int hasta_s) {
+    std::vector<Lectura> r;
+    for (const Lectura& l : detenido) {
+      const auto t = l.momento - lecturas.back().momento;
+      if (t >= desde_s && t <= hasta_s) r.push_back(l);
+    }
+    return r;
+  };
+  EXPECT_FALSE(p.enviar_en_grupos("recorrido-1", false, parte(3, 60)).empty()) << "el primer minuto todavía informa";
+  p.enviar_en_grupos("recorrido-1", false, parte(63, 90));
+  EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, parte(93, 120)).empty()) << "más de 90 s sin avanzar 10 m";
+
+  // Vuelve a moverse despacio: unos 33 m, y se informa otra vez.
+  std::vector<Lectura> sigue{detenido.back()};
+  avanzar(sigue, 8, 90, 15);
+  sigue.erase(sigue.begin());
+  EXPECT_FALSE(p.enviar_en_grupos("recorrido-1", false, sigue).empty());
 }

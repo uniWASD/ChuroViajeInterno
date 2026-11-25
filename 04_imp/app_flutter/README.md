@@ -75,6 +75,13 @@ Se utiliza **Provider**, con `ChangeNotifier` para notificar cambios de estado a
 
 El `NavigationController` administra la pestaña seleccionada en la navegación principal.
 
+Para que la app no se trabe, las vistas escuchan solo lo que usan (`context.select`): la pantalla principal y la
+lista de Surtidores no se reconstruyen con cada posición del GPS. `EventosController.eventos` devuelve la misma lista
+mientras no llegue ni venza ningún evento, y `EventosController.congestiones` une las congestiones una sola vez por
+cada lista; el mapa guarda los marcadores y el tráfico de la ruta mientras sus datos no cambien. En el mapa de
+Mapbox, cada capa se dibuja de a una vez (`DibujoEnSerie`), así dos cambios seguidos no dejan marcadores ni líneas
+repetidas.
+
 ## Navegación principal
 
 La aplicación dispone de una barra de navegación inferior con tres pantallas:
@@ -83,7 +90,12 @@ La aplicación dispone de una barra de navegación inferior con tres pantallas:
 * Eventos.
 * Surtidores.
 
-Las pantallas son estructuras iniciales en español, preparadas para incorporar sus funcionalidades posteriormente.
+El mapa queda siempre detrás; Eventos y Surtidores son hojas sobre él. Al cambiar de pestaña no queda nada abierto
+de la anterior: se cierran la búsqueda, el detalle de un evento o de un surtidor, el surtidor desplegado en la lista,
+«Notificar evento» (salvo que se esté enviando o se haya quedado sin red) y la elección de una parada. El lugar
+elegido y su ruta («Cómo llegar») sí se conservan. En Eventos y en Surtidores, tocar el mapa de fondo no elige un
+punto; tocar el marcador de un evento desde Surtidores lleva a Eventos, y el de un surtidor desde Eventos, a
+Surtidores.
 
 ## Configuración de entornos
 
@@ -99,6 +111,7 @@ Variables disponibles:
 | `API_URL_PROD` | Dirección del backend de producción.                |
 | `MAPBOX_ACCESS_TOKEN` | Token público de Mapbox para el mapa base. Sin él, la vista Mapa muestra el error de mapa no disponible. |
 | `RUTA_DE_EJEMPLO` | `false` por defecto: Cómo llegar pide la ruta a `POST /rutas`. Con `true` muestra una ruta de ejemplo, para probar sin backend. En producción siempre llama al backend. |
+| `MAPA_TEXTURA` | `false` por defecto. Con `true`, en Android el mapa se dibuja como textura (Texture Layer Hybrid Composition) en lugar de Hybrid Composition: las hojas de Eventos y Surtidores suelen desplazarse más fluidas sobre el mapa. Es para comparar en el teléfono antes de dejarlo fijo. |
 | `GOOGLE_SERVER_CLIENT_ID` | Client ID **web** del proyecto de Google Cloud. El token de identidad de Google sale para ese Client ID, que es el mismo `GOOGLE_CLIENT_ID` que valida el backend (HU-10). |
 
 ### Desarrollo en Android

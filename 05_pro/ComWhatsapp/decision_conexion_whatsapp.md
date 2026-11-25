@@ -8,8 +8,8 @@
 | Tareas relacionadas | T-024, T-025, T-026, T-027 |
 | Documento base | `investigacion_whatsapp.md` (v1.1) |
 | Estado | Aceptada |
-| Versión | 1.4 |
-| Fecha | 12/10/2026 |
+| Versión | 1.5 |
+| Fecha | 24/11/2026 |
 
 | Versión | Fecha | Descripción |
 | ------- | ----- | ----------- |
@@ -18,12 +18,13 @@
 | 1.2 | 25/09/2026 | Se registra que CU-06, HU-08 y el Documento de Visión (v0.3) ya fueron actualizados según esta decisión; el requisito de tiempo pasa a menos de 6 minutos. |
 | 1.3 | 06/10/2026 | Se define que el proceso de análisis forma parte del servicio de WhatsApp/LLM y que el backend Java solo recibe, valida y guarda el resultado. El tipo de combustible es obligatorio en el resultado (uno de los tipos del catálogo, o "Desconocido" si el mensaje no lo indica) y la fila aproximada se extrae solo cuando el mensaje la menciona. Se alinea el contexto con el Documento de Visión v0.4 y se referencia la vigencia de los mensajes pendientes. |
 | 1.4 | 12/10/2026 | Se acepta la capa gratuita de la API de Gemini, aunque sus términos permiten a Google usar lo enviado para mejorar sus productos; se enmascaran los números de teléfono del texto y la política de privacidad lo informa (D-17 de la arquitectura). |
+| 1.5 | 24/11/2026 | Se registra que la API pública de ANH Abastecimiento entra como fuente complementaria (CU-09, D-28 de la arquitectura, decidido el 23/10/2026). WhatsApp sigue siendo la fuente principal; la revisión futura por una API de los surtidores queda resuelta así. |
 
 ---
 
 ## 1. Contexto
 
-El módulo de disponibilidad de combustible (CU-05) necesita conocer el estado de los surtidores de Tarija. Según el Documento de Visión (v0.4), el dato se obtiene **monitoreando grupos de WhatsApp existentes donde la comunidad avisa si hay o no combustible**, sin depender de reportes de los usuarios ni de la colaboración de las gasolineras. La confirmación opcional de los conductores que acaban de recargar (HU-12) solo complementa esta fuente.
+El módulo de disponibilidad de combustible (CU-05) necesita conocer el estado de los surtidores de Tarija. Según el Documento de Visión (v0.4), el dato se obtiene **monitoreando grupos de WhatsApp existentes donde la comunidad avisa si hay o no combustible**, sin depender de reportes de los usuarios ni de la colaboración de las gasolineras. La confirmación opcional de los conductores que acaban de recargar (HU-12) y, desde el 23/10/2026, la consulta a la API pública de ANH (CU-09, HU-14) solo complementan esta fuente.
 
 Esto impone dos condiciones a la solución:
 
@@ -140,6 +141,6 @@ Backend Java (valida contra el catálogo) ──> Base de datos ──> App (CU-
 
 Esta decisión se revisará si:
 
-* Los surtidores otorgan acceso a una API propia: esa API pasaría a ser la fuente primaria y el monitoreo de WhatsApp quedaría como respaldo, como establece CU-06.
+* Los surtidores otorgan acceso a una API propia: esa API pasaría a ser la fuente primaria y el monitoreo de WhatsApp quedaría como respaldo, como establece CU-06. **Revisado en v1.5:** la API pública de ANH se evaluó en el Sprint 1 y el 23/10/2026 se decidió usarla como fuente complementaria, no como principal, porque no publica condiciones de uso, cuotas ni disponibilidad garantizada (D-28 de la arquitectura).
 * El número dedicado es bloqueado de forma recurrente, lo que obligaría a reevaluar el enfoque de extracción.
 * La precisión del LLM o su costo no resultan aceptables en las pruebas con mensajes reales.

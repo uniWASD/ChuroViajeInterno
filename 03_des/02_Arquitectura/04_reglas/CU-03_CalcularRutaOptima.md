@@ -33,14 +33,14 @@ El factor de cada tipo de evento sobre un tramo (RN-03.9) está en [P-12](../08_
 
 ## Recorrido por Vista, Controlador y Modelo
 
-1. **Vista Cómo llegar.** El conductor indica origen, destino y, si quiere, paradas. Toca «Calcular ruta». El destino puede venir de la barra de búsqueda del Mapa principal: el lugar elegido queda marcado y «Cómo llegar» lo toma (RN-03.19).
-2. **Controlador de ruta (app).** Comprueba que haya origen y destino, y envía la solicitud al backend con el JWT.
+1. **Vista Mapa principal.** El conductor elige el destino: toca un punto o un lugar conocido del mapa, o lo busca en la barra (RN-03.19). Se abre la hoja del lugar (#191).
+2. **Controlador de ruta (app).** Pide la ruta al backend con el JWT, con la posición del conductor como origen. La hoja muestra su distancia y su tiempo (RN-03.13) y los botones «Ir» y «Cómo llegar». «Cómo llegar» dibuja la ruta en el mismo mapa con «Iniciar» y «Otra parada»; cada parada nueva se toca en el mapa y la ruta se vuelve a pedir.
 3. **Controlador REST de rutas (backend).** Comprueba el JWT (RN-03.1) y el formato. Llama al servicio del modelo que calcula rutas.
 4. **Modelo (backend).** Valida los puntos (RN-03.2, RN-03.3) y pasa la solicitud a `MotorDeRutas`, el wrapper Java del motor core.
 5. **Modelo (motor core).** La `RedVial` ajusta cada punto a una intersección (RN-03.4). Cada `Tramo` da su costo según su tráfico (RN-03.6 a RN-03.9). El motor arma la `Ruta` de menor costo, con distancia y tiempo (RN-03.10 a RN-03.14).
 6. **Modelo (backend).** Recibe la ruta o el motivo por el que no hay ruta (RN-03.12, RN-03.15).
 7. **Controlador REST de rutas (backend).** Devuelve la ruta con su tiempo y su distancia, o el mensaje correspondiente.
 8. **Controlador de ruta (app) y vista.** Dibujan la ruta y muestran tiempo y distancia. Si hubo fallo, muestran el mensaje y dejan reintentar.
-9. **Vista Cómo llegar.** El conductor toca «Iniciar»; la ruta pasa a Activa y se abre la vista Navegación activa (RN-03.17).
+9. **Vista Mapa principal.** El conductor toca «Iniciar» (o «Ir», desde la hoja del lugar); la ruta pasa a Activa y se abre la vista Navegación activa, con la cámara sobre el conductor (RN-03.17).
 
 El motor core conoce el tráfico porque el backend lo mantiene al día: le avisa cada vez que un evento nace, cambia su vencimiento, se retira o vence, y le envía todos los vigentes cada vez que arranca el núcleo C++ ([D-14](../08_decisiones_parametros.md), [D-15](../08_decisiones_parametros.md)).

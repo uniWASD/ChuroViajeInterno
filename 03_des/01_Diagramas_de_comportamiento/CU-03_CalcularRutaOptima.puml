@@ -2,6 +2,7 @@
 ' CU-03: Calcular Ruta Óptima - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09), secciones 4 y 6
 ' Issue: T-045 (actualizado en T-086)
+' Sprint 6.5 (#191): el destino se elige en el mapa y el origen es la posición; la hoja muestra la ruta e «Iniciar» o «Ir».
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
@@ -33,21 +34,23 @@ title CU-03: Calcular Ruta Óptima\nDiagrama de actividad
 start
 repeat
   |Conductor|
-  :Ingresa origen,
-destino y paradas
-opcionales;
+  :Elige el destino en
+el mapa (toca un
+punto o un lugar, o
+lo busca);
   |Sistema ChuroViaje|
-  :Valida los puntos
-ingresados;
+  :Valida el punto
+elegido;
 backward:[1a] Muestra un
 mensaje de error y
 solicita un nuevo
 destino;
 repeat while (¿Destino\ninválido o fuera\nde cobertura?) is (sí [1a])
 ->no;
-|Conductor|
-:Solicita "Calcular
-ruta";
+|Sistema ChuroViaje|
+:Pide la ruta desde
+la posición del
+conductor;
 |Backend Java|
 :Valida la solicitud
 y la envía al motor
@@ -64,12 +67,13 @@ vigentes;
 if (¿Existe una ruta\nvehicular?) then (sí)
   |Sistema ChuroViaje|
   if (¿Carga el mapa\nbase de Mapbox?) then (sí)
-    :Dibuja la ruta con
-tiempo y distancia
-estimados;
+    :Muestra la distancia
+y el tiempo; con
+"Cómo llegar" dibuja
+la ruta en el mapa;
     |Conductor|
-    :Confirma el inicio
-de la navegación;
+    :Toca "Iniciar" o
+"Ir";
     |Sistema ChuroViaje|
     :Comienza el
 seguimiento de la

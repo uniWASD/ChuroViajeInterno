@@ -41,10 +41,18 @@ class _MainScreenState extends State<MainScreen> {
   EventosController? _eventos;
   RecargaController? _recarga;
   ReporteController? _reporte;
+  NavigationController? _pestanas;
+  int? _pestanaAnterior;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final pestanas = context.read<NavigationController>();
+    if (!identical(pestanas, _pestanas)) {
+      _pestanas?.removeListener(_alCambiarPestana);
+      _pestanas = pestanas..addListener(_alCambiarPestana);
+      _pestanaAnterior = pestanas.selectedIndex;
+    }
     final eventos = context.read<EventosController>();
     if (!identical(eventos, _eventos)) {
       _eventos?.removeListener(_mostrarMensajes);
@@ -72,9 +80,32 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  /// Al cambiar de pestaña no queda nada abierto de la anterior: la búsqueda, el detalle de un evento o de un
+  /// surtidor, el surtidor desplegado en la lista, «Notificar evento» y la elección de una parada. Antes quedaban
+  /// abiertos sin verse y aparecían al volver (por ejemplo, el detalle de un surtidor abierto en Surtidores salía
+  /// en el Mapa, o «Ir» desde Surtidores mostraba un evento en vez de la ruta). El lugar elegido y su ruta («Cómo
+  /// llegar») sí se conservan, como en Google Maps.
+  void _alCambiarPestana() {
+    final actual = _pestanas!.selectedIndex;
+    if (actual == _pestanaAnterior) return;
+    _pestanaAnterior = actual;
+    final busqueda = context.read<BusquedaController>();
+    if (busqueda.abierta) busqueda.cerrar();
+    context.read<EventosController>().cerrarFicha();
+    context.read<CombustibleController>()
+      ..cerrarFicha()
+      ..plegar();
+    final reporte = context.read<ReporteController>();
+    // Si se está enviando, o se quedó sin red con lo elegido, la hoja se conserva para no perder el reporte.
+    if (reporte.abierto && !reporte.enviando && reporte.estado != EstadoReporte.sinRed) reporte.cerrar();
+    final ruta = context.read<RutaController>();
+    if (ruta.eligiendoParada) ruta.cancelarParada();
+  }
+
   @override
   void dispose() {
     _ventana?.cancel();
+    _pestanas?.removeListener(_alCambiarPestana);
     _eventos?.removeListener(_mostrarMensajes);
     _recarga?.removeListener(_mostrarMensajesRecarga);
     _reporte?.removeListener(_mostrarMensajesReporte);
@@ -105,20 +136,6 @@ class _MainScreenState extends State<MainScreen> {
       mensajero.showSnackBar(SnackBar(content: Text(m)));
     }
   }
-
-  /// Si en el Mapa hay algo abierto que el gesto debe cerrar primero.
-  bool _hayAlgoAbierto(
-    EventosController eventos,
-    MapController mapa,
-    BusquedaController busqueda,
-    CombustibleController combustible,
-    ReporteController reporte,
-  ) =>
-      busqueda.abierta ||
-      reporte.abierto ||
-      eventos.seleccionado != null ||
-      combustible.seleccionado != null ||
-      mapa.puntoSeleccionado != null;
 
   void _alVolver(bool salio) {
     if (salio) return;
@@ -187,22 +204,25 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventos = context.watch<EventosController>();
-    final mapa = context.watch<MapController>();
-    final busqueda = context.watch<BusquedaController>();
-    final combustible = context.watch<CombustibleController>();
-    final recarga = context.watch<RecargaController>();
-    final reporte = context.watch<ReporteController>();
+    // Solo lo que esta pantalla usa: así no se reconstruye entera con cada posición del GPS ni con cada consulta de
+    // eventos (eso hacía que la lista de Surtidores se trabara).
+    final busquedaAbierta = context.select<BusquedaController, bool>((b) => b.abierta);
+    final reporteAbierto = context.select<ReporteController, bool>((r) => r.abierto);
+    final eventoAbierto = context.select<EventosController, bool>((e) => e.seleccionado != null);
+    final avisoEventos = context.select<EventosController, bool>((e) => e.sinActualizar || e.desactualizados);
+    final surtidorAbierto = context.select<CombustibleController, bool>((c) => c.seleccionado != null);
+    final puntoAbierto = context.select<MapController, bool>((m) => m.puntoSeleccionado != null);
+    final pregunta = context.select<RecargaController, Object?>((r) => r.pregunta);
+    final recarga = context.read<RecargaController>();
+    // Si en el Mapa hay algo abierto que el gesto debe cerrar primero.
+    final hayAlgoAbierto = busquedaAbierta || reporteAbierto || eventoAbierto || surtidorAbierto || puntoAbierto;
     return Consumer<NavigationController>(
       builder: (context, controller, child) {
         final enElMapa = controller.selectedIndex == AppTab.map.index;
         return PopScope(
           // Solo se deja salir en el Mapa, sin nada abierto y dentro de la ventana: así el sistema muestra la
           // animación del gesto predictivo hacia el inicio solo cuando de verdad se va a salir.
-          canPop:
-              _puedeSalir &&
-              enElMapa &&
-              !_hayAlgoAbierto(eventos, mapa, busqueda, combustible, reporte),
+          canPop: _puedeSalir && enElMapa && !hayAlgoAbierto,
           onPopInvokedWithResult: (salio, _) => _alVolver(salio),
           // Sin encabezado, el mapa llega hasta arriba: los íconos de la barra de estado van oscuros.
           child: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -235,13 +255,9 @@ class _MainScreenState extends State<MainScreen> {
                               // HU-12: la pregunta va debajo de la barra y no tapa la lista ni la navegación
                               // (RN-05.16). Con la búsqueda abierta se queda esperando. Si el mapa avisa que no
                               // pudo actualizar los eventos, va debajo de ese aviso.
-                              if (recarga.pregunta != null && !busqueda.abierta)
+                              if (pregunta != null && !busquedaAbierta)
                                 Padding(
-                                  padding: EdgeInsets.only(
-                                    top: enElMapa && (eventos.sinActualizar || eventos.desactualizados)
-                                        ? 80
-                                        : 8,
-                                  ),
+                                  padding: EdgeInsets.only(top: enElMapa && avisoEventos ? 80 : 8),
                                   child: PreguntaRecargaTarjeta(recarga: recarga),
                                 ),
                             ],

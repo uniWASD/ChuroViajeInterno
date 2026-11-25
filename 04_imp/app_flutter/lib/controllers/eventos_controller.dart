@@ -5,6 +5,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/catalogos.dart';
 import '../models/evento_vial.dart';
+import '../models/trafico.dart';
 import '../services/api/api_client.dart';
 import '../services/eventos/servicio_eventos.dart';
 import '../services/sesion/almacen_local.dart';
@@ -45,6 +46,16 @@ class EventosController extends ChangeNotifier {
   final Set<int> _votando = {};
   final List<String> _mensajes = [];
 
+  /// Los vigentes ya calculados: mientras no cambie nada, [eventos] devuelve la misma lista. Así el mapa y la
+  /// navegación no rehacen sus cálculos (las congestiones unidas, los marcadores) en cada reconstrucción.
+  List<EventoVial>? _vigentes;
+  List<CongestionUnida>? _congestiones;
+  Catalogos? _vigentesCatalogos;
+  DateTime? _vigentesDesde;
+
+  /// El primer vencimiento de los eventos que entraron en [_vigentes]: desde ahí hay que volver a calcular.
+  DateTime? _vigentesHasta;
+
   EventosController(
     this._servicio,
     this._sesion, {
@@ -57,13 +68,50 @@ class EventosController extends ChangeNotifier {
     _sesion.addListener(_alCambiarSesion);
   }
 
-  /// Los eventos vigentes que conoce la app, sin los que ya pasaron su vigencia.
+  /// Los eventos vigentes que conoce la app, sin los que ya pasaron su vigencia. Mientras no llegue ni venza nada
+  /// es la misma lista (no se puede modificar), para que las vistas puedan reconocer que no cambió.
   List<EventoVial> get eventos {
     final ahora = _ahora();
-    return [
-      for (final e in _eventos.values)
-        if (!_vencido(e, ahora)) e,
-    ];
+    final catalogos = _sesion.catalogos;
+    final guardada = _vigentes;
+    if (guardada != null &&
+        identical(catalogos, _vigentesCatalogos) &&
+        !ahora.isBefore(_vigentesDesde!) &&
+        (_vigentesHasta == null || ahora.isBefore(_vigentesHasta!))) {
+      return guardada;
+    }
+    DateTime? hasta;
+    final lista = <EventoVial>[];
+    for (final e in _eventos.values) {
+      final tipo = catalogos?.tipo(e.tipo);
+      if (tipo == null) {
+        lista.add(e);
+        continue;
+      }
+      final vence = e.momentoOcurrencia.add(tipo.vigencia);
+      if (!ahora.isBefore(vence)) continue;
+      lista.add(e);
+      if (hasta == null || vence.isBefore(hasta)) hasta = vence;
+    }
+    _vigentes = List.unmodifiable(lista);
+    _congestiones = null;
+    _vigentesCatalogos = catalogos;
+    _vigentesDesde = ahora;
+    _vigentesHasta = hasta;
+    return _vigentes!;
+  }
+
+  /// #191: las congestiones de [eventos] unidas de donde empiezan a donde acaban. Se calculan una vez por cada lista
+  /// de vigentes, no en cada reconstrucción del mapa.
+  List<CongestionUnida> get congestiones {
+    final vigentes = eventos;
+    return _congestiones ??= List.unmodifiable(unirCongestiones(vigentes));
+  }
+
+  /// Algo cambió en los eventos que conoce la app: [eventos] se vuelve a calcular.
+  void _cambiaronEventos() {
+    _vigentes = null;
+    _congestiones = null;
   }
 
   Catalogos? get catalogos => _sesion.catalogos;
@@ -98,6 +146,7 @@ class EventosController extends ChangeNotifier {
         final evento = EventoVial.fromJson(e as Map<String, dynamic>);
         _eventos[evento.id] = evento;
       }
+      _cambiaronEventos();
       _guardadosEn = DateTime.tryParse(json['guardadoEn'] as String? ?? '');
       _desactualizados = true;
     } on Object catch (e) {
@@ -144,6 +193,7 @@ class EventosController extends ChangeNotifier {
       for (final id in respuesta.quitados) {
         _eventos.remove(id); // RN-02.4 y RN-02.13: retirado o vencido
       }
+      if (respuesta.completa || respuesta.eventos.isNotEmpty || respuesta.quitados.isNotEmpty) _cambiaronEventos();
       _marca = respuesta.marca;
       _sinActualizar = false;
       _desactualizados = false; // RN-02.9: volvió la red y lo guardado se reemplaza por lo vigente
@@ -185,6 +235,7 @@ class EventosController extends ChangeNotifier {
         // RN-02.14 y D-46: el estado y el conteo que dejó el voto.
         _eventos[id] = actual.conEstado(r.estado, r.confirmado, votosReal: r.votosReal, votosFalso: r.votosFalso);
       }
+      _cambiaronEventos();
       _mensajes.add(valor == ValorVoto.real ? 'Gracias: votaste que es real.' : 'Gracias: votaste que es falso.');
     } on ApiException catch (e) {
       // VOTO_REPETIDO, VOTO_PROPIO, EVENTO_NO_VIGENTE o VOTO_NO_PERMITIDO: el voto no se puede repetir.
@@ -238,6 +289,7 @@ class EventosController extends ChangeNotifier {
     }
     pausar(); // sin sesión no se consulta y no queda nada de la sesión anterior
     _eventos.clear();
+    _cambiaronEventos();
     _marca = null;
     _seleccionado = null;
     _sinActualizar = false;

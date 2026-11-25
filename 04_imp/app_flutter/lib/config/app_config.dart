@@ -35,6 +35,15 @@ class AppConfig {
     'GOOGLE_SERVER_CLIENT_ID',
   );
 
+  /// Con `--dart-define=MAPA_TEXTURA=true`, en Android el mapa se dibuja como textura (Texture Layer Hybrid
+  /// Composition) en lugar de Hybrid Composition: las listas y hojas que se desplazan sobre el mapa (Surtidores,
+  /// Eventos) suelen ir más fluidas, a cambio de que el mapa copie cada cuadro. Es para comparar en el teléfono; sin
+  /// la opción, el mapa queda como siempre.
+  static const bool mapaEnTextura = bool.fromEnvironment(
+    'MAPA_TEXTURA',
+    defaultValue: false,
+  );
+
   static const bool _rutaDeEjemplo = bool.fromEnvironment(
     'RUTA_DE_EJEMPLO',
     defaultValue: false,

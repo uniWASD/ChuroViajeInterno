@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../controllers/busqueda_controller.dart';
+import '../../controllers/combustible_controller.dart';
 import '../../controllers/eventos_controller.dart';
 import '../../controllers/map_controller.dart';
 import '../../controllers/navigation_controller.dart';
@@ -70,6 +71,8 @@ class _BarraBusquedaState extends State<BarraBusqueda> {
       ..limpiar()
       ..cerrar();
     context.read<EventosController>().cerrarFicha();
+    // Si había un surtidor abierto en el Mapa, su hoja tapaba la del lugar elegido.
+    context.read<CombustibleController>().cerrarFicha();
     context.read<NavigationController>().selectTab(AppTab.map.index);
     context.read<MapController>().elegirLugar(lugar.ubicacion, lugar.nombre);
   }

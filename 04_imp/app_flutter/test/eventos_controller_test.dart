@@ -158,4 +158,54 @@ void main() {
     expect(eventos.activo, isFalse);
     expect(eventos.eventos, isEmpty);
   });
+
+  group('Optimización: la lista de vigentes se reutiliza', () {
+    test('Sin cambios, eventos y congestiones devuelven la misma lista (y no se pueden modificar)', () async {
+      await preparar();
+      backend.respuestas.add({'marca': 'm1', 'completa': true, 'quitados': [], 'eventos': [
+        evento(1, 'ACCIDENTE', '2026-11-01T11:50:00Z'),
+      ]});
+      await eventos.actualizar();
+      final primera = eventos.eventos;
+      final congestiones = eventos.congestiones;
+      expect(identical(eventos.eventos, primera), isTrue);
+      expect(identical(eventos.congestiones, congestiones), isTrue);
+      expect(() => primera.add(primera.first), throwsUnsupportedError);
+
+      // Una consulta que no trae nada nuevo tampoco cambia la lista.
+      await eventos.actualizar();
+      expect(identical(eventos.eventos, primera), isTrue);
+    });
+
+    test('Con un cambio del backend o un voto, la lista es otra y trae el cambio', () async {
+      await preparar();
+      backend.respuestas.addAll([
+        {'marca': 'm1', 'completa': true, 'quitados': [], 'eventos': [evento(1, 'ACCIDENTE', '2026-11-01T11:50:00Z')]},
+        {'marca': 'm2', 'completa': false, 'quitados': [], 'eventos': [evento(2, 'BLOQUEO', '2026-11-01T11:55:00Z')]},
+        {'marca': 'm3', 'completa': false, 'quitados': [1], 'eventos': []},
+      ]);
+      await eventos.actualizar();
+      final antes = eventos.eventos;
+      await eventos.actualizar();
+      expect(identical(eventos.eventos, antes), isFalse);
+      expect(eventos.eventos.map((e) => e.id), unorderedEquals([1, 2]));
+      await eventos.actualizar();
+      expect(eventos.eventos.map((e) => e.id), [2]);
+    });
+
+    test('Cuando un evento vence con el reloj, deja de estar aunque no llegue nada', () async {
+      await preparar();
+      backend.respuestas.add({'marca': 'm1', 'completa': true, 'quitados': [], 'eventos': [
+        evento(1, 'ACCIDENTE', '2026-11-01T11:10:00Z'), // vence a las 12:10
+        evento(2, 'BLOQUEO', '2026-11-01T11:50:00Z'), // vence a las 12:50
+      ]});
+      await eventos.actualizar();
+      expect(eventos.eventos, hasLength(2));
+      ahora = DateTime.parse('2026-11-01T12:10:00Z');
+      expect(eventos.eventos.map((e) => e.id), [2]);
+      // Si el reloj vuelve atrás (por ejemplo, se corrige la hora del teléfono), se vuelve a calcular.
+      ahora = DateTime.parse('2026-11-01T12:05:00Z');
+      expect(eventos.eventos, hasLength(2));
+    });
+  });
 }

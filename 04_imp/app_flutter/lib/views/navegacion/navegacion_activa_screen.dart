@@ -48,7 +48,7 @@ class NavegacionActivaScreen extends StatelessWidget {
     final mapa = context.watch<MapController>();
     final nav = context.watch<NavegacionController>();
     final eventos = context.watch<EventosController>();
-    final congestiones = unirCongestiones(eventos.eventos);
+    final congestiones = eventos.congestiones;
     final falta = nav.trazadoQueFalta;
     return PopScope(
       // Volver atrás también termina la ruta: una ruta Activa sin su vista no se sigue (D-05).

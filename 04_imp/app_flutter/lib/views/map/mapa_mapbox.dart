@@ -7,6 +7,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import '../../config/app_config.dart';
 import '../../models/coordenada.dart';
 import '../../models/trafico.dart';
+import 'dibujo_en_serie.dart';
 import 'estilo_mapa.dart';
 import 'mapa_base.dart';
 import 'marcadores.dart';
@@ -42,6 +43,13 @@ class _MapaMapboxState extends State<MapaMapbox> {
   PolylineAnnotation? _ruta;
   Cancelable? _toquesEventos;
   Cancelable? _toquesCongestiones;
+
+  /// Cada capa se dibuja de a una vez: así dos cambios seguidos no dejan marcadores ni líneas repetidas.
+  final DibujoEnSerie _serieSurtidores = DibujoEnSerie();
+  final DibujoEnSerie _serieEventos = DibujoEnSerie();
+  final DibujoEnSerie _seriePunto = DibujoEnSerie();
+  final DibujoEnSerie _serieTrazado = DibujoEnSerie();
+  final DibujoEnSerie _serieTrafico = DibujoEnSerie();
 
   @override
   void initState() {
@@ -174,7 +182,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
   }
 
   /// D-25 y RN-05.17: cada surtidor con el ícono del surtidor, del color de su estado.
-  Future<void> _dibujarSurtidores() async {
+  Future<void> _dibujarSurtidores() => _serieSurtidores.pedir(_hacerSurtidores);
+
+  Future<void> _hacerSurtidores() async {
+    if (!mounted) return;
     final capa = _surtidores;
     if (capa == null) return;
     _dibujos.usarEscala(MediaQuery.devicePixelRatioOf(context));
@@ -200,7 +211,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
 
   /// RN-02.7 y RN-02.14: cada evento con el color de su tipo; los confirmados, con un borde grueso oscuro. Una
   /// congestión con trazado se dibuja a lo largo de su calle (RN-04.25, D-45).
-  Future<void> _dibujarEventos() async {
+  Future<void> _dibujarEventos() => _serieEventos.pedir(_hacerEventos);
+
+  Future<void> _hacerEventos() async {
+    if (!mounted) return;
     final capa = _eventos;
     final lineas = _congestiones;
     if (capa == null || lineas == null) return;
@@ -249,7 +263,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
   }
 
   /// El origen y las paradas van como círculos; el punto elegido y el destino, como el pin rojo del diseño (#191).
-  Future<void> _marcarPunto() async {
+  Future<void> _marcarPunto() => _seriePunto.pedir(_hacerPunto);
+
+  Future<void> _hacerPunto() async {
+    if (!mounted) return;
     final marcas = _marcas;
     final pines = _pines;
     if (marcas == null || pines == null) return;
@@ -295,7 +312,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
     TipoMarca.destino || TipoMarca.punto => Colors.red,
   };
 
-  Future<void> _dibujarTrazado() async {
+  Future<void> _dibujarTrazado() => _serieTrazado.pedir(_hacerTrazado);
+
+  Future<void> _hacerTrazado() async {
+    if (!mounted) return;
     final lineas = _lineas;
     final mapa = _mapa;
     if (lineas == null || mapa == null) return;
@@ -338,7 +358,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
   }
 
   /// #191: las partes de la ruta que pasan por una congestión, de amarillo o de rojo encima de la línea azul.
-  Future<void> _dibujarTrafico() async {
+  Future<void> _dibujarTrafico() => _serieTrafico.pedir(_hacerTrafico);
+
+  Future<void> _hacerTrafico() async {
+    if (!mounted) return;
     final capa = _trafico;
     if (capa == null) return;
     await capa.deleteAll();
@@ -395,6 +418,15 @@ class _MapaMapboxState extends State<MapaMapbox> {
     }
     return MapWidget(
       styleUri: MapboxStyles.STANDARD,
+      // Opcional, para probar en el teléfono: con --dart-define=MAPA_TEXTURA=true el mapa de Android va como textura
+      // (TLHC) y las hojas que se desplazan encima suelen ir más fluidas. Sin la opción, queda como siempre (HC).
+      // El SDK marca el modo como experimental; sin la opción se pasa el mismo valor que usa por defecto (HC).
+      androidHostingMode: AppConfig.mapaEnTextura
+          // ignore: experimental_member_use
+          ? AndroidPlatformViewHostingMode.TLHC_HC
+          // ignore: experimental_member_use
+          : AndroidPlatformViewHostingMode.HC,
+      textureView: AppConfig.mapaEnTextura ? true : null,
       // Abre donde está el conductor (o en el centro pedido) y, al navegar, [_seguirAlConductor] lo sigue.
       viewport: CameraViewportState(
         center: _punto(widget.datos.centro),

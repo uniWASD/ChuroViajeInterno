@@ -836,11 +836,12 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ## Sprint 6.5 (24/11 – 25/11)
 
-1 issue. Corrige la interfaz después de revisarla con el diseño.
+2 issues. Corrige la interfaz después de revisarla con el diseño y optimiza la app y la telemetría.
 
 | Issue | Responsable | Casos de prueba |
 | --- | --- | --- |
 | [T-124][Sprint 6.5] Correcciones de interfaz ([#191](https://github.com/uniWASD/ChuroViajeInterno/issues/191)) | Marcelo | CP-192 a CP-201 |
+| [T-125][Sprint 6.5] Optimización de la app y de la telemetría ([#193](https://github.com/uniWASD/ChuroViajeInterno/issues/193)) | Marcelo | CP-202 a CP-208 |
 
 ### [T-124][Sprint 6.5] Correcciones de interfaz: hoja del lugar, Cómo llegar en el mapa, tráfico y reporte a 1 km · [#191](https://github.com/uniWASD/ChuroViajeInterno/issues/191)
 
@@ -872,6 +873,34 @@ Un issue está terminado cuando cumple las tres condiciones:
 | **CP-199** la campana abre «Notificar evento» y el reporte se completa en 3 toques, sin imagen ni comentario | Prueba de widget y captura en el teléfono |  |
 | **CP-200** los surtidores no muestran el ícono junto a (i), la hora exacta ni el estado de ANH; la distancia lleva el auto y los litros van entre paréntesis | Prueba de widget y captura en el teléfono |  |
 | **CP-201** al iniciar la navegación la cámara se centra en el conductor sobre la ruta | Video en el teléfono |  |
+
+### [T-125][Sprint 6.5] Optimización de la app y de la telemetría · [#193](https://github.com/uniWASD/ChuroViajeInterno/issues/193)
+
+**Responsable:** Marcelo · **Fechas:** 25/11
+
+**Reglas y decisiones**
+
+- RN-04.26 y P-40 ([CU-04](../../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md)); P-13 ([decisiones](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+
+**Criterios de aceptación**
+
+- Al cambiar de pestaña no queda abierto nada de la anterior; el lugar elegido y su ruta se conservan
+- En Eventos y Surtidores, tocar el mapa de fondo no elige un punto, y un marcador lleva a la pestaña de su detalle
+- La lista de Surtidores se desplaza sin trabarse mientras el GPS cambia
+- No quedan marcadores ni líneas de la ruta repetidos en el mapa
+- Con el auto quieto y la app abierta siguen llegando lecturas de telemetría
+- Los marcadores se ven del mismo tamaño y color que antes
+- Acercarse despacio y estacionar no marca congestión; una fila que avanza a tirones sí
+
+| Caso de prueba | Evidencia esperada | Validación |
+| --- | --- | --- |
+| **CP-202** al cambiar de pestaña se cierran la búsqueda, los detalles de evento y surtidor, el surtidor desplegado, «Notificar evento» y la elección de parada; el lugar elegido y su ruta se conservan | Prueba de widget y video en el teléfono |  |
+| **CP-203** en Eventos y Surtidores, tocar el mapa de fondo no elige un punto; el marcador de un surtidor lleva a Surtidores y el de un evento, a Eventos | Prueba de widget y video en el teléfono |  |
+| **CP-204** la pantalla principal y la lista de Surtidores no se reconstruyen con cada posición del GPS, y la lista se desplaza sin trabarse | Prueba de widget y video en el teléfono |  |
+| **CP-205** cada capa del mapa se dibuja de a una vez: al navegar no queda un pedazo de ruta repetido | Prueba unitaria y video en el teléfono |  |
+| **CP-206** el mapa y la telemetría comparten una sola lectura del GPS; con el auto quieto llegan lecturas a `POST /telemetria` | Prueba unitaria y salida del registro del servidor |  |
+| **CP-207** cada imagen de marcador se registra una sola vez en el mapa y los marcadores se ven igual que antes | Prueba unitaria y captura en el teléfono |  |
+| **CP-208** acercarse despacio unos 30 m y estacionar no es congestión; una fila a tirones sí lo es (RN-04.26) | Prueba automatizada y su salida en la CI |  |
 
 ## Sprint 7 (26/11 – 30/11)
 

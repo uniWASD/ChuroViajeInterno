@@ -36,7 +36,8 @@ class _StationsScreenState extends State<StationsScreen> {
   @override
   Widget build(BuildContext context) {
     final combustible = context.watch<CombustibleController>();
-    final mapa = context.watch<MapController>();
+    // Del mapa solo importa el permiso: la lista no se reconstruye con cada posición del GPS (antes se trababa).
+    final permiso = context.select<MapController, PermisoUbicacion?>((m) => m.permiso);
     final seleccionado = combustible.seleccionado;
     if (seleccionado != null) {
       return Align(
@@ -71,7 +72,8 @@ class _StationsScreenState extends State<StationsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Center(child: AsaHoja()),
-                  if (mapa.permiso != null && !mapa.tienePermiso) _PedirUbicacion(mapa: mapa),
+                  if (permiso != null && permiso != PermisoUbicacion.concedido)
+                    _PedirUbicacion(mapa: context.read<MapController>()),
                   if (combustible.sinActualizar)
                     Material(
                       color: Theme.of(context).colorScheme.errorContainer,

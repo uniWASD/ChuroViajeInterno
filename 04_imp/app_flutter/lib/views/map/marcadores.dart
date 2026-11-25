@@ -26,9 +26,22 @@ class Marcadores {
     _hechos.clear();
   }
 
+  /// El nombre con que cada dibujo queda registrado en el estilo del mapa: el mismo dibujo (y la misma densidad), el
+  /// mismo nombre. Así el mapa guarda una sola imagen por dibujo y los marcadores solo la nombran, en vez de mandar
+  /// cada uno su propia copia.
+  String idSurtidor(Color color) => _id(_claveSurtidor(color));
+  String idPin(Color color) => _id(_clavePin(color));
+  String idEvento({required String tipo, required Color color, required bool confirmado}) =>
+      _id(_claveEvento(tipo, color, confirmado));
+
+  String _id(String clave) => 'churo-$clave@$escala';
+  static String _claveSurtidor(Color color) => 'surtidor|${color.toARGB32()}';
+  static String _clavePin(Color color) => 'pin|${color.toARGB32()}';
+  static String _claveEvento(String tipo, Color color, bool confirmado) => '$tipo|${color.toARGB32()}|$confirmado';
+
   /// CU-05: el marcador de un surtidor, con su ícono, del color de su estado.
   Future<Uint8List> deSurtidor(Color color) async {
-    final clave = 'surtidor|${color.toARGB32()}';
+    final clave = _claveSurtidor(color);
     final hecho = _hechos[clave];
     if (hecho != null) return hecho;
     final png = await dibujarMarcador(icono: Icons.local_gas_station, color: color, confirmado: false, escala: escala);
@@ -38,7 +51,7 @@ class Marcadores {
 
   /// #191: el pin rojo del lugar elegido, como en el diseño: la gota con un punto blanco.
   Future<Uint8List> dePin(Color color) async {
-    final clave = 'pin|${color.toARGB32()}';
+    final clave = _clavePin(color);
     final hecho = _hechos[clave];
     if (hecho != null) return hecho;
     final png = await dibujarMarcador(
@@ -53,7 +66,7 @@ class Marcadores {
   }
 
   Future<Uint8List> de({required String tipo, required Color color, required bool confirmado}) async {
-    final clave = '$tipo|${color.toARGB32()}|$confirmado';
+    final clave = _claveEvento(tipo, color, confirmado);
     final hecho = _hechos[clave];
     if (hecho != null) return hecho;
     final png = await dibujarMarcador(icono: iconoDeEvento(tipo), color: color, confirmado: confirmado, escala: escala);

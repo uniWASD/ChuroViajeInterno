@@ -9,7 +9,10 @@ import '../../controllers/navigation_controller.dart';
 import '../../controllers/recarga_controller.dart';
 import '../../controllers/reporte_controller.dart';
 import '../../controllers/ruta_controller.dart';
+import '../../models/catalogos.dart';
 import '../../models/coordenada.dart';
+import '../../models/evento_vial.dart';
+import '../../models/surtidor.dart';
 import '../../models/trafico.dart';
 import '../../services/ubicacion/servicio_ubicacion.dart';
 import '../busqueda/barra_busqueda.dart';
@@ -31,6 +34,11 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
+  /// Lo que se le pasa al mapa se calcula de nuevo solo cuando cambian sus datos, no en cada reconstrucción (por
+  /// ejemplo, con cada posición del GPS). Así la lista de surtidores y la de eventos no se traban mientras el mapa
+  /// sigue al conductor.
+  final _MemoMapa _memo = _MemoMapa();
+
   @override
   void initState() {
     super.initState();
@@ -100,7 +108,7 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
         // #191: «Cómo llegar» se ve en este mismo mapa, hacia el lugar elegido.
         final enRuta = ruta.mostrando && punto != null && ruta.destino == punto;
         final rutaVisible = enRuta ? ruta.ruta : null;
-        final congestiones = unirCongestiones(eventos.eventos);
+        final congestiones = eventos.congestiones;
         final notificando = enElMapa && reporte.abierto;
         return Stack(
           children: [
@@ -121,17 +129,11 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
                     // #191: la ruta de amarillo o de rojo donde pasa por una congestión.
                     trafico: rutaVisible == null
                         ? const []
-                        : pintarRutaPorTrafico(rutaVisible.trazado, congestiones),
-                    eventos: marcasDeEventos(eventos, congestiones: congestiones),
-                    alTocarEvento: (id) {
-                      combustible.cerrarFicha();
-                      eventos.seleccionar(id);
-                    },
-                    surtidores: marcasDeSurtidores(combustible),
-                    alTocarSurtidor: (id) {
-                      eventos.cerrarFicha();
-                      combustible.seleccionar(id);
-                    },
+                        : _memo.trafico(rutaVisible.trazado, congestiones),
+                    eventos: _memo.eventos(eventos, congestiones),
+                    alTocarEvento: (id) => _alTocarEvento(context, id),
+                    surtidores: _memo.surtidores(combustible),
+                    alTocarSurtidor: (id) => _alTocarSurtidor(context, id),
                     // #172: al abrir un evento la cámara va hasta él, por encima del detalle. D-47: también va
                     // hasta el lugar elegido en la búsqueda, y #71, hasta el surtidor abierto.
                     foco: eventos.seleccionado?.ubicacion ??
@@ -249,6 +251,9 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
   /// «Notificar evento» cambia el punto del evento; después de «Otra parada», es la parada; con la ruta a la vista no
   /// hace nada, como en Google Maps; si no, elige el lugar y abre su hoja.
   void _alTocarMapa(BuildContext context, Coordenada punto, {String? nombre}) {
+    // En Eventos y en Surtidores el mapa se ve detrás de la hoja, pero no se elige nada en él: la hoja del lugar,
+    // «Notificar evento» y las paradas son de la pestaña Mapa, y quedarían cambiadas sin que el conductor lo vea.
+    if (context.read<NavigationController>().selectedIndex != AppTab.map.index) return;
     final mapa = context.read<MapController>();
     final reporte = context.read<ReporteController>();
     final ruta = context.read<RutaController>();
@@ -264,6 +269,72 @@ class _MapScreenState extends State<MapScreen> with WidgetsBindingObserver {
     context.read<EventosController>().cerrarFicha();
     context.read<CombustibleController>().cerrarFicha();
     mapa.seleccionarPunto(punto, nombre: nombre);
+  }
+
+  /// Un evento del mapa se abre en la pestaña donde se ve su detalle: en el Mapa y en Eventos, ahí mismo; desde
+  /// Surtidores, se pasa a Eventos (antes quedaba elegido sin verse y aparecía al volver al Mapa).
+  void _alTocarEvento(BuildContext context, int id) {
+    final pestanas = context.read<NavigationController>();
+    if (pestanas.selectedIndex == AppTab.stations.index) pestanas.selectTab(AppTab.events.index);
+    context.read<CombustibleController>().cerrarFicha();
+    context.read<EventosController>().seleccionar(id);
+  }
+
+  /// Igual con un surtidor: en el Mapa y en Surtidores se abre ahí; desde Eventos, se pasa a Surtidores.
+  void _alTocarSurtidor(BuildContext context, int id) {
+    final pestanas = context.read<NavigationController>();
+    if (pestanas.selectedIndex == AppTab.events.index) pestanas.selectTab(AppTab.stations.index);
+    context.read<EventosController>().cerrarFicha();
+    context.read<CombustibleController>().seleccionar(id);
+  }
+}
+
+/// Guarda lo último que se calculó para el mapa y lo devuelve igual mientras sus datos sean los mismos (la misma
+/// lista de eventos, de surtidores o el mismo trazado). Unir las congestiones y pintar la ruta por tráfico recorren
+/// todos los puntos; no hace falta repetirlo con cada posición del conductor.
+class _MemoMapa {
+  List<CongestionUnida>? _congestionesEventos;
+  Catalogos? _catalogos;
+  List<EventoVial>? _baseEventos;
+  List<MarcaEvento> _eventos = const [];
+
+  List<Surtidor>? _baseSurtidores;
+  List<MarcaSurtidor> _surtidores = const [];
+
+  List<Coordenada>? _baseTrazado;
+  List<CongestionUnida>? _congestionesTrafico;
+  List<LineaTrafico> _trafico = const [];
+
+  List<MarcaEvento> eventos(EventosController controller, List<CongestionUnida> congestiones) {
+    final lista = controller.eventos;
+    final catalogos = controller.catalogos;
+    if (!identical(lista, _baseEventos) ||
+        !identical(congestiones, _congestionesEventos) ||
+        !identical(catalogos, _catalogos)) {
+      _baseEventos = lista;
+      _congestionesEventos = congestiones;
+      _catalogos = catalogos;
+      _eventos = marcasDeEventos(controller, congestiones: congestiones);
+    }
+    return _eventos;
+  }
+
+  List<MarcaSurtidor> surtidores(CombustibleController controller) {
+    final lista = controller.surtidores;
+    if (!identical(lista, _baseSurtidores)) {
+      _baseSurtidores = lista;
+      _surtidores = marcasDeSurtidores(controller);
+    }
+    return _surtidores;
+  }
+
+  List<LineaTrafico> trafico(List<Coordenada> trazado, List<CongestionUnida> congestiones) {
+    if (!identical(trazado, _baseTrazado) || !identical(congestiones, _congestionesTrafico)) {
+      _baseTrazado = trazado;
+      _congestionesTrafico = congestiones;
+      _trafico = pintarRutaPorTrafico(trazado, congestiones);
+    }
+    return _trafico;
   }
 }
 

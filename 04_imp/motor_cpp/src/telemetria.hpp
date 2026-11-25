@@ -61,6 +61,11 @@ class AnalizadorTelemetria {
   // desde donde empezó la racha. Se mide de punta a punta y no sumando pasos, para que el temblor del GPS de un
   // teléfono quieto no se acumule.
   static constexpr double kAvanceMinimoM = 25;
+  // RN-04.26, P-40: «sigue avanzando». Mientras va lento, el recorrido tiene que moverse al menos 10 m cada
+  // 90 segundos. Si no, es alguien que se acercó despacio y estacionó: no informa congestión, aunque ya haya
+  // cumplido RN-04.23. Una fila que avanza a tirones se mueve antes.
+  static constexpr double kAvanceRecienteM = 10;
+  static constexpr std::int64_t kSinAvanzarMaximoS = 90;
   // RN-04.24, P-38, D-44: la racha sigue en la cuadra siguiente de la misma calle si esta cambia menos de 40 grados
   // de dirección (el mismo ángulo que RN-04.7 toma como giro).
   static constexpr double kCambioMaximoMismaCalleGrados = 40;
@@ -92,6 +97,8 @@ class AnalizadorTelemetria {
     std::vector<std::size_t> tramos_lentos;      // cuadras de la racha lenta, en orden; vacío si no va lento
     std::vector<std::size_t> informados;         // cuadras de la racha ya informadas como congestión
     Punto inicio_lento;                          // dónde empezó la racha
+    Punto ultimo_avance;                         // RN-04.26: dónde estaba la última vez que avanzó 10 m
+    std::int64_t avance_desde = 0;               // y cuándo
     std::int64_t lento_desde = 0;
     double metros_lentos = 0;
     double segundos_lentos = 0;

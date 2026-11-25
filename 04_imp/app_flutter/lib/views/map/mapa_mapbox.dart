@@ -7,6 +7,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import '../../config/app_config.dart';
 import '../../models/coordenada.dart';
 import '../../models/trafico.dart';
+import 'dibujo_en_serie.dart';
 import 'estilo_mapa.dart';
 import 'mapa_base.dart';
 import 'marcadores.dart';
@@ -42,6 +43,13 @@ class _MapaMapboxState extends State<MapaMapbox> {
   PolylineAnnotation? _ruta;
   Cancelable? _toquesEventos;
   Cancelable? _toquesCongestiones;
+
+  /// Cada capa se dibuja de a una vez: así dos cambios seguidos no dejan marcadores ni líneas repetidas.
+  final DibujoEnSerie _serieSurtidores = DibujoEnSerie();
+  final DibujoEnSerie _serieEventos = DibujoEnSerie();
+  final DibujoEnSerie _seriePunto = DibujoEnSerie();
+  final DibujoEnSerie _serieTrazado = DibujoEnSerie();
+  final DibujoEnSerie _serieTrafico = DibujoEnSerie();
 
   @override
   void initState() {
@@ -174,21 +182,28 @@ class _MapaMapboxState extends State<MapaMapbox> {
   }
 
   /// D-25 y RN-05.17: cada surtidor con el ícono del surtidor, del color de su estado.
-  Future<void> _dibujarSurtidores() async {
+  Future<void> _dibujarSurtidores() => _serieSurtidores.pedir(_hacerSurtidores);
+
+  Future<void> _hacerSurtidores() async {
+    if (!mounted) return;
     final capa = _surtidores;
     if (capa == null) return;
     _dibujos.usarEscala(MediaQuery.devicePixelRatioOf(context));
     await capa.deleteAll();
     final surtidores = widget.datos.surtidores;
     if (surtidores.isEmpty) return;
+    final imagenes = _ImagenesDelDibujo(this);
     await capa.createMulti([
       for (final s in surtidores)
-        PointAnnotationOptions(
-          geometry: _punto(s.coordenada),
-          image: await _dibujos.deSurtidor(s.color),
-          iconAnchor: IconAnchor.BOTTOM,
-          iconSize: 0.85,
-          customData: {'surtidor': s.id},
+        await imagenes.en(
+          PointAnnotationOptions(
+            geometry: _punto(s.coordenada),
+            iconAnchor: IconAnchor.BOTTOM,
+            iconSize: 0.85,
+            customData: {'surtidor': s.id},
+          ),
+          _dibujos.idSurtidor(s.color),
+          () => _dibujos.deSurtidor(s.color),
         ),
     ]);
   }
@@ -200,7 +215,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
 
   /// RN-02.7 y RN-02.14: cada evento con el color de su tipo; los confirmados, con un borde grueso oscuro. Una
   /// congestión con trazado se dibuja a lo largo de su calle (RN-04.25, D-45).
-  Future<void> _dibujarEventos() async {
+  Future<void> _dibujarEventos() => _serieEventos.pedir(_hacerEventos);
+
+  Future<void> _hacerEventos() async {
+    if (!mounted) return;
     final capa = _eventos;
     final lineas = _congestiones;
     if (capa == null || lineas == null) return;
@@ -228,13 +246,17 @@ class _MapaMapboxState extends State<MapaMapbox> {
     }
     if (enPunto.isEmpty) return;
     // #172: cada evento con el ícono de su tipo, en una gota del color del tipo.
+    final imagenes = _ImagenesDelDibujo(this);
     await capa.createMulti([
       for (final e in enPunto)
-        PointAnnotationOptions(
-          geometry: _punto(e.coordenada),
-          image: await _dibujos.de(tipo: e.tipo, color: e.color, confirmado: e.confirmado),
-          iconAnchor: IconAnchor.BOTTOM,
-          customData: {'evento': e.id},
+        await imagenes.en(
+          PointAnnotationOptions(
+            geometry: _punto(e.coordenada),
+            iconAnchor: IconAnchor.BOTTOM,
+            customData: {'evento': e.id},
+          ),
+          _dibujos.idEvento(tipo: e.tipo, color: e.color, confirmado: e.confirmado),
+          () => _dibujos.de(tipo: e.tipo, color: e.color, confirmado: e.confirmado),
         ),
     ]);
   }
@@ -249,7 +271,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
   }
 
   /// El origen y las paradas van como círculos; el punto elegido y el destino, como el pin rojo del diseño (#191).
-  Future<void> _marcarPunto() async {
+  Future<void> _marcarPunto() => _seriePunto.pedir(_hacerPunto);
+
+  Future<void> _hacerPunto() async {
+    if (!mounted) return;
     final marcas = _marcas;
     final pines = _pines;
     if (marcas == null || pines == null) return;
@@ -266,10 +291,15 @@ class _MapaMapboxState extends State<MapaMapbox> {
         if (m.tipo == TipoMarca.punto || m.tipo == TipoMarca.destino) m.coordenada,
     };
     if (conPin.isNotEmpty) {
-      final pin = await _dibujos.dePin(Colors.red.shade700);
+      final color = Colors.red.shade700;
+      final imagenes = _ImagenesDelDibujo(this);
       await pines.createMulti([
         for (final c in conPin)
-          PointAnnotationOptions(geometry: _punto(c), image: pin, iconAnchor: IconAnchor.BOTTOM, iconSize: 0.9),
+          await imagenes.en(
+            PointAnnotationOptions(geometry: _punto(c), iconAnchor: IconAnchor.BOTTOM, iconSize: 0.9),
+            _dibujos.idPin(color),
+            () => _dibujos.dePin(color),
+          ),
       ]);
     }
     final circulos = [
@@ -295,7 +325,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
     TipoMarca.destino || TipoMarca.punto => Colors.red,
   };
 
-  Future<void> _dibujarTrazado() async {
+  Future<void> _dibujarTrazado() => _serieTrazado.pedir(_hacerTrazado);
+
+  Future<void> _hacerTrazado() async {
+    if (!mounted) return;
     final lineas = _lineas;
     final mapa = _mapa;
     if (lineas == null || mapa == null) return;
@@ -338,7 +371,10 @@ class _MapaMapboxState extends State<MapaMapbox> {
   }
 
   /// #191: las partes de la ruta que pasan por una congestión, de amarillo o de rojo encima de la línea azul.
-  Future<void> _dibujarTrafico() async {
+  Future<void> _dibujarTrafico() => _serieTrafico.pedir(_hacerTrafico);
+
+  Future<void> _hacerTrafico() async {
+    if (!mounted) return;
     final capa = _trafico;
     if (capa == null) return;
     await capa.deleteAll();
@@ -385,6 +421,30 @@ class _MapaMapboxState extends State<MapaMapbox> {
 
   bool get _siguiendo => widget.datos.seguirUbicacion && widget.datos.mostrarUbicacion;
 
+  /// Registra un dibujo en el estilo del mapa, una sola vez. Devuelve false si no se pudo: entonces el marcador lleva
+  /// su propia imagen, como antes, y el mapa se ve igual.
+  Future<bool> _registrarImagen(String id, Uint8List png) async {
+    final mapa = _mapa;
+    if (mapa == null) return false;
+    try {
+      if (await mapa.hasStyleImage(id)) return true;
+      // La imagen está dibujada con la densidad de la pantalla: con esa escala se ve del mismo tamaño que antes.
+      await mapa.addImage(id, _dibujos.escala, StyleImage.bytes(png));
+      return true;
+    } on Object catch (e) {
+      debugPrint('No se pudo registrar la imagen $id en el mapa: $e');
+      return false;
+    }
+  }
+
+  /// Si el estilo se vuelve a cargar, sus imágenes se pierden: los marcadores se dibujan de nuevo y las registran.
+  void _alCargarEstilo() {
+    _aplicarEstilo();
+    if (_surtidores != null) _dibujarSurtidores();
+    if (_eventos != null) _dibujarEventos();
+    if (_pines != null) _marcarPunto();
+  }
+
   static Point _punto(Coordenada c) =>
       Point(coordinates: Position(c.longitud, c.latitud));
 
@@ -395,6 +455,15 @@ class _MapaMapboxState extends State<MapaMapbox> {
     }
     return MapWidget(
       styleUri: MapboxStyles.STANDARD,
+      // Opcional, para probar en el teléfono: con --dart-define=MAPA_TEXTURA=true el mapa de Android va como textura
+      // (TLHC) y las hojas que se desplazan encima suelen ir más fluidas. Sin la opción, queda como siempre (HC).
+      // El SDK marca el modo como experimental; sin la opción se pasa el mismo valor que usa por defecto (HC).
+      androidHostingMode: AppConfig.mapaEnTextura
+          // ignore: experimental_member_use
+          ? AndroidPlatformViewHostingMode.TLHC_HC
+          // ignore: experimental_member_use
+          : AndroidPlatformViewHostingMode.HC,
+      textureView: AppConfig.mapaEnTextura ? true : null,
       // Abre donde está el conductor (o en el centro pedido) y, al navegar, [_seguirAlConductor] lo sigue.
       viewport: CameraViewportState(
         center: _punto(widget.datos.centro),
@@ -403,7 +472,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
       ),
       viewportController: _vista,
       onMapCreated: _alCrear,
-      onStyleLoadedListener: (_) => _aplicarEstilo(),
+      onStyleLoadedListener: (_) => _alCargarEstilo(),
       onMapLoadErrorListener: (error) {
         // Solo el estilo deja el mapa sin cargar; un mosaico que falla se vuelve a pedir solo.
         if (error.type == MapLoadErrorType.STYLE) {
@@ -411,5 +480,29 @@ class _MapaMapboxState extends State<MapaMapbox> {
         }
       },
     );
+  }
+}
+
+/// Las imágenes de un dibujo de marcadores: cada dibujo distinto se registra en el estilo una sola vez y los
+/// marcadores solo lo nombran. Si registrarlo falla, el marcador lleva su imagen como antes.
+class _ImagenesDelDibujo {
+  final _MapaMapboxState _estado;
+  final Map<String, bool> _registradas = {};
+
+  _ImagenesDelDibujo(this._estado);
+
+  Future<PointAnnotationOptions> en(
+    PointAnnotationOptions opciones,
+    String id,
+    Future<Uint8List> Function() dibujo,
+  ) async {
+    final png = await dibujo();
+    final registrada = _registradas[id] ??= await _estado._registrarImagen(id, png);
+    if (registrada) {
+      opciones.iconImage = id;
+    } else {
+      opciones.image = png;
+    }
+    return opciones;
   }
 }

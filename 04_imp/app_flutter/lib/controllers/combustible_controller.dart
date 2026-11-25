@@ -109,6 +109,13 @@ class CombustibleController extends ChangeNotifier {
     _avisar();
   }
 
+  /// Pliega el surtidor desplegado en la lista, por ejemplo al salir de la pestaña Surtidores.
+  void plegar() {
+    if (_expandido == null) return;
+    _expandido = null;
+    _avisar();
+  }
+
   Surtidor? _porId(int? id) {
     if (id == null) return null;
     for (final s in _surtidores) {

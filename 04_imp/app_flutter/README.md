@@ -75,6 +75,13 @@ Se utiliza **Provider**, con `ChangeNotifier` para notificar cambios de estado a
 
 El `NavigationController` administra la pestaña seleccionada en la navegación principal.
 
+Para que la app no se trabe, las vistas escuchan solo lo que usan (`context.select`): la pantalla principal y la
+lista de Surtidores no se reconstruyen con cada posición del GPS. `EventosController.eventos` devuelve la misma lista
+mientras no llegue ni venza ningún evento, y `EventosController.congestiones` une las congestiones una sola vez por
+cada lista; el mapa guarda los marcadores y el tráfico de la ruta mientras sus datos no cambien. En el mapa de
+Mapbox, cada capa se dibuja de a una vez (`DibujoEnSerie`), así dos cambios seguidos no dejan marcadores ni líneas
+repetidas.
+
 ## Navegación principal
 
 La aplicación dispone de una barra de navegación inferior con tres pantallas:
@@ -83,7 +90,12 @@ La aplicación dispone de una barra de navegación inferior con tres pantallas:
 * Eventos.
 * Surtidores.
 
-Las pantallas son estructuras iniciales en español, preparadas para incorporar sus funcionalidades posteriormente.
+El mapa queda siempre detrás; Eventos y Surtidores son hojas sobre él. Al cambiar de pestaña no queda nada abierto
+de la anterior: se cierran la búsqueda, el detalle de un evento o de un surtidor, el surtidor desplegado en la lista,
+«Notificar evento» (salvo que se esté enviando o se haya quedado sin red) y la elección de una parada. El lugar
+elegido y su ruta («Cómo llegar») sí se conservan. En Eventos y en Surtidores, tocar el mapa de fondo no elige un
+punto; tocar el marcador de un evento desde Surtidores lleva a Eventos, y el de un surtidor desde Eventos, a
+Surtidores.
 
 ## Configuración de entornos
 
@@ -99,6 +111,7 @@ Variables disponibles:
 | `API_URL_PROD` | Dirección del backend de producción.                |
 | `MAPBOX_ACCESS_TOKEN` | Token público de Mapbox para el mapa base. Sin él, la vista Mapa muestra el error de mapa no disponible. |
 | `RUTA_DE_EJEMPLO` | `false` por defecto: Cómo llegar pide la ruta a `POST /rutas`. Con `true` muestra una ruta de ejemplo, para probar sin backend. En producción siempre llama al backend. |
+| `MAPA_TEXTURA` | `false` por defecto. Con `true`, en Android el mapa se dibuja como textura (Texture Layer Hybrid Composition) en lugar de Hybrid Composition: las hojas de Eventos y Surtidores suelen desplazarse más fluidas sobre el mapa. Es para comparar en el teléfono antes de dejarlo fijo. |
 | `GOOGLE_SERVER_CLIENT_ID` | Client ID **web** del proyecto de Google Cloud. El token de identidad de Google sale para ese Client ID, que es el mismo `GOOGLE_CLIENT_ID` que valida el backend (HU-10). |
 
 ### Desarrollo en Android
@@ -139,6 +152,7 @@ flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.xxxxx --dart-define=API_URL_DEV
 * Sin permiso o con el GPS apagado, el mapa sigue funcionando y un aviso ofrece dar el permiso o abrir los ajustes (RN-04.3).
 * Si el estilo del mapa no carga (sin conexión, token inválido), la vista muestra «No se pudo cargar el mapa. Revisa tu conexión e inténtalo de nuevo.» con un botón para reintentar (RN-03.18). Los mosaicos que fallan sueltos no cuentan como error.
 * El logo y la atribución de Mapbox y OpenStreetMap quedan visibles (RNF-19).
+* Las imágenes de los marcadores (surtidores, eventos y el pin) se registran una sola vez por dibujo en el estilo del mapa (`churo-…`), y cada marcador solo la nombra. Si registrarla falla, el marcador lleva su propia imagen, como antes. Si el estilo se vuelve a cargar, los marcadores se dibujan de nuevo y las registran otra vez.
 
 ## Cómo llegar
 
@@ -214,6 +228,7 @@ Mientras la ruta está Activa, cada 5 segundos (con la consulta de eventos) el c
 `TelemetriaController` sigue al controlador del mapa y a la sesión: con la app en pantalla, con sesión y con permiso de ubicación, toma una lectura del GPS cada 3 segundos y las envía en grupos cada 15 a `POST /telemetria`, haya o no una ruta activa (P-13, RN-04.2). Cada lectura lleva posición, precisión y momento; la velocidad la calcula el motor (RN-04.1).
 
 * Las lecturas salen de un flujo del GPS sin filtro de distancia (en Android, cada 3 segundos), para que un auto detenido también las mande. Si el GPS no dio una lectura nueva, no se repite la anterior.
+* El mapa y la telemetría comparten esa única lectura del GPS (`ServicioUbicacionGeolocator`); al mapa solo le llegan las posiciones cuando el conductor se movió 5 m o más. Antes cada uno pedía la suya, pero `geolocator` devuelve el mismo flujo a la segunda llamada y descarta sus ajustes: la telemetría terminaba con el filtro de 5 m del mapa y un auto detenido dejaba de mandar lecturas. Para que un auto estacionado con la app abierta no marque tráfico, el núcleo exige que el recorrido siga avanzando (RN-04.26).
 * Al pasar a segundo plano, al cerrar la sesión o si se pierde el permiso, deja de leer y de enviar, y lo que no se envió se descarta (RN-04.1, RN-04.3, RNF-13). Sin permiso, el resto de la app funciona igual.
 * Un grupo que no se pudo enviar se descarta: la telemetría no se reintenta.
 * La prueba de batería de 30 minutos comparada con Google Maps (RNF-18) se hace a mano en un teléfono.

@@ -35,4 +35,23 @@ void main() {
       expect(identical(await m.de(tipo: 'ACCIDENTE', color: Colors.red, confirmado: true), a), isFalse);
     });
   });
+
+  test('cada dibujo tiene un nombre fijo para registrarlo una sola vez en el mapa', () {
+    final m = Marcadores(escala: 3);
+    expect(m.idSurtidor(Colors.green), m.idSurtidor(Colors.green), reason: 'el mismo dibujo, el mismo nombre');
+    expect(m.idSurtidor(Colors.green), isNot(m.idSurtidor(Colors.red)));
+    expect(m.idPin(Colors.red), isNot(m.idSurtidor(Colors.red)));
+    expect(
+      m.idEvento(tipo: 'ACCIDENTE', color: Colors.red, confirmado: false),
+      isNot(m.idEvento(tipo: 'ACCIDENTE', color: Colors.red, confirmado: true)),
+    );
+    expect(
+      m.idEvento(tipo: 'ACCIDENTE', color: Colors.red, confirmado: false),
+      isNot(m.idEvento(tipo: 'BLOQUEO', color: Colors.red, confirmado: false)),
+    );
+    final antes = m.idSurtidor(Colors.green);
+    m.usarEscala(2);
+    expect(m.idSurtidor(Colors.green), isNot(antes), reason: 'con otra densidad es otro dibujo');
+    expect(m.idSurtidor(Colors.green), startsWith('churo-'));
+  });
 }

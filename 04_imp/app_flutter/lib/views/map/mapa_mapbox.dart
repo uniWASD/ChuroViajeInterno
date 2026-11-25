@@ -132,8 +132,9 @@ class _MapaMapboxState extends State<MapaMapbox> {
         widget.datos.alTocar(Coordenada(c.lat.toDouble(), c.lng.toDouble()));
       }),
     );
-    // #191: tocar un lugar conocido del mapa base lo elige con su nombre, como en Google Maps. Esta interacción va
-    // antes que la del mapa, así que el toque no llega también como un punto suelto.
+    // #191: tocar un lugar conocido del mapa base lo elige con su nombre, como en Google Maps. Mapbox atiende las
+    // interacciones sobre lugares antes que la del mapa y esta detiene el toque, así que no llega también como un
+    // punto suelto.
     mapa.addInteraction(
       TapInteraction(StandardPOIs(), (lugar, contexto) {
         final c = lugar.coordinate?.coordinates ?? contexto.point.coordinates;

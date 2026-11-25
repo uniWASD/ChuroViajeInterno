@@ -152,6 +152,7 @@ flutter run --dart-define=MAPBOX_ACCESS_TOKEN=pk.xxxxx --dart-define=API_URL_DEV
 * Sin permiso o con el GPS apagado, el mapa sigue funcionando y un aviso ofrece dar el permiso o abrir los ajustes (RN-04.3).
 * Si el estilo del mapa no carga (sin conexión, token inválido), la vista muestra «No se pudo cargar el mapa. Revisa tu conexión e inténtalo de nuevo.» con un botón para reintentar (RN-03.18). Los mosaicos que fallan sueltos no cuentan como error.
 * El logo y la atribución de Mapbox y OpenStreetMap quedan visibles (RNF-19).
+* Las imágenes de los marcadores (surtidores, eventos y el pin) se registran una sola vez por dibujo en el estilo del mapa (`churo-…`), y cada marcador solo la nombra. Si registrarla falla, el marcador lleva su propia imagen, como antes. Si el estilo se vuelve a cargar, los marcadores se dibujan de nuevo y las registran otra vez.
 
 ## Cómo llegar
 
@@ -227,6 +228,7 @@ Mientras la ruta está Activa, cada 5 segundos (con la consulta de eventos) el c
 `TelemetriaController` sigue al controlador del mapa y a la sesión: con la app en pantalla, con sesión y con permiso de ubicación, toma una lectura del GPS cada 3 segundos y las envía en grupos cada 15 a `POST /telemetria`, haya o no una ruta activa (P-13, RN-04.2). Cada lectura lleva posición, precisión y momento; la velocidad la calcula el motor (RN-04.1).
 
 * Las lecturas salen de un flujo del GPS sin filtro de distancia (en Android, cada 3 segundos), para que un auto detenido también las mande. Si el GPS no dio una lectura nueva, no se repite la anterior.
+* El mapa y la telemetría comparten esa única lectura del GPS (`ServicioUbicacionGeolocator`); al mapa solo le llegan las posiciones cuando el conductor se movió 5 m o más. Antes cada uno pedía la suya, pero `geolocator` devuelve el mismo flujo a la segunda llamada y descarta sus ajustes: la telemetría terminaba con el filtro de 5 m del mapa y un auto detenido dejaba de mandar lecturas.
 * Al pasar a segundo plano, al cerrar la sesión o si se pierde el permiso, deja de leer y de enviar, y lo que no se envió se descarta (RN-04.1, RN-04.3, RNF-13). Sin permiso, el resto de la app funciona igual.
 * Un grupo que no se pudo enviar se descarta: la telemetría no se reintenta.
 * La prueba de batería de 30 minutos comparada con Google Maps (RNF-18) se hace a mano en un teléfono.

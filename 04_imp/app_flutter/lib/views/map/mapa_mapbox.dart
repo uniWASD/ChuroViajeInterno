@@ -192,14 +192,18 @@ class _MapaMapboxState extends State<MapaMapbox> {
     await capa.deleteAll();
     final surtidores = widget.datos.surtidores;
     if (surtidores.isEmpty) return;
+    final imagenes = _ImagenesDelDibujo(this);
     await capa.createMulti([
       for (final s in surtidores)
-        PointAnnotationOptions(
-          geometry: _punto(s.coordenada),
-          image: await _dibujos.deSurtidor(s.color),
-          iconAnchor: IconAnchor.BOTTOM,
-          iconSize: 0.85,
-          customData: {'surtidor': s.id},
+        await imagenes.en(
+          PointAnnotationOptions(
+            geometry: _punto(s.coordenada),
+            iconAnchor: IconAnchor.BOTTOM,
+            iconSize: 0.85,
+            customData: {'surtidor': s.id},
+          ),
+          _dibujos.idSurtidor(s.color),
+          () => _dibujos.deSurtidor(s.color),
         ),
     ]);
   }
@@ -242,13 +246,17 @@ class _MapaMapboxState extends State<MapaMapbox> {
     }
     if (enPunto.isEmpty) return;
     // #172: cada evento con el ícono de su tipo, en una gota del color del tipo.
+    final imagenes = _ImagenesDelDibujo(this);
     await capa.createMulti([
       for (final e in enPunto)
-        PointAnnotationOptions(
-          geometry: _punto(e.coordenada),
-          image: await _dibujos.de(tipo: e.tipo, color: e.color, confirmado: e.confirmado),
-          iconAnchor: IconAnchor.BOTTOM,
-          customData: {'evento': e.id},
+        await imagenes.en(
+          PointAnnotationOptions(
+            geometry: _punto(e.coordenada),
+            iconAnchor: IconAnchor.BOTTOM,
+            customData: {'evento': e.id},
+          ),
+          _dibujos.idEvento(tipo: e.tipo, color: e.color, confirmado: e.confirmado),
+          () => _dibujos.de(tipo: e.tipo, color: e.color, confirmado: e.confirmado),
         ),
     ]);
   }
@@ -283,10 +291,15 @@ class _MapaMapboxState extends State<MapaMapbox> {
         if (m.tipo == TipoMarca.punto || m.tipo == TipoMarca.destino) m.coordenada,
     };
     if (conPin.isNotEmpty) {
-      final pin = await _dibujos.dePin(Colors.red.shade700);
+      final color = Colors.red.shade700;
+      final imagenes = _ImagenesDelDibujo(this);
       await pines.createMulti([
         for (final c in conPin)
-          PointAnnotationOptions(geometry: _punto(c), image: pin, iconAnchor: IconAnchor.BOTTOM, iconSize: 0.9),
+          await imagenes.en(
+            PointAnnotationOptions(geometry: _punto(c), iconAnchor: IconAnchor.BOTTOM, iconSize: 0.9),
+            _dibujos.idPin(color),
+            () => _dibujos.dePin(color),
+          ),
       ]);
     }
     final circulos = [
@@ -408,6 +421,30 @@ class _MapaMapboxState extends State<MapaMapbox> {
 
   bool get _siguiendo => widget.datos.seguirUbicacion && widget.datos.mostrarUbicacion;
 
+  /// Registra un dibujo en el estilo del mapa, una sola vez. Devuelve false si no se pudo: entonces el marcador lleva
+  /// su propia imagen, como antes, y el mapa se ve igual.
+  Future<bool> _registrarImagen(String id, Uint8List png) async {
+    final mapa = _mapa;
+    if (mapa == null) return false;
+    try {
+      if (await mapa.hasStyleImage(id)) return true;
+      // La imagen está dibujada con la densidad de la pantalla: con esa escala se ve del mismo tamaño que antes.
+      await mapa.addImage(id, _dibujos.escala, StyleImage.bytes(png));
+      return true;
+    } on Object catch (e) {
+      debugPrint('No se pudo registrar la imagen $id en el mapa: $e');
+      return false;
+    }
+  }
+
+  /// Si el estilo se vuelve a cargar, sus imágenes se pierden: los marcadores se dibujan de nuevo y las registran.
+  void _alCargarEstilo() {
+    _aplicarEstilo();
+    if (_surtidores != null) _dibujarSurtidores();
+    if (_eventos != null) _dibujarEventos();
+    if (_pines != null) _marcarPunto();
+  }
+
   static Point _punto(Coordenada c) =>
       Point(coordinates: Position(c.longitud, c.latitud));
 
@@ -435,7 +472,7 @@ class _MapaMapboxState extends State<MapaMapbox> {
       ),
       viewportController: _vista,
       onMapCreated: _alCrear,
-      onStyleLoadedListener: (_) => _aplicarEstilo(),
+      onStyleLoadedListener: (_) => _alCargarEstilo(),
       onMapLoadErrorListener: (error) {
         // Solo el estilo deja el mapa sin cargar; un mosaico que falla se vuelve a pedir solo.
         if (error.type == MapLoadErrorType.STYLE) {
@@ -443,5 +480,29 @@ class _MapaMapboxState extends State<MapaMapbox> {
         }
       },
     );
+  }
+}
+
+/// Las imágenes de un dibujo de marcadores: cada dibujo distinto se registra en el estilo una sola vez y los
+/// marcadores solo lo nombran. Si registrarlo falla, el marcador lleva su imagen como antes.
+class _ImagenesDelDibujo {
+  final _MapaMapboxState _estado;
+  final Map<String, bool> _registradas = {};
+
+  _ImagenesDelDibujo(this._estado);
+
+  Future<PointAnnotationOptions> en(
+    PointAnnotationOptions opciones,
+    String id,
+    Future<Uint8List> Function() dibujo,
+  ) async {
+    final png = await dibujo();
+    final registrada = _registradas[id] ??= await _estado._registrarImagen(id, png);
+    if (registrada) {
+      opciones.iconImage = id;
+    } else {
+      opciones.image = png;
+    }
+    return opciones;
   }
 }

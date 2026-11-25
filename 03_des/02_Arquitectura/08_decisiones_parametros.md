@@ -97,5 +97,6 @@ Este archivo reúne las decisiones de arquitectura y los valores de los parámet
 | P-37 | Cuánto tiene que avanzar un recorrido durante la racha lenta | [RN-04.23](04_reglas/CU-04_RecalcularRuta.md) | 25 m en línea recta desde donde empezó la racha (`kAvanceMinimoM`): más que el error típico del GPS y unos 4 autos de una fila | Confirmado el 19/11/2026 |
 | P-38 | Cuánto puede cambiar de dirección la cuadra siguiente para ser la misma calle | [RN-04.24](04_reglas/CU-04_RecalcularRuta.md) | Menos de 40 grados (`kCambioMaximoMismaCalleGrados`), el mismo ángulo que RN-04.7 toma como giro | Confirmado el 19/11/2026 |
 | P-39 | Hasta dónde puede reportar un conductor desde su posición | [RN-01.5](04_reglas/CU-01_ReportarEventoVial.md) | 1 km (`Ubicacion.RADIO_REPORTE_METROS`). Lo entrega `GET /catalogos` en `radioReporteMetros` | Confirmado el 24/11/2026 (#191) |
+| P-40 | Cada cuánto tiene que avanzar un recorrido lento para seguir contando | [RN-04.26](04_reglas/CU-04_RecalcularRuta.md) | 10 m cada 90 segundos (`kAvanceRecienteM`, `kSinAvanzarMaximoS`). 10 m es más que el temblor del GPS de un auto quieto y unos 2 autos de una fila; 90 s cubre un semáforo largo | Propuesta (25/11/2026) |
 
 P-07, P-08 y P-10 se cerraron con las decisiones D-09, D-08 y D-12. P-16 quedó sin uso.

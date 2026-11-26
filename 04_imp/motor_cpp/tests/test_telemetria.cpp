@@ -535,3 +535,72 @@ TEST(Telemetria, RN0426_SiLaFilaSeDetieneMasDe90SegundosDejaDeInformarYVuelveAlA
   sigue.erase(sigue.begin());
   EXPECT_FALSE(p.enviar_en_grupos("recorrido-1", false, sigue).empty());
 }
+
+// #197, RN-04.8, P-41: una avenida con cuadras de 85 m, como las de Tarija, y en cada esquina calles que cruzan
+// (tests/datos/red_cuadras_cortas.json). El auto va por su carril, a unos metros del eje de la avenida: junto a la
+// esquina, la calle que cruza queda más cerca que la avenida. Las pruebas de arriba van justo sobre el eje.
+namespace {
+
+constexpr double kLonCuadrasCortas = -64.74;  // el extremo oeste de la Av. Cuadras Cortas
+constexpr double kCuadraM = 85;
+
+json red_cuadras_cortas() {
+  std::ifstream archivo(RED_CUADRAS_CORTAS);
+  return json::parse(archivo);
+}
+
+// La latitud del carril derecho yendo hacia el este, a `metros` al sur del eje de la avenida.
+double carril_hacia_el_este(double metros) { return kLatAvenida - metros * grados_lat_por_metro(); }
+
+// La longitud a `metros` al este del extremo oeste de la avenida.
+double metros_al_este(double metros) { return kLonCuadrasCortas + metros * grados_lon_por_metro(); }
+
+}  // namespace
+
+TEST(Telemetria, CP213_A10KmhPorSuCarrilEnUnaAvenidaConCrucesHayCongestion) {
+  for (const double carril : {0.0, 2.0, 4.0, 6.0}) {
+    Prueba p(red_cuadras_cortas());
+    // Llega manejando y sigue 126 s a 10 km/h (unos 350 m): pasa por 4 esquinas.
+    auto lecturas = llega_manejando(carril_hacia_el_este(carril), metros_al_este(20), 90);
+    avanzar(lecturas, 10, 90, 126);
+    const json congestiones = p.enviar_en_grupos("recorrido-1", false, lecturas);
+    ASSERT_FALSE(congestiones.empty()) << "carril a " << carril << " m del eje";
+    std::set<std::string> tramos;
+    for (const json& c : congestiones) tramos.insert(c.at("tramo"));
+    // Todas las cuadras recorridas, en el sentido en que avanza, y ninguna calle que cruza.
+    EXPECT_EQ(tramos, (std::set<std::string>{"avenida0:ida", "avenida1:ida", "avenida2:ida", "avenida3:ida",
+                                             "avenida4:ida"}))
+        << "carril a " << carril << " m del eje";
+  }
+}
+
+TEST(Telemetria, CP214_JuntoALaEsquinaLaLecturaSigueEnLaAvenidaYNoEnLaCalleQueCruza) {
+  const RedVial red = RedVial::desde_json(red_cuadras_cortas());
+  // A 4 m del eje de la avenida y 2 m después de la esquina con la Calle Sur 3: la calle que cruza está a 2 m y
+  // la avenida a 4 m.
+  const double lat = carril_hacia_el_este(4);
+  const double lon = metros_al_este(3 * kCuadraM + 2);
+  const auto hacia_el_este = red.tramo_en_sentido(lat, lon, 90.0, 30);
+  ASSERT_TRUE(hacia_el_este.has_value());
+  EXPECT_EQ(red.tramos()[hacia_el_este->tramo].id, "avenida3:ida");
+  EXPECT_NEAR(hacia_el_este->distancia_m, 4, 0.1);
+  // Sin rumbo no se sabe hacia dónde va: el tramo más cercano, como antes.
+  const auto sin_rumbo = red.tramo_en_sentido(lat, lon, std::nullopt, 30);
+  ASSERT_TRUE(sin_rumbo.has_value());
+  EXPECT_EQ(red.tramos()[sin_rumbo->tramo].nombre, "Calle Sur 3");
+  // Si de verdad dobló hacia el sur, la calle que cruza es la alineada.
+  const auto hacia_el_sur = red.tramo_en_sentido(lat, lon, 180.0, 30);
+  ASSERT_TRUE(hacia_el_sur.has_value());
+  EXPECT_EQ(red.tramos()[hacia_el_sur->tramo].id, "sur3:ida");
+}
+
+TEST(Telemetria, CP215_DoblarEnLaEsquinaHaciaLaCalleQueCruzaCortaLaRacha) {
+  Prueba p(red_cuadras_cortas());
+  // Lento 75 s por su carril, a 4 m del eje, hasta la esquina con la Calle Sur 3, y otros 75 s por esa calle hacia
+  // el sur. En total pasa los 2 minutos, pero ninguna de las dos partes sola.
+  const double hasta_la_esquina = 75 * 10 / 3.6;
+  auto lecturas = llega_manejando(carril_hacia_el_este(4), metros_al_este(3 * kCuadraM - hasta_la_esquina), 90);
+  avanzar(lecturas, 10, 90, 75);
+  avanzar(lecturas, 8, 180, 75);
+  EXPECT_TRUE(p.enviar_en_grupos("recorrido-1", false, lecturas).empty());
+}

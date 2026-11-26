@@ -74,6 +74,7 @@ if(BUILD_TESTING)
     RED_PRUEBA_PLAZA="${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_prueba_plaza.json"
     RED_IRREGULAR="${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_irregular.json"
     RED_TELEMETRIA="${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_telemetria.json"
+    RED_CUADRAS_CORTAS="${CMAKE_CURRENT_SOURCE_DIR}/tests/datos/red_cuadras_cortas.json"
     RED_EJEMPLO_FORMATO="${CMAKE_CURRENT_SOURCE_DIR}/preparacion/ejemplos/red_vial_ejemplo.json"
     RUTAS_REFERENCIA="${CMAKE_CURRENT_SOURCE_DIR}/../datos/rutas_referencia.json")
   gtest_discover_tests(pruebas_nucleo)

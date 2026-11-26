@@ -904,7 +904,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ## Sprint 7 (26/11 – 30/11)
 
-7 issues · 18 puntos. T-126 es una corrección que salió al revisar los datos de ANH y no suma puntos.
+8 issues · 18 puntos. T-126 y T-127 son correcciones que salieron al revisar los datos de ANH y al probar la congestión en la calle, y no suman puntos.
 
 | Issue | Responsable | Casos de prueba |
 | --- | --- | --- |
@@ -915,6 +915,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | [T-110][Servidor] Despliegue final y revisión de seguridad ([#91](https://github.com/uniWASD/ChuroViajeInterno/issues/91)) | Marcelo | CP-154 |
 | [T-104][Flutter] Política de privacidad ([#81](https://github.com/uniWASD/ChuroViajeInterno/issues/81)) | Franz | CP-133 |
 | [T-126][Java] La fecha de un dato de ANH es desde cuándo dice lo mismo ([#195](https://github.com/uniWASD/ChuroViajeInterno/issues/195)) | Marcelo | CP-209 a CP-212 |
+| [T-127][C++] Al pasar una esquina, la lectura se queda en la calle por la que avanza ([#197](https://github.com/uniWASD/ChuroViajeInterno/issues/197)) | Marcelo | CP-213 a CP-215 |
 
 ### [T-101][WhatsApp/LLM] Prueba con mensajes reales · [#77](https://github.com/uniWASD/ChuroViajeInterno/issues/77)
 
@@ -1071,3 +1072,29 @@ Un issue está terminado cuando cumple las tres condiciones:
 | **CP-210** ANH pasa de 0 litros a tener saldo: la fecha del dato pasa a su `updated_at` y GET /surtidores muestra el dato de ANH | Prueba automatizada y su salida en la CI |  |
 | **CP-211** suben los litros de ANH sin cambiar la disponibilidad: la fecha del dato pasa a su `updated_at` y gana sobre un «se acabó» de WhatsApp anterior | Prueba automatizada y su salida en la CI |  |
 | **CP-212** bajan los litros de ANH sin agotarse: se guardan los litros nuevos y la fecha del dato se queda | Prueba automatizada y su salida en la CI |  |
+
+### [T-127][C++] Al pasar una esquina, la lectura se queda en la calle por la que avanza · [#197](https://github.com/uniWASD/ChuroViajeInterno/issues/197)
+
+**Responsable:** Marcelo · **Fechas:** 26/11
+
+**Historia de usuario y requisitos**
+
+- HU-13: Como sistema, quiero recibir la posición de los conductores mientras tienen la app abierta, para calcular su velocidad y detectar congestión sin depender solo de los reportes manuales.
+
+**Reglas y decisiones**
+
+- RN-04.8, RN-04.10 y RN-04.24 ([CU-04](../../03_des/02_Arquitectura/04_reglas/CU-04_RecalcularRuta.md)); P-41 ([parámetros](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+
+**Criterios de aceptación**
+
+- A 10 km/h durante 2 minutos por una avenida con cruces cada 85 m, a 4 m del eje, se informa congestión
+- Con rumbo, una lectura a 30 m o menos de un tramo alineado con el avance (diferencia de 45° o menos) se asigna a ese tramo, aunque un tramo cruzado esté más cerca
+- Doblar a la calle que cruza sigue cortando la racha lenta
+- Sin rumbo, la lectura va al tramo más cercano, como antes
+- Pasan las pruebas del núcleo que ya existían y la CI está en verde
+
+| Caso de prueba | Evidencia esperada | Validación |
+| --- | --- | --- |
+| **CP-213** a 10 km/h por la avenida, a 0, 2, 4 y 6 m del eje y con cruces cada 85 m, hay congestión en las cuadras recorridas y en ninguna calle que cruza | Prueba automatizada y su salida en la CI |  |
+| **CP-214** con el auto a 4 m del eje y 2 m después de la esquina, la lectura va a la avenida; sin rumbo, a la calle que cruza; y hacia el sur, a la calle que cruza | Prueba automatizada y su salida en la CI |  |
+| **CP-215** lento a 4 m del eje hasta la esquina y doblando hacia la calle que cruza, la racha se corta y no hay congestión | Prueba automatizada y su salida en la CI |  |

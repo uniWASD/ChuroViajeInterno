@@ -565,7 +565,7 @@ El backend consulta a ANH Abastecimiento, el servicio público de la Agencia Nac
 | `producto_id`, `producto_nombre` | Comprobar que el registro es del combustible que se pidió. El tipo del dato sale del código que se pidió: 0, Gasolina; 1, Diesel |
 | `saldo_litros` | Los litros. Si no es un número válido o es negativo, el dato es «sin saldo» |
 | `saldo_estado` | El estado de ANH: alto, medio o bajo. Se guarda como llega |
-| `updated_at` | La fecha del dato |
+| `updated_at` | Comparar con la lectura anterior y, si ANH cambió lo que dice, la fecha del dato ([RN-09.14](04_reglas/CU-09_ConsultarEstadoANH.md)) |
 
 Algunas respuestas traen los datos del combustible dentro de una lista `productos`; de ahí se toma solo el combustible pedido. Cualquier otro campo se ignora. En particular, la fecha de última venta y el indicador de venta se descartan apenas llegan, y no se lee ni se guarda la dirección ([RN-09.18](04_reglas/CU-09_ConsultarEstadoANH.md)). ANH no informa cuándo llegó combustible a una estación, y el sistema no inventa ese dato.
 

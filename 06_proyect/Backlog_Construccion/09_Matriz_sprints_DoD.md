@@ -904,7 +904,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 
 ## Sprint 7 (26/11 – 30/11)
 
-6 issues · 18 puntos.
+7 issues · 18 puntos. T-126 es una corrección que salió al revisar los datos de ANH y no suma puntos.
 
 | Issue | Responsable | Casos de prueba |
 | --- | --- | --- |
@@ -914,6 +914,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | [T-109][C++] Rendimiento con la red real de Tarija ([#90](https://github.com/uniWASD/ChuroViajeInterno/issues/90)) | Marcelo | CP-153 |
 | [T-110][Servidor] Despliegue final y revisión de seguridad ([#91](https://github.com/uniWASD/ChuroViajeInterno/issues/91)) | Marcelo | CP-154 |
 | [T-104][Flutter] Política de privacidad ([#81](https://github.com/uniWASD/ChuroViajeInterno/issues/81)) | Franz | CP-133 |
+| [T-126][Java] La fecha de un dato de ANH es desde cuándo dice lo mismo ([#195](https://github.com/uniWASD/ChuroViajeInterno/issues/195)) | Marcelo | CP-209 a CP-212 |
 
 ### [T-101][WhatsApp/LLM] Prueba con mensajes reales · [#77](https://github.com/uniWASD/ChuroViajeInterno/issues/77)
 
@@ -1042,3 +1043,31 @@ Un issue está terminado cuando cumple las tres condiciones:
 | Caso de prueba | Evidencia esperada | Validación |
 | --- | --- | --- |
 | **CP-133** desde la vista Inicio de sesión, sin cuenta, se abre la política y menciona al proveedor del LLM y a ANH | Captura de pantalla |  |
+
+### [T-126][Java] La fecha de un dato de ANH es desde cuándo dice lo mismo · [#195](https://github.com/uniWASD/ChuroViajeInterno/issues/195)
+
+**Responsable:** Marcelo · **Fechas:** 26/11
+
+**Historia de usuario y requisitos**
+
+- HU-07: Como conductor de la app, quiero consultar el estado de disponibilidad de combustible en surtidores cercanos, para evitar dirigirme a uno que esté agotado.
+- HU-14: Como sistema, quiero consultar periódicamente la API de ANH Abastecimiento, para mantener actualizado el estado de los surtidores con el saldo y el estado que informa ANH, además de los mensajes de WhatsApp.
+
+**Reglas y decisiones**
+
+- RN-09.13, RN-09.14 y RN-09.17 ([CU-09](../../03_des/02_Arquitectura/04_reglas/CU-09_ConsultarEstadoANH.md)); RN-05.3 ([CU-05](../../03_des/02_Arquitectura/04_reglas/CU-05_ConsultarDisponibilidadCombustible.md)); D-50 ([decisiones](../../03_des/02_Arquitectura/08_decisiones_parametros.md)).
+
+**Criterios de aceptación**
+
+- Si ANH sigue diciendo lo mismo con un `updated_at` nuevo, un aviso de WhatsApp o una confirmación más reciente que el último cambio de ANH es el dato que se muestra
+- Si ANH pasa de agotado a disponible (o al revés) o suben sus litros, su dato vuelve a ser el más reciente
+- Los litros y el estado de ANH se guardan en cada lectura nueva, aunque la fecha del dato no cambie
+- Una lectura con un `updated_at` más viejo que el último aceptado no cambia nada
+- La vigencia de 6 horas se sigue contando desde la última lectura
+
+| Caso de prueba | Evidencia esperada | Validación |
+| --- | --- | --- |
+| **CP-209** ANH sigue en 0 litros con un `updated_at` nuevo: la fecha del dato se queda y GET /surtidores muestra el aviso de WhatsApp | Prueba automatizada y su salida en la CI |  |
+| **CP-210** ANH pasa de 0 litros a tener saldo: la fecha del dato pasa a su `updated_at` y GET /surtidores muestra el dato de ANH | Prueba automatizada y su salida en la CI |  |
+| **CP-211** suben los litros de ANH sin cambiar la disponibilidad: la fecha del dato pasa a su `updated_at` y gana sobre un «se acabó» de WhatsApp anterior | Prueba automatizada y su salida en la CI |  |
+| **CP-212** bajan los litros de ANH sin agotarse: se guardan los litros nuevos y la fecha del dato se queda | Prueba automatizada y su salida en la CI |  |

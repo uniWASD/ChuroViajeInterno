@@ -1,12 +1,13 @@
 @startuml CU-09_ConsultarEstadoANH
 ' CU-09: Consultar Estado de Combustible desde ANH - Diagrama de comportamiento (actividad)
 ' Fuente: 02_req - Especificación de Casos de Uso (CU-01 a CU-09), secciones 4 y 6
-' Issue: T-116 (#106).
+' Issue: T-116 (#106). Actualizado en T-126 (#195): extensión 6c, la fecha del dato de ANH.
 
 skinparam shadowing false
 skinparam defaultFontName "DejaVu Sans"
 skinparam defaultFontSize 12
 skinparam wrapWidth 200
+skinparam titleFontStyle bold
 skinparam ArrowColor #2F5D8A
 skinparam activity {
   BackgroundColor #EAF2FB
@@ -56,10 +57,21 @@ surtidor;
 más de 0 es
 disponible;
       if (¿Es más reciente\nque el dato de ANH\nque ya hay?) then (sí)
-        :Actualiza el
+        if (¿No había dato,\ncambió la disponibilidad\no subieron los litros?) then (sí)
+          :Actualiza el
 estado del
 surtidor con
-origen "ANH";
+origen "ANH" y la
+fecha que informa
+ANH;
+        else (no [6c])
+          #FFF8E1:[6c] Guarda los
+litros, el estado
+de ANH y el
+momento de la
+lectura, y conserva
+la fecha del dato;
+        endif
         :El estado queda
 disponible para
 las consultas

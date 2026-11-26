@@ -136,12 +136,31 @@ class VinculoAnhIntegracionTest extends PruebaIntegracionPostgis {
                 .hasMessageContaining("ck_estado_combustible_solo_anh");
     }
 
+    @Test
+    @DisplayName("V15: anh_actualizado es solo de ANH, y un dato de ANH sin él (de la versión anterior) se acepta")
+    void anhActualizadoSoloDeAnh() {
+        assertThatThrownBy(() -> jdbc.update("""
+                insert into estado_combustible (surtidor_id, tipo_codigo, origen, disponible, fecha_dato,
+                                                actualizado_en, anh_actualizado)
+                values (?, 'GASOLINA', 'WHATSAPP', true, ?, ?, ?)""",
+                lasVegas, Timestamp.from(ACTUALIZADO), Timestamp.from(LEIDO), Timestamp.from(ACTUALIZADO)))
+                .isInstanceOf(DataIntegrityViolationException.class)
+                .hasMessageContaining("ck_estado_combustible_solo_anh_actualizado");
+        jdbc.update("""
+                insert into estado_combustible (surtidor_id, tipo_codigo, origen, disponible, fecha_dato, litros,
+                                                consultado_en, actualizado_en)
+                values (?, 'GASOLINA', 'ANH', true, ?, 10, ?, ?)""",
+                lasVegas, Timestamp.from(ACTUALIZADO), Timestamp.from(LEIDO), Timestamp.from(LEIDO));
+        assertThat(jdbc.queryForObject("select count(*) from estado_combustible where origen = 'ANH' "
+                + "and anh_actualizado is null", Integer.class)).isEqualTo(1);
+    }
+
     private void insertarAnh(long surtidor, BigDecimal litros, String estadoAnh) {
         jdbc.update("""
                 insert into estado_combustible (surtidor_id, tipo_codigo, origen, disponible, fecha_dato, litros,
-                                                estado_anh, consultado_en, actualizado_en)
-                values (?, 'GASOLINA', 'ANH', ?, ?, ?, ?, ?, ?)""",
+                                                estado_anh, consultado_en, actualizado_en, anh_actualizado)
+                values (?, 'GASOLINA', 'ANH', ?, ?, ?, ?, ?, ?, ?)""",
                 surtidor, litros.signum() > 0, Timestamp.from(ACTUALIZADO), litros, estadoAnh,
-                Timestamp.from(LEIDO), Timestamp.from(LEIDO));
+                Timestamp.from(LEIDO), Timestamp.from(LEIDO), Timestamp.from(ACTUALIZADO));
     }
 }

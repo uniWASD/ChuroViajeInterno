@@ -32,8 +32,9 @@ public record LecturaAnh(int anhId, String nombre, Ubicacion ubicacion, BigDecim
     }
 
     /**
-     * RN-09.11 a RN-09.13: el {@link EstadoCombustible} de origen ANH de esta lectura. Sin saldo o sin fecha no hay
-     * estado: no se crea ni se cambia nada, y nunca se toma como cero litros.
+     * RN-09.11 a RN-09.13: el {@link EstadoCombustible} de origen ANH de esta lectura, con el {@code updated_at} como
+     * fecha. Al guardarlo, esa fecha reemplaza a la del dato anterior solo si ANH cambió lo que dice (RN-09.14). Sin
+     * saldo o sin fecha no hay estado: no se crea ni se cambia nada, y nunca se toma como cero litros.
      *
      * @param leidoEn cuándo leyó el backend la respuesta; de ahí se cuenta la vigencia (RN-09.17)
      */

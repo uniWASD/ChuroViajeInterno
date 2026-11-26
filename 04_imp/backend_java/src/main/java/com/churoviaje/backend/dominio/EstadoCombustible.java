@@ -16,7 +16,8 @@ import java.util.Objects;
  * dato (RN-05.4). Hay uno por surtidor, tipo y origen; el más reciente de un origen reemplaza al anterior del mismo
  * origen (RN-06.17, RN-09.14) y cuál de los tres orígenes se muestra lo decide la consulta (RN-05.3).
  *
- * @param fecha        la fecha del dato: la del mensaje, la de la confirmación o el {@code updated_at} de ANH
+ * @param fecha        la fecha del dato: la del mensaje o la de la confirmación; en ANH, el {@code updated_at} de la
+ *                     lectura y, ya guardado, desde cuándo ANH dice lo mismo (RN-09.14, D-50)
  * @param litros       solo ANH (RN-09.12)
  * @param estadoAnh    solo ANH: {@code ALTO}, {@code MEDIO} o {@code BAJO}, tal como llega (D-31)
  * @param consultadoEn solo ANH: cuándo lo leyó el backend; de ahí se cuenta su vigencia (RN-09.17)

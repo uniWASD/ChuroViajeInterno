@@ -40,28 +40,43 @@ public class PgEstadoCombustibleRepository implements EstadoCombustibleRepositor
              where estado_combustible.fecha_dato < excluded.fecha_dato""";
 
     /**
-     * RN-09.14: con la misma fecha solo cambia el momento de la lectura; un dato más viejo no entra (el {@code where}
-     * deja la fila como está y no devuelve nada). {@code previo} ve la fila de antes, para saber qué pasó.
+     * RN-09.14: una lectura de ANH con un {@code updated_at} más viejo que el último aceptado no entra (el
+     * {@code where} deja la fila como está y no devuelve nada); con el mismo, solo cambia el momento de la lectura.
+     * Con uno más nuevo se guardan los litros y el estado de ANH, pero {@code fecha_dato} (desde cuándo ANH dice lo
+     * mismo) solo pasa al {@code updated_at} nuevo si cambió la disponibilidad o subieron los litros (D-50). Así el
+     * {@code updated_at} que ANH renueva sin que cambie nada no tapa a WhatsApp ni a los conductores (RN-05.3).
+     * {@code previo} ve la fila de antes, para saber qué pasó. Una fila sin {@code anh_actualizado} (la guardó la
+     * versión anterior a V15) usa {@code fecha_dato} en su lugar.
      */
     private static final String GUARDAR_DE_ANH = """
             with previo as (
-                select fecha_dato from estado_combustible
+                select coalesce(anh_actualizado, fecha_dato) as anh_actualizado from estado_combustible
                  where surtidor_id = ? and tipo_codigo = ? and origen = 'ANH')
             insert into estado_combustible as e (surtidor_id, tipo_codigo, origen, disponible, fila, fecha_dato, litros,
-                                                 estado_anh, consultado_en, actualizado_en)
-            values (?, ?, 'ANH', ?, null, ?, ?, ?, ?, ?)
+                                                 estado_anh, consultado_en, actualizado_en, anh_actualizado)
+            values (?, ?, 'ANH', ?, null, ?, ?, ?, ?, ?, ?)
             on conflict (surtidor_id, tipo_codigo, origen) do update
-               set disponible = case when e.fecha_dato = excluded.fecha_dato then e.disponible
-                                     else excluded.disponible end,
-                   litros = case when e.fecha_dato = excluded.fecha_dato then e.litros else excluded.litros end,
-                   estado_anh = case when e.fecha_dato = excluded.fecha_dato then e.estado_anh
-                                     else excluded.estado_anh end,
-                   fecha_dato = excluded.fecha_dato,
+               set fecha_dato = case
+                       when coalesce(e.anh_actualizado, e.fecha_dato) = excluded.anh_actualizado then e.fecha_dato
+                       when e.disponible <> excluded.disponible then excluded.fecha_dato
+                       when excluded.litros > e.litros then excluded.fecha_dato
+                       else e.fecha_dato end,
+                   disponible = case
+                       when coalesce(e.anh_actualizado, e.fecha_dato) = excluded.anh_actualizado then e.disponible
+                       else excluded.disponible end,
+                   litros = case
+                       when coalesce(e.anh_actualizado, e.fecha_dato) = excluded.anh_actualizado then e.litros
+                       else excluded.litros end,
+                   estado_anh = case
+                       when coalesce(e.anh_actualizado, e.fecha_dato) = excluded.anh_actualizado then e.estado_anh
+                       else excluded.estado_anh end,
+                   anh_actualizado = excluded.anh_actualizado,
                    consultado_en = excluded.consultado_en,
-                   actualizado_en = case when e.fecha_dato = excluded.fecha_dato
-                                          then e.actualizado_en else excluded.actualizado_en end
-             where e.fecha_dato <= excluded.fecha_dato
-            returning (select fecha_dato from previo) as fecha_previa, e.fecha_dato""";
+                   actualizado_en = case
+                       when coalesce(e.anh_actualizado, e.fecha_dato) = excluded.anh_actualizado then e.actualizado_en
+                       else excluded.actualizado_en end
+             where coalesce(e.anh_actualizado, e.fecha_dato) <= excluded.anh_actualizado
+            returning (select anh_actualizado from previo) as anh_previo""";
 
     private final DataSource conexiones;
 
@@ -111,11 +126,13 @@ public class PgEstadoCombustibleRepository implements EstadoCombustibleRepositor
             sentencia.setString(8, estado.estadoAnh());
             ponerInstante(sentencia, 9, estado.consultadoEn());
             ponerInstante(sentencia, 10, ahora);
+            // Al entrar, fecha_dato y anh_actualizado son el mismo updated_at (RN-09.13).
+            ponerInstante(sentencia, 11, estado.fecha());
             try (ResultSet fila = sentencia.executeQuery()) {
                 if (!fila.next()) {
                     return ResultadoAnh.MAS_VIEJO;
                 }
-                OffsetDateTime previa = fila.getObject("fecha_previa", OffsetDateTime.class);
+                OffsetDateTime previa = fila.getObject("anh_previo", OffsetDateTime.class);
                 return previa != null && previa.toInstant().equals(estado.fecha())
                         ? ResultadoAnh.RELEIDO : ResultadoAnh.GUARDADO;
             }

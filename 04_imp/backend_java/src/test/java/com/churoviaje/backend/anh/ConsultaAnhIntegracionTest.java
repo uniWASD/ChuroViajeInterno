@@ -125,10 +125,10 @@ class ConsultaAnhIntegracionTest extends PruebaIntegracionPostgis {
     private void guardarAnh(long surtidor, String litros, Instant fecha, Instant leido) {
         jdbc.update("""
                 insert into estado_combustible (surtidor_id, tipo_codigo, origen, disponible, fecha_dato, litros,
-                                                estado_anh, consultado_en, actualizado_en)
-                values (?, 'GASOLINA', 'ANH', ?, ?, ?, 'MEDIO', ?, ?)""",
+                                                estado_anh, consultado_en, actualizado_en, anh_actualizado)
+                values (?, 'GASOLINA', 'ANH', ?, ?, ?, 'MEDIO', ?, ?, ?)""",
                 surtidor, new BigDecimal(litros).signum() > 0, Timestamp.from(fecha), new BigDecimal(litros),
-                Timestamp.from(leido), Timestamp.from(leido));
+                Timestamp.from(leido), Timestamp.from(leido), Timestamp.from(fecha));
     }
 
     @Test
@@ -339,6 +339,128 @@ class ConsultaAnhIntegracionTest extends PruebaIntegracionPostgis {
         ANH.responder(GASOLINA, Respuesta.json(listado()));
         consulta.consultar();
         assertThat(ANH.pedidos(DIESEL)).isEqualTo(1);
+    }
+
+    private void guardarWhatsapp(long surtidor, boolean disponible, Instant fecha) {
+        jdbc.update("""
+                insert into estado_combustible (surtidor_id, tipo_codigo, origen, disponible, fecha_dato, actualizado_en)
+                values (?, 'GASOLINA', 'WHATSAPP', ?, ?, ?)""", surtidor, disponible, Timestamp.from(fecha),
+                Timestamp.from(fecha));
+    }
+
+    private Instant fechaDeAnh() {
+        return ((Timestamp) estadosDeAnh().get(0).get("fecha_dato")).toInstant();
+    }
+
+    private Instant anhActualizado() {
+        return jdbc.queryForObject("select anh_actualizado from estado_combustible where origen = 'ANH'",
+                Timestamp.class).toInstant();
+    }
+
+    @Test
+    @DisplayName("CP-209: ANH renueva updated_at sin cambiar de estado: la fecha del dato se queda y gana WhatsApp")
+    void cp209UpdatedAtRenovadoSinCambio() throws Exception {
+        // ANH dice «agotado» desde las 8:00; a las 9:30 un aviso de WhatsApp dice que hay.
+        Instant desde = HORA_ANH_UTC.minus(Duration.ofHours(2));
+        guardarAnh(elMolle, "0", desde, desde);
+        guardarWhatsapp(elMolle, true, HORA_ANH_UTC.minus(Duration.ofMinutes(30)));
+        // A las 10:00 ANH sigue en 0 litros, con un updated_at nuevo.
+        ANH.responder(GASOLINA, Respuesta.json(listado(elMolle(0, "0", "bajo", HORA_ANH))));
+        ANH.responder(DIESEL, Respuesta.json(listado()));
+
+        ConsultaAnh.Resumen resumen = consulta.consultar();
+
+        assertThat(resumen.rutas()).filteredOn(r -> r.ruta().equals(GASOLINA)).first()
+                .extracting(ConsultaAnh.Ruta::aceptadas).isEqualTo(1);
+        assertThat(fechaDeAnh()).isEqualTo(desde);
+        assertThat(anhActualizado()).isEqualTo(HORA_ANH_UTC);
+        assertThat(((Timestamp) estadosDeAnh().get(0).get("consultado_en")).toInstant()).isEqualTo(AHORA);
+        assertThat(origenQueSeMuestra()).isEqualTo("WHATSAPP");
+    }
+
+    @Test
+    @DisplayName("CP-210: ANH cambia de agotado a disponible: la fecha del dato pasa a su updated_at y gana ANH")
+    void cp210CambiaLaDisponibilidad() throws Exception {
+        Instant desde = HORA_ANH_UTC.minus(Duration.ofHours(2));
+        guardarAnh(elMolle, "0", desde, desde);
+        guardarWhatsapp(elMolle, false, HORA_ANH_UTC.minus(Duration.ofMinutes(30)));
+        ANH.responder(GASOLINA, Respuesta.json(listado(elMolle(0, "5000", "medio", HORA_ANH))));
+        ANH.responder(DIESEL, Respuesta.json(listado()));
+
+        consulta.consultar();
+
+        assertThat(fechaDeAnh()).isEqualTo(HORA_ANH_UTC);
+        assertThat(estadosDeAnh().get(0).get("disponible")).isEqualTo(true);
+        assertThat(origenQueSeMuestra()).isEqualTo("ANH");
+    }
+
+    @Test
+    @DisplayName("CP-211: suben los litros de ANH (llegó combustible): la fecha del dato pasa a su updated_at")
+    void cp211SubenLosLitros() throws Exception {
+        // ANH tenía 40 litros desde las 8:00 y a las 9:30 avisaron por WhatsApp que se acabó; a las 10:00 llegan 9000.
+        Instant desde = HORA_ANH_UTC.minus(Duration.ofHours(2));
+        guardarAnh(elMolle, "40", desde, desde);
+        guardarWhatsapp(elMolle, false, HORA_ANH_UTC.minus(Duration.ofMinutes(30)));
+        ANH.responder(GASOLINA, Respuesta.json(listado(elMolle(0, "9000", "alto", HORA_ANH))));
+        ANH.responder(DIESEL, Respuesta.json(listado()));
+
+        consulta.consultar();
+
+        assertThat(fechaDeAnh()).isEqualTo(HORA_ANH_UTC);
+        assertThat((BigDecimal) estadosDeAnh().get(0).get("litros")).isEqualByComparingTo("9000");
+        assertThat(origenQueSeMuestra()).isEqualTo("ANH");
+    }
+
+    @Test
+    @DisplayName("CP-212: bajan los litros de ANH sin agotarse: se guardan, pero la fecha del dato se queda")
+    void cp212BajanLosLitros() throws Exception {
+        Instant desde = HORA_ANH_UTC.minus(Duration.ofHours(2));
+        guardarAnh(elMolle, "9000", desde, desde);
+        ANH.responder(GASOLINA, Respuesta.json(listado(elMolle(0, "7500", "alto", HORA_ANH))));
+        ANH.responder(DIESEL, Respuesta.json(listado()));
+
+        consulta.consultar();
+
+        Map<String, Object> estado = estadosDeAnh().get(0);
+        assertThat((BigDecimal) estado.get("litros")).isEqualByComparingTo("7500");
+        assertThat(estado.get("estado_anh")).isEqualTo("ALTO");
+        assertThat(((Timestamp) estado.get("fecha_dato")).toInstant()).isEqualTo(desde);
+        assertThat(anhActualizado()).isEqualTo(HORA_ANH_UTC);
+    }
+
+    @Test
+    @DisplayName("V15: un dato de ANH sin anh_actualizado (de la versión anterior) se compara por su fecha_dato")
+    void datoDeLaVersionAnterior() throws Exception {
+        Instant desde = HORA_ANH_UTC.minus(Duration.ofHours(2));
+        guardarAnh(elMolle, "0", desde, desde);
+        jdbc.update("update estado_combustible set anh_actualizado = null");
+        ANH.responder(GASOLINA, Respuesta.json(listado(elMolle(0, "0", "bajo", HORA_ANH))));
+        ANH.responder(DIESEL, Respuesta.json(listado()));
+
+        consulta.consultar();
+
+        assertThat(fechaDeAnh()).isEqualTo(desde);
+        assertThat(anhActualizado()).isEqualTo(HORA_ANH_UTC);
+    }
+
+    /** El origen del dato de gasolina de El Molle que la consulta de surtidores muestra (RN-05.3). */
+    private String origenQueSeMuestra() throws Exception {
+        long conductor = jdbc.queryForObject(
+                "insert into conductor (google_id, fecha_alta) values ('google-anh-' || gen_random_uuid(), now()) returning id",
+                Long.class);
+        String cuerpo = mvc.perform(get("/surtidores").param("latitud", "-21.5234844").param("longitud", "-64.724772")
+                        .header("Authorization", "Bearer " + jwtServicio.emitir(conductor, AHORA)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        for (JsonNode s : json.readTree(cuerpo).path("surtidores")) {
+            if (s.path("id").asLong() == elMolle) {
+                for (JsonNode c : s.path("combustibles")) {
+                    if (c.path("tipo").asText().equals("GASOLINA")) {
+                        return c.path("origen").asText();
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     @Test

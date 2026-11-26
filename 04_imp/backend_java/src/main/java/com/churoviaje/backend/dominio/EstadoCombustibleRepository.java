@@ -16,17 +16,23 @@ public interface EstadoCombustibleRepository {
 
     /** Qué pasó con un dato de ANH al guardarlo (RN-09.14). */
     enum ResultadoAnh {
-        /** No había dato de ANH para ese surtidor y tipo, o el que había era más viejo: quedó el nuevo. */
+        /**
+         * No había dato de ANH para ese surtidor y tipo, o el que había tenía un {@code updated_at} más viejo: quedaron
+         * los litros nuevos. La fecha del dato solo cambia si ANH cambió lo que dice (D-50).
+         */
         GUARDADO,
-        /** El que había tiene la misma fecha: solo cambió el momento de la lectura. */
+        /** El que había tiene el mismo {@code updated_at}: solo cambió el momento de la lectura. */
         RELEIDO,
-        /** El que había es más reciente: no cambió nada. */
+        /** El que había tiene un {@code updated_at} más reciente: no cambió nada. */
         MAS_VIEJO
     }
 
     /**
-     * RN-09.14: guarda un dato de ANH. Un dato más viejo no reemplaza al que hay; con la misma fecha solo se actualiza
-     * {@code consultado_en}. La comparación es solo entre datos de ANH y la hace la base en la misma sentencia.
+     * RN-09.14: guarda una lectura de ANH, cuya {@code fecha} es el {@code updated_at} que informa ANH. Una lectura más
+     * vieja que la última aceptada no entra; con el mismo {@code updated_at} solo se actualiza {@code consultado_en}.
+     * Con uno más nuevo se guardan los litros y el estado de ANH, y la fecha del dato guardado, que es desde cuándo ANH
+     * dice lo mismo, solo pasa al {@code updated_at} nuevo si cambió la disponibilidad o subieron los litros (D-50). La
+     * comparación es solo entre datos de ANH y la hace la base en la misma sentencia.
      */
     ResultadoAnh guardarDeAnh(EstadoCombustible estado, Instant ahora);
 

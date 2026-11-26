@@ -390,6 +390,16 @@ std::optional<TramoCercano> RedVial::tramo_en_sentido(double lat, double lon, st
           mejor = c;
           continue;
         }
+        // P-41 (#197): con rumbo, el tramo alineado con el avance gana aunque el otro esté más cerca. El auto va por
+        // su carril, a unos metros del eje de la calle, y junto a una esquina la calle que cruza queda más cerca.
+        if (rumbo) {
+          const bool c_alineado = diferencia(*rumbo, c.rumbo_tramo) <= kRumboAlineadoMaximoGrados;
+          const bool m_alineado = diferencia(*rumbo, mejor->rumbo_tramo) <= kRumboAlineadoMaximoGrados;
+          if (c_alineado != m_alineado) {
+            if (c_alineado) mejor = c;
+            continue;
+          }
+        }
         // Los dos sentidos de una calle están a la misma distancia: decide el rumbo del vehículo.
         const bool misma_distancia = std::fabs(d - mejor->distancia) < 1e-6;
         if (d < mejor->distancia - 1e-6) {

@@ -69,6 +69,9 @@ class RedVial {
  public:
   // RN-03.4 y P-23: un punto se ajusta a la intersección más cercana si hay una a menos de 100 m.
   static constexpr double kRadioAjusteMetros = 100.0;
+  // RN-04.8, P-41: un tramo va «en la dirección del avance» si su rumbo difiere en 45 grados o menos del rumbo del
+  // vehículo. Así una calle que cruza (unos 90 grados) nunca le gana a la calle por la que avanza.
+  static constexpr double kRumboAlineadoMaximoGrados = 45.0;
 
   // Construye la red desde el JSON ya leído. Lanza ErrorRedVial si algo no cumple el formato.
   static RedVial desde_json(const nlohmann::json& documento);
@@ -97,9 +100,12 @@ class RedVial {
   // Entre los dos sentidos de una calle, que comparten trazado, devuelve el que aparece primero.
   std::optional<TramoCercano> tramo_mas_cercano(double lat, double lon) const;
 
-  // El tramo donde está un vehículo (RN-04.8, D-18): el que pasa más cerca de (lat, lon), si está a no más de
-  // `radio_m` (como máximo kRadioAjusteMetros). Entre los dos sentidos de una calle, que comparten trazado, elige
-  // el que va más parecido a `rumbo` (grados desde el norte, en sentido horario); sin rumbo, el que aparece primero.
+  // El tramo donde está un vehículo (RN-04.8, D-18), entre los que pasan a no más de `radio_m` de (lat, lon) (como
+  // máximo kRadioAjusteMetros). Con `rumbo` (grados desde el norte, en sentido horario), un tramo alineado con el
+  // avance (kRumboAlineadoMaximoGrados, P-41) gana a uno que no lo está aunque este quede más cerca: al pasar una
+  // esquina por su carril, el vehículo sigue en su calle y no cae en la que cruza (#197). Entre tramos igual de
+  // alineados gana el más cercano, y entre los dos sentidos de una calle, que comparten trazado, el que va más
+  // parecido a `rumbo`. Sin rumbo, el más cercano y, en un empate, el que aparece primero.
   std::optional<TramoCercano> tramo_en_sentido(double lat, double lon, std::optional<double> rumbo,
                                                double radio_m) const;
 

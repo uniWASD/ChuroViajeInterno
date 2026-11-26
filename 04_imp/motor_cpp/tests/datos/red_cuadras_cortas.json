@@ -1,0 +1,874 @@
+{
+  "version": 1,
+  "fuente": "Prueba de telemetría (#197): una avenida principal de doble sentido con cuadras de 85 m, como las de Tarija, y en cada esquina una calle residencial que cruza hacia el norte y otra hacia el sur",
+  "fecha_extracto": "2026-11-26",
+  "nodos": [
+    {
+      "id": "A0",
+      "lat": -21.54,
+      "lon": -64.74
+    },
+    {
+      "id": "N0",
+      "lat": -21.5382014,
+      "lon": -64.74
+    },
+    {
+      "id": "S0",
+      "lat": -21.5417986,
+      "lon": -64.74
+    },
+    {
+      "id": "A1",
+      "lat": -21.54,
+      "lon": -64.7391782
+    },
+    {
+      "id": "N1",
+      "lat": -21.5382014,
+      "lon": -64.7391782
+    },
+    {
+      "id": "S1",
+      "lat": -21.5417986,
+      "lon": -64.7391782
+    },
+    {
+      "id": "A2",
+      "lat": -21.54,
+      "lon": -64.7383564
+    },
+    {
+      "id": "N2",
+      "lat": -21.5382014,
+      "lon": -64.7383564
+    },
+    {
+      "id": "S2",
+      "lat": -21.5417986,
+      "lon": -64.7383564
+    },
+    {
+      "id": "A3",
+      "lat": -21.54,
+      "lon": -64.7375345
+    },
+    {
+      "id": "N3",
+      "lat": -21.5382014,
+      "lon": -64.7375345
+    },
+    {
+      "id": "S3",
+      "lat": -21.5417986,
+      "lon": -64.7375345
+    },
+    {
+      "id": "A4",
+      "lat": -21.54,
+      "lon": -64.7367127
+    },
+    {
+      "id": "N4",
+      "lat": -21.5382014,
+      "lon": -64.7367127
+    },
+    {
+      "id": "S4",
+      "lat": -21.5417986,
+      "lon": -64.7367127
+    },
+    {
+      "id": "A5",
+      "lat": -21.54,
+      "lon": -64.7358909
+    },
+    {
+      "id": "N5",
+      "lat": -21.5382014,
+      "lon": -64.7358909
+    },
+    {
+      "id": "S5",
+      "lat": -21.5417986,
+      "lon": -64.7358909
+    },
+    {
+      "id": "A6",
+      "lat": -21.54,
+      "lon": -64.7350691
+    },
+    {
+      "id": "N6",
+      "lat": -21.5382014,
+      "lon": -64.7350691
+    },
+    {
+      "id": "S6",
+      "lat": -21.5417986,
+      "lon": -64.7350691
+    }
+  ],
+  "tramos": [
+    {
+      "id": "avenida0:ida",
+      "desde": "A0",
+      "hasta": "A1",
+      "opuesto": "avenida0:vuelta",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.74
+        ],
+        [
+          -21.54,
+          -64.7391782
+        ]
+      ]
+    },
+    {
+      "id": "avenida0:vuelta",
+      "desde": "A1",
+      "hasta": "A0",
+      "opuesto": "avenida0:ida",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7391782
+        ],
+        [
+          -21.54,
+          -64.74
+        ]
+      ]
+    },
+    {
+      "id": "avenida1:ida",
+      "desde": "A1",
+      "hasta": "A2",
+      "opuesto": "avenida1:vuelta",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7391782
+        ],
+        [
+          -21.54,
+          -64.7383564
+        ]
+      ]
+    },
+    {
+      "id": "avenida1:vuelta",
+      "desde": "A2",
+      "hasta": "A1",
+      "opuesto": "avenida1:ida",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7383564
+        ],
+        [
+          -21.54,
+          -64.7391782
+        ]
+      ]
+    },
+    {
+      "id": "avenida2:ida",
+      "desde": "A2",
+      "hasta": "A3",
+      "opuesto": "avenida2:vuelta",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 85.009,
+      "geometria": [
+        [
+          -21.54,
+          -64.7383564
+        ],
+        [
+          -21.54,
+          -64.7375345
+        ]
+      ]
+    },
+    {
+      "id": "avenida2:vuelta",
+      "desde": "A3",
+      "hasta": "A2",
+      "opuesto": "avenida2:ida",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 85.009,
+      "geometria": [
+        [
+          -21.54,
+          -64.7375345
+        ],
+        [
+          -21.54,
+          -64.7383564
+        ]
+      ]
+    },
+    {
+      "id": "avenida3:ida",
+      "desde": "A3",
+      "hasta": "A4",
+      "opuesto": "avenida3:vuelta",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7375345
+        ],
+        [
+          -21.54,
+          -64.7367127
+        ]
+      ]
+    },
+    {
+      "id": "avenida3:vuelta",
+      "desde": "A4",
+      "hasta": "A3",
+      "opuesto": "avenida3:ida",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7367127
+        ],
+        [
+          -21.54,
+          -64.7375345
+        ]
+      ]
+    },
+    {
+      "id": "avenida4:ida",
+      "desde": "A4",
+      "hasta": "A5",
+      "opuesto": "avenida4:vuelta",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7367127
+        ],
+        [
+          -21.54,
+          -64.7358909
+        ]
+      ]
+    },
+    {
+      "id": "avenida4:vuelta",
+      "desde": "A5",
+      "hasta": "A4",
+      "opuesto": "avenida4:ida",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7358909
+        ],
+        [
+          -21.54,
+          -64.7367127
+        ]
+      ]
+    },
+    {
+      "id": "avenida5:ida",
+      "desde": "A5",
+      "hasta": "A6",
+      "opuesto": "avenida5:vuelta",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7358909
+        ],
+        [
+          -21.54,
+          -64.7350691
+        ]
+      ]
+    },
+    {
+      "id": "avenida5:vuelta",
+      "desde": "A6",
+      "hasta": "A5",
+      "opuesto": "avenida5:ida",
+      "nombre": "Av. Cuadras Cortas",
+      "tipo_via": "avenida_principal",
+      "longitud_m": 84.998,
+      "geometria": [
+        [
+          -21.54,
+          -64.7350691
+        ],
+        [
+          -21.54,
+          -64.7358909
+        ]
+      ]
+    },
+    {
+      "id": "norte0:ida",
+      "desde": "A0",
+      "hasta": "N0",
+      "opuesto": "norte0:vuelta",
+      "nombre": "Calle Norte 0",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.74
+        ],
+        [
+          -21.5382014,
+          -64.74
+        ]
+      ]
+    },
+    {
+      "id": "norte0:vuelta",
+      "desde": "N0",
+      "hasta": "A0",
+      "opuesto": "norte0:ida",
+      "nombre": "Calle Norte 0",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5382014,
+          -64.74
+        ],
+        [
+          -21.54,
+          -64.74
+        ]
+      ]
+    },
+    {
+      "id": "sur0:ida",
+      "desde": "A0",
+      "hasta": "S0",
+      "opuesto": "sur0:vuelta",
+      "nombre": "Calle Sur 0",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.74
+        ],
+        [
+          -21.5417986,
+          -64.74
+        ]
+      ]
+    },
+    {
+      "id": "sur0:vuelta",
+      "desde": "S0",
+      "hasta": "A0",
+      "opuesto": "sur0:ida",
+      "nombre": "Calle Sur 0",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5417986,
+          -64.74
+        ],
+        [
+          -21.54,
+          -64.74
+        ]
+      ]
+    },
+    {
+      "id": "norte1:ida",
+      "desde": "A1",
+      "hasta": "N1",
+      "opuesto": "norte1:vuelta",
+      "nombre": "Calle Norte 1",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7391782
+        ],
+        [
+          -21.5382014,
+          -64.7391782
+        ]
+      ]
+    },
+    {
+      "id": "norte1:vuelta",
+      "desde": "N1",
+      "hasta": "A1",
+      "opuesto": "norte1:ida",
+      "nombre": "Calle Norte 1",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5382014,
+          -64.7391782
+        ],
+        [
+          -21.54,
+          -64.7391782
+        ]
+      ]
+    },
+    {
+      "id": "sur1:ida",
+      "desde": "A1",
+      "hasta": "S1",
+      "opuesto": "sur1:vuelta",
+      "nombre": "Calle Sur 1",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7391782
+        ],
+        [
+          -21.5417986,
+          -64.7391782
+        ]
+      ]
+    },
+    {
+      "id": "sur1:vuelta",
+      "desde": "S1",
+      "hasta": "A1",
+      "opuesto": "sur1:ida",
+      "nombre": "Calle Sur 1",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5417986,
+          -64.7391782
+        ],
+        [
+          -21.54,
+          -64.7391782
+        ]
+      ]
+    },
+    {
+      "id": "norte2:ida",
+      "desde": "A2",
+      "hasta": "N2",
+      "opuesto": "norte2:vuelta",
+      "nombre": "Calle Norte 2",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7383564
+        ],
+        [
+          -21.5382014,
+          -64.7383564
+        ]
+      ]
+    },
+    {
+      "id": "norte2:vuelta",
+      "desde": "N2",
+      "hasta": "A2",
+      "opuesto": "norte2:ida",
+      "nombre": "Calle Norte 2",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5382014,
+          -64.7383564
+        ],
+        [
+          -21.54,
+          -64.7383564
+        ]
+      ]
+    },
+    {
+      "id": "sur2:ida",
+      "desde": "A2",
+      "hasta": "S2",
+      "opuesto": "sur2:vuelta",
+      "nombre": "Calle Sur 2",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7383564
+        ],
+        [
+          -21.5417986,
+          -64.7383564
+        ]
+      ]
+    },
+    {
+      "id": "sur2:vuelta",
+      "desde": "S2",
+      "hasta": "A2",
+      "opuesto": "sur2:ida",
+      "nombre": "Calle Sur 2",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5417986,
+          -64.7383564
+        ],
+        [
+          -21.54,
+          -64.7383564
+        ]
+      ]
+    },
+    {
+      "id": "norte3:ida",
+      "desde": "A3",
+      "hasta": "N3",
+      "opuesto": "norte3:vuelta",
+      "nombre": "Calle Norte 3",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7375345
+        ],
+        [
+          -21.5382014,
+          -64.7375345
+        ]
+      ]
+    },
+    {
+      "id": "norte3:vuelta",
+      "desde": "N3",
+      "hasta": "A3",
+      "opuesto": "norte3:ida",
+      "nombre": "Calle Norte 3",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5382014,
+          -64.7375345
+        ],
+        [
+          -21.54,
+          -64.7375345
+        ]
+      ]
+    },
+    {
+      "id": "sur3:ida",
+      "desde": "A3",
+      "hasta": "S3",
+      "opuesto": "sur3:vuelta",
+      "nombre": "Calle Sur 3",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7375345
+        ],
+        [
+          -21.5417986,
+          -64.7375345
+        ]
+      ]
+    },
+    {
+      "id": "sur3:vuelta",
+      "desde": "S3",
+      "hasta": "A3",
+      "opuesto": "sur3:ida",
+      "nombre": "Calle Sur 3",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5417986,
+          -64.7375345
+        ],
+        [
+          -21.54,
+          -64.7375345
+        ]
+      ]
+    },
+    {
+      "id": "norte4:ida",
+      "desde": "A4",
+      "hasta": "N4",
+      "opuesto": "norte4:vuelta",
+      "nombre": "Calle Norte 4",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7367127
+        ],
+        [
+          -21.5382014,
+          -64.7367127
+        ]
+      ]
+    },
+    {
+      "id": "norte4:vuelta",
+      "desde": "N4",
+      "hasta": "A4",
+      "opuesto": "norte4:ida",
+      "nombre": "Calle Norte 4",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5382014,
+          -64.7367127
+        ],
+        [
+          -21.54,
+          -64.7367127
+        ]
+      ]
+    },
+    {
+      "id": "sur4:ida",
+      "desde": "A4",
+      "hasta": "S4",
+      "opuesto": "sur4:vuelta",
+      "nombre": "Calle Sur 4",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7367127
+        ],
+        [
+          -21.5417986,
+          -64.7367127
+        ]
+      ]
+    },
+    {
+      "id": "sur4:vuelta",
+      "desde": "S4",
+      "hasta": "A4",
+      "opuesto": "sur4:ida",
+      "nombre": "Calle Sur 4",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5417986,
+          -64.7367127
+        ],
+        [
+          -21.54,
+          -64.7367127
+        ]
+      ]
+    },
+    {
+      "id": "norte5:ida",
+      "desde": "A5",
+      "hasta": "N5",
+      "opuesto": "norte5:vuelta",
+      "nombre": "Calle Norte 5",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7358909
+        ],
+        [
+          -21.5382014,
+          -64.7358909
+        ]
+      ]
+    },
+    {
+      "id": "norte5:vuelta",
+      "desde": "N5",
+      "hasta": "A5",
+      "opuesto": "norte5:ida",
+      "nombre": "Calle Norte 5",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5382014,
+          -64.7358909
+        ],
+        [
+          -21.54,
+          -64.7358909
+        ]
+      ]
+    },
+    {
+      "id": "sur5:ida",
+      "desde": "A5",
+      "hasta": "S5",
+      "opuesto": "sur5:vuelta",
+      "nombre": "Calle Sur 5",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7358909
+        ],
+        [
+          -21.5417986,
+          -64.7358909
+        ]
+      ]
+    },
+    {
+      "id": "sur5:vuelta",
+      "desde": "S5",
+      "hasta": "A5",
+      "opuesto": "sur5:ida",
+      "nombre": "Calle Sur 5",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5417986,
+          -64.7358909
+        ],
+        [
+          -21.54,
+          -64.7358909
+        ]
+      ]
+    },
+    {
+      "id": "norte6:ida",
+      "desde": "A6",
+      "hasta": "N6",
+      "opuesto": "norte6:vuelta",
+      "nombre": "Calle Norte 6",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7350691
+        ],
+        [
+          -21.5382014,
+          -64.7350691
+        ]
+      ]
+    },
+    {
+      "id": "norte6:vuelta",
+      "desde": "N6",
+      "hasta": "A6",
+      "opuesto": "norte6:ida",
+      "nombre": "Calle Norte 6",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5382014,
+          -64.7350691
+        ],
+        [
+          -21.54,
+          -64.7350691
+        ]
+      ]
+    },
+    {
+      "id": "sur6:ida",
+      "desde": "A6",
+      "hasta": "S6",
+      "opuesto": "sur6:vuelta",
+      "nombre": "Calle Sur 6",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.54,
+          -64.7350691
+        ],
+        [
+          -21.5417986,
+          -64.7350691
+        ]
+      ]
+    },
+    {
+      "id": "sur6:vuelta",
+      "desde": "S6",
+      "hasta": "A6",
+      "opuesto": "sur6:ida",
+      "nombre": "Calle Sur 6",
+      "tipo_via": "zona_residencial",
+      "longitud_m": 199.995,
+      "geometria": [
+        [
+          -21.5417986,
+          -64.7350691
+        ],
+        [
+          -21.54,
+          -64.7350691
+        ]
+      ]
+    }
+  ]
+}

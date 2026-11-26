@@ -914,7 +914,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | [T-109][C++] Rendimiento con la red real de Tarija ([#90](https://github.com/uniWASD/ChuroViajeInterno/issues/90)) | Marcelo | CP-153 |
 | [T-110][Servidor] Despliegue final y revisión de seguridad ([#91](https://github.com/uniWASD/ChuroViajeInterno/issues/91)) | Marcelo | CP-154 |
 | [T-104][Flutter] Política de privacidad ([#81](https://github.com/uniWASD/ChuroViajeInterno/issues/81)) | Franz | CP-133 |
-| [T-126][Java] La fecha de un dato de ANH es desde cuándo dice lo mismo ([#T126-ISSUE](https://github.com/uniWASD/ChuroViajeInterno/issues/T126-ISSUE)) | Marcelo | CP-209 a CP-212 |
+| [T-126][Java] La fecha de un dato de ANH es desde cuándo dice lo mismo ([#195](https://github.com/uniWASD/ChuroViajeInterno/issues/195)) | Marcelo | CP-209 a CP-212 |
 
 ### [T-101][WhatsApp/LLM] Prueba con mensajes reales · [#77](https://github.com/uniWASD/ChuroViajeInterno/issues/77)
 
@@ -1044,7 +1044,7 @@ Un issue está terminado cuando cumple las tres condiciones:
 | --- | --- | --- |
 | **CP-133** desde la vista Inicio de sesión, sin cuenta, se abre la política y menciona al proveedor del LLM y a ANH | Captura de pantalla |  |
 
-### [T-126][Java] La fecha de un dato de ANH es desde cuándo dice lo mismo · [#T126-ISSUE](https://github.com/uniWASD/ChuroViajeInterno/issues/T126-ISSUE)
+### [T-126][Java] La fecha de un dato de ANH es desde cuándo dice lo mismo · [#195](https://github.com/uniWASD/ChuroViajeInterno/issues/195)
 
 **Responsable:** Marcelo · **Fechas:** 26/11
 

@@ -69,9 +69,9 @@ class SurtidoresIntegracionTest extends PruebaIntegracionPostgis {
     private void datoAnh(String surtidor, String tipo, double litros, String estadoAnh, String fecha, String leido) {
         jdbc.update("""
                 insert into estado_combustible (surtidor_id, tipo_codigo, origen, disponible, fecha_dato, litros,
-                                                estado_anh, consultado_en, actualizado_en)
-                select id, ?, 'ANH', ?, ?, ?, ?, ?, ? from surtidor where nombre = ?""",
-                tipo, litros > 0, a(fecha), litros, estadoAnh, a(leido), a(leido), surtidor);
+                                                estado_anh, consultado_en, actualizado_en, anh_actualizado)
+                select id, ?, 'ANH', ?, ?, ?, ?, ?, ?, ? from surtidor where nombre = ?""",
+                tipo, litros > 0, a(fecha), litros, estadoAnh, a(leido), a(leido), a(fecha), surtidor);
     }
 
     private ResultActions pedir(String lat, String lon) throws Exception {

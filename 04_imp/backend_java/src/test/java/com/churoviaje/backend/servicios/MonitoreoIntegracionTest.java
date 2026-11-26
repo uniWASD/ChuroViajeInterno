@@ -116,9 +116,10 @@ class MonitoreoIntegracionTest extends PruebaIntegracionPostgis {
                 java.sql.Timestamp.from(AHORA), java.sql.Timestamp.from(AHORA));
         jdbc.update("""
                 insert into estado_combustible (surtidor_id, tipo_codigo, origen, disponible, fecha_dato, litros,
-                                                estado_anh, consultado_en, actualizado_en)
-                select id, 'GASOLINA', 'ANH', true, ?, 1200, 'ALTO', ?, ? from surtidor where nombre = 'Las Vegas'""",
-                java.sql.Timestamp.from(AHORA), java.sql.Timestamp.from(AHORA), java.sql.Timestamp.from(AHORA));
+                                                estado_anh, consultado_en, actualizado_en, anh_actualizado)
+                select id, 'GASOLINA', 'ANH', true, ?, 1200, 'ALTO', ?, ?, ? from surtidor where nombre = 'Las Vegas'""",
+                java.sql.Timestamp.from(AHORA), java.sql.Timestamp.from(AHORA), java.sql.Timestamp.from(AHORA),
+                java.sql.Timestamp.from(AHORA));
 
         enviar(CREDENCIAL, aviso("Las Vegas", "Gasolina", "AGOTADO", null, "15:00")).andExpect(status().isOk());
 
